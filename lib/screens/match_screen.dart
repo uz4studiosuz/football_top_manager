@@ -685,24 +685,15 @@ class _MatchScreenState extends State<MatchScreen> {
         ),
         const SizedBox(height: 12),
         AppCard(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: RatingsList(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: LineupList(
             club: club,
-            ids: ids,
-            ratings: ratings,
+            starters: _lineupTab == 0 ? _field.homeStartIds : _field.awayStartIds,
+            bench: _lineupTab == 0 ? _field.homeBenchIds : _field.awayBenchIds,
             lines: _field.lines,
+            ratings: ratings,
+            events: _field.events,
             motmId: _field.isFinished ? _field.manOfTheMatch : null,
-            onTap: (p) => _showPlayer(p, club),
-          ),
-        ),
-        const SizedBox(height: 12),
-        AppCard(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: SubstitutesList(
-            club: club,
-            benchIds: _lineupTab == 0 ? _field.homeBenchIds : _field.awayBenchIds,
-            lines: _field.lines,
-            ratings: ratings,
             onTap: (p) => _showPlayer(p, club),
           ),
         ),

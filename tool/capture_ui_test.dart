@@ -179,6 +179,11 @@ void main() {
     await shot('match-commentary-mobile');
     await mount(MatchReportScreen(fixture: fixture), const Size(390, 900));
     await shot('match-report-mobile');
+    await tester.tap(find.text('Tarkiblar'));
+    await tester.pumpAndSettle();
+    await tester.drag(find.byType(ListView).last, const Offset(0, -700));
+    await tester.pumpAndSettle();
+    await shot('match-report-lineups-mobile');
     await mount(const MainNavigationScreen(), const Size(390, 844));
     await shot('dashboard-after-match-mobile');
     await tester.ensureVisible(find.text('Keyingi turga o‘tish'));

@@ -250,37 +250,55 @@ class IncidentTimeline extends StatelessWidget {
   const IncidentTimeline({super.key, required this.events, this.newestFirst = true});
   @override
   Widget build(BuildContext context) {
-    final list = events.where((e) => e.type.isIncident && e.type != MatchEventType.fullTime).toList();
-    final ordered = newestFirst ? list.reversed.toList() : list;
-    if (ordered.isEmpty) {
-      return const EmptyState(
-        icon: Icons.timer_outlined,
-        text: 'Hozircha muhim voqealar yo‘q',
-      );
-    }
+    bool key(MatchEvent e) =>
+        e.type.isIncident &&
+        e.type != MatchEventType.halfTime &&
+        e.type != MatchEventType.fullTime;
+    final htIndex = events.indexWhere((e) => e.type == MatchEventType.halfTime);
+    final ftIndex = events.indexWhere((e) => e.type == MatchEventType.fullTime);
+    final firstEnd = htIndex < 0 ? events.length : htIndex;
+    final first = events.take(firstEnd).where(key).toList();
+    final second = htIndex < 0 ? <MatchEvent>[] : events.skip(htIndex).where(key).toList();
+    Widget divider(String text) => Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          const Expanded(child: Divider()),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Text(text, style: AppText.overline),
+          ),
+          const Expanded(child: Divider()),
+        ],
+      ),
+    );
+    Widget quiet(String text) => Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Center(child: Text(text, style: AppText.caption)),
+    );
+    final ht = htIndex < 0 ? null : events[htIndex];
+    final ft = ftIndex < 0 ? null : events[ftIndex];
+    // SofaScore layout: one section per half, each with its own score.
+    final firstSection = <Widget>[
+      divider(ht == null ? '1-BO‘LIM' : '1-BO‘LIM  ${ht.homeScore} – ${ht.awayScore}'),
+      if (first.isEmpty)
+        quiet(ht == null ? 'Hozircha muhim voqealar yo‘q' : 'Muhim voqealar bo‘lmadi')
+      else
+        for (final e in (newestFirst ? first.reversed : first)) _IncidentRow(e),
+    ];
+    final secondSection = ht == null
+        ? <Widget>[]
+        : <Widget>[
+            divider(ft == null ? '2-BO‘LIM' : '2-BO‘LIM  ${ft.homeScore} – ${ft.awayScore}'),
+            if (second.isEmpty)
+              quiet(ft == null ? 'Hozircha muhim voqealar yo‘q' : 'Muhim voqealar bo‘lmadi')
+            else
+              for (final e in (newestFirst ? second.reversed : second)) _IncidentRow(e),
+          ];
     return Column(
-      children: [
-        for (final e in ordered)
-          if (e.type == MatchEventType.halfTime)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Row(
-                children: [
-                  const Expanded(child: Divider()),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: Text(
-                      'TANAFFUS  ${e.homeScore} – ${e.awayScore}',
-                      style: AppText.overline,
-                    ),
-                  ),
-                  const Expanded(child: Divider()),
-                ],
-              ),
-            )
-          else
-            _IncidentRow(e),
-      ],
+      children: newestFirst
+          ? [...secondSection, ...firstSection]
+          : [...firstSection, ...secondSection],
     );
   }
 }
@@ -507,6 +525,7 @@ class LineupPitch extends StatelessWidget {
                     goals: goals[players[i].id] ?? 0,
                     booked: booked.contains(players[i].id),
                     subOn: lines[players[i].id]?.subOnMinute,
+                    subOff: lines[players[i].id]?.subOffMinute,
                     onTap: onTap == null ? null : () => onTap!(players[i]),
                   ),
                 ),
@@ -524,7 +543,7 @@ class _LineupNode extends StatelessWidget {
   final Color shirt;
   final bool out, booked;
   final int goals;
-  final int? subOn;
+  final int? subOn, subOff;
   final VoidCallback? onTap;
   const _LineupNode({
     required this.player,
@@ -534,6 +553,7 @@ class _LineupNode extends StatelessWidget {
     required this.goals,
     required this.booked,
     this.subOn,
+    this.subOff,
     this.onTap,
   });
   @override
@@ -581,6 +601,25 @@ class _LineupNode extends StatelessWidget {
                       padding: const EdgeInsets.all(1.5),
                       decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
                       child: const Icon(Icons.arrow_upward_rounded, size: 10, color: AppColors.win),
+                    ),
+                  ),
+                if (subOff != null)
+                  Positioned(
+                    left: -12,
+                    bottom: -4,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(6)),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.arrow_downward_rounded, size: 9, color: AppColors.live),
+                          Text(
+                            '$subOff′',
+                            style: const TextStyle(fontSize: 8, fontWeight: FontWeight.w800, color: AppColors.live),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 if (booked)
@@ -702,7 +741,7 @@ class RatingsList extends StatelessWidget {
   static String _lineSummary(PlayerMatchStats? l) {
     if (l == null) return '';
     final parts = <String>[
-      '${l.minutes.round()}′',
+      '${min(90, l.minutes.round())}′',
       if (l.goals > 0) '${l.goals} gol',
       if (l.assists > 0) '${l.assists} assist',
       if (l.saves > 0) '${l.saves} seyv',
@@ -787,7 +826,7 @@ Future<void> showPlayerMatchSheet(
     String pct(int a, int b) => b == 0 ? '0%' : '${(a * 100 / b).round()}%';
     final rows = <(String, String)>[
       if (l != null) ...[
-        ('Daqiqalar', '${l.minutes.round()}′'),
+        ('Daqiqalar', '${min(90, l.minutes.round())}′'),
         if (gk) ('Seyvlar', '${l.saves}'),
         if (gk) ('O‘tkazilgan gollar', '${l.goalsConceded}'),
         ('Gollar', '${l.goals}'),
@@ -979,6 +1018,171 @@ class SubstitutesList extends StatelessWidget {
           child: Text('ZAXIRA', style: AppText.overline),
         ),
         for (final p in unused) row(p),
+      ],
+    );
+  }
+}
+
+/// SofaScore-style line-up list: the starting XI in formation order, then
+/// substitutes who came on and finally unused bench players. Each change
+/// shows who replaced whom and when.
+class LineupList extends StatelessWidget {
+  final Club club;
+  final List<String> starters;
+  final List<String> bench;
+  final Map<String, PlayerMatchStats> lines;
+  final Map<String, double?> ratings;
+  final List<MatchEvent> events;
+  final String? motmId;
+  final ValueChanged<Player>? onTap;
+  const LineupList({
+    super.key,
+    required this.club,
+    required this.starters,
+    required this.bench,
+    required this.lines,
+    required this.ratings,
+    required this.events,
+    this.motmId,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Substitution events carry the incoming id and the outgoing short name.
+    final replacedBy = <String, String>{}; // out short name -> in short name
+    final replaced = <String, String>{}; // in id -> out short name
+    for (final e in events.where((e) => e.type == MatchEventType.substitution && e.clubId == club.id)) {
+      final incoming = e.playerId == null ? null : club.playerById(e.playerId!);
+      if (incoming == null || e.secondaryName == null) continue;
+      replacedBy[e.secondaryName!] = incoming.shortName;
+      replaced[incoming.id] = e.secondaryName!;
+    }
+    final xi = starters.map(club.playerById).whereType<Player>().toList();
+    final benchPlayers = bench.map(club.playerById).whereType<Player>().toList();
+    final cameOn = benchPlayers.where((p) => lines[p.id]?.subOnMinute != null).toList()
+      ..sort((a, b) => lines[a.id]!.subOnMinute!.compareTo(lines[b.id]!.subOnMinute!));
+    final unused = benchPlayers.where((p) => lines[p.id]?.subOnMinute == null).toList();
+
+    Widget header(String text) => Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      child: Text(text, style: AppText.overline),
+    );
+
+    Widget row(Player p, {String? change, bool on = false, bool off = false}) {
+      final l = lines[p.id];
+      return InkWell(
+        onTap: onTap == null ? null : () => onTap!(p),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 24,
+                child: Text('${p.number}', style: AppText.number.copyWith(fontSize: 12, color: AppColors.ink2)),
+              ),
+              FaceAvatar(config: p.face, size: 34, shirt: club.primaryColor, circle: true),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            p.shortName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppText.bodyStrong.copyWith(fontSize: 13),
+                          ),
+                        ),
+                        if (p.id == motmId) ...[
+                          const SizedBox(width: 4),
+                          const Icon(Icons.star_rounded, size: 15, color: AppColors.gold),
+                        ],
+                        if ((l?.goals ?? 0) > 0) ...[
+                          const SizedBox(width: 4),
+                          for (var i = 0; i < l!.goals; i++)
+                            const Icon(Icons.sports_soccer, size: 13, color: AppColors.ink),
+                        ],
+                        if ((l?.yellow ?? 0) > 0)
+                          Container(width: 7, height: 10, margin: const EdgeInsets.only(left: 4), color: const Color(0xFFF5C518)),
+                        if ((l?.red ?? 0) > 0)
+                          Container(width: 7, height: 10, margin: const EdgeInsets.only(left: 3), color: AppColors.live),
+                      ],
+                    ),
+                    if (change != null)
+                      Row(
+                        children: [
+                          Icon(
+                            on ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+                            size: 13,
+                            color: on ? AppColors.win : AppColors.live,
+                          ),
+                          const SizedBox(width: 2),
+                          Flexible(
+                            child: Text(
+                              change,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: on ? AppColors.win : AppColors.live,
+                              ),
+                            ),
+                          ),
+                        ],
+                      )
+                    else if (l != null)
+                      Text(RatingsList._lineSummary(l), maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.caption),
+                  ],
+                ),
+              ),
+              PositionChip(p.mainPosition.code),
+              const SizedBox(width: 8),
+              RatingBadge(ratings[p.id], size: 12),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        header('ASOSIY TARKIB'),
+        for (final p in xi)
+          row(
+            p,
+            off: lines[p.id]?.subOffMinute != null,
+            change: lines[p.id]?.subOffMinute == null
+                ? null
+                : '${lines[p.id]!.subOffMinute}′ · chiqdi'
+                      '${replacedBy[p.shortName] == null ? '' : ', o‘rniga ${replacedBy[p.shortName]}'}',
+          ),
+        header('ZAXIRADAN TUSHGANLAR'),
+        if (cameOn.isEmpty)
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 4, 16, 8),
+            child: Text('Almashtirish bo‘lmadi', style: AppText.caption),
+          ),
+        for (final p in cameOn)
+          row(
+            p,
+            on: true,
+            change: '${lines[p.id]!.subOnMinute}′ · tushdi'
+                '${replaced[p.id] == null ? '' : ', ${replaced[p.id]} o‘rniga'}',
+          ),
+        header('ZAXIRA'),
+        if (unused.isEmpty)
+          const Padding(
+            padding: EdgeInsets.fromLTRB(16, 4, 16, 8),
+            child: Text('Barcha zaxiralar maydonga tushdi', style: AppText.caption),
+          ),
+        for (final p in unused) row(p),
+        const SizedBox(height: 6),
       ],
     );
   }

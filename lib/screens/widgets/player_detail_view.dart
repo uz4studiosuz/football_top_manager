@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../models/player.dart';
 import '../../models/club.dart';
@@ -448,7 +449,7 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
                   Text(opp.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.bodyStrong.copyWith(fontSize: 13)),
                   Row(
                     children: [
-                      Text('${l.minutes.round()}′', style: AppText.caption),
+                      Text('${min(90, l.minutes.round())}′', style: AppText.caption),
                       if (l.subOnMinute != null || l.subOffMinute != null) ...[
                         const SizedBox(width: 6),
                         _subMark(l),

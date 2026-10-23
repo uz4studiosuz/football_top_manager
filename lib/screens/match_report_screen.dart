@@ -182,24 +182,15 @@ class _MatchReportScreenState extends State<MatchReportScreen> {
           ),
         const SizedBox(height: 12),
         AppCard(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          child: RatingsList(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: LineupList(
             club: club,
-            ids: ids,
-            ratings: ratings,
+            starters: starters,
+            bench: club.id == f.homeClubId ? f.homeBench : f.awayBench,
             lines: f.playerStats,
+            ratings: ratings,
+            events: f.events,
             motmId: f.motmId,
-            onTap: (p) => _sheet(p, club, f),
-          ),
-        ),
-        const SizedBox(height: 12),
-        AppCard(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: SubstitutesList(
-            club: club,
-            benchIds: club.id == f.homeClubId ? f.homeBench : f.awayBench,
-            lines: f.playerStats,
-            ratings: ratings,
             onTap: (p) => _sheet(p, club, f),
           ),
         ),
