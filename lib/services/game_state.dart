@@ -1364,6 +1364,13 @@ class GameState extends ChangeNotifier {
       weeklyWage: draft.calculatedRenewalWageDemand,
     );
     club.squad.add(draft);
+    // A new signing goes on the matchday bench; if it is full, the weakest
+    // outfield substitute drops to the reserves to make room.
+    if (club.benchIds.length >= Club.matchdayBench) {
+      final outfield = club.bench.where((b) => !b.mainPosition.isGoalkeeper).toList()
+        ..sort((a, b) => a.ovr.compareTo(b.ovr));
+      if (outfield.isNotEmpty) club.benchIds.remove(outfield.first.id);
+    }
     if (club.benchIds.length < Club.matchdayBench) club.benchIds.add(draft.id);
     _news(
       NewsKind.transfer,

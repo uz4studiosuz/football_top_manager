@@ -157,7 +157,7 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
       return;
     }
     Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${p.name} jamoaga qo‘shildi (OVR ${p.ovr})')));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${p.name} zaxiraga qo‘shildi (OVR ${p.ovr}). Jamoa → Sxema va tarkib → Zaxira')));
     PlayerDetailView.show(context, player: p, club: game.userClub);
   }
 
