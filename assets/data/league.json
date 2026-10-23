@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 2,
+  "name": "Super League",
+  "rounds": 14,
+  "clubsFile": "clubs.json",
+  "playersFile": "players.json",
+  "templatesFile": "squad_templates.json",
+  "namesFile": "names.json"
+}

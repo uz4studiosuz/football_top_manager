@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "clockSamples": [
+    1,
+    2
+  ],
+  "pageErrors": [],
+  "consoleErrors": [],
+  "externalRequests": []
+}

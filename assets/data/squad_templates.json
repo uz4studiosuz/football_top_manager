@@ -1,0 +1,84 @@
+{
+  "slots": [
+    {
+      "pos": "GK",
+      "ovr": 76,
+      "num": 1
+    },
+    {
+      "pos": "CB",
+      "ovr": 78,
+      "num": 4
+    },
+    {
+      "pos": "CB",
+      "ovr": 76,
+      "num": 5
+    },
+    {
+      "pos": "LB",
+      "ovr": 75,
+      "num": 3
+    },
+    {
+      "pos": "RB",
+      "ovr": 75,
+      "num": 2
+    },
+    {
+      "pos": "DMF",
+      "ovr": 78,
+      "num": 6
+    },
+    {
+      "pos": "CMF",
+      "ovr": 79,
+      "num": 8
+    },
+    {
+      "pos": "AMF",
+      "ovr": 80,
+      "num": 10
+    },
+    {
+      "pos": "RWF",
+      "ovr": 81,
+      "num": 7
+    },
+    {
+      "pos": "LWF",
+      "ovr": 77,
+      "num": 11
+    },
+    {
+      "pos": "ST",
+      "ovr": 82,
+      "num": 9
+    },
+    {
+      "pos": "GK",
+      "ovr": 72,
+      "num": 12
+    },
+    {
+      "pos": "LB",
+      "ovr": 74,
+      "num": 13
+    },
+    {
+      "pos": "CB",
+      "ovr": 75,
+      "num": 14
+    },
+    {
+      "pos": "CMF",
+      "ovr": 76,
+      "num": 15
+    },
+    {
+      "pos": "ST",
+      "ovr": 77,
+      "num": 16
+    }
+  ]
+}
