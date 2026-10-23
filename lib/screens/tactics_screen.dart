@@ -9,6 +9,7 @@ import '../ui/widgets.dart';
 import 'widgets/player_detail_view.dart';
 import 'widgets/team_instructions_view.dart';
 import 'squad_screen.dart';
+import 'player_creator_screen.dart';
 
 class TacticsScreen extends StatefulWidget {
   final bool Function(Player, Player)? onSwap;
@@ -200,6 +201,15 @@ class _TacticsScreenState extends State<TacticsScreen> {
             appBar: AppBar(
               title: const Text('Jamoa'),
               actions: [
+                if (!_inMatch)
+                  IconButton(
+                    tooltip: 'Futbolchi yaratish',
+                    icon: const Icon(Icons.person_add_alt_1_rounded),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(builder: (_) => const PlayerCreatorScreen()),
+                    ),
+                  ),
                 if (!_inMatch)
                   PopupMenuButton<bool>(
                     tooltip: 'Avto tarkib',

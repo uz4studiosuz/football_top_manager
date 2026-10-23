@@ -4,6 +4,7 @@ import '../services/game_state.dart';
 import '../ui/team_widgets.dart';
 import '../ui/widgets.dart';
 import 'widgets/player_detail_view.dart';
+import 'player_creator_screen.dart';
 
 class SquadScreen extends StatelessWidget {
   const SquadScreen({super.key});
@@ -66,6 +67,30 @@ class _SquadListState extends State<SquadList> {
                     Expanded(child: StatTile(club.averageAge.toStringAsFixed(1), 'O‘rtacha yosh')),
                     Expanded(child: StatTile(formatMoney(club.squadValue), 'Qiymati')),
                     Expanded(child: StatTile(formatMoney(club.totalWeeklyWages), 'Maosh/hafta')),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              AppCard(
+                color: AppColors.primarySoft,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(builder: (_) => const PlayerCreatorScreen()),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.person_add_alt_1_rounded, color: AppColors.primary),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Futbolchi yaratish', style: AppText.bodyStrong),
+                          Text('Ism, yuz, pozitsiya, uslub va 26 atributni noldan sozlang', style: AppText.caption),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.chevron_right_rounded, color: AppColors.primary),
                   ],
                 ),
               ),

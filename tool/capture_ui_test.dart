@@ -14,6 +14,7 @@ import 'package:football_top_manager/screens/onboarding_screen.dart';
 import 'package:football_top_manager/screens/club_selection_screen.dart';
 import 'package:football_top_manager/screens/custom_club_creator_screen.dart';
 import 'package:football_top_manager/screens/match_report_screen.dart';
+import 'package:football_top_manager/screens/player_creator_screen.dart';
 import 'package:football_top_manager/screens/widgets/opponent_squad_sheet.dart';
 
 void main() {
@@ -106,6 +107,8 @@ void main() {
     await shot('club-selection-mobile');
     await mount(const CustomClubCreatorScreen(), const Size(390, 1400));
     await shot('club-creator-mobile');
+    await mount(const PlayerCreatorScreen(), const Size(390, 1500));
+    await shot('player-creator-mobile');
     await mount(const MainNavigationScreen(), const Size(1280, 900));
     await shot('dashboard-desktop');
     await mount(const MainNavigationScreen(), const Size(390, 844));

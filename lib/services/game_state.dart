@@ -6,6 +6,7 @@ import '../models/player.dart';
 import '../models/league.dart';
 import '../models/manager_profile.dart';
 import '../models/finance.dart';
+import '../models/face.dart';
 import 'match_field.dart';
 import 'save_codec.dart';
 import 'season_calendar.dart';
@@ -1298,6 +1299,80 @@ class GameState extends ChangeNotifier {
         marketValue: Player.valuation(ovr, age, ovr),
       ));
     }
+  }
+
+  // ------------------------------------------------------ player creator
+  /// Attribute template for a position at a target OVR (creator presets).
+  static PlayerStats statsTemplate(PlayerPosition pos, int target, [int? seed]) =>
+      _statsFor(pos, target, Random(seed));
+
+  String? createdPlayerIssue() => userClub.squad.length >= maxSquad
+      ? 'Ro‘yxat to‘la: ko‘pi bilan $maxSquad futbolchi. Avval kimnidir soting.'
+      : null;
+
+  /// Adds a player built from scratch to the user's club. A created player
+  /// costs no fee but draws a normal weekly wage from the club.
+  Player? addCreatedPlayer({
+    required String name,
+    required int age,
+    required String nationality,
+    required String countryFlag,
+    required int number,
+    required PlayerPosition position,
+    required List<PlayerPosition> altPositions,
+    required PreferredFoot foot,
+    required int weakFoot,
+    required PlayerStats stats,
+    required int potential,
+    required FaceConfig face,
+    PlayingStyle? style,
+    int contractYears = 3,
+  }) {
+    lastTransferError = createdPlayerIssue();
+    if (lastTransferError != null) return null;
+    final club = userClub;
+    final used = club.squad.map((p) => p.number).toSet();
+    var shirt = number.clamp(1, 99);
+    while (used.contains(shirt)) {
+      shirt = shirt % 99 + 1;
+    }
+    final parts = name.trim().split(RegExp(r'\s+'));
+    final short = parts.length > 1 ? '${parts.first[0]}. ${parts.sublist(1).join(' ')}' : parts.first;
+    final draft = Player(
+      id: 'own_${DateTime.now().microsecondsSinceEpoch}',
+      name: name.trim(),
+      shortName: short,
+      age: age,
+      nationality: nationality,
+      countryFlag: countryFlag,
+      number: shirt,
+      mainPosition: position,
+      altPositions: altPositions.where((p) => p != position).toList(),
+      preferredFoot: foot,
+      weakFoot: weakFoot,
+      stats: stats,
+      contract: const PlayerContract(contractYears: 3, weeklyWage: 10000),
+      marketValue: 0,
+      potential: potential,
+      playingStyle: style,
+      face: face,
+    );
+    draft.potential = max(draft.potential, draft.ovr);
+    draft.marketValue = Player.valuation(draft.ovr, age, draft.potential);
+    draft.contract = PlayerContract(
+      contractYears: contractYears,
+      weeklyWage: draft.calculatedRenewalWageDemand,
+    );
+    club.squad.add(draft);
+    if (club.benchIds.length < Club.matchdayBench) club.benchIds.add(draft.id);
+    _news(
+      NewsKind.transfer,
+      '${draft.name} jamoaga qo‘shildi',
+      'Yangi futbolchi yaratildi: ${draft.mainPosition.code}, OVR ${draft.ovr}, salohiyat ${draft.potential}. '
+          'Haftalik maosh ${_m(draft.contract.weeklyWage)}.',
+    );
+    notifyListeners();
+    return draft;
   }
 
   bool renewContract(Player player, int years, int newWage) {

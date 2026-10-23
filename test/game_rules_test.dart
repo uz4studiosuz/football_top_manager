@@ -6,6 +6,7 @@ import 'package:football_top_manager/services/match_clock.dart';
 import 'package:football_top_manager/models/league.dart';
 import 'dart:convert';
 import 'package:football_top_manager/models/player.dart';
+import 'package:football_top_manager/models/face.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -305,6 +306,39 @@ void main() {
     final homePens = e.events.where((x) => x.type == MatchEventType.penalty && x.isHomeTeam).length;
     expect(a.freeKicks, h.fouls + h.offsides - awayPens);
     expect(h.freeKicks, a.fouls + a.offsides - homePens);
+  });
+
+  test('A player built from scratch joins the club and survives saving', () {
+    final stats = GameState.statsTemplate(PlayerPosition.cf, 80, 1);
+    final before = game.userClub.squad.length;
+    final p = game.addCreatedPlayer(
+      name: 'Eldor Shomurodov',
+      age: 29,
+      nationality: 'O‘zbekiston',
+      countryFlag: '🇺🇿',
+      number: 14,
+      position: PlayerPosition.cf,
+      altPositions: [PlayerPosition.ss, PlayerPosition.cf],
+      foot: PreferredFoot.right,
+      weakFoot: 4,
+      stats: stats,
+      potential: 84,
+      face: const FaceConfig(skin: 3, cut: 1, beardStyle: 2),
+      style: PlayingStyle.targetMan,
+    )!;
+    expect(game.userClub.squad.length, before + 1);
+    expect(p.shortName, 'E. Shomurodov');
+    expect(p.altPositions, [PlayerPosition.ss]);
+    expect(p.playingStyle, PlayingStyle.targetMan);
+    expect(p.potential, greaterThanOrEqualTo(p.ovr));
+    expect(game.userClub.squad.map((q) => q.number).toSet().length, game.userClub.squad.length);
+    final json = jsonEncode(game.toSave());
+    game.resetCareer();
+    game.restore(jsonDecode(json));
+    final back = game.userClub.playerById(p.id)!;
+    expect(back.name, 'Eldor Shomurodov');
+    expect(back.face.beardStyle, 2);
+    expect(back.ovr, p.ovr);
   });
 
   test('Injured and suspended starters are replaced automatically', () {
