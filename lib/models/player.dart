@@ -421,7 +421,7 @@ enum PlayerInstruction {
   playmaker('Pas markazi', 'To‘pga ochilib sheriklarni bog‘laydi', true),
   counterTarget('Counter Target', 'Himoyaga qaytmaydi, qarshi hujumni kutadi', false),
   manMarking('Man Marking', 'Raqibning eng xavfli o‘yinchisini shaxsan qo‘riqlaydi', false),
-  tightMarking('Tight Marking', 'Yaqin masofadan bosim: ko‘proq Olib qo'yish va qoidabuzarlik', false),
+  tightMarking('Tight Marking', 'Yaqin masofadan bosim: ko‘proq Olib qo‘yish va qoidabuzarlik', false),
   deepLine('Deep Line', 'Himoyada chuqurroq turib, orqa zonani sug‘urtalaydi', false);
 
   const PlayerInstruction(this.label, this.description, this.offence);

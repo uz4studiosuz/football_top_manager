@@ -65,7 +65,7 @@ List<(String, List<StatLine>)> statGroupsFromEngine(MatchField e) {
     (
       'Himoya va intizom',
       [
-        StatLine('Olib qo'yishlar', h.tackles, a.tackles),
+        StatLine('Olib qo‘yishlar', h.tackles, a.tackles),
         StatLine('Pas kesishlar', h.interceptions, a.interceptions),
         StatLine('Sariq kartochkalar', h.yellows, a.yellows, higherIsBetter: false),
         StatLine('Qizil kartochkalar', h.reds, a.reds, higherIsBetter: false),
@@ -95,7 +95,7 @@ List<(String, List<StatLine>)> statGroupsFromFixture(Fixture f) {
       [
         StatLine('Paslar', f.homePasses, f.awayPasses),
         StatLine('Pas aniqligi', hAcc, aAcc, format: _pct),
-        StatLine('Olib qo'yishlar', f.homeTackles, f.awayTackles),
+        StatLine('Olib qo‘yishlar', f.homeTackles, f.awayTackles),
         StatLine('Ofsaydlar', f.homeOffsides, f.awayOffsides, higherIsBetter: false),
         StatLine('Qoidabuzarliklar', f.homeFouls, f.awayFouls, higherIsBetter: false),
         StatLine(
@@ -707,7 +707,7 @@ class RatingsList extends StatelessWidget {
       if (l.assists > 0) '${l.assists} assist',
       if (l.saves > 0) '${l.saves} seyv',
       '${l.passesCompleted}/${l.passes} pas',
-      if (l.tackles + l.interceptions > 0) '${l.tackles + l.interceptions} Olib qo'yish',
+      if (l.tackles + l.interceptions > 0) '${l.tackles + l.interceptions} Olib qo‘yish',
       if (l.keyPasses > 0) '${l.keyPasses} key pas',
     ];
     return parts.join(' · ');
@@ -800,7 +800,7 @@ Future<void> showPlayerMatchSheet(
         ('Krosslar', '${l.crosses}'),
         ('Driblinglar', '${l.dribblesWon}/${l.dribbles}'),
         ('To‘pga tegishlar', '${l.touches}'),
-        ('Olib qo'yishlar', '${l.tackles}'),
+        ('Olib qo‘yishlar', '${l.tackles}'),
         ('Pas kesishlar', '${l.interceptions}'),
         ('Tozalashlar', '${l.clearances}'),
         ('Bloklangan zarbalar', '${l.blocks}'),

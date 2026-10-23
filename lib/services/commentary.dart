@@ -79,7 +79,7 @@ class Commentary {
       '{p} krossni bosh bilan yo‘naltirdi.',
     ],
     'tackle': [
-      '{p} ajoyib Olib qo'yish bilan to‘pni oldi.',
+      '{p} ajoyib Olib qo‘yish bilan to‘pni oldi.',
       '{p} o‘z vaqtida to‘pni tortib oldi.',
       '{p} kurashda ustun keldi.',
     ],

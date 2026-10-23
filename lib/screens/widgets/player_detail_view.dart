@@ -5,6 +5,9 @@ import '../../services/game_state.dart';
 import '../../ui/face_avatar.dart';
 import '../../ui/widgets.dart';
 import 'player_attributes_view.dart';
+import '../../models/league.dart';
+import '../../services/season_calendar.dart';
+import '../match_report_screen.dart';
 
 /// SofaScore-like player page: header card, season numbers, rating form,
 /// attributes, positional map and contract actions.
@@ -49,7 +52,7 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
     final c = club;
     final shirt = c?.primaryColor ?? AppColors.primary;
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Futbolchi profili'),
@@ -77,6 +80,7 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
                     Tab(text: 'Umumiy'),
                     Tab(text: 'Atributlar'),
                     Tab(text: 'Pozitsiyalar'),
+                    Tab(text: 'O‘yinlar'),
                   ],
                 ),
               ],
@@ -88,6 +92,7 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
             _overview(c),
             PlayerAttributesView(player: p),
             PositionRatingsView(player: p),
+            _matches(),
           ],
         ),
       ),
@@ -362,6 +367,134 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
       ],
     );
   }
+
+  /// Every fixture this season in which the player took the field.
+  Widget _matches() {
+    final game = GameState();
+    if (!game.isInitialized) return const SizedBox();
+    final games = game.fixtures
+        .where((f) => f.isPlayed && (f.playerStats[p.id]?.minutes ?? 0) > 0)
+        .toList()
+        .reversed
+        .toList();
+    if (games.isEmpty) {
+      return const EmptyState(icon: Icons.event_busy_outlined, text: 'Bu mavsumda hali maydonga tushmagan');
+    }
+    var goals = 0, assists = 0, minutes = 0;
+    for (final f in games) {
+      final l = f.playerStats[p.id]!;
+      goals += l.goals;
+      assists += l.assists;
+      minutes += l.minutes.round();
+    }
+    return ListView(
+      padding: const EdgeInsets.all(12),
+      children: [
+        AppCard(
+          child: Row(
+            children: [
+              Expanded(child: StatTile('${games.length}', 'O‘yin')),
+              Expanded(child: StatTile('$goals', 'Gol')),
+              Expanded(child: StatTile('$assists', 'Assist')),
+              Expanded(child: StatTile('$minutes′', 'Daqiqa')),
+              RatingBadge(p.averageRating, size: 14),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        AppCard(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Column(children: [for (final f in games) _matchRow(game, f)]),
+        ),
+      ],
+    );
+  }
+
+  Widget _matchRow(GameState game, Fixture f) {
+    final l = f.playerStats[p.id]!;
+    // Line-ups record the side he played for, even after a later transfer.
+    final inLineups = f.homeLineup.isNotEmpty || f.awayLineup.isNotEmpty;
+    final playedHome = inLineups
+        ? f.homeLineup.contains(p.id) || f.homeBench.contains(p.id)
+        : game.getClubById(f.homeClubId)!.playerById(p.id) != null;
+    final mine = playedHome ? f.homeClubId : f.awayClubId;
+    final home = mine == f.homeClubId;
+    final opp = game.getClubById(home ? f.awayClubId : f.homeClubId)!;
+    return InkWell(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute<void>(builder: (_) => MatchReportScreen(fixture: f)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 44,
+              child: Column(
+                children: [
+                  Text(f.date == null ? '${f.round}-tur' : SeasonCalendar.short(f.date!), style: AppText.caption),
+                  Text(home ? 'Uyda' : 'Safarda', style: AppText.caption.copyWith(fontSize: 10)),
+                ],
+              ),
+            ),
+            const SizedBox(width: 6),
+            ClubCrestWidget(config: opp.crestConfig, size: 24),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(opp.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.bodyStrong.copyWith(fontSize: 13)),
+                  Row(
+                    children: [
+                      Text('${l.minutes.round()}′', style: AppText.caption),
+                      if (l.subOnMinute != null || l.subOffMinute != null) ...[
+                        const SizedBox(width: 6),
+                        _subMark(l),
+                      ],
+                      for (var i = 0; i < l.goals; i++)
+                        const Padding(
+                          padding: EdgeInsets.only(left: 4),
+                          child: Icon(Icons.sports_soccer, size: 13, color: AppColors.ink),
+                        ),
+                      if (l.assists > 0)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 6),
+                          child: Text('${l.assists} A', style: AppText.caption.copyWith(fontWeight: FontWeight.w700)),
+                        ),
+                      if (l.yellow > 0)
+                        Container(
+                          width: 8,
+                          height: 11,
+                          margin: const EdgeInsets.only(left: 6),
+                          color: const Color(0xFFF5C518),
+                        ),
+                      if (l.red > 0)
+                        Container(width: 8, height: 11, margin: const EdgeInsets.only(left: 4), color: AppColors.live),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Text('${f.homeScore}–${f.awayScore}', style: AppText.number.copyWith(fontSize: 13)),
+            const SizedBox(width: 6),
+            FormChip(f.resultFor(mine), size: 20),
+            const SizedBox(width: 6),
+            RatingBadge(f.ratings[p.id], size: 12),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _subMark(PlayerMatchStats l) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      if (l.subOnMinute != null) const Icon(Icons.arrow_upward_rounded, size: 12, color: AppColors.win),
+      if (l.subOffMinute != null) const Icon(Icons.arrow_downward_rounded, size: 12, color: AppColors.live),
+    ],
+  );
 
   void _renew() {
     final game = GameState();
