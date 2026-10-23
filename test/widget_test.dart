@@ -2,11 +2,13 @@ import 'package:football_top_manager/data/initial_database.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:football_top_manager/main.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   setUpAll(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
     await InitialDatabase.load();
+    SharedPreferences.setMockInitialValues({});
   });
   testWidgets('App starts at Onboarding screen and allows selecting club', (
     WidgetTester tester,
@@ -49,7 +51,7 @@ void main() {
 
     // Verify MainNavigationScreen / Dashboard loaded
     expect(find.text('NAVBATDAGI UCHRASHUV'), findsOneWidget);
-    expect(find.text('Taktika'), findsOneWidget);
+    expect(find.text('Jamoa'), findsWidgets);
     expect(find.text('Jadval'), findsOneWidget);
 
     // Check opponent inspection button exists
@@ -60,12 +62,13 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Super League Markazi'), findsOneWidget);
-    expect(find.text('To\'purarlar'), findsOneWidget);
+    expect(find.text('Turnir jadvali'), findsOneWidget);
 
-    // Tap To'purarlar tab
-    await tester.tap(find.text('To\'purarlar'));
+    // Player leaderboards live in the third tab.
+    await tester.tap(find.text('Futbolchilar'));
     await tester.pumpAndSettle();
 
+    expect(find.text('To\'purarlar'), findsOneWidget);
     expect(find.text('Assistentlar'), findsOneWidget);
   });
 

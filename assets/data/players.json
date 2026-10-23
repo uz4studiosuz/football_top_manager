@@ -9,7 +9,7 @@
       "nationality": "Fransiya",
       "countryFlag": "🇫🇷",
       "number": 9,
-      "mainPosition": "ST",
+      "mainPosition": "CF",
       "altPositions": [
         "CF",
         "LWF"
@@ -49,7 +49,14 @@
         "weeklyWage": 600000,
         "releaseClause": 0
       },
-      "marketValue": 180000000
+      "marketValue": 180000000,
+      "face": {
+        "skin": 7,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 0
+      },
+      "playingStyle": "goalPoacher"
     },
     {
       "id": "rma_vinicius",
@@ -61,7 +68,7 @@
       "number": 7,
       "mainPosition": "LWF",
       "altPositions": [
-        "ST",
+        "CF",
         "LMF"
       ],
       "preferredFoot": "right",
@@ -99,7 +106,14 @@
         "weeklyWage": 420000,
         "releaseClause": 0
       },
-      "marketValue": 180000000
+      "marketValue": 180000000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 6,
+        "beardStyle": 1
+      },
+      "playingStyle": "prolificWinger"
     },
     {
       "id": "rma_bellingham",
@@ -149,7 +163,14 @@
         "weeklyWage": 400000,
         "releaseClause": 0
       },
-      "marketValue": 170000000
+      "marketValue": 170000000,
+      "face": {
+        "skin": 6,
+        "hair": 0,
+        "cut": 6,
+        "beardStyle": 0
+      },
+      "playingStyle": "holePlayer"
     },
     {
       "id": "rma_rodrygo",
@@ -199,7 +220,14 @@
         "weeklyWage": 280000,
         "releaseClause": 0
       },
-      "marketValue": 110000000
+      "marketValue": 110000000,
+      "face": {
+        "skin": 5,
+        "hair": 0,
+        "cut": 3,
+        "beardStyle": 1
+      },
+      "playingStyle": "roamingFlank"
     },
     {
       "id": "rma_valverde",
@@ -249,7 +277,14 @@
         "weeklyWage": 320000,
         "releaseClause": 0
       },
-      "marketValue": 130000000
+      "marketValue": 130000000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 1,
+        "beardStyle": 2
+      },
+      "playingStyle": "boxToBox"
     },
     {
       "id": "rma_camavinga",
@@ -299,7 +334,14 @@
         "weeklyWage": 230000,
         "releaseClause": 0
       },
-      "marketValue": 95000000
+      "marketValue": 95000000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 10,
+        "beardStyle": 0
+      },
+      "playingStyle": "boxToBox"
     },
     {
       "id": "rma_tchouameni",
@@ -349,7 +391,14 @@
         "weeklyWage": 250000,
         "releaseClause": 0
       },
-      "marketValue": 90000000
+      "marketValue": 90000000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 1
+      },
+      "playingStyle": "anchorMan"
     },
     {
       "id": "rma_militao",
@@ -398,7 +447,14 @@
         "weeklyWage": 230000,
         "releaseClause": 0
       },
-      "marketValue": 65000000
+      "marketValue": 65000000,
+      "face": {
+        "skin": 6,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 2
+      },
+      "playingStyle": "buildUp"
     },
     {
       "id": "rma_rudiger",
@@ -447,7 +503,14 @@
         "weeklyWage": 260000,
         "releaseClause": 0
       },
-      "marketValue": 35000000
+      "marketValue": 35000000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 3
+      },
+      "playingStyle": "destroyer"
     },
     {
       "id": "rma_carvajal",
@@ -496,7 +559,14 @@
         "weeklyWage": 200000,
         "releaseClause": 0
       },
-      "marketValue": 20000000
+      "marketValue": 20000000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 0,
+        "beardStyle": 3
+      },
+      "playingStyle": "attackingFullBack"
     },
     {
       "id": "rma_courtois",
@@ -543,7 +613,14 @@
         "weeklyWage": 300000,
         "releaseClause": 0
       },
-      "marketValue": 40000000
+      "marketValue": 40000000,
+      "face": {
+        "skin": 1,
+        "hair": 2,
+        "cut": 1,
+        "beardStyle": 1
+      },
+      "playingStyle": "defensiveGoalkeeper"
     },
     {
       "id": "rma_modric",
@@ -592,7 +669,14 @@
         "weeklyWage": 200000,
         "releaseClause": 0
       },
-      "marketValue": 8000000
+      "marketValue": 8000000,
+      "face": {
+        "skin": 1,
+        "hair": 2,
+        "cut": 8,
+        "beardStyle": 1
+      },
+      "playingStyle": "orchestrator"
     },
     {
       "id": "rma_brahim",
@@ -642,7 +726,14 @@
         "weeklyWage": 140000,
         "releaseClause": 0
       },
-      "marketValue": 45000000
+      "marketValue": 45000000,
+      "face": {
+        "skin": 3,
+        "hair": 0,
+        "cut": 2,
+        "beardStyle": 1
+      },
+      "playingStyle": "creativePlaymaker"
     },
     {
       "id": "rma_endrick",
@@ -652,7 +743,7 @@
       "nationality": "Braziliya",
       "countryFlag": "🇧🇷",
       "number": 16,
-      "mainPosition": "ST",
+      "mainPosition": "CF",
       "altPositions": [
         "CF"
       ],
@@ -691,7 +782,14 @@
         "weeklyWage": 90000,
         "releaseClause": 0
       },
-      "marketValue": 60000000
+      "marketValue": 60000000,
+      "face": {
+        "skin": 7,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 0
+      },
+      "playingStyle": "advancedStriker"
     },
     {
       "id": "rma_mendy",
@@ -740,7 +838,14 @@
         "weeklyWage": 180000,
         "releaseClause": 0
       },
-      "marketValue": 30000000
+      "marketValue": 30000000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 2
+      },
+      "playingStyle": "defensiveFullBack"
     },
     {
       "id": "rma_lunin",
@@ -787,7 +892,14 @@
         "weeklyWage": 80000,
         "releaseClause": 0
       },
-      "marketValue": 25000000
+      "marketValue": 25000000,
+      "face": {
+        "skin": 1,
+        "hair": 2,
+        "cut": 0,
+        "beardStyle": 0
+      },
+      "playingStyle": "defensiveGoalkeeper"
     },
     {
       "id": "mci_haaland",
@@ -797,7 +909,7 @@
       "nationality": "Norvegiya",
       "countryFlag": "🇳🇴",
       "number": 9,
-      "mainPosition": "ST",
+      "mainPosition": "CF",
       "altPositions": [
         "CF"
       ],
@@ -836,7 +948,14 @@
         "weeklyWage": 550000,
         "releaseClause": 0
       },
-      "marketValue": 180000000
+      "marketValue": 180000000,
+      "face": {
+        "skin": 0,
+        "hair": 3,
+        "cut": 9,
+        "beardStyle": 0
+      },
+      "playingStyle": "goalPoacher"
     },
     {
       "id": "mci_rodri",
@@ -886,7 +1005,14 @@
         "weeklyWage": 380000,
         "releaseClause": 0
       },
-      "marketValue": 130000000
+      "marketValue": 130000000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 1,
+        "beardStyle": 2
+      },
+      "playingStyle": "orchestrator"
     },
     {
       "id": "mci_debruyne",
@@ -935,7 +1061,14 @@
         "weeklyWage": 480000,
         "releaseClause": 0
       },
-      "marketValue": 50000000
+      "marketValue": 50000000,
+      "face": {
+        "skin": 0,
+        "hair": 5,
+        "cut": 1,
+        "beardStyle": 1
+      },
+      "playingStyle": "creativePlaymaker"
     },
     {
       "id": "mci_foden",
@@ -985,7 +1118,14 @@
         "weeklyWage": 320000,
         "releaseClause": 0
       },
-      "marketValue": 140000000
+      "marketValue": 140000000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 4,
+        "beardStyle": 1
+      },
+      "playingStyle": "roamingFlank"
     },
     {
       "id": "mci_bernardo",
@@ -1035,7 +1175,14 @@
         "weeklyWage": 300000,
         "releaseClause": 0
       },
-      "marketValue": 70000000
+      "marketValue": 70000000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 13,
+        "beardStyle": 3
+      },
+      "playingStyle": "roamingFlank"
     },
     {
       "id": "mci_doku",
@@ -1084,7 +1231,14 @@
         "weeklyWage": 160000,
         "releaseClause": 0
       },
-      "marketValue": 65000000
+      "marketValue": 65000000,
+      "face": {
+        "skin": 9,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 0
+      },
+      "playingStyle": "prolificWinger"
     },
     {
       "id": "mci_gvardiol",
@@ -1133,7 +1287,14 @@
         "weeklyWage": 220000,
         "releaseClause": 0
       },
-      "marketValue": 80000000
+      "marketValue": 80000000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 0,
+        "beardStyle": 1
+      },
+      "playingStyle": "attackingFullBack"
     },
     {
       "id": "mci_dias",
@@ -1180,7 +1341,14 @@
         "weeklyWage": 260000,
         "releaseClause": 0
       },
-      "marketValue": 80000000
+      "marketValue": 80000000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 1,
+        "beardStyle": 3
+      },
+      "playingStyle": "buildUp"
     },
     {
       "id": "mci_akanji",
@@ -1230,7 +1398,14 @@
         "weeklyWage": 200000,
         "releaseClause": 0
       },
-      "marketValue": 45000000
+      "marketValue": 45000000,
+      "face": {
+        "skin": 7,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 2
+      },
+      "playingStyle": "buildUp"
     },
     {
       "id": "mci_walker",
@@ -1279,7 +1454,14 @@
         "weeklyWage": 220000,
         "releaseClause": 0
       },
-      "marketValue": 15000000
+      "marketValue": 15000000,
+      "face": {
+        "skin": 7,
+        "hair": 0,
+        "cut": 5,
+        "beardStyle": 1
+      },
+      "playingStyle": "defensiveFullBack"
     },
     {
       "id": "mci_ederson",
@@ -1326,7 +1508,14 @@
         "weeklyWage": 250000,
         "releaseClause": 0
       },
-      "marketValue": 35000000
+      "marketValue": 35000000,
+      "face": {
+        "skin": 3,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 3
+      },
+      "playingStyle": "attackingGoalkeeper"
     },
     {
       "id": "mci_gundogan",
@@ -1376,7 +1565,14 @@
         "weeklyWage": 220000,
         "releaseClause": 0
       },
-      "marketValue": 12000000
+      "marketValue": 12000000,
+      "face": {
+        "skin": 3,
+        "hair": 0,
+        "cut": 1,
+        "beardStyle": 3
+      },
+      "playingStyle": "holePlayer"
     },
     {
       "id": "mci_kovacic",
@@ -1425,7 +1621,14 @@
         "weeklyWage": 190000,
         "releaseClause": 0
       },
-      "marketValue": 30000000
+      "marketValue": 30000000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 1,
+        "beardStyle": 2
+      },
+      "playingStyle": "boxToBox"
     },
     {
       "id": "mci_savinho",
@@ -1474,7 +1677,14 @@
         "weeklyWage": 120000,
         "releaseClause": 0
       },
-      "marketValue": 50000000
+      "marketValue": 50000000,
+      "face": {
+        "skin": 5,
+        "hair": 0,
+        "cut": 3,
+        "beardStyle": 0
+      },
+      "playingStyle": "prolificWinger"
     },
     {
       "id": "mci_stones",
@@ -1524,7 +1734,14 @@
         "weeklyWage": 230000,
         "releaseClause": 0
       },
-      "marketValue": 38000000
+      "marketValue": 38000000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 1,
+        "beardStyle": 1
+      },
+      "playingStyle": "buildUp"
     },
     {
       "id": "mci_ortega",
@@ -1571,7 +1788,14 @@
         "weeklyWage": 90000,
         "releaseClause": 0
       },
-      "marketValue": 9000000
+      "marketValue": 9000000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 0,
+        "beardStyle": 2
+      },
+      "playingStyle": "defensiveGoalkeeper"
     },
     {
       "id": "ars_saka",
@@ -1621,7 +1845,14 @@
         "weeklyWage": 330000,
         "releaseClause": 0
       },
-      "marketValue": 140000000
+      "marketValue": 140000000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 0
+      },
+      "playingStyle": "prolificWinger"
     },
     {
       "id": "ars_odegaard",
@@ -1670,7 +1901,14 @@
         "weeklyWage": 280000,
         "releaseClause": 0
       },
-      "marketValue": 110000000
+      "marketValue": 110000000,
+      "face": {
+        "skin": 1,
+        "hair": 2,
+        "cut": 1,
+        "beardStyle": 1
+      },
+      "playingStyle": "creativePlaymaker"
     },
     {
       "id": "ars_rice",
@@ -1720,7 +1958,14 @@
         "weeklyWage": 290000,
         "releaseClause": 0
       },
-      "marketValue": 120000000
+      "marketValue": 120000000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 0,
+        "beardStyle": 1
+      },
+      "playingStyle": "boxToBox"
     },
     {
       "id": "ars_saliba",
@@ -1767,7 +2012,14 @@
         "weeklyWage": 230000,
         "releaseClause": 0
       },
-      "marketValue": 80000000
+      "marketValue": 80000000,
+      "face": {
+        "skin": 9,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 2
+      },
+      "playingStyle": "buildUp"
     },
     {
       "id": "ars_gabriel",
@@ -1814,7 +2066,14 @@
         "weeklyWage": 200000,
         "releaseClause": 0
       },
-      "marketValue": 75000000
+      "marketValue": 75000000,
+      "face": {
+        "skin": 6,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 3
+      },
+      "playingStyle": "extraFrontman"
     },
     {
       "id": "ars_havertz",
@@ -1826,7 +2085,7 @@
       "number": 29,
       "mainPosition": "CF",
       "altPositions": [
-        "ST",
+        "CF",
         "AMF"
       ],
       "preferredFoot": "left",
@@ -1864,7 +2123,14 @@
         "weeklyWage": 280000,
         "releaseClause": 0
       },
-      "marketValue": 75000000
+      "marketValue": 75000000,
+      "face": {
+        "skin": 1,
+        "hair": 2,
+        "cut": 13,
+        "beardStyle": 1
+      },
+      "playingStyle": "deepLyingForward"
     },
     {
       "id": "ars_martinelli",
@@ -1877,7 +2143,7 @@
       "mainPosition": "LWF",
       "altPositions": [
         "LMF",
-        "ST"
+        "CF"
       ],
       "preferredFoot": "right",
       "weakFoot": 3,
@@ -1914,7 +2180,14 @@
         "weeklyWage": 190000,
         "releaseClause": 0
       },
-      "marketValue": 70000000
+      "marketValue": 70000000,
+      "face": {
+        "skin": 3,
+        "hair": 1,
+        "cut": 3,
+        "beardStyle": 0
+      },
+      "playingStyle": "prolificWinger"
     },
     {
       "id": "ars_merino",
@@ -1963,7 +2236,14 @@
         "weeklyWage": 170000,
         "releaseClause": 0
       },
-      "marketValue": 50000000
+      "marketValue": 50000000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 1,
+        "beardStyle": 2
+      },
+      "playingStyle": "boxToBox"
     },
     {
       "id": "ars_white",
@@ -2012,7 +2292,14 @@
         "weeklyWage": 180000,
         "releaseClause": 0
       },
-      "marketValue": 55000000
+      "marketValue": 55000000,
+      "face": {
+        "skin": 1,
+        "hair": 2,
+        "cut": 0,
+        "beardStyle": 3
+      },
+      "playingStyle": "defensiveFullBack"
     },
     {
       "id": "ars_timber",
@@ -2062,7 +2349,14 @@
         "weeklyWage": 150000,
         "releaseClause": 0
       },
-      "marketValue": 45000000
+      "marketValue": 45000000,
+      "face": {
+        "skin": 7,
+        "hair": 0,
+        "cut": 6,
+        "beardStyle": 0
+      },
+      "playingStyle": "attackingFullBack"
     },
     {
       "id": "ars_raya",
@@ -2109,7 +2403,14 @@
         "weeklyWage": 160000,
         "releaseClause": 0
       },
-      "marketValue": 35000000
+      "marketValue": 35000000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 0,
+        "beardStyle": 2
+      },
+      "playingStyle": "attackingGoalkeeper"
     },
     {
       "id": "ars_trossard",
@@ -2159,7 +2460,14 @@
         "weeklyWage": 140000,
         "releaseClause": 0
       },
-      "marketValue": 35000000
+      "marketValue": 35000000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 1,
+        "beardStyle": 2
+      },
+      "playingStyle": "roamingFlank"
     },
     {
       "id": "ars_jesus",
@@ -2169,7 +2477,7 @@
       "nationality": "Braziliya",
       "countryFlag": "🇧🇷",
       "number": 9,
-      "mainPosition": "ST",
+      "mainPosition": "CF",
       "altPositions": [
         "RWF",
         "LWF"
@@ -2209,7 +2517,14 @@
         "weeklyWage": 230000,
         "releaseClause": 0
       },
-      "marketValue": 50000000
+      "marketValue": 50000000,
+      "face": {
+        "skin": 6,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 1
+      },
+      "playingStyle": "dummyRunner"
     },
     {
       "id": "ars_jorginho",
@@ -2258,7 +2573,14 @@
         "weeklyWage": 150000,
         "releaseClause": 0
       },
-      "marketValue": 12000000
+      "marketValue": 12000000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 3
+      },
+      "playingStyle": "orchestrator"
     },
     {
       "id": "ars_calafiori",
@@ -2307,7 +2629,14 @@
         "weeklyWage": 120000,
         "releaseClause": 0
       },
-      "marketValue": 45000000
+      "marketValue": 45000000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 8,
+        "beardStyle": 3
+      },
+      "playingStyle": "attackingFullBack"
     },
     {
       "id": "ars_partey",
@@ -2357,7 +2686,14 @@
         "weeklyWage": 200000,
         "releaseClause": 0
       },
-      "marketValue": 20000000
+      "marketValue": 20000000,
+      "face": {
+        "skin": 9,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 3
+      },
+      "playingStyle": "destroyer"
     },
     {
       "id": "fcb_yamal",
@@ -2406,7 +2742,14 @@
         "weeklyWage": 180000,
         "releaseClause": 0
       },
-      "marketValue": 150000000
+      "marketValue": 150000000,
+      "face": {
+        "skin": 6,
+        "hair": 0,
+        "cut": 3,
+        "beardStyle": 0
+      },
+      "playingStyle": "prolificWinger"
     },
     {
       "id": "fcb_lewandowski",
@@ -2416,7 +2759,7 @@
       "nationality": "Polsha",
       "countryFlag": "🇵🇱",
       "number": 9,
-      "mainPosition": "ST",
+      "mainPosition": "CF",
       "altPositions": [
         "CF"
       ],
@@ -2455,7 +2798,14 @@
         "weeklyWage": 400000,
         "releaseClause": 0
       },
-      "marketValue": 15000000
+      "marketValue": 15000000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 12,
+        "beardStyle": 1
+      },
+      "playingStyle": "foxInTheBox"
     },
     {
       "id": "fcb_raphinha",
@@ -2505,7 +2855,14 @@
         "weeklyWage": 280000,
         "releaseClause": 0
       },
-      "marketValue": 80000000
+      "marketValue": 80000000,
+      "face": {
+        "skin": 4,
+        "hair": 0,
+        "cut": 10,
+        "beardStyle": 1
+      },
+      "playingStyle": "prolificWinger"
     },
     {
       "id": "fcb_pedri",
@@ -2554,7 +2911,14 @@
         "weeklyWage": 250000,
         "releaseClause": 0
       },
-      "marketValue": 100000000
+      "marketValue": 100000000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 13,
+        "beardStyle": 0
+      },
+      "playingStyle": "creativePlaymaker"
     },
     {
       "id": "fcb_gavi",
@@ -2604,7 +2968,14 @@
         "weeklyWage": 200000,
         "releaseClause": 0
       },
-      "marketValue": 90000000
+      "marketValue": 90000000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 1,
+        "beardStyle": 0
+      },
+      "playingStyle": "boxToBox"
     },
     {
       "id": "fcb_dejong",
@@ -2654,7 +3025,14 @@
         "weeklyWage": 380000,
         "releaseClause": 0
       },
-      "marketValue": 70000000
+      "marketValue": 70000000,
+      "face": {
+        "skin": 1,
+        "hair": 2,
+        "cut": 13,
+        "beardStyle": 1
+      },
+      "playingStyle": "orchestrator"
     },
     {
       "id": "fcb_kounde",
@@ -2703,7 +3081,14 @@
         "weeklyWage": 240000,
         "releaseClause": 0
       },
-      "marketValue": 65000000
+      "marketValue": 65000000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 7,
+        "beardStyle": 1
+      },
+      "playingStyle": "defensiveFullBack"
     },
     {
       "id": "fcb_cubarsi",
@@ -2750,7 +3135,14 @@
         "weeklyWage": 90000,
         "releaseClause": 0
       },
-      "marketValue": 50000000
+      "marketValue": 50000000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 13,
+        "beardStyle": 0
+      },
+      "playingStyle": "buildUp"
     },
     {
       "id": "fcb_araujo",
@@ -2799,7 +3191,14 @@
         "weeklyWage": 220000,
         "releaseClause": 0
       },
-      "marketValue": 70000000
+      "marketValue": 70000000,
+      "face": {
+        "skin": 6,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 3
+      },
+      "playingStyle": "destroyer"
     },
     {
       "id": "fcb_balde",
@@ -2848,7 +3247,14 @@
         "weeklyWage": 130000,
         "releaseClause": 0
       },
-      "marketValue": 45000000
+      "marketValue": 45000000,
+      "face": {
+        "skin": 9,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 0
+      },
+      "playingStyle": "attackingFullBack"
     },
     {
       "id": "fcb_terstegen",
@@ -2895,7 +3301,14 @@
         "weeklyWage": 280000,
         "releaseClause": 0
       },
-      "marketValue": 28000000
+      "marketValue": 28000000,
+      "face": {
+        "skin": 0,
+        "hair": 3,
+        "cut": 12,
+        "beardStyle": 1
+      },
+      "playingStyle": "attackingGoalkeeper"
     },
     {
       "id": "fcb_olmo",
@@ -2945,7 +3358,14 @@
         "weeklyWage": 200000,
         "releaseClause": 0
       },
-      "marketValue": 60000000
+      "marketValue": 60000000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 1,
+        "beardStyle": 2
+      },
+      "playingStyle": "holePlayer"
     },
     {
       "id": "fcb_ferran",
@@ -2955,7 +3375,7 @@
       "nationality": "Ispaniya",
       "countryFlag": "🇪🇸",
       "number": 7,
-      "mainPosition": "ST",
+      "mainPosition": "CF",
       "altPositions": [
         "RWF",
         "LWF"
@@ -2995,7 +3415,14 @@
         "weeklyWage": 160000,
         "releaseClause": 0
       },
-      "marketValue": 35000000
+      "marketValue": 35000000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 1,
+        "beardStyle": 1
+      },
+      "playingStyle": "advancedStriker"
     },
     {
       "id": "fcb_fermin",
@@ -3044,7 +3471,14 @@
         "weeklyWage": 95000,
         "releaseClause": 0
       },
-      "marketValue": 50000000
+      "marketValue": 50000000,
+      "face": {
+        "skin": 3,
+        "hair": 0,
+        "cut": 13,
+        "beardStyle": 0
+      },
+      "playingStyle": "holePlayer"
     },
     {
       "id": "fcb_christensen",
@@ -3093,7 +3527,14 @@
         "weeklyWage": 180000,
         "releaseClause": 0
       },
-      "marketValue": 30000000
+      "marketValue": 30000000,
+      "face": {
+        "skin": 0,
+        "hair": 3,
+        "cut": 0,
+        "beardStyle": 1
+      },
+      "playingStyle": "buildUp"
     },
     {
       "id": "fcb_penya",
@@ -3140,7 +3581,14 @@
         "weeklyWage": 60000,
         "releaseClause": 0
       },
-      "marketValue": 8000000
+      "marketValue": 8000000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 0,
+        "beardStyle": 2
+      },
+      "playingStyle": "defensiveGoalkeeper"
     },
     {
       "id": "bay_kane",
@@ -3150,7 +3598,7 @@
       "nationality": "Angliya",
       "countryFlag": "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
       "number": 9,
-      "mainPosition": "ST",
+      "mainPosition": "CF",
       "altPositions": [
         "CF"
       ],
@@ -3189,7 +3637,14 @@
         "weeklyWage": 480000,
         "releaseClause": 0
       },
-      "marketValue": 100000000
+      "marketValue": 100000000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 1,
+        "beardStyle": 1
+      },
+      "playingStyle": "deepLyingForward"
     },
     {
       "id": "bay_musiala",
@@ -3239,7 +3694,14 @@
         "weeklyWage": 260000,
         "releaseClause": 0
       },
-      "marketValue": 140000000
+      "marketValue": 140000000,
+      "face": {
+        "skin": 6,
+        "hair": 0,
+        "cut": 6,
+        "beardStyle": 0
+      },
+      "playingStyle": "holePlayer"
     },
     {
       "id": "bay_kimmich",
@@ -3289,7 +3751,14 @@
         "weeklyWage": 380000,
         "releaseClause": 0
       },
-      "marketValue": 50000000
+      "marketValue": 50000000,
+      "face": {
+        "skin": 0,
+        "hair": 2,
+        "cut": 1,
+        "beardStyle": 0
+      },
+      "playingStyle": "orchestrator"
     },
     {
       "id": "bay_sane",
@@ -3339,7 +3808,14 @@
         "weeklyWage": 340000,
         "releaseClause": 0
       },
-      "marketValue": 60000000
+      "marketValue": 60000000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 3
+      },
+      "playingStyle": "prolificWinger"
     },
     {
       "id": "bay_gnabry",
@@ -3352,7 +3828,7 @@
       "mainPosition": "LWF",
       "altPositions": [
         "RWF",
-        "ST"
+        "CF"
       ],
       "preferredFoot": "right",
       "weakFoot": 4,
@@ -3389,7 +3865,14 @@
         "weeklyWage": 320000,
         "releaseClause": 0
       },
-      "marketValue": 40000000
+      "marketValue": 40000000,
+      "face": {
+        "skin": 7,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 2
+      },
+      "playingStyle": "prolificWinger"
     },
     {
       "id": "bay_davies",
@@ -3438,7 +3921,14 @@
         "weeklyWage": 240000,
         "releaseClause": 0
       },
-      "marketValue": 50000000
+      "marketValue": 50000000,
+      "face": {
+        "skin": 9,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 0
+      },
+      "playingStyle": "attackingFullBack"
     },
     {
       "id": "bay_kim",
@@ -3485,7 +3975,14 @@
         "weeklyWage": 230000,
         "releaseClause": 0
       },
-      "marketValue": 45000000
+      "marketValue": 45000000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 0,
+        "beardStyle": 0
+      },
+      "playingStyle": "destroyer"
     },
     {
       "id": "bay_upamecano",
@@ -3532,7 +4029,14 @@
         "weeklyWage": 200000,
         "releaseClause": 0
       },
-      "marketValue": 50000000
+      "marketValue": 50000000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 1
+      },
+      "playingStyle": "buildUp"
     },
     {
       "id": "bay_pavlovic",
@@ -3581,7 +4085,14 @@
         "weeklyWage": 80000,
         "releaseClause": 0
       },
-      "marketValue": 50000000
+      "marketValue": 50000000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 0,
+        "beardStyle": 0
+      },
+      "playingStyle": "orchestrator"
     },
     {
       "id": "bay_boey",
@@ -3628,7 +4139,14 @@
         "weeklyWage": 120000,
         "releaseClause": 0
       },
-      "marketValue": 22000000
+      "marketValue": 22000000,
+      "face": {
+        "skin": 7,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 0
+      },
+      "playingStyle": "attackingFullBack"
     },
     {
       "id": "bay_neuer",
@@ -3675,7 +4193,14 @@
         "weeklyWage": 350000,
         "releaseClause": 0
       },
-      "marketValue": 4000000
+      "marketValue": 4000000,
+      "face": {
+        "skin": 0,
+        "hair": 3,
+        "cut": 0,
+        "beardStyle": 0
+      },
+      "playingStyle": "attackingGoalkeeper"
     },
     {
       "id": "bay_coman",
@@ -3724,7 +4249,14 @@
         "weeklyWage": 280000,
         "releaseClause": 0
       },
-      "marketValue": 40000000
+      "marketValue": 40000000,
+      "face": {
+        "skin": 7,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 1
+      },
+      "playingStyle": "crossSpecialist"
     },
     {
       "id": "bay_muller",
@@ -3774,7 +4306,14 @@
         "weeklyWage": 300000,
         "releaseClause": 0
       },
-      "marketValue": 8000000
+      "marketValue": 8000000,
+      "face": {
+        "skin": 0,
+        "hair": 2,
+        "cut": 0,
+        "beardStyle": 0
+      },
+      "playingStyle": "dummyRunner"
     },
     {
       "id": "bay_palhinha",
@@ -3823,7 +4362,14 @@
         "weeklyWage": 210000,
         "releaseClause": 0
       },
-      "marketValue": 50000000
+      "marketValue": 50000000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 0,
+        "beardStyle": 3
+      },
+      "playingStyle": "destroyer"
     },
     {
       "id": "bay_tel",
@@ -3833,7 +4379,7 @@
       "nationality": "Fransiya",
       "countryFlag": "🇫🇷",
       "number": 39,
-      "mainPosition": "ST",
+      "mainPosition": "CF",
       "altPositions": [
         "LWF"
       ],
@@ -3872,7 +4418,14 @@
         "weeklyWage": 80000,
         "releaseClause": 0
       },
-      "marketValue": 40000000
+      "marketValue": 40000000,
+      "face": {
+        "skin": 7,
+        "hair": 0,
+        "cut": 3,
+        "beardStyle": 0
+      },
+      "playingStyle": "advancedStriker"
     },
     {
       "id": "bay_guerreiro",
@@ -3922,7 +4475,14 @@
         "weeklyWage": 140000,
         "releaseClause": 0
       },
-      "marketValue": 12000000
+      "marketValue": 12000000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 1,
+        "beardStyle": 2
+      },
+      "playingStyle": "attackingFullBack"
     },
     {
       "id": "psg_dembele",
@@ -3972,7 +4532,14 @@
         "weeklyWage": 360000,
         "releaseClause": 0
       },
-      "marketValue": 60000000
+      "marketValue": 60000000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 1
+      },
+      "playingStyle": "roamingFlank"
     },
     {
       "id": "psg_barcola",
@@ -4021,7 +4588,14 @@
         "weeklyWage": 180000,
         "releaseClause": 0
       },
-      "marketValue": 65000000
+      "marketValue": 65000000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 3,
+        "beardStyle": 0
+      },
+      "playingStyle": "prolificWinger"
     },
     {
       "id": "psg_hakimi",
@@ -4070,7 +4644,14 @@
         "weeklyWage": 310000,
         "releaseClause": 0
       },
-      "marketValue": 60000000
+      "marketValue": 60000000,
+      "face": {
+        "skin": 5,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 2
+      },
+      "playingStyle": "attackingFullBack"
     },
     {
       "id": "psg_vitinha",
@@ -4119,7 +4700,14 @@
         "weeklyWage": 220000,
         "releaseClause": 0
       },
-      "marketValue": 55000000
+      "marketValue": 55000000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 3,
+        "beardStyle": 1
+      },
+      "playingStyle": "orchestrator"
     },
     {
       "id": "psg_marquinhos",
@@ -4168,7 +4756,14 @@
         "weeklyWage": 330000,
         "releaseClause": 0
       },
-      "marketValue": 50000000
+      "marketValue": 50000000,
+      "face": {
+        "skin": 3,
+        "hair": 0,
+        "cut": 1,
+        "beardStyle": 3
+      },
+      "playingStyle": "buildUp"
     },
     {
       "id": "psg_nuno",
@@ -4217,7 +4812,14 @@
         "weeklyWage": 200000,
         "releaseClause": 0
       },
-      "marketValue": 55000000
+      "marketValue": 55000000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 0
+      },
+      "playingStyle": "attackingFullBack"
     },
     {
       "id": "psg_pacho",
@@ -4266,7 +4868,14 @@
         "weeklyWage": 140000,
         "releaseClause": 0
       },
-      "marketValue": 40000000
+      "marketValue": 40000000,
+      "face": {
+        "skin": 9,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 0
+      },
+      "playingStyle": "destroyer"
     },
     {
       "id": "psg_zaire",
@@ -4316,7 +4925,14 @@
         "weeklyWage": 140000,
         "releaseClause": 0
       },
-      "marketValue": 60000000
+      "marketValue": 60000000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 3,
+        "beardStyle": 0
+      },
+      "playingStyle": "boxToBox"
     },
     {
       "id": "psg_fabian",
@@ -4365,7 +4981,14 @@
         "weeklyWage": 190000,
         "releaseClause": 0
       },
-      "marketValue": 35000000
+      "marketValue": 35000000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 12,
+        "beardStyle": 3
+      },
+      "playingStyle": "orchestrator"
     },
     {
       "id": "psg_kolo",
@@ -4375,7 +4998,7 @@
       "nationality": "Fransiya",
       "countryFlag": "🇫🇷",
       "number": 23,
-      "mainPosition": "ST",
+      "mainPosition": "CF",
       "altPositions": [
         "CF",
         "RWF"
@@ -4415,7 +5038,14 @@
         "weeklyWage": 230000,
         "releaseClause": 0
       },
-      "marketValue": 40000000
+      "marketValue": 40000000,
+      "face": {
+        "skin": 9,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 0
+      },
+      "playingStyle": "targetMan"
     },
     {
       "id": "psg_donnarumma",
@@ -4462,7 +5092,14 @@
         "weeklyWage": 300000,
         "releaseClause": 0
       },
-      "marketValue": 40000000
+      "marketValue": 40000000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 0,
+        "beardStyle": 2
+      },
+      "playingStyle": "defensiveGoalkeeper"
     },
     {
       "id": "psg_asensio",
@@ -4512,7 +5149,14 @@
         "weeklyWage": 200000,
         "releaseClause": 0
       },
-      "marketValue": 20000000
+      "marketValue": 20000000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 1,
+        "beardStyle": 1
+      },
+      "playingStyle": "creativePlaymaker"
     },
     {
       "id": "psg_lee",
@@ -4562,7 +5206,14 @@
         "weeklyWage": 140000,
         "releaseClause": 0
       },
-      "marketValue": 30000000
+      "marketValue": 30000000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 13,
+        "beardStyle": 0
+      },
+      "playingStyle": "creativePlaymaker"
     },
     {
       "id": "psg_neves",
@@ -4611,7 +5262,14 @@
         "weeklyWage": 130000,
         "releaseClause": 0
       },
-      "marketValue": 60000000
+      "marketValue": 60000000,
+      "face": {
+        "skin": 3,
+        "hair": 0,
+        "cut": 3,
+        "beardStyle": 0
+      },
+      "playingStyle": "boxToBox"
     },
     {
       "id": "psg_beraldo",
@@ -4660,7 +5318,14 @@
         "weeklyWage": 90000,
         "releaseClause": 0
       },
-      "marketValue": 30000000
+      "marketValue": 30000000,
+      "face": {
+        "skin": 4,
+        "hair": 0,
+        "cut": 0,
+        "beardStyle": 0
+      },
+      "playingStyle": "buildUp"
     },
     {
       "id": "psg_safonov",
@@ -4707,7 +5372,14 @@
         "weeklyWage": 80000,
         "releaseClause": 0
       },
-      "marketValue": 20000000
+      "marketValue": 20000000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 0,
+        "beardStyle": 0
+      },
+      "playingStyle": "defensiveGoalkeeper"
     },
     {
       "id": "int_lautaro",
@@ -4717,7 +5389,7 @@
       "nationality": "Argentina",
       "countryFlag": "🇦🇷",
       "number": 10,
-      "mainPosition": "ST",
+      "mainPosition": "CF",
       "altPositions": [
         "CF"
       ],
@@ -4756,7 +5428,14 @@
         "weeklyWage": 320000,
         "releaseClause": 0
       },
-      "marketValue": 110000000
+      "marketValue": 110000000,
+      "face": {
+        "skin": 3,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 3
+      },
+      "playingStyle": "advancedStriker"
     },
     {
       "id": "int_thuram",
@@ -4768,7 +5447,7 @@
       "number": 9,
       "mainPosition": "CF",
       "altPositions": [
-        "ST",
+        "CF",
         "LWF"
       ],
       "preferredFoot": "right",
@@ -4806,7 +5485,14 @@
         "weeklyWage": 210000,
         "releaseClause": 0
       },
-      "marketValue": 65000000
+      "marketValue": 65000000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 1
+      },
+      "playingStyle": "targetMan"
     },
     {
       "id": "int_barella",
@@ -4855,7 +5541,14 @@
         "weeklyWage": 280000,
         "releaseClause": 0
       },
-      "marketValue": 80000000
+      "marketValue": 80000000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 1,
+        "beardStyle": 2
+      },
+      "playingStyle": "boxToBox"
     },
     {
       "id": "int_calhanoglu",
@@ -4904,7 +5597,14 @@
         "weeklyWage": 240000,
         "releaseClause": 0
       },
-      "marketValue": 45000000
+      "marketValue": 45000000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 12,
+        "beardStyle": 3
+      },
+      "playingStyle": "orchestrator"
     },
     {
       "id": "int_mkhitaryan",
@@ -4953,7 +5653,14 @@
         "weeklyWage": 160000,
         "releaseClause": 0
       },
-      "marketValue": 6000000
+      "marketValue": 6000000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 3
+      },
+      "playingStyle": "holePlayer"
     },
     {
       "id": "int_dimarco",
@@ -5002,7 +5709,14 @@
         "weeklyWage": 190000,
         "releaseClause": 0
       },
-      "marketValue": 50000000
+      "marketValue": 50000000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 0,
+        "beardStyle": 2
+      },
+      "playingStyle": "crossSpecialist"
     },
     {
       "id": "int_bastoni",
@@ -5051,7 +5765,14 @@
         "weeklyWage": 230000,
         "releaseClause": 0
       },
-      "marketValue": 70000000
+      "marketValue": 70000000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 1,
+        "beardStyle": 1
+      },
+      "playingStyle": "buildUp"
     },
     {
       "id": "int_acerbi",
@@ -5098,7 +5819,14 @@
         "weeklyWage": 120000,
         "releaseClause": 0
       },
-      "marketValue": 4000000
+      "marketValue": 4000000,
+      "face": {
+        "skin": 1,
+        "hair": 4,
+        "cut": 4,
+        "beardStyle": 3
+      },
+      "playingStyle": "destroyer"
     },
     {
       "id": "int_pavard",
@@ -5147,7 +5875,14 @@
         "weeklyWage": 200000,
         "releaseClause": 0
       },
-      "marketValue": 45000000
+      "marketValue": 45000000,
+      "face": {
+        "skin": 1,
+        "hair": 2,
+        "cut": 9,
+        "beardStyle": 2
+      },
+      "playingStyle": "buildUp"
     },
     {
       "id": "int_dumfries",
@@ -5196,7 +5931,14 @@
         "weeklyWage": 150000,
         "releaseClause": 0
       },
-      "marketValue": 30000000
+      "marketValue": 30000000,
+      "face": {
+        "skin": 7,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 2
+      },
+      "playingStyle": "fullBackFinisher"
     },
     {
       "id": "int_sommer",
@@ -5243,7 +5985,14 @@
         "weeklyWage": 170000,
         "releaseClause": 0
       },
-      "marketValue": 5000000
+      "marketValue": 5000000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 0,
+        "beardStyle": 1
+      },
+      "playingStyle": "defensiveGoalkeeper"
     },
     {
       "id": "int_taremi",
@@ -5253,7 +6002,7 @@
       "nationality": "Eron",
       "countryFlag": "🇮🇷",
       "number": 99,
-      "mainPosition": "ST",
+      "mainPosition": "CF",
       "altPositions": [
         "CF"
       ],
@@ -5292,7 +6041,14 @@
         "weeklyWage": 120000,
         "releaseClause": 0
       },
-      "marketValue": 10000000
+      "marketValue": 10000000,
+      "face": {
+        "skin": 3,
+        "hair": 0,
+        "cut": 0,
+        "beardStyle": 3
+      },
+      "playingStyle": "foxInTheBox"
     },
     {
       "id": "int_frattesi",
@@ -5341,7 +6097,14 @@
         "weeklyWage": 120000,
         "releaseClause": 0
       },
-      "marketValue": 35000000
+      "marketValue": 35000000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 1,
+        "beardStyle": 2
+      },
+      "playingStyle": "holePlayer"
     },
     {
       "id": "int_zielinski",
@@ -5390,7 +6153,14 @@
         "weeklyWage": 170000,
         "releaseClause": 0
       },
-      "marketValue": 22000000
+      "marketValue": 22000000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 1,
+        "beardStyle": 1
+      },
+      "playingStyle": "creativePlaymaker"
     },
     {
       "id": "int_augusto",
@@ -5440,7 +6210,14 @@
         "weeklyWage": 100000,
         "releaseClause": 0
       },
-      "marketValue": 22000000
+      "marketValue": 22000000,
+      "face": {
+        "skin": 6,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 0
+      },
+      "playingStyle": "attackingFullBack"
     },
     {
       "id": "int_martinez",
@@ -5487,7 +6264,14 @@
         "weeklyWage": 75000,
         "releaseClause": 0
       },
-      "marketValue": 15000000
+      "marketValue": 15000000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 0,
+        "beardStyle": 1
+      },
+      "playingStyle": "defensiveGoalkeeper"
     },
     {
       "id": "liv_salah",
@@ -5499,7 +6283,7 @@
       "number": 11,
       "mainPosition": "RWF",
       "altPositions": [
-        "ST"
+        "CF"
       ],
       "preferredFoot": "left",
       "weakFoot": 3,
@@ -5536,7 +6320,14 @@
         "weeklyWage": 420000,
         "releaseClause": 0
       },
-      "marketValue": 55000000
+      "marketValue": 55000000,
+      "face": {
+        "skin": 5,
+        "hair": 0,
+        "cut": 7,
+        "beardStyle": 3
+      },
+      "playingStyle": "prolificWinger"
     },
     {
       "id": "liv_vandijk",
@@ -5583,7 +6374,14 @@
         "weeklyWage": 350000,
         "releaseClause": 0
       },
-      "marketValue": 30000000
+      "marketValue": 30000000,
+      "face": {
+        "skin": 6,
+        "hair": 0,
+        "cut": 1,
+        "beardStyle": 2
+      },
+      "playingStyle": "buildUp"
     },
     {
       "id": "liv_alexander_arnold",
@@ -5633,7 +6431,14 @@
         "weeklyWage": 280000,
         "releaseClause": 0
       },
-      "marketValue": 70000000
+      "marketValue": 70000000,
+      "face": {
+        "skin": 6,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 0
+      },
+      "playingStyle": "attackingFullBack"
     },
     {
       "id": "liv_diaz",
@@ -5682,7 +6487,14 @@
         "weeklyWage": 220000,
         "releaseClause": 0
       },
-      "marketValue": 80000000
+      "marketValue": 80000000,
+      "face": {
+        "skin": 6,
+        "hair": 0,
+        "cut": 3,
+        "beardStyle": 1
+      },
+      "playingStyle": "prolificWinger"
     },
     {
       "id": "liv_macallister",
@@ -5732,7 +6544,14 @@
         "weeklyWage": 230000,
         "releaseClause": 0
       },
-      "marketValue": 75000000
+      "marketValue": 75000000,
+      "face": {
+        "skin": 1,
+        "hair": 5,
+        "cut": 0,
+        "beardStyle": 1
+      },
+      "playingStyle": "orchestrator"
     },
     {
       "id": "liv_szoboszlai",
@@ -5782,7 +6601,14 @@
         "weeklyWage": 210000,
         "releaseClause": 0
       },
-      "marketValue": 75000000
+      "marketValue": 75000000,
+      "face": {
+        "skin": 0,
+        "hair": 3,
+        "cut": 12,
+        "beardStyle": 0
+      },
+      "playingStyle": "holePlayer"
     },
     {
       "id": "liv_gravenberch",
@@ -5831,7 +6657,14 @@
         "weeklyWage": 170000,
         "releaseClause": 0
       },
-      "marketValue": 60000000
+      "marketValue": 60000000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 10,
+        "beardStyle": 0
+      },
+      "playingStyle": "anchorMan"
     },
     {
       "id": "liv_nunez",
@@ -5841,7 +6674,7 @@
       "nationality": "Urugvay",
       "countryFlag": "🇺🇾",
       "number": 9,
-      "mainPosition": "ST",
+      "mainPosition": "CF",
       "altPositions": [
         "CF",
         "LWF"
@@ -5881,7 +6714,14 @@
         "weeklyWage": 200000,
         "releaseClause": 0
       },
-      "marketValue": 65000000
+      "marketValue": 65000000,
+      "face": {
+        "skin": 4,
+        "hair": 0,
+        "cut": 3,
+        "beardStyle": 3
+      },
+      "playingStyle": "goalPoacher"
     },
     {
       "id": "liv_robertson",
@@ -5930,7 +6770,14 @@
         "weeklyWage": 210000,
         "releaseClause": 0
       },
-      "marketValue": 30000000
+      "marketValue": 30000000,
+      "face": {
+        "skin": 0,
+        "hair": 1,
+        "cut": 0,
+        "beardStyle": 2
+      },
+      "playingStyle": "crossSpecialist"
     },
     {
       "id": "liv_konate",
@@ -5977,7 +6824,14 @@
         "weeklyWage": 180000,
         "releaseClause": 0
       },
-      "marketValue": 50000000
+      "marketValue": 50000000,
+      "face": {
+        "skin": 9,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 2
+      },
+      "playingStyle": "destroyer"
     },
     {
       "id": "liv_alisson",
@@ -6024,7 +6878,14 @@
         "weeklyWage": 270000,
         "releaseClause": 0
       },
-      "marketValue": 35000000
+      "marketValue": 35000000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 1,
+        "beardStyle": 3
+      },
+      "playingStyle": "attackingGoalkeeper"
     },
     {
       "id": "liv_jota",
@@ -6036,7 +6897,7 @@
       "number": 20,
       "mainPosition": "CF",
       "altPositions": [
-        "ST",
+        "CF",
         "LWF"
       ],
       "preferredFoot": "right",
@@ -6074,7 +6935,14 @@
         "weeklyWage": 200000,
         "releaseClause": 0
       },
-      "marketValue": 50000000
+      "marketValue": 50000000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 0,
+        "beardStyle": 2
+      },
+      "playingStyle": "foxInTheBox"
     },
     {
       "id": "liv_gakpo",
@@ -6087,7 +6955,7 @@
       "mainPosition": "LWF",
       "altPositions": [
         "CF",
-        "ST"
+        "CF"
       ],
       "preferredFoot": "right",
       "weakFoot": 4,
@@ -6124,7 +6992,14 @@
         "weeklyWage": 180000,
         "releaseClause": 0
       },
-      "marketValue": 55000000
+      "marketValue": 55000000,
+      "face": {
+        "skin": 7,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 2
+      },
+      "playingStyle": "roamingFlank"
     },
     {
       "id": "liv_jones",
@@ -6173,7 +7048,14 @@
         "weeklyWage": 120000,
         "releaseClause": 0
       },
-      "marketValue": 35000000
+      "marketValue": 35000000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 1,
+        "beardStyle": 0
+      },
+      "playingStyle": "boxToBox"
     },
     {
       "id": "liv_elliott",
@@ -6223,7 +7105,14 @@
         "weeklyWage": 100000,
         "releaseClause": 0
       },
-      "marketValue": 35000000
+      "marketValue": 35000000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 13,
+        "beardStyle": 0
+      },
+      "playingStyle": "creativePlaymaker"
     },
     {
       "id": "liv_kelleher",
@@ -6270,7 +7159,3123 @@
         "weeklyWage": 70000,
         "releaseClause": 0
       },
-      "marketValue": 20000000
+      "marketValue": 20000000,
+      "face": {
+        "skin": 0,
+        "hair": 5,
+        "cut": 0,
+        "beardStyle": 0
+      },
+      "playingStyle": "defensiveGoalkeeper"
+    },
+    {
+      "id": "rma_guler",
+      "name": "Arda Güler",
+      "shortName": "A. Güler",
+      "age": 20,
+      "nationality": "Turkiya",
+      "countryFlag": "🇹🇷",
+      "number": 15,
+      "mainPosition": "AMF",
+      "altPositions": [
+        "RWF",
+        "CMF"
+      ],
+      "preferredFoot": "left",
+      "weakFoot": 4,
+      "stats": {
+        "attackingAwareness": 78,
+        "ballControl": 84,
+        "dribbling": 78,
+        "tightPossession": 77,
+        "lowPass": 82,
+        "loftedPass": 79,
+        "finishing": 79,
+        "heading": 64,
+        "setPieceTaking": 75,
+        "curl": 82,
+        "defensiveAwareness": 50,
+        "defensiveEngagement": 56,
+        "tackling": 50,
+        "aggression": 74,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 79,
+        "acceleration": 81,
+        "kickingPower": 76,
+        "jumping": 75,
+        "physicalContact": 69,
+        "balance": 78,
+        "stamina": 76
+      },
+      "contract": {
+        "contractYears": 3,
+        "weeklyWage": 90000,
+        "releaseClause": 0
+      },
+      "marketValue": 52500000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 8,
+        "beardStyle": 0
+      },
+      "playingStyle": "creativePlaymaker"
+    },
+    {
+      "id": "rma_ceballos",
+      "name": "Dani Ceballos",
+      "shortName": "D. Ceballos",
+      "age": 28,
+      "nationality": "Ispaniya",
+      "countryFlag": "🇪🇸",
+      "number": 19,
+      "mainPosition": "CMF",
+      "altPositions": [
+        "AMF"
+      ],
+      "preferredFoot": "right",
+      "weakFoot": 3,
+      "stats": {
+        "attackingAwareness": 78,
+        "ballControl": 77,
+        "dribbling": 79,
+        "tightPossession": 80,
+        "lowPass": 80,
+        "loftedPass": 76,
+        "finishing": 64,
+        "heading": 61,
+        "setPieceTaking": 77,
+        "curl": 79,
+        "defensiveAwareness": 69,
+        "defensiveEngagement": 83,
+        "tackling": 66,
+        "aggression": 76,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 68,
+        "acceleration": 73,
+        "kickingPower": 80,
+        "jumping": 80,
+        "physicalContact": 78,
+        "balance": 76,
+        "stamina": 82
+      },
+      "contract": {
+        "contractYears": 2,
+        "weeklyWage": 110000,
+        "releaseClause": 0
+      },
+      "marketValue": 27500000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 1,
+        "beardStyle": 2
+      },
+      "playingStyle": "orchestrator"
+    },
+    {
+      "id": "rma_vazquez",
+      "name": "Lucas Vázquez",
+      "shortName": "L. Vázquez",
+      "age": 33,
+      "nationality": "Ispaniya",
+      "countryFlag": "🇪🇸",
+      "number": 17,
+      "mainPosition": "RB",
+      "altPositions": [
+        "RMF"
+      ],
+      "preferredFoot": "right",
+      "weakFoot": 3,
+      "stats": {
+        "attackingAwareness": 54,
+        "ballControl": 72,
+        "dribbling": 75,
+        "tightPossession": 79,
+        "lowPass": 74,
+        "loftedPass": 81,
+        "finishing": 44,
+        "heading": 63,
+        "setPieceTaking": 52,
+        "curl": 65,
+        "defensiveAwareness": 80,
+        "defensiveEngagement": 73,
+        "tackling": 75,
+        "aggression": 71,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 81,
+        "acceleration": 79,
+        "kickingPower": 78,
+        "jumping": 78,
+        "physicalContact": 74,
+        "balance": 77,
+        "stamina": 80
+      },
+      "contract": {
+        "contractYears": 3,
+        "weeklyWage": 120000,
+        "releaseClause": 0
+      },
+      "marketValue": 11500000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 0,
+        "beardStyle": 3
+      },
+      "playingStyle": "attackingFullBack"
+    },
+    {
+      "id": "rma_alaba",
+      "name": "David Alaba",
+      "shortName": "D. Alaba",
+      "age": 32,
+      "nationality": "Avstriya",
+      "countryFlag": "🇦🇹",
+      "number": 4,
+      "mainPosition": "CB",
+      "altPositions": [
+        "LB",
+        "DMF"
+      ],
+      "preferredFoot": "left",
+      "weakFoot": 2,
+      "stats": {
+        "attackingAwareness": 48,
+        "ballControl": 78,
+        "dribbling": 56,
+        "tightPossession": 67,
+        "lowPass": 74,
+        "loftedPass": 76,
+        "finishing": 44,
+        "heading": 83,
+        "setPieceTaking": 53,
+        "curl": 53,
+        "defensiveAwareness": 81,
+        "defensiveEngagement": 81,
+        "tackling": 84,
+        "aggression": 82,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 79,
+        "acceleration": 81,
+        "kickingPower": 79,
+        "jumping": 85,
+        "physicalContact": 83,
+        "balance": 83,
+        "stamina": 81
+      },
+      "contract": {
+        "contractYears": 4,
+        "weeklyWage": 220000,
+        "releaseClause": 0
+      },
+      "marketValue": 19500000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 1
+      },
+      "playingStyle": "buildUp"
+    },
+    {
+      "id": "rma_fgarcia",
+      "name": "Fran García",
+      "shortName": "F. García",
+      "age": 25,
+      "nationality": "Ispaniya",
+      "countryFlag": "🇪🇸",
+      "number": 20,
+      "mainPosition": "LB",
+      "altPositions": [
+        "LMF"
+      ],
+      "preferredFoot": "left",
+      "weakFoot": 3,
+      "stats": {
+        "attackingAwareness": 55,
+        "ballControl": 76,
+        "dribbling": 71,
+        "tightPossession": 73,
+        "lowPass": 75,
+        "loftedPass": 75,
+        "finishing": 48,
+        "heading": 64,
+        "setPieceTaking": 51,
+        "curl": 62,
+        "defensiveAwareness": 78,
+        "defensiveEngagement": 76,
+        "tackling": 79,
+        "aggression": 73,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 76,
+        "acceleration": 77,
+        "kickingPower": 75,
+        "jumping": 70,
+        "physicalContact": 69,
+        "balance": 76,
+        "stamina": 73
+      },
+      "contract": {
+        "contractYears": 2,
+        "weeklyWage": 70000,
+        "releaseClause": 0
+      },
+      "marketValue": 21000000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 0,
+        "beardStyle": 1
+      },
+      "playingStyle": "attackingFullBack"
+    },
+    {
+      "id": "rma_asencio",
+      "name": "Raúl Asencio",
+      "shortName": "R. Asencio",
+      "age": 21,
+      "nationality": "Ispaniya",
+      "countryFlag": "🇪🇸",
+      "number": 35,
+      "mainPosition": "CB",
+      "altPositions": [],
+      "preferredFoot": "right",
+      "weakFoot": 2,
+      "stats": {
+        "attackingAwareness": 43,
+        "ballControl": 71,
+        "dribbling": 53,
+        "tightPossession": 57,
+        "lowPass": 71,
+        "loftedPass": 67,
+        "finishing": 40,
+        "heading": 73,
+        "setPieceTaking": 49,
+        "curl": 49,
+        "defensiveAwareness": 76,
+        "defensiveEngagement": 73,
+        "tackling": 75,
+        "aggression": 74,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 70,
+        "acceleration": 73,
+        "kickingPower": 74,
+        "jumping": 78,
+        "physicalContact": 74,
+        "balance": 68,
+        "stamina": 70
+      },
+      "contract": {
+        "contractYears": 4,
+        "weeklyWage": 25000,
+        "releaseClause": 0
+      },
+      "marketValue": 24500000,
+      "face": {
+        "skin": 3,
+        "hair": 0,
+        "cut": 0,
+        "beardStyle": 0
+      },
+      "playingStyle": "buildUp"
+    },
+    {
+      "id": "rma_fgonzalez",
+      "name": "Fran González",
+      "shortName": "F. González",
+      "age": 19,
+      "nationality": "Ispaniya",
+      "countryFlag": "🇪🇸",
+      "number": 26,
+      "mainPosition": "GK",
+      "altPositions": [],
+      "preferredFoot": "right",
+      "weakFoot": 4,
+      "stats": {
+        "attackingAwareness": 40,
+        "ballControl": 40,
+        "dribbling": 40,
+        "tightPossession": 40,
+        "lowPass": 40,
+        "loftedPass": 40,
+        "finishing": 40,
+        "heading": 44,
+        "setPieceTaking": 40,
+        "curl": 40,
+        "defensiveAwareness": 42,
+        "defensiveEngagement": 44,
+        "tackling": 40,
+        "aggression": 40,
+        "gkAwareness": 64,
+        "gkCatching": 65,
+        "gkParrying": 70,
+        "gkReflexes": 65,
+        "gkReach": 71,
+        "speed": 40,
+        "acceleration": 40,
+        "kickingPower": 40,
+        "jumping": 42,
+        "physicalContact": 40,
+        "balance": 40,
+        "stamina": 40
+      },
+      "contract": {
+        "contractYears": 4,
+        "weeklyWage": 12000,
+        "releaseClause": 0
+      },
+      "marketValue": 3200000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 0,
+        "beardStyle": 0
+      },
+      "playingStyle": "defensiveGoalkeeper"
+    },
+    {
+      "id": "mci_marmoush",
+      "name": "Omar Marmoush",
+      "shortName": "O. Marmoush",
+      "age": 25,
+      "nationality": "Misr",
+      "countryFlag": "🇪🇬",
+      "number": 7,
+      "mainPosition": "CF",
+      "altPositions": [
+        "LWF",
+        "CF"
+      ],
+      "preferredFoot": "right",
+      "weakFoot": 2,
+      "stats": {
+        "attackingAwareness": 85,
+        "ballControl": 88,
+        "dribbling": 77,
+        "tightPossession": 80,
+        "lowPass": 78,
+        "loftedPass": 70,
+        "finishing": 84,
+        "heading": 85,
+        "setPieceTaking": 71,
+        "curl": 81,
+        "defensiveAwareness": 42,
+        "defensiveEngagement": 51,
+        "tackling": 44,
+        "aggression": 81,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 83,
+        "acceleration": 83,
+        "kickingPower": 81,
+        "jumping": 77,
+        "physicalContact": 81,
+        "balance": 79,
+        "stamina": 82
+      },
+      "contract": {
+        "contractYears": 4,
+        "weeklyWage": 180000,
+        "releaseClause": 0
+      },
+      "marketValue": 62500000,
+      "face": {
+        "skin": 4,
+        "hair": 0,
+        "cut": 3,
+        "beardStyle": 2
+      },
+      "playingStyle": "advancedStriker"
+    },
+    {
+      "id": "mci_khusanov",
+      "name": "Abdukodir Khusanov",
+      "shortName": "A. Khusanov",
+      "age": 20,
+      "nationality": "O‘zbekiston",
+      "countryFlag": "🇺🇿",
+      "number": 45,
+      "mainPosition": "CB",
+      "altPositions": [],
+      "preferredFoot": "right",
+      "weakFoot": 4,
+      "stats": {
+        "attackingAwareness": 40,
+        "ballControl": 73,
+        "dribbling": 57,
+        "tightPossession": 56,
+        "lowPass": 71,
+        "loftedPass": 67,
+        "finishing": 40,
+        "heading": 76,
+        "setPieceTaking": 44,
+        "curl": 48,
+        "defensiveAwareness": 78,
+        "defensiveEngagement": 76,
+        "tackling": 71,
+        "aggression": 70,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 87,
+        "acceleration": 83,
+        "kickingPower": 71,
+        "jumping": 77,
+        "physicalContact": 79,
+        "balance": 72,
+        "stamina": 76
+      },
+      "contract": {
+        "contractYears": 3,
+        "weeklyWage": 55000,
+        "releaseClause": 0
+      },
+      "marketValue": 29000000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 0,
+        "beardStyle": 0
+      },
+      "playingStyle": "destroyer"
+    },
+    {
+      "id": "mci_ake",
+      "name": "Nathan Aké",
+      "shortName": "N. Aké",
+      "age": 29,
+      "nationality": "Niderlandiya",
+      "countryFlag": "🇳🇱",
+      "number": 6,
+      "mainPosition": "CB",
+      "altPositions": [
+        "LB"
+      ],
+      "preferredFoot": "left",
+      "weakFoot": 4,
+      "stats": {
+        "attackingAwareness": 52,
+        "ballControl": 83,
+        "dribbling": 61,
+        "tightPossession": 66,
+        "lowPass": 76,
+        "loftedPass": 70,
+        "finishing": 44,
+        "heading": 79,
+        "setPieceTaking": 50,
+        "curl": 52,
+        "defensiveAwareness": 86,
+        "defensiveEngagement": 86,
+        "tackling": 80,
+        "aggression": 84,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 84,
+        "acceleration": 78,
+        "kickingPower": 80,
+        "jumping": 83,
+        "physicalContact": 85,
+        "balance": 80,
+        "stamina": 80
+      },
+      "contract": {
+        "contractYears": 2,
+        "weeklyWage": 180000,
+        "releaseClause": 0
+      },
+      "marketValue": 46500000,
+      "face": {
+        "skin": 7,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 1
+      },
+      "playingStyle": "buildUp"
+    },
+    {
+      "id": "mci_lewis",
+      "name": "Rico Lewis",
+      "shortName": "R. Lewis",
+      "age": 20,
+      "nationality": "Angliya",
+      "countryFlag": "🏴",
+      "number": 82,
+      "mainPosition": "RB",
+      "altPositions": [
+        "CMF"
+      ],
+      "preferredFoot": "right",
+      "weakFoot": 3,
+      "stats": {
+        "attackingAwareness": 58,
+        "ballControl": 78,
+        "dribbling": 78,
+        "tightPossession": 76,
+        "lowPass": 78,
+        "loftedPass": 79,
+        "finishing": 49,
+        "heading": 65,
+        "setPieceTaking": 49,
+        "curl": 61,
+        "defensiveAwareness": 80,
+        "defensiveEngagement": 78,
+        "tackling": 74,
+        "aggression": 75,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 74,
+        "acceleration": 74,
+        "kickingPower": 78,
+        "jumping": 78,
+        "physicalContact": 72,
+        "balance": 72,
+        "stamina": 81
+      },
+      "contract": {
+        "contractYears": 3,
+        "weeklyWage": 50000,
+        "releaseClause": 0
+      },
+      "marketValue": 34000000,
+      "face": {
+        "skin": 6,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 0
+      },
+      "playingStyle": "attackingFullBack"
+    },
+    {
+      "id": "mci_nunes",
+      "name": "Matheus Nunes",
+      "shortName": "M. Nunes",
+      "age": 26,
+      "nationality": "Portugaliya",
+      "countryFlag": "🇵🇹",
+      "number": 27,
+      "mainPosition": "CMF",
+      "altPositions": [
+        "RB"
+      ],
+      "preferredFoot": "right",
+      "weakFoot": 4,
+      "stats": {
+        "attackingAwareness": 73,
+        "ballControl": 81,
+        "dribbling": 73,
+        "tightPossession": 79,
+        "lowPass": 74,
+        "loftedPass": 80,
+        "finishing": 69,
+        "heading": 61,
+        "setPieceTaking": 79,
+        "curl": 74,
+        "defensiveAwareness": 70,
+        "defensiveEngagement": 81,
+        "tackling": 70,
+        "aggression": 74,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 75,
+        "acceleration": 80,
+        "kickingPower": 78,
+        "jumping": 73,
+        "physicalContact": 72,
+        "balance": 81,
+        "stamina": 82
+      },
+      "contract": {
+        "contractYears": 4,
+        "weeklyWage": 140000,
+        "releaseClause": 0
+      },
+      "marketValue": 33000000,
+      "face": {
+        "skin": 6,
+        "hair": 0,
+        "cut": 6,
+        "beardStyle": 2
+      },
+      "playingStyle": "boxToBox"
+    },
+    {
+      "id": "mci_grealish",
+      "name": "Jack Grealish",
+      "shortName": "J. Grealish",
+      "age": 29,
+      "nationality": "Angliya",
+      "countryFlag": "🏴",
+      "number": 10,
+      "mainPosition": "LWF",
+      "altPositions": [
+        "AMF"
+      ],
+      "preferredFoot": "right",
+      "weakFoot": 2,
+      "stats": {
+        "attackingAwareness": 83,
+        "ballControl": 78,
+        "dribbling": 81,
+        "tightPossession": 81,
+        "lowPass": 81,
+        "loftedPass": 82,
+        "finishing": 79,
+        "heading": 64,
+        "setPieceTaking": 79,
+        "curl": 74,
+        "defensiveAwareness": 49,
+        "defensiveEngagement": 47,
+        "tackling": 43,
+        "aggression": 76,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 81,
+        "acceleration": 82,
+        "kickingPower": 81,
+        "jumping": 81,
+        "physicalContact": 69,
+        "balance": 75,
+        "stamina": 82
+      },
+      "contract": {
+        "contractYears": 3,
+        "weeklyWage": 300000,
+        "releaseClause": 0
+      },
+      "marketValue": 36500000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 12,
+        "beardStyle": 1
+      },
+      "playingStyle": "roamingFlank"
+    },
+    {
+      "id": "mci_bobb",
+      "name": "Oscar Bobb",
+      "shortName": "O. Bobb",
+      "age": 21,
+      "nationality": "Norvegiya",
+      "countryFlag": "🇳🇴",
+      "number": 52,
+      "mainPosition": "RWF",
+      "altPositions": [
+        "AMF"
+      ],
+      "preferredFoot": "left",
+      "weakFoot": 3,
+      "stats": {
+        "attackingAwareness": 73,
+        "ballControl": 78,
+        "dribbling": 70,
+        "tightPossession": 78,
+        "lowPass": 70,
+        "loftedPass": 76,
+        "finishing": 67,
+        "heading": 60,
+        "setPieceTaking": 68,
+        "curl": 71,
+        "defensiveAwareness": 42,
+        "defensiveEngagement": 42,
+        "tackling": 40,
+        "aggression": 69,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 78,
+        "acceleration": 71,
+        "kickingPower": 70,
+        "jumping": 72,
+        "physicalContact": 59,
+        "balance": 67,
+        "stamina": 72
+      },
+      "contract": {
+        "contractYears": 2,
+        "weeklyWage": 40000,
+        "releaseClause": 0
+      },
+      "marketValue": 20500000,
+      "face": {
+        "skin": 7,
+        "hair": 0,
+        "cut": 3,
+        "beardStyle": 0
+      },
+      "playingStyle": "roamingFlank"
+    },
+    {
+      "id": "ars_sterling",
+      "name": "Raheem Sterling",
+      "shortName": "R. Sterling",
+      "age": 30,
+      "nationality": "Angliya",
+      "countryFlag": "🏴",
+      "number": 30,
+      "mainPosition": "LWF",
+      "altPositions": [
+        "RWF"
+      ],
+      "preferredFoot": "right",
+      "weakFoot": 3,
+      "stats": {
+        "attackingAwareness": 80,
+        "ballControl": 80,
+        "dribbling": 79,
+        "tightPossession": 79,
+        "lowPass": 80,
+        "loftedPass": 82,
+        "finishing": 75,
+        "heading": 62,
+        "setPieceTaking": 78,
+        "curl": 74,
+        "defensiveAwareness": 45,
+        "defensiveEngagement": 50,
+        "tackling": 47,
+        "aggression": 78,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 76,
+        "acceleration": 80,
+        "kickingPower": 74,
+        "jumping": 74,
+        "physicalContact": 65,
+        "balance": 76,
+        "stamina": 74
+      },
+      "contract": {
+        "contractYears": 4,
+        "weeklyWage": 300000,
+        "releaseClause": 0
+      },
+      "marketValue": 20500000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 1
+      },
+      "playingStyle": "prolificWinger"
+    },
+    {
+      "id": "ars_kiwior",
+      "name": "Jakub Kiwior",
+      "shortName": "J. Kiwior",
+      "age": 24,
+      "nationality": "Polsha",
+      "countryFlag": "🇵🇱",
+      "number": 15,
+      "mainPosition": "CB",
+      "altPositions": [
+        "LB"
+      ],
+      "preferredFoot": "left",
+      "weakFoot": 4,
+      "stats": {
+        "attackingAwareness": 44,
+        "ballControl": 73,
+        "dribbling": 51,
+        "tightPossession": 59,
+        "lowPass": 68,
+        "loftedPass": 64,
+        "finishing": 40,
+        "heading": 75,
+        "setPieceTaking": 46,
+        "curl": 50,
+        "defensiveAwareness": 74,
+        "defensiveEngagement": 73,
+        "tackling": 80,
+        "aggression": 71,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 74,
+        "acceleration": 73,
+        "kickingPower": 75,
+        "jumping": 81,
+        "physicalContact": 81,
+        "balance": 75,
+        "stamina": 77
+      },
+      "contract": {
+        "contractYears": 2,
+        "weeklyWage": 70000,
+        "releaseClause": 0
+      },
+      "marketValue": 29000000,
+      "face": {
+        "skin": 0,
+        "hair": 2,
+        "cut": 0,
+        "beardStyle": 1
+      },
+      "playingStyle": "buildUp"
+    },
+    {
+      "id": "ars_tomiyasu",
+      "name": "Takehiro Tomiyasu",
+      "shortName": "T. Tomiyasu",
+      "age": 26,
+      "nationality": "Yaponiya",
+      "countryFlag": "🇯🇵",
+      "number": 18,
+      "mainPosition": "RB",
+      "altPositions": [
+        "CB",
+        "LB"
+      ],
+      "preferredFoot": "right",
+      "weakFoot": 2,
+      "stats": {
+        "attackingAwareness": 58,
+        "ballControl": 72,
+        "dribbling": 76,
+        "tightPossession": 78,
+        "lowPass": 81,
+        "loftedPass": 77,
+        "finishing": 51,
+        "heading": 66,
+        "setPieceTaking": 55,
+        "curl": 64,
+        "defensiveAwareness": 80,
+        "defensiveEngagement": 76,
+        "tackling": 75,
+        "aggression": 77,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 76,
+        "acceleration": 82,
+        "kickingPower": 78,
+        "jumping": 77,
+        "physicalContact": 74,
+        "balance": 71,
+        "stamina": 79
+      },
+      "contract": {
+        "contractYears": 2,
+        "weeklyWage": 90000,
+        "releaseClause": 0
+      },
+      "marketValue": 28500000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 0,
+        "beardStyle": 0
+      },
+      "playingStyle": "defensiveFullBack"
+    },
+    {
+      "id": "ars_tierney",
+      "name": "Kieran Tierney",
+      "shortName": "K. Tierney",
+      "age": 27,
+      "nationality": "Shotlandiya",
+      "countryFlag": "🏴",
+      "number": 3,
+      "mainPosition": "LB",
+      "altPositions": [],
+      "preferredFoot": "left",
+      "weakFoot": 4,
+      "stats": {
+        "attackingAwareness": 53,
+        "ballControl": 70,
+        "dribbling": 72,
+        "tightPossession": 71,
+        "lowPass": 77,
+        "loftedPass": 73,
+        "finishing": 50,
+        "heading": 61,
+        "setPieceTaking": 48,
+        "curl": 64,
+        "defensiveAwareness": 79,
+        "defensiveEngagement": 76,
+        "tackling": 72,
+        "aggression": 71,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 78,
+        "acceleration": 78,
+        "kickingPower": 74,
+        "jumping": 72,
+        "physicalContact": 74,
+        "balance": 73,
+        "stamina": 76
+      },
+      "contract": {
+        "contractYears": 4,
+        "weeklyWage": 110000,
+        "releaseClause": 0
+      },
+      "marketValue": 21000000,
+      "face": {
+        "skin": 0,
+        "hair": 1,
+        "cut": 0,
+        "beardStyle": 3
+      },
+      "playingStyle": "attackingFullBack"
+    },
+    {
+      "id": "ars_nwaneri",
+      "name": "Ethan Nwaneri",
+      "shortName": "E. Nwaneri",
+      "age": 18,
+      "nationality": "Angliya",
+      "countryFlag": "🏴",
+      "number": 53,
+      "mainPosition": "AMF",
+      "altPositions": [
+        "RWF"
+      ],
+      "preferredFoot": "left",
+      "weakFoot": 3,
+      "stats": {
+        "attackingAwareness": 74,
+        "ballControl": 76,
+        "dribbling": 70,
+        "tightPossession": 74,
+        "lowPass": 73,
+        "loftedPass": 67,
+        "finishing": 73,
+        "heading": 55,
+        "setPieceTaking": 73,
+        "curl": 75,
+        "defensiveAwareness": 45,
+        "defensiveEngagement": 54,
+        "tackling": 45,
+        "aggression": 69,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 70,
+        "acceleration": 68,
+        "kickingPower": 69,
+        "jumping": 74,
+        "physicalContact": 63,
+        "balance": 75,
+        "stamina": 70
+      },
+      "contract": {
+        "contractYears": 2,
+        "weeklyWage": 15000,
+        "releaseClause": 0
+      },
+      "marketValue": 20500000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 3,
+        "beardStyle": 0
+      },
+      "playingStyle": "creativePlaymaker"
+    },
+    {
+      "id": "ars_skelly",
+      "name": "Myles Lewis-Skelly",
+      "shortName": "M. Lewis-Skelly",
+      "age": 18,
+      "nationality": "Angliya",
+      "countryFlag": "🏴",
+      "number": 49,
+      "mainPosition": "LB",
+      "altPositions": [
+        "CMF"
+      ],
+      "preferredFoot": "left",
+      "weakFoot": 2,
+      "stats": {
+        "attackingAwareness": 57,
+        "ballControl": 70,
+        "dribbling": 66,
+        "tightPossession": 73,
+        "lowPass": 72,
+        "loftedPass": 74,
+        "finishing": 43,
+        "heading": 62,
+        "setPieceTaking": 51,
+        "curl": 62,
+        "defensiveAwareness": 74,
+        "defensiveEngagement": 74,
+        "tackling": 70,
+        "aggression": 72,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 74,
+        "acceleration": 69,
+        "kickingPower": 70,
+        "jumping": 74,
+        "physicalContact": 66,
+        "balance": 67,
+        "stamina": 74
+      },
+      "contract": {
+        "contractYears": 2,
+        "weeklyWage": 12000,
+        "releaseClause": 0
+      },
+      "marketValue": 17000000,
+      "face": {
+        "skin": 7,
+        "hair": 0,
+        "cut": 3,
+        "beardStyle": 0
+      },
+      "playingStyle": "attackingFullBack"
+    },
+    {
+      "id": "ars_neto",
+      "name": "Neto",
+      "shortName": "Neto",
+      "age": 35,
+      "nationality": "Braziliya",
+      "countryFlag": "🇧🇷",
+      "number": 32,
+      "mainPosition": "GK",
+      "altPositions": [],
+      "preferredFoot": "right",
+      "weakFoot": 3,
+      "stats": {
+        "attackingAwareness": 44,
+        "ballControl": 40,
+        "dribbling": 45,
+        "tightPossession": 52,
+        "lowPass": 44,
+        "loftedPass": 42,
+        "finishing": 40,
+        "heading": 40,
+        "setPieceTaking": 41,
+        "curl": 47,
+        "defensiveAwareness": 45,
+        "defensiveEngagement": 40,
+        "tackling": 48,
+        "aggression": 46,
+        "gkAwareness": 76,
+        "gkCatching": 79,
+        "gkParrying": 78,
+        "gkReflexes": 73,
+        "gkReach": 79,
+        "speed": 40,
+        "acceleration": 53,
+        "kickingPower": 40,
+        "jumping": 40,
+        "physicalContact": 46,
+        "balance": 50,
+        "stamina": 46
+      },
+      "contract": {
+        "contractYears": 4,
+        "weeklyWage": 60000,
+        "releaseClause": 0
+      },
+      "marketValue": 4400000,
+      "face": {
+        "skin": 3,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 3
+      },
+      "playingStyle": "defensiveGoalkeeper"
+    },
+    {
+      "id": "fcb_szczesny",
+      "name": "Wojciech Szczęsny",
+      "shortName": "W. Szczęsny",
+      "age": 34,
+      "nationality": "Polsha",
+      "countryFlag": "🇵🇱",
+      "number": 25,
+      "mainPosition": "GK",
+      "altPositions": [],
+      "preferredFoot": "right",
+      "weakFoot": 3,
+      "stats": {
+        "attackingAwareness": 55,
+        "ballControl": 51,
+        "dribbling": 50,
+        "tightPossession": 58,
+        "lowPass": 44,
+        "loftedPass": 43,
+        "finishing": 53,
+        "heading": 47,
+        "setPieceTaking": 44,
+        "curl": 48,
+        "defensiveAwareness": 58,
+        "defensiveEngagement": 56,
+        "tackling": 51,
+        "aggression": 40,
+        "gkAwareness": 80,
+        "gkCatching": 79,
+        "gkParrying": 85,
+        "gkReflexes": 78,
+        "gkReach": 84,
+        "speed": 41,
+        "acceleration": 42,
+        "kickingPower": 52,
+        "jumping": 48,
+        "physicalContact": 55,
+        "balance": 40,
+        "stamina": 40
+      },
+      "contract": {
+        "contractYears": 3,
+        "weeklyWage": 120000,
+        "releaseClause": 0
+      },
+      "marketValue": 9100000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 0,
+        "beardStyle": 3
+      },
+      "playingStyle": "defensiveGoalkeeper"
+    },
+    {
+      "id": "fcb_inigo",
+      "name": "Iñigo Martínez",
+      "shortName": "I. Martínez",
+      "age": 33,
+      "nationality": "Ispaniya",
+      "countryFlag": "🇪🇸",
+      "number": 5,
+      "mainPosition": "CB",
+      "altPositions": [],
+      "preferredFoot": "left",
+      "weakFoot": 2,
+      "stats": {
+        "attackingAwareness": 51,
+        "ballControl": 78,
+        "dribbling": 63,
+        "tightPossession": 67,
+        "lowPass": 77,
+        "loftedPass": 71,
+        "finishing": 45,
+        "heading": 84,
+        "setPieceTaking": 53,
+        "curl": 57,
+        "defensiveAwareness": 80,
+        "defensiveEngagement": 85,
+        "tackling": 77,
+        "aggression": 77,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 76,
+        "acceleration": 81,
+        "kickingPower": 79,
+        "jumping": 81,
+        "physicalContact": 80,
+        "balance": 74,
+        "stamina": 79
+      },
+      "contract": {
+        "contractYears": 4,
+        "weeklyWage": 150000,
+        "releaseClause": 0
+      },
+      "marketValue": 17500000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 0,
+        "beardStyle": 3
+      },
+      "playingStyle": "buildUp"
+    },
+    {
+      "id": "fcb_ericgarcia",
+      "name": "Eric García",
+      "shortName": "E. García",
+      "age": 24,
+      "nationality": "Ispaniya",
+      "countryFlag": "🇪🇸",
+      "number": 24,
+      "mainPosition": "CB",
+      "altPositions": [
+        "DMF",
+        "RB"
+      ],
+      "preferredFoot": "right",
+      "weakFoot": 4,
+      "stats": {
+        "attackingAwareness": 42,
+        "ballControl": 71,
+        "dribbling": 53,
+        "tightPossession": 58,
+        "lowPass": 69,
+        "loftedPass": 70,
+        "finishing": 40,
+        "heading": 74,
+        "setPieceTaking": 43,
+        "curl": 53,
+        "defensiveAwareness": 75,
+        "defensiveEngagement": 81,
+        "tackling": 76,
+        "aggression": 76,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 72,
+        "acceleration": 75,
+        "kickingPower": 75,
+        "jumping": 78,
+        "physicalContact": 80,
+        "balance": 74,
+        "stamina": 70
+      },
+      "contract": {
+        "contractYears": 4,
+        "weeklyWage": 90000,
+        "releaseClause": 0
+      },
+      "marketValue": 29000000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 1,
+        "beardStyle": 2
+      },
+      "playingStyle": "buildUp"
+    },
+    {
+      "id": "fcb_casado",
+      "name": "Marc Casadó",
+      "shortName": "M. Casadó",
+      "age": 21,
+      "nationality": "Ispaniya",
+      "countryFlag": "🇪🇸",
+      "number": 17,
+      "mainPosition": "DMF",
+      "altPositions": [
+        "CMF"
+      ],
+      "preferredFoot": "right",
+      "weakFoot": 3,
+      "stats": {
+        "attackingAwareness": 60,
+        "ballControl": 76,
+        "dribbling": 70,
+        "tightPossession": 73,
+        "lowPass": 79,
+        "loftedPass": 76,
+        "finishing": 56,
+        "heading": 77,
+        "setPieceTaking": 72,
+        "curl": 63,
+        "defensiveAwareness": 78,
+        "defensiveEngagement": 79,
+        "tackling": 77,
+        "aggression": 75,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 66,
+        "acceleration": 70,
+        "kickingPower": 75,
+        "jumping": 74,
+        "physicalContact": 75,
+        "balance": 75,
+        "stamina": 75
+      },
+      "contract": {
+        "contractYears": 3,
+        "weeklyWage": 40000,
+        "releaseClause": 0
+      },
+      "marketValue": 34000000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 0,
+        "beardStyle": 0
+      },
+      "playingStyle": "anchorMan"
+    },
+    {
+      "id": "fcb_ansu",
+      "name": "Ansu Fati",
+      "shortName": "Ansu Fati",
+      "age": 22,
+      "nationality": "Ispaniya",
+      "countryFlag": "🇪🇸",
+      "number": 10,
+      "mainPosition": "LWF",
+      "altPositions": [
+        "CF"
+      ],
+      "preferredFoot": "right",
+      "weakFoot": 4,
+      "stats": {
+        "attackingAwareness": 79,
+        "ballControl": 72,
+        "dribbling": 73,
+        "tightPossession": 79,
+        "lowPass": 75,
+        "loftedPass": 79,
+        "finishing": 68,
+        "heading": 55,
+        "setPieceTaking": 68,
+        "curl": 75,
+        "defensiveAwareness": 40,
+        "defensiveEngagement": 43,
+        "tackling": 42,
+        "aggression": 70,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 76,
+        "acceleration": 71,
+        "kickingPower": 73,
+        "jumping": 75,
+        "physicalContact": 64,
+        "balance": 70,
+        "stamina": 74
+      },
+      "contract": {
+        "contractYears": 3,
+        "weeklyWage": 200000,
+        "releaseClause": 0
+      },
+      "marketValue": 21000000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 0
+      },
+      "playingStyle": "advancedStriker"
+    },
+    {
+      "id": "fcb_gmartin",
+      "name": "Gerard Martín",
+      "shortName": "G. Martín",
+      "age": 22,
+      "nationality": "Ispaniya",
+      "countryFlag": "🇪🇸",
+      "number": 35,
+      "mainPosition": "LB",
+      "altPositions": [],
+      "preferredFoot": "left",
+      "weakFoot": 3,
+      "stats": {
+        "attackingAwareness": 54,
+        "ballControl": 71,
+        "dribbling": 66,
+        "tightPossession": 70,
+        "lowPass": 69,
+        "loftedPass": 74,
+        "finishing": 46,
+        "heading": 65,
+        "setPieceTaking": 48,
+        "curl": 55,
+        "defensiveAwareness": 69,
+        "defensiveEngagement": 77,
+        "tackling": 73,
+        "aggression": 69,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 76,
+        "acceleration": 77,
+        "kickingPower": 72,
+        "jumping": 67,
+        "physicalContact": 67,
+        "balance": 74,
+        "stamina": 69
+      },
+      "contract": {
+        "contractYears": 3,
+        "weeklyWage": 20000,
+        "releaseClause": 0
+      },
+      "marketValue": 15000000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 1,
+        "beardStyle": 0
+      },
+      "playingStyle": "attackingFullBack"
+    },
+    {
+      "id": "fcb_pauvictor",
+      "name": "Pau Víctor",
+      "shortName": "P. Víctor",
+      "age": 23,
+      "nationality": "Ispaniya",
+      "countryFlag": "🇪🇸",
+      "number": 18,
+      "mainPosition": "CF",
+      "altPositions": [],
+      "preferredFoot": "right",
+      "weakFoot": 4,
+      "stats": {
+        "attackingAwareness": 76,
+        "ballControl": 68,
+        "dribbling": 69,
+        "tightPossession": 71,
+        "lowPass": 62,
+        "loftedPass": 58,
+        "finishing": 73,
+        "heading": 74,
+        "setPieceTaking": 62,
+        "curl": 70,
+        "defensiveAwareness": 40,
+        "defensiveEngagement": 41,
+        "tackling": 40,
+        "aggression": 68,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 70,
+        "acceleration": 72,
+        "kickingPower": 69,
+        "jumping": 68,
+        "physicalContact": 69,
+        "balance": 71,
+        "stamina": 67
+      },
+      "contract": {
+        "contractYears": 2,
+        "weeklyWage": 25000,
+        "releaseClause": 0
+      },
+      "marketValue": 12000000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 0,
+        "beardStyle": 1
+      },
+      "playingStyle": "foxInTheBox"
+    },
+    {
+      "id": "bay_goretzka",
+      "name": "Leon Goretzka",
+      "shortName": "L. Goretzka",
+      "age": 30,
+      "nationality": "Germaniya",
+      "countryFlag": "🇩🇪",
+      "number": 8,
+      "mainPosition": "CMF",
+      "altPositions": [
+        "DMF"
+      ],
+      "preferredFoot": "right",
+      "weakFoot": 4,
+      "stats": {
+        "attackingAwareness": 74,
+        "ballControl": 84,
+        "dribbling": 77,
+        "tightPossession": 80,
+        "lowPass": 85,
+        "loftedPass": 77,
+        "finishing": 66,
+        "heading": 69,
+        "setPieceTaking": 75,
+        "curl": 79,
+        "defensiveAwareness": 72,
+        "defensiveEngagement": 79,
+        "tackling": 67,
+        "aggression": 77,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 71,
+        "acceleration": 80,
+        "kickingPower": 79,
+        "jumping": 81,
+        "physicalContact": 79,
+        "balance": 81,
+        "stamina": 77
+      },
+      "contract": {
+        "contractYears": 4,
+        "weeklyWage": 300000,
+        "releaseClause": 0
+      },
+      "marketValue": 27000000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 1,
+        "beardStyle": 3
+      },
+      "playingStyle": "boxToBox"
+    },
+    {
+      "id": "bay_laimer",
+      "name": "Konrad Laimer",
+      "shortName": "K. Laimer",
+      "age": 27,
+      "nationality": "Avstriya",
+      "countryFlag": "🇦🇹",
+      "number": 27,
+      "mainPosition": "RB",
+      "altPositions": [
+        "CMF",
+        "DMF"
+      ],
+      "preferredFoot": "right",
+      "weakFoot": 4,
+      "stats": {
+        "attackingAwareness": 64,
+        "ballControl": 77,
+        "dribbling": 77,
+        "tightPossession": 77,
+        "lowPass": 83,
+        "loftedPass": 82,
+        "finishing": 48,
+        "heading": 65,
+        "setPieceTaking": 54,
+        "curl": 67,
+        "defensiveAwareness": 78,
+        "defensiveEngagement": 76,
+        "tackling": 79,
+        "aggression": 79,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 81,
+        "acceleration": 76,
+        "kickingPower": 73,
+        "jumping": 80,
+        "physicalContact": 78,
+        "balance": 77,
+        "stamina": 84
+      },
+      "contract": {
+        "contractYears": 2,
+        "weeklyWage": 150000,
+        "releaseClause": 0
+      },
+      "marketValue": 38000000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 0,
+        "beardStyle": 2
+      },
+      "playingStyle": "boxToBox"
+    },
+    {
+      "id": "bay_ito",
+      "name": "Hiroki Ito",
+      "shortName": "H. Ito",
+      "age": 25,
+      "nationality": "Yaponiya",
+      "countryFlag": "🇯🇵",
+      "number": 21,
+      "mainPosition": "CB",
+      "altPositions": [
+        "LB"
+      ],
+      "preferredFoot": "left",
+      "weakFoot": 4,
+      "stats": {
+        "attackingAwareness": 49,
+        "ballControl": 78,
+        "dribbling": 61,
+        "tightPossession": 60,
+        "lowPass": 72,
+        "loftedPass": 66,
+        "finishing": 40,
+        "heading": 75,
+        "setPieceTaking": 50,
+        "curl": 55,
+        "defensiveAwareness": 76,
+        "defensiveEngagement": 79,
+        "tackling": 83,
+        "aggression": 73,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 79,
+        "acceleration": 75,
+        "kickingPower": 77,
+        "jumping": 79,
+        "physicalContact": 78,
+        "balance": 78,
+        "stamina": 78
+      },
+      "contract": {
+        "contractYears": 4,
+        "weeklyWage": 120000,
+        "releaseClause": 0
+      },
+      "marketValue": 33000000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 0,
+        "beardStyle": 0
+      },
+      "playingStyle": "buildUp"
+    },
+    {
+      "id": "bay_dier",
+      "name": "Eric Dier",
+      "shortName": "E. Dier",
+      "age": 31,
+      "nationality": "Angliya",
+      "countryFlag": "🏴",
+      "number": 15,
+      "mainPosition": "CB",
+      "altPositions": [
+        "DMF"
+      ],
+      "preferredFoot": "right",
+      "weakFoot": 3,
+      "stats": {
+        "attackingAwareness": 43,
+        "ballControl": 73,
+        "dribbling": 60,
+        "tightPossession": 60,
+        "lowPass": 68,
+        "loftedPass": 72,
+        "finishing": 43,
+        "heading": 79,
+        "setPieceTaking": 44,
+        "curl": 52,
+        "defensiveAwareness": 76,
+        "defensiveEngagement": 80,
+        "tackling": 75,
+        "aggression": 74,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 77,
+        "acceleration": 74,
+        "kickingPower": 73,
+        "jumping": 78,
+        "physicalContact": 82,
+        "balance": 76,
+        "stamina": 72
+      },
+      "contract": {
+        "contractYears": 4,
+        "weeklyWage": 140000,
+        "releaseClause": 0
+      },
+      "marketValue": 18000000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 0,
+        "beardStyle": 2
+      },
+      "playingStyle": "buildUp"
+    },
+    {
+      "id": "bay_zaragoza",
+      "name": "Bryan Zaragoza",
+      "shortName": "B. Zaragoza",
+      "age": 23,
+      "nationality": "Ispaniya",
+      "countryFlag": "🇪🇸",
+      "number": 17,
+      "mainPosition": "LWF",
+      "altPositions": [
+        "RWF"
+      ],
+      "preferredFoot": "right",
+      "weakFoot": 2,
+      "stats": {
+        "attackingAwareness": 78,
+        "ballControl": 74,
+        "dribbling": 75,
+        "tightPossession": 74,
+        "lowPass": 77,
+        "loftedPass": 76,
+        "finishing": 66,
+        "heading": 56,
+        "setPieceTaking": 73,
+        "curl": 70,
+        "defensiveAwareness": 40,
+        "defensiveEngagement": 47,
+        "tackling": 40,
+        "aggression": 75,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 71,
+        "acceleration": 74,
+        "kickingPower": 70,
+        "jumping": 72,
+        "physicalContact": 62,
+        "balance": 75,
+        "stamina": 67
+      },
+      "contract": {
+        "contractYears": 4,
+        "weeklyWage": 60000,
+        "releaseClause": 0
+      },
+      "marketValue": 17500000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 13,
+        "beardStyle": 0
+      },
+      "playingStyle": "roamingFlank"
+    },
+    {
+      "id": "bay_wanner",
+      "name": "Paul Wanner",
+      "shortName": "P. Wanner",
+      "age": 19,
+      "nationality": "Germaniya",
+      "countryFlag": "🇩🇪",
+      "number": 14,
+      "mainPosition": "AMF",
+      "altPositions": [
+        "CMF"
+      ],
+      "preferredFoot": "left",
+      "weakFoot": 3,
+      "stats": {
+        "attackingAwareness": 71,
+        "ballControl": 72,
+        "dribbling": 73,
+        "tightPossession": 72,
+        "lowPass": 73,
+        "loftedPass": 73,
+        "finishing": 71,
+        "heading": 53,
+        "setPieceTaking": 67,
+        "curl": 70,
+        "defensiveAwareness": 42,
+        "defensiveEngagement": 44,
+        "tackling": 43,
+        "aggression": 67,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 67,
+        "acceleration": 69,
+        "kickingPower": 72,
+        "jumping": 73,
+        "physicalContact": 59,
+        "balance": 71,
+        "stamina": 67
+      },
+      "contract": {
+        "contractYears": 4,
+        "weeklyWage": 15000,
+        "releaseClause": 0
+      },
+      "marketValue": 14000000,
+      "face": {
+        "skin": 0,
+        "hair": 3,
+        "cut": 13,
+        "beardStyle": 0
+      },
+      "playingStyle": "creativePlaymaker"
+    },
+    {
+      "id": "bay_ulreich",
+      "name": "Sven Ulreich",
+      "shortName": "S. Ulreich",
+      "age": 36,
+      "nationality": "Germaniya",
+      "countryFlag": "🇩🇪",
+      "number": 26,
+      "mainPosition": "GK",
+      "altPositions": [],
+      "preferredFoot": "right",
+      "weakFoot": 2,
+      "stats": {
+        "attackingAwareness": 40,
+        "ballControl": 40,
+        "dribbling": 49,
+        "tightPossession": 48,
+        "lowPass": 49,
+        "loftedPass": 43,
+        "finishing": 52,
+        "heading": 43,
+        "setPieceTaking": 49,
+        "curl": 40,
+        "defensiveAwareness": 50,
+        "defensiveEngagement": 40,
+        "tackling": 48,
+        "aggression": 48,
+        "gkAwareness": 73,
+        "gkCatching": 78,
+        "gkParrying": 74,
+        "gkReflexes": 72,
+        "gkReach": 78,
+        "speed": 49,
+        "acceleration": 44,
+        "kickingPower": 49,
+        "jumping": 51,
+        "physicalContact": 46,
+        "balance": 40,
+        "stamina": 40
+      },
+      "contract": {
+        "contractYears": 4,
+        "weeklyWage": 50000,
+        "releaseClause": 0
+      },
+      "marketValue": 3100000,
+      "face": {
+        "skin": 0,
+        "hair": 2,
+        "cut": 0,
+        "beardStyle": 0
+      },
+      "playingStyle": "defensiveGoalkeeper"
+    },
+    {
+      "id": "psg_kvara",
+      "name": "Khvicha Kvaratskhelia",
+      "shortName": "K. Kvaratskhelia",
+      "age": 24,
+      "nationality": "Gruziya",
+      "countryFlag": "🇬🇪",
+      "number": 7,
+      "mainPosition": "LWF",
+      "altPositions": [
+        "AMF"
+      ],
+      "preferredFoot": "right",
+      "weakFoot": 3,
+      "stats": {
+        "attackingAwareness": 82,
+        "ballControl": 89,
+        "dribbling": 85,
+        "tightPossession": 83,
+        "lowPass": 90,
+        "loftedPass": 87,
+        "finishing": 82,
+        "heading": 73,
+        "setPieceTaking": 88,
+        "curl": 86,
+        "defensiveAwareness": 51,
+        "defensiveEngagement": 61,
+        "tackling": 52,
+        "aggression": 83,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 89,
+        "acceleration": 88,
+        "kickingPower": 81,
+        "jumping": 88,
+        "physicalContact": 76,
+        "balance": 86,
+        "stamina": 83
+      },
+      "contract": {
+        "contractYears": 3,
+        "weeklyWage": 260000,
+        "releaseClause": 0
+      },
+      "marketValue": 104500000,
+      "face": {
+        "skin": 1,
+        "hair": 0,
+        "cut": 8,
+        "beardStyle": 0
+      },
+      "playingStyle": "roamingFlank"
+    },
+    {
+      "id": "psg_doue",
+      "name": "Désiré Doué",
+      "shortName": "D. Doué",
+      "age": 19,
+      "nationality": "Fransiya",
+      "countryFlag": "🇫🇷",
+      "number": 14,
+      "mainPosition": "AMF",
+      "altPositions": [
+        "RWF",
+        "LWF"
+      ],
+      "preferredFoot": "right",
+      "weakFoot": 3,
+      "stats": {
+        "attackingAwareness": 83,
+        "ballControl": 80,
+        "dribbling": 79,
+        "tightPossession": 83,
+        "lowPass": 78,
+        "loftedPass": 81,
+        "finishing": 77,
+        "heading": 61,
+        "setPieceTaking": 77,
+        "curl": 80,
+        "defensiveAwareness": 52,
+        "defensiveEngagement": 54,
+        "tackling": 46,
+        "aggression": 81,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 79,
+        "acceleration": 75,
+        "kickingPower": 73,
+        "jumping": 75,
+        "physicalContact": 65,
+        "balance": 74,
+        "stamina": 81
+      },
+      "contract": {
+        "contractYears": 3,
+        "weeklyWage": 90000,
+        "releaseClause": 0
+      },
+      "marketValue": 52500000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 3,
+        "beardStyle": 0
+      },
+      "playingStyle": "prolificWinger"
+    },
+    {
+      "id": "psg_ramos",
+      "name": "Gonçalo Ramos",
+      "shortName": "G. Ramos",
+      "age": 23,
+      "nationality": "Portugaliya",
+      "countryFlag": "🇵🇹",
+      "number": 9,
+      "mainPosition": "CF",
+      "altPositions": [],
+      "preferredFoot": "right",
+      "weakFoot": 4,
+      "stats": {
+        "attackingAwareness": 81,
+        "ballControl": 77,
+        "dribbling": 81,
+        "tightPossession": 79,
+        "lowPass": 70,
+        "loftedPass": 64,
+        "finishing": 81,
+        "heading": 76,
+        "setPieceTaking": 71,
+        "curl": 81,
+        "defensiveAwareness": 40,
+        "defensiveEngagement": 47,
+        "tackling": 44,
+        "aggression": 76,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 77,
+        "acceleration": 83,
+        "kickingPower": 78,
+        "jumping": 80,
+        "physicalContact": 80,
+        "balance": 78,
+        "stamina": 75
+      },
+      "contract": {
+        "contractYears": 2,
+        "weeklyWage": 160000,
+        "releaseClause": 0
+      },
+      "marketValue": 45000000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 1,
+        "beardStyle": 1
+      },
+      "playingStyle": "goalPoacher"
+    },
+    {
+      "id": "psg_lhernandez",
+      "name": "Lucas Hernández",
+      "shortName": "L. Hernández",
+      "age": 29,
+      "nationality": "Fransiya",
+      "countryFlag": "🇫🇷",
+      "number": 21,
+      "mainPosition": "CB",
+      "altPositions": [
+        "LB"
+      ],
+      "preferredFoot": "left",
+      "weakFoot": 4,
+      "stats": {
+        "attackingAwareness": 49,
+        "ballControl": 80,
+        "dribbling": 61,
+        "tightPossession": 62,
+        "lowPass": 69,
+        "loftedPass": 74,
+        "finishing": 48,
+        "heading": 84,
+        "setPieceTaking": 51,
+        "curl": 57,
+        "defensiveAwareness": 80,
+        "defensiveEngagement": 83,
+        "tackling": 80,
+        "aggression": 81,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 77,
+        "acceleration": 74,
+        "kickingPower": 81,
+        "jumping": 77,
+        "physicalContact": 84,
+        "balance": 77,
+        "stamina": 77
+      },
+      "contract": {
+        "contractYears": 2,
+        "weeklyWage": 200000,
+        "releaseClause": 0
+      },
+      "marketValue": 36500000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 0,
+        "beardStyle": 2
+      },
+      "playingStyle": "buildUp"
+    },
+    {
+      "id": "psg_kimpembe",
+      "name": "Presnel Kimpembe",
+      "shortName": "P. Kimpembe",
+      "age": 29,
+      "nationality": "Fransiya",
+      "countryFlag": "🇫🇷",
+      "number": 3,
+      "mainPosition": "CB",
+      "altPositions": [],
+      "preferredFoot": "left",
+      "weakFoot": 4,
+      "stats": {
+        "attackingAwareness": 44,
+        "ballControl": 72,
+        "dribbling": 57,
+        "tightPossession": 57,
+        "lowPass": 71,
+        "loftedPass": 65,
+        "finishing": 45,
+        "heading": 73,
+        "setPieceTaking": 46,
+        "curl": 49,
+        "defensiveAwareness": 81,
+        "defensiveEngagement": 79,
+        "tackling": 74,
+        "aggression": 76,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 77,
+        "acceleration": 70,
+        "kickingPower": 75,
+        "jumping": 81,
+        "physicalContact": 73,
+        "balance": 70,
+        "stamina": 76
+      },
+      "contract": {
+        "contractYears": 3,
+        "weeklyWage": 170000,
+        "releaseClause": 0
+      },
+      "marketValue": 20500000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 3
+      },
+      "playingStyle": "destroyer"
+    },
+    {
+      "id": "psg_mayulu",
+      "name": "Senny Mayulu",
+      "shortName": "S. Mayulu",
+      "age": 18,
+      "nationality": "Fransiya",
+      "countryFlag": "🇫🇷",
+      "number": 24,
+      "mainPosition": "CMF",
+      "altPositions": [
+        "AMF"
+      ],
+      "preferredFoot": "right",
+      "weakFoot": 2,
+      "stats": {
+        "attackingAwareness": 64,
+        "ballControl": 69,
+        "dribbling": 69,
+        "tightPossession": 67,
+        "lowPass": 74,
+        "loftedPass": 67,
+        "finishing": 53,
+        "heading": 54,
+        "setPieceTaking": 68,
+        "curl": 65,
+        "defensiveAwareness": 61,
+        "defensiveEngagement": 74,
+        "tackling": 56,
+        "aggression": 70,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 63,
+        "acceleration": 66,
+        "kickingPower": 66,
+        "jumping": 69,
+        "physicalContact": 67,
+        "balance": 74,
+        "stamina": 67
+      },
+      "contract": {
+        "contractYears": 3,
+        "weeklyWage": 12000,
+        "releaseClause": 0
+      },
+      "marketValue": 9200000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 3,
+        "beardStyle": 0
+      },
+      "playingStyle": "boxToBox"
+    },
+    {
+      "id": "psg_tenas",
+      "name": "Arnau Tenas",
+      "shortName": "A. Tenas",
+      "age": 23,
+      "nationality": "Ispaniya",
+      "countryFlag": "🇪🇸",
+      "number": 80,
+      "mainPosition": "GK",
+      "altPositions": [],
+      "preferredFoot": "right",
+      "weakFoot": 3,
+      "stats": {
+        "attackingAwareness": 40,
+        "ballControl": 42,
+        "dribbling": 40,
+        "tightPossession": 40,
+        "lowPass": 48,
+        "loftedPass": 49,
+        "finishing": 49,
+        "heading": 40,
+        "setPieceTaking": 40,
+        "curl": 43,
+        "defensiveAwareness": 43,
+        "defensiveEngagement": 40,
+        "tackling": 40,
+        "aggression": 40,
+        "gkAwareness": 69,
+        "gkCatching": 70,
+        "gkParrying": 71,
+        "gkReflexes": 77,
+        "gkReach": 71,
+        "speed": 40,
+        "acceleration": 45,
+        "kickingPower": 45,
+        "jumping": 40,
+        "physicalContact": 40,
+        "balance": 40,
+        "stamina": 40
+      },
+      "contract": {
+        "contractYears": 3,
+        "weeklyWage": 30000,
+        "releaseClause": 0
+      },
+      "marketValue": 12000000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 0,
+        "beardStyle": 0
+      },
+      "playingStyle": "defensiveGoalkeeper"
+    },
+    {
+      "id": "int_devrij",
+      "name": "Stefan de Vrij",
+      "shortName": "S. de Vrij",
+      "age": 32,
+      "nationality": "Niderlandiya",
+      "countryFlag": "🇳🇱",
+      "number": 6,
+      "mainPosition": "CB",
+      "altPositions": [],
+      "preferredFoot": "right",
+      "weakFoot": 3,
+      "stats": {
+        "attackingAwareness": 52,
+        "ballControl": 80,
+        "dribbling": 56,
+        "tightPossession": 64,
+        "lowPass": 74,
+        "loftedPass": 69,
+        "finishing": 43,
+        "heading": 79,
+        "setPieceTaking": 52,
+        "curl": 52,
+        "defensiveAwareness": 81,
+        "defensiveEngagement": 82,
+        "tackling": 84,
+        "aggression": 82,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 83,
+        "acceleration": 78,
+        "kickingPower": 80,
+        "jumping": 79,
+        "physicalContact": 84,
+        "balance": 77,
+        "stamina": 82
+      },
+      "contract": {
+        "contractYears": 3,
+        "weeklyWage": 140000,
+        "releaseClause": 0
+      },
+      "marketValue": 19500000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 0,
+        "beardStyle": 1
+      },
+      "playingStyle": "buildUp"
+    },
+    {
+      "id": "int_bisseck",
+      "name": "Yann Bisseck",
+      "shortName": "Y. Bisseck",
+      "age": 24,
+      "nationality": "Germaniya",
+      "countryFlag": "🇩🇪",
+      "number": 31,
+      "mainPosition": "CB",
+      "altPositions": [
+        "RB"
+      ],
+      "preferredFoot": "right",
+      "weakFoot": 3,
+      "stats": {
+        "attackingAwareness": 48,
+        "ballControl": 78,
+        "dribbling": 57,
+        "tightPossession": 65,
+        "lowPass": 72,
+        "loftedPass": 67,
+        "finishing": 47,
+        "heading": 82,
+        "setPieceTaking": 50,
+        "curl": 49,
+        "defensiveAwareness": 77,
+        "defensiveEngagement": 79,
+        "tackling": 80,
+        "aggression": 77,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 79,
+        "acceleration": 75,
+        "kickingPower": 73,
+        "jumping": 79,
+        "physicalContact": 81,
+        "balance": 73,
+        "stamina": 73
+      },
+      "contract": {
+        "contractYears": 3,
+        "weeklyWage": 60000,
+        "releaseClause": 0
+      },
+      "marketValue": 39000000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 0
+      },
+      "playingStyle": "extraFrontman"
+    },
+    {
+      "id": "int_darmian",
+      "name": "Matteo Darmian",
+      "shortName": "M. Darmian",
+      "age": 35,
+      "nationality": "Italiya",
+      "countryFlag": "🇮🇹",
+      "number": 36,
+      "mainPosition": "RB",
+      "altPositions": [
+        "CB",
+        "LB"
+      ],
+      "preferredFoot": "right",
+      "weakFoot": 2,
+      "stats": {
+        "attackingAwareness": 62,
+        "ballControl": 76,
+        "dribbling": 73,
+        "tightPossession": 76,
+        "lowPass": 81,
+        "loftedPass": 80,
+        "finishing": 52,
+        "heading": 69,
+        "setPieceTaking": 57,
+        "curl": 61,
+        "defensiveAwareness": 79,
+        "defensiveEngagement": 81,
+        "tackling": 78,
+        "aggression": 74,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 75,
+        "acceleration": 78,
+        "kickingPower": 78,
+        "jumping": 72,
+        "physicalContact": 75,
+        "balance": 75,
+        "stamina": 74
+      },
+      "contract": {
+        "contractYears": 2,
+        "weeklyWage": 70000,
+        "releaseClause": 0
+      },
+      "marketValue": 6000000,
+      "face": {
+        "skin": 1,
+        "hair": 4,
+        "cut": 0,
+        "beardStyle": 1
+      },
+      "playingStyle": "defensiveFullBack"
+    },
+    {
+      "id": "int_asllani",
+      "name": "Kristjan Asllani",
+      "shortName": "K. Asllani",
+      "age": 22,
+      "nationality": "Albaniya",
+      "countryFlag": "🇦🇱",
+      "number": 21,
+      "mainPosition": "DMF",
+      "altPositions": [
+        "CMF"
+      ],
+      "preferredFoot": "right",
+      "weakFoot": 3,
+      "stats": {
+        "attackingAwareness": 55,
+        "ballControl": 77,
+        "dribbling": 68,
+        "tightPossession": 71,
+        "lowPass": 79,
+        "loftedPass": 72,
+        "finishing": 56,
+        "heading": 70,
+        "setPieceTaking": 73,
+        "curl": 62,
+        "defensiveAwareness": 78,
+        "defensiveEngagement": 76,
+        "tackling": 73,
+        "aggression": 73,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 72,
+        "acceleration": 77,
+        "kickingPower": 69,
+        "jumping": 76,
+        "physicalContact": 74,
+        "balance": 77,
+        "stamina": 75
+      },
+      "contract": {
+        "contractYears": 4,
+        "weeklyWage": 45000,
+        "releaseClause": 0
+      },
+      "marketValue": 25000000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 1,
+        "beardStyle": 0
+      },
+      "playingStyle": "orchestrator"
+    },
+    {
+      "id": "int_zalewski",
+      "name": "Nicola Zalewski",
+      "shortName": "N. Zalewski",
+      "age": 23,
+      "nationality": "Polsha",
+      "countryFlag": "🇵🇱",
+      "number": 59,
+      "mainPosition": "LB",
+      "altPositions": [
+        "LMF"
+      ],
+      "preferredFoot": "left",
+      "weakFoot": 3,
+      "stats": {
+        "attackingAwareness": 57,
+        "ballControl": 71,
+        "dribbling": 72,
+        "tightPossession": 75,
+        "lowPass": 76,
+        "loftedPass": 80,
+        "finishing": 46,
+        "heading": 65,
+        "setPieceTaking": 52,
+        "curl": 58,
+        "defensiveAwareness": 73,
+        "defensiveEngagement": 73,
+        "tackling": 75,
+        "aggression": 68,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 73,
+        "acceleration": 81,
+        "kickingPower": 76,
+        "jumping": 70,
+        "physicalContact": 74,
+        "balance": 75,
+        "stamina": 73
+      },
+      "contract": {
+        "contractYears": 3,
+        "weeklyWage": 40000,
+        "releaseClause": 0
+      },
+      "marketValue": 21000000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 1,
+        "beardStyle": 0
+      },
+      "playingStyle": "crossSpecialist"
+    },
+    {
+      "id": "int_arnautovic",
+      "name": "Marko Arnautović",
+      "shortName": "M. Arnautović",
+      "age": 35,
+      "nationality": "Avstriya",
+      "countryFlag": "🇦🇹",
+      "number": 8,
+      "mainPosition": "CF",
+      "altPositions": [
+        "CF"
+      ],
+      "preferredFoot": "right",
+      "weakFoot": 4,
+      "stats": {
+        "attackingAwareness": 79,
+        "ballControl": 78,
+        "dribbling": 75,
+        "tightPossession": 78,
+        "lowPass": 66,
+        "loftedPass": 69,
+        "finishing": 78,
+        "heading": 73,
+        "setPieceTaking": 69,
+        "curl": 70,
+        "defensiveAwareness": 40,
+        "defensiveEngagement": 46,
+        "tackling": 40,
+        "aggression": 73,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 75,
+        "acceleration": 76,
+        "kickingPower": 76,
+        "jumping": 75,
+        "physicalContact": 73,
+        "balance": 77,
+        "stamina": 73
+      },
+      "contract": {
+        "contractYears": 3,
+        "weeklyWage": 70000,
+        "releaseClause": 0
+      },
+      "marketValue": 5100000,
+      "face": {
+        "skin": 2,
+        "hair": 4,
+        "cut": 12,
+        "beardStyle": 3
+      },
+      "playingStyle": "targetMan"
+    },
+    {
+      "id": "int_correa",
+      "name": "Joaquín Correa",
+      "shortName": "J. Correa",
+      "age": 30,
+      "nationality": "Argentina",
+      "countryFlag": "🇦🇷",
+      "number": 11,
+      "mainPosition": "SS",
+      "altPositions": [
+        "CF"
+      ],
+      "preferredFoot": "right",
+      "weakFoot": 3,
+      "stats": {
+        "attackingAwareness": 74,
+        "ballControl": 79,
+        "dribbling": 79,
+        "tightPossession": 74,
+        "lowPass": 72,
+        "loftedPass": 74,
+        "finishing": 72,
+        "heading": 58,
+        "setPieceTaking": 69,
+        "curl": 68,
+        "defensiveAwareness": 40,
+        "defensiveEngagement": 41,
+        "tackling": 42,
+        "aggression": 69,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 75,
+        "acceleration": 78,
+        "kickingPower": 70,
+        "jumping": 72,
+        "physicalContact": 73,
+        "balance": 74,
+        "stamina": 75
+      },
+      "contract": {
+        "contractYears": 2,
+        "weeklyWage": 90000,
+        "releaseClause": 0
+      },
+      "marketValue": 11000000,
+      "face": {
+        "skin": 3,
+        "hair": 0,
+        "cut": 0,
+        "beardStyle": 3
+      },
+      "playingStyle": "deepLyingForward"
+    },
+    {
+      "id": "liv_chiesa",
+      "name": "Federico Chiesa",
+      "shortName": "F. Chiesa",
+      "age": 27,
+      "nationality": "Italiya",
+      "countryFlag": "🇮🇹",
+      "number": 14,
+      "mainPosition": "RWF",
+      "altPositions": [
+        "LWF"
+      ],
+      "preferredFoot": "right",
+      "weakFoot": 4,
+      "stats": {
+        "attackingAwareness": 72,
+        "ballControl": 78,
+        "dribbling": 80,
+        "tightPossession": 77,
+        "lowPass": 74,
+        "loftedPass": 75,
+        "finishing": 73,
+        "heading": 57,
+        "setPieceTaking": 72,
+        "curl": 74,
+        "defensiveAwareness": 41,
+        "defensiveEngagement": 47,
+        "tackling": 42,
+        "aggression": 71,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 78,
+        "acceleration": 80,
+        "kickingPower": 74,
+        "jumping": 77,
+        "physicalContact": 60,
+        "balance": 72,
+        "stamina": 77
+      },
+      "contract": {
+        "contractYears": 2,
+        "weeklyWage": 150000,
+        "releaseClause": 0
+      },
+      "marketValue": 28500000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 1,
+        "beardStyle": 2
+      },
+      "playingStyle": "prolificWinger"
+    },
+    {
+      "id": "liv_endo",
+      "name": "Wataru Endō",
+      "shortName": "W. Endō",
+      "age": 31,
+      "nationality": "Yaponiya",
+      "countryFlag": "🇯🇵",
+      "number": 3,
+      "mainPosition": "DMF",
+      "altPositions": [
+        "CB"
+      ],
+      "preferredFoot": "right",
+      "weakFoot": 3,
+      "stats": {
+        "attackingAwareness": 56,
+        "ballControl": 78,
+        "dribbling": 66,
+        "tightPossession": 73,
+        "lowPass": 81,
+        "loftedPass": 75,
+        "finishing": 54,
+        "heading": 77,
+        "setPieceTaking": 78,
+        "curl": 68,
+        "defensiveAwareness": 74,
+        "defensiveEngagement": 79,
+        "tackling": 80,
+        "aggression": 78,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 73,
+        "acceleration": 77,
+        "kickingPower": 72,
+        "jumping": 76,
+        "physicalContact": 75,
+        "balance": 76,
+        "stamina": 78
+      },
+      "contract": {
+        "contractYears": 2,
+        "weeklyWage": 70000,
+        "releaseClause": 0
+      },
+      "marketValue": 18000000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 0,
+        "beardStyle": 0
+      },
+      "playingStyle": "anchorMan"
+    },
+    {
+      "id": "liv_gomez",
+      "name": "Joe Gomez",
+      "shortName": "J. Gomez",
+      "age": 27,
+      "nationality": "Angliya",
+      "countryFlag": "🏴",
+      "number": 2,
+      "mainPosition": "CB",
+      "altPositions": [
+        "RB",
+        "LB"
+      ],
+      "preferredFoot": "right",
+      "weakFoot": 2,
+      "stats": {
+        "attackingAwareness": 46,
+        "ballControl": 79,
+        "dribbling": 55,
+        "tightPossession": 64,
+        "lowPass": 67,
+        "loftedPass": 70,
+        "finishing": 45,
+        "heading": 79,
+        "setPieceTaking": 53,
+        "curl": 52,
+        "defensiveAwareness": 76,
+        "defensiveEngagement": 82,
+        "tackling": 79,
+        "aggression": 77,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 77,
+        "acceleration": 78,
+        "kickingPower": 76,
+        "jumping": 79,
+        "physicalContact": 80,
+        "balance": 76,
+        "stamina": 73
+      },
+      "contract": {
+        "contractYears": 2,
+        "weeklyWage": 85000,
+        "releaseClause": 0
+      },
+      "marketValue": 33000000,
+      "face": {
+        "skin": 7,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 1
+      },
+      "playingStyle": "buildUp"
+    },
+    {
+      "id": "liv_tsimikas",
+      "name": "Kostas Tsimikas",
+      "shortName": "K. Tsimikas",
+      "age": 28,
+      "nationality": "Gretsiya",
+      "countryFlag": "🇬🇷",
+      "number": 21,
+      "mainPosition": "LB",
+      "altPositions": [],
+      "preferredFoot": "left",
+      "weakFoot": 3,
+      "stats": {
+        "attackingAwareness": 57,
+        "ballControl": 70,
+        "dribbling": 74,
+        "tightPossession": 71,
+        "lowPass": 81,
+        "loftedPass": 76,
+        "finishing": 44,
+        "heading": 65,
+        "setPieceTaking": 55,
+        "curl": 62,
+        "defensiveAwareness": 75,
+        "defensiveEngagement": 76,
+        "tackling": 77,
+        "aggression": 74,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 77,
+        "acceleration": 76,
+        "kickingPower": 72,
+        "jumping": 77,
+        "physicalContact": 73,
+        "balance": 72,
+        "stamina": 81
+      },
+      "contract": {
+        "contractYears": 3,
+        "weeklyWage": 60000,
+        "releaseClause": 0
+      },
+      "marketValue": 20500000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 0,
+        "beardStyle": 3
+      },
+      "playingStyle": "crossSpecialist"
+    },
+    {
+      "id": "liv_quansah",
+      "name": "Jarell Quansah",
+      "shortName": "J. Quansah",
+      "age": 21,
+      "nationality": "Angliya",
+      "countryFlag": "🏴",
+      "number": 78,
+      "mainPosition": "CB",
+      "altPositions": [],
+      "preferredFoot": "right",
+      "weakFoot": 3,
+      "stats": {
+        "attackingAwareness": 40,
+        "ballControl": 73,
+        "dribbling": 51,
+        "tightPossession": 59,
+        "lowPass": 65,
+        "loftedPass": 62,
+        "finishing": 41,
+        "heading": 81,
+        "setPieceTaking": 48,
+        "curl": 44,
+        "defensiveAwareness": 74,
+        "defensiveEngagement": 77,
+        "tackling": 75,
+        "aggression": 70,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 69,
+        "acceleration": 76,
+        "kickingPower": 71,
+        "jumping": 74,
+        "physicalContact": 77,
+        "balance": 72,
+        "stamina": 76
+      },
+      "contract": {
+        "contractYears": 4,
+        "weeklyWage": 30000,
+        "releaseClause": 0
+      },
+      "marketValue": 29000000,
+      "face": {
+        "skin": 7,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 0
+      },
+      "playingStyle": "buildUp"
+    },
+    {
+      "id": "liv_bradley",
+      "name": "Conor Bradley",
+      "shortName": "C. Bradley",
+      "age": 21,
+      "nationality": "Shimoliy Irlandiya",
+      "countryFlag": "🇬🇧",
+      "number": 84,
+      "mainPosition": "RB",
+      "altPositions": [],
+      "preferredFoot": "right",
+      "weakFoot": 3,
+      "stats": {
+        "attackingAwareness": 55,
+        "ballControl": 76,
+        "dribbling": 68,
+        "tightPossession": 75,
+        "lowPass": 76,
+        "loftedPass": 75,
+        "finishing": 48,
+        "heading": 62,
+        "setPieceTaking": 55,
+        "curl": 61,
+        "defensiveAwareness": 77,
+        "defensiveEngagement": 72,
+        "tackling": 72,
+        "aggression": 74,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 74,
+        "acceleration": 73,
+        "kickingPower": 72,
+        "jumping": 74,
+        "physicalContact": 68,
+        "balance": 69,
+        "stamina": 77
+      },
+      "contract": {
+        "contractYears": 2,
+        "weeklyWage": 30000,
+        "releaseClause": 0
+      },
+      "marketValue": 24500000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 0,
+        "beardStyle": 0
+      },
+      "playingStyle": "attackingFullBack"
+    },
+    {
+      "id": "liv_doak",
+      "name": "Ben Doak",
+      "shortName": "B. Doak",
+      "age": 19,
+      "nationality": "Shotlandiya",
+      "countryFlag": "🏴",
+      "number": 50,
+      "mainPosition": "RWF",
+      "altPositions": [],
+      "preferredFoot": "right",
+      "weakFoot": 3,
+      "stats": {
+        "attackingAwareness": 69,
+        "ballControl": 73,
+        "dribbling": 71,
+        "tightPossession": 65,
+        "lowPass": 66,
+        "loftedPass": 65,
+        "finishing": 70,
+        "heading": 53,
+        "setPieceTaking": 68,
+        "curl": 69,
+        "defensiveAwareness": 40,
+        "defensiveEngagement": 40,
+        "tackling": 40,
+        "aggression": 69,
+        "gkAwareness": 40,
+        "gkCatching": 40,
+        "gkParrying": 40,
+        "gkReflexes": 40,
+        "gkReach": 40,
+        "speed": 69,
+        "acceleration": 73,
+        "kickingPower": 63,
+        "jumping": 66,
+        "physicalContact": 54,
+        "balance": 63,
+        "stamina": 66
+      },
+      "contract": {
+        "contractYears": 4,
+        "weeklyWage": 15000,
+        "releaseClause": 0
+      },
+      "marketValue": 9200000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 13,
+        "beardStyle": 0
+      },
+      "playingStyle": "prolificWinger"
     }
   ]
 }

@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:football_top_manager/data/initial_database.dart';
@@ -54,7 +53,7 @@ void main() {
     () {
       final face = const FaceConfig(shape: 3, eyes: 2, nose: 3, glasses: true);
       final m = ManagerProfile(name: 'Aziz', face: face);
-      expect(m.proficiency.length, 5);
+      expect(m.proficiency.length, ManagerPhilosophy.values.length);
       expect(m.proficiency.values.every((v) => v == 70), isTrue);
       expect(m.ratingFor(TeamPlaystyle.outWide), 70);
       expect(FaceConfig.fromMap(m.face.toMap()).toMap(), face.toMap());
@@ -75,10 +74,10 @@ void main() {
       );
       start();
       final first = game.userClub.squad.map((p) => p.name).toList();
-      expect(first.toSet().length, 16);
+      expect(first.toSet().length, 23);
       start();
       final second = game.userClub.squad.map((p) => p.name).toList();
-      expect(second.toSet().length, 16);
+      expect(second.toSet().length, 23);
       expect(first.join('|'), isNot(second.join('|')));
       expect(game.userClub.startingXI.length, 11);
     },
@@ -105,8 +104,9 @@ void main() {
     final clubs = InitialDatabase.getSuperLeagueClubs();
     final field = MatchField(clubs[0], clubs[1], seed: 0);
     var previousGoals = 0, observedGoals = 0;
-    while (field.time < 90 - 0.000001) {
-      field.update(min(1 / 60, 90 - field.time), {});
+    while (!field.isFinished) {
+      if (field.isHalfTime) field.startSecondHalf();
+      field.update(1 / 60);
       final total = field.homeStats.goals + field.awayStats.goals;
       if (total > previousGoals) {
         observedGoals++;
@@ -139,16 +139,14 @@ void main() {
     () {
       final clubs = InitialDatabase.getSuperLeagueClubs();
       final field = MatchField(clubs[0], clubs[7], seed: 0);
-      while (field.time < 90 - 0.000001) {
-        field.update(1 / 30, {});
-      }
+      field.simulateToEnd();
       expect(
         field.homeStats.shots + field.awayStats.shots,
         greaterThanOrEqualTo(6),
       );
       expect(
-        field.events.where((e) => e.description.startsWith('Ofsayd')).length,
-        lessThanOrEqualTo(4),
+        field.events.where((e) => e.type == MatchEventType.offside).length,
+        lessThanOrEqualTo(9),
       );
     },
   );

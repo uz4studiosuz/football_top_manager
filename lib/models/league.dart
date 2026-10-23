@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 /// O'yindagi voqea turlari (Match Events)
 enum MatchEventType {
-  kickoff('O\'yin boshlandi'),
-  pass('Xavfli pas'),
+  kickoff('O‘yin boshlandi'),
+  pass('Hujum'),
   shot('Zarba'),
   save('Seyv'),
   goal('GOL!'),
@@ -11,34 +11,64 @@ enum MatchEventType {
   yellowCard('Sariq kartochka'),
   redCard('Qizil kartochka'),
   halfTime('Tanaffus'),
-  fullTime('O\'yin yakunlandi'),
-  substitution('O\'yinchi almashtirish');
+  fullTime('O‘yin yakunlandi'),
+  substitution('Almashtirish'),
+  corner('Burchak'),
+  freeKick('Jarima zarbasi'),
+  penalty('Penalti'),
+  offside('Ofsayd'),
+  injury('Jarohat'),
+  woodwork('Ustun'),
+  bigChance('Katta imkoniyat'),
+  info('Ma’lumot');
 
   const MatchEventType(this.label);
   final String label;
   IconData get iconData => switch (this) {
     kickoff => Icons.sports_outlined,
-    pass => Icons.near_me_outlined,
+    pass => Icons.trending_flat_rounded,
     shot => Icons.gps_fixed,
-    save => Icons.pan_tool_outlined,
+    save => Icons.back_hand_outlined,
     goal => Icons.sports_soccer,
-    foul => Icons.front_hand_outlined,
-    yellowCard || redCard => Icons.style_outlined,
+    foul => Icons.do_not_touch_outlined,
+    yellowCard || redCard => Icons.crop_portrait_rounded,
     halfTime => Icons.pause_circle_outline,
     fullTime => Icons.flag_outlined,
-    substitution => Icons.swap_horiz,
+    substitution => Icons.swap_vert_rounded,
+    corner => Icons.flag_circle_outlined,
+    freeKick => Icons.adjust_rounded,
+    penalty => Icons.radio_button_checked,
+    offside => Icons.outlined_flag_rounded,
+    injury => Icons.healing_outlined,
+    woodwork => Icons.vertical_align_center_rounded,
+    bigChance => Icons.local_fire_department_outlined,
+    info => Icons.info_outline_rounded,
   };
+
+  /// Key moments shown in the SofaScore-like incident timeline.
+  bool get isIncident =>
+      this == goal ||
+      this == yellowCard ||
+      this == redCard ||
+      this == substitution ||
+      this == injury ||
+      this == halfTime ||
+      this == fullTime;
 }
 
 /// O'yin simulyatsiyasi voqeasi
 class MatchEvent {
   final int minute;
+  final int extraMinute;
   final MatchEventType type;
   final String description;
   final String clubId;
   final String? playerName;
+  final String? playerId;
+  final String? secondaryName;
   final bool isHomeTeam;
   final String? assistPlayerId;
+  final int homeScore, awayScore;
   const MatchEvent({
     required this.minute,
     required this.type,
@@ -47,38 +77,133 @@ class MatchEvent {
     this.playerName,
     required this.isHomeTeam,
     this.assistPlayerId,
+    this.playerId,
+    this.secondaryName,
+    this.extraMinute = 0,
+    this.homeScore = 0,
+    this.awayScore = 0,
   });
+  String get minuteLabel =>
+      extraMinute > 0 ? '$minute+$extraMinute\'' : '$minute\'';
+}
+
+/// Per-player match line. The rating follows SofaScore conventions: a
+/// player starts near 6.3–6.5 and every action moves it up or down.
+class PlayerMatchStats {
+  final String playerId;
+  final bool started;
+  double minutes = 0;
+  int passes = 0,
+      passesCompleted = 0,
+      keyPasses = 0,
+      shots = 0,
+      shotsOnTarget = 0,
+      goals = 0,
+      assists = 0,
+      tackles = 0,
+      interceptions = 0,
+      clearances = 0,
+      blocks = 0,
+      dribbles = 0,
+      dribblesWon = 0,
+      duelsWon = 0,
+      duelsLost = 0,
+      fouls = 0,
+      fouled = 0,
+      saves = 0,
+      goalsConceded = 0,
+      yellow = 0,
+      red = 0,
+      possessionLost = 0,
+      offsides = 0,
+      bigChancesMissed = 0,
+      crosses = 0,
+      touches = 0;
+  double xg = 0, xa = 0;
+  bool injured = false;
+  int? subOnMinute, subOffMinute;
+  PlayerMatchStats(this.playerId, {this.started = true});
+
+  double rating({
+    required bool goalkeeper,
+    required bool defender,
+    required bool forward,
+    required int goalDifference,
+  }) {
+    var r = 6.35;
+    r += goals * (forward ? 0.95 : defender ? 1.2 : 1.05);
+    r += assists * 0.7;
+    r += keyPasses * 0.16;
+    r += (shotsOnTarget - goals).clamp(0, 99) * 0.1;
+    r -= (shots - shotsOnTarget).clamp(0, 99) * 0.03;
+    r -= bigChancesMissed * 0.22;
+    r += passesCompleted * 0.009;
+    r -= (passes - passesCompleted) * 0.03;
+    r += tackles * 0.12 + interceptions * 0.1 + clearances * 0.05 + blocks * 0.1;
+    r += dribblesWon * 0.09 - (dribbles - dribblesWon) * 0.04;
+    r += (duelsWon - duelsLost) * 0.02;
+    r -= fouls * 0.06;
+    r += fouled * 0.03;
+    r -= yellow * 0.25 + red * 1.5;
+    r -= possessionLost * 0.022;
+    r -= offsides * 0.04;
+    final cleanSheet = minutes >= 60 && goalsConceded == 0;
+    if (goalkeeper) {
+      r += saves * 0.3 - goalsConceded * 0.22 + (cleanSheet ? 0.45 : 0);
+    } else if (defender) {
+      r -= goalsConceded * 0.09;
+      if (cleanSheet) r += 0.3;
+    } else if (!forward && cleanSheet) {
+      r += 0.08;
+    }
+    r += goalDifference.clamp(-3, 3) * 0.06;
+    if (minutes < 25) r = 6.5 + (r - 6.5) * (0.5 + minutes / 50);
+    return (r.clamp(3.0, 10.0) * 10).round() / 10;
+  }
 }
 
 /// Uchrashuv taqvimi (Fixture)
 class Fixture {
   final String id;
-  final int round; // Tur raqami (1.0.14)
+  final int round;
   final String homeClubId;
   final String awayClubId;
+  DateTime? date;
   int? homeScore;
   int? awayScore;
   bool isPlayed;
   List<MatchEvent> events;
-  // Realistik statistikalar
   int homePasses, awayPasses, homeCompletedPasses, awayCompletedPasses;
   int homeShots;
   int awayShots;
   int homeShotsOnTarget;
   int awayShotsOnTarget;
-  int homePossession; // Masalan: 56 (%)
-  int awayPossession; // Masalan: 44 (%)
+  int homePossession;
+  int awayPossession;
   int homeCorners;
   int awayCorners;
   int homeFouls;
   int awayFouls;
+  int homeSaves = 0, awaySaves = 0;
+  int homeOffsides = 0, awayOffsides = 0;
+  int homeTackles = 0, awayTackles = 0;
+  int homeBigChances = 0, awayBigChances = 0;
+  int homeYellows = 0, awayYellows = 0, homeReds = 0, awayReds = 0;
+  int attendance = 0;
   double homeXG;
   double awayXG;
+  Map<String, double> ratings = {};
+  Map<String, PlayerMatchStats> playerStats = {};
+  List<String> homeLineup = [], awayLineup = [];
+  List<String> homeBench = [], awayBench = [];
+  List<double> momentum = [];
+  String? motmId;
   Fixture({
     required this.id,
     required this.round,
     required this.homeClubId,
     required this.awayClubId,
+    this.date,
     this.homeScore,
     this.awayScore,
     this.isPlayed = false,
@@ -102,6 +227,18 @@ class Fixture {
   }) : events = events ?? [];
   bool get hasResult => isPlayed && homeScore != null && awayScore != null;
   String get scoreDisplay => hasResult ? '$homeScore - $awayScore' : 'VS';
+  bool involves(String clubId) =>
+      homeClubId == clubId || awayClubId == clubId;
+  String resultFor(String clubId) {
+    if (!hasResult) return '';
+    final mine = clubId == homeClubId ? homeScore! : awayScore!;
+    final theirs = clubId == homeClubId ? awayScore! : homeScore!;
+    return mine > theirs
+        ? 'W'
+        : mine == theirs
+        ? 'D'
+        : 'L';
+  }
 }
 
 /// Liga turnir jadvali qatori (Standings Row)
@@ -113,7 +250,7 @@ class LeagueStanding {
   int lost;
   int goalsFor;
   int goalsAgainst;
-  List<String> formGuide; // 'W', 'D', 'L' (oxirgi 5 ta o'yin)
+  List<String> formGuide;
   LeagueStanding({
     required this.clubId,
     this.played = 0,
@@ -144,21 +281,17 @@ class LeagueStanding {
 
   void _addForm(String result) {
     formGuide.add(result);
-    if (formGuide.length > 5) {
-      formGuide.removeAt(0);
-    }
+    if (formGuide.length > 5) formGuide.removeAt(0);
   }
 
-  LeagueStanding copy() {
-    return LeagueStanding(
-      clubId: clubId,
-      played: played,
-      won: won,
-      drawn: drawn,
-      lost: lost,
-      goalsFor: goalsFor,
-      goalsAgainst: goalsAgainst,
-      formGuide: List<String>.from(formGuide),
-    );
-  }
+  LeagueStanding copy() => LeagueStanding(
+    clubId: clubId,
+    played: played,
+    won: won,
+    drawn: drawn,
+    lost: lost,
+    goalsFor: goalsFor,
+    goalsAgainst: goalsAgainst,
+    formGuide: List<String>.from(formGuide),
+  );
 }

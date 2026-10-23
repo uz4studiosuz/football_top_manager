@@ -24,81 +24,62 @@ responsive navigation and touch/mouse interactions share the same Flutter code.
 
 ## Career and UI
 
-- Four-step onboarding: identity, custom portrait, preferred philosophy, club.
-- Possession Game, Quick Counter, Long Ball Counter, Out Wide and Long Ball
-  proficiency all begin at **70**. Every five managed fixtures develops the
-  currently used philosophy by one point, up to 100.
-- Parametric faces include skin, jaw/face, eyes, nose, lips, eyebrows, hair cut
-  and colour, beard, age lines, freckles and glasses. The same editor serves
-  managers and players.
-- New clubs receive randomly combined, unique player names from locale pools.
-  Club crests support both manual choices and random generation.
-- Squad, tactics, league, transfers and finance are separate pages. Mouse drag
-  and touch long-press drag swap players; edges scroll during a drag. Tapping a
-  player opens profile, individual instructions and substitution choices.
-- Individual roles: balanced, stay back, make runs, hold width and playmaker.
-- Profiles group all 26 requested attributes, show radar/strength bars, and place
-  all 14 positional OVR ratings on a football pitch. GK OVR uses five actual GK
-  attributes rather than outfield proxies.
-- Scouting compares both teams on identical 0–100 scales, with actual numeric
-  differences, fitness, formation, squad depth, danger player and recent results.
+- SofaScore-inspired clean design system (`lib/ui/app_theme.dart`,
+  `lib/ui/widgets.dart`): white cards, rating pills (SofaScore scale), stat
+  colours 90+ sky blue / 80–89 green / 70–79 amber / ≤69 red.
+- Navigation: Boshqaruv · Jamoa (pitch, list, team tactics, instructions) ·
+  Jadval · Transfer · Moliya (finance, real-date calendar, inbox, club profile).
+- Eight clubs with 23-man squads, look-alike vector crests (crowned roundel,
+  ringed badges, pointed shield, heater shields) and look-alike portraits.
+- Every player has an eFootball playing style (PlayerPlayingStyles.md),
+  a defending style and AI styles; all of them change match behaviour.
+- New clubs get an average squad (≈64–73) plus one star chosen from three.
+- Careers auto-save with shared_preferences (localStorage on the web);
+  Profile → "Chiqish va saqlanganni tozalash" wipes the save.
 
 ## Simulation
 
-At 1x, one real second equals one match minute. Half-time pauses the match;
-2x/5x and instant result use the same engine. The pitch is authoritative:
-carriers advance into space, choose passes by progression/safety/style, and
-receive pressure or interceptions. Completed shot flights produce goals, saves,
-blocks and misses; a goal is written only when the ball reaches the goal line.
-After a goal the conceding side restarts from the centre.
+`lib/services/match_field.dart` drives a 2D pitch where action time runs at
+`MatchField.tempo` relative to the clock. Calibrated averages per match
+(`flutter test tool/calibrate_test.dart`): ~2.8 goals, ~23 shots, ~8 on
+target, ~830 passes at 84%, ~9 corners, ~24 fouls, ~4 yellows, ~3 offsides,
+home win ≈45% / draw ≈24%. Players earn live SofaScore-style ratings;
+fixtures store momentum, shot maps, player lines and man of the match.
 
-Geometry, canonical attributes, team tactics, individual instructions, manager
-proficiency and fatigue influence decisions. Wide play/lofted crosses can lead
-to headers; passing accounts for offside, and free kicks/corners use set-piece
-attributes. AI fixtures run the same engine. Goals, assists, xG, passes,
-on-target shots, fouls and cards come from its events rather than a separate
-random scoreboard. Live substitution guards enforce five changes and no re-entry.
+Real rules: added time, 5 substitutions in 3 in-play windows (half-time
+free), yellow accumulation and red-card bans, injuries, offsides, penalties,
+free kicks that mirror fouls + offsides, corners with players taking
+realistic positions (box crowded, near-post marker, wall at free kicks).
+Team tactics (build-up, attacking area, defensive approach, containment,
+compactness, pressing, offside trap, time wasting), individual instructions
+(Anchoring, Offensive, Defensive, Man/Tight Marking, Deep Line, Counter
+Target) and set-piece takers/captain all feed the engine, as does the
+manager's proficiency in the chosen playstyle.
+
+## Progression and economy
+
+- Manager proficiency grows with experience (matches, wins, clean sheets,
+  season finish); players develop during the season from match ratings and
+  at season end by age/potential.
+- Real dates (Aug–May), summer/winter transfer windows, negotiation with
+  counter-offers, AI bids for your players, free agents (signable any time),
+  weekly wages, ticket pricing, prize money, board objective and confidence.
+- The fixture draw, match outcomes and AI deals are random per career.
 
 ## Data
 
-The bundled data is a fictional career seed, not a live real-world roster.
-
 | Asset | Contents |
 | --- | --- |
-| `assets/data/league.json` | Versioned manifest and league metadata |
 | `assets/data/clubs.json` | Clubs, budgets, crests, tactics and squad IDs |
-| `assets/data/players.json` | Player identity, contracts and 26 attributes |
-| `assets/data/names.json` | Locale-specific first/last name pools |
-| `assets/data/squad_templates.json` | Generated squad positions and target levels |
+| `assets/data/players.json` | Players, 26 attributes, look-alike face hints, playing styles |
+| `assets/data/names.json` | Locale name pools for generated players |
+| `assets/data/squad_templates.json` | 23-slot template for new clubs |
 
-Startup joins by IDs, validates lineups/ownership, and gives each new career
-independent objects. Attributes are bounded to **40–100**. Runtime career
-progress and edited faces currently remain in memory.
-
-## Transfers and finance
-
-The compact league's transfer windows are rounds 1–3 and 8–9. A seller retains
-at least 14 players and one keeper; a buyer stays within 25 registrations,
-transfer funds and weekly wage limits. Agent cost is 3% of the fee, signing bonus
-four offered weekly wages, and purchases sign three-year contracts. AI clubs
-trade with their own funds. Transfers preserve a single owner and replenish a
-seller's starting XI. These are explicit game rules for this fictional league.
-
-All clubs receive sponsorship and pay wages/operating costs each round. Home
-clubs receive gate income and pay stadium costs. Finance and transfer history
-are inspectable, and applying a match result twice cannot duplicate payments.
+Generators: `tool/expand_squads.py`, `tool/star_faces.py`,
+`tool/playing_styles.py`.
 
 ## Verification
 
-`flutter test` covers attribute schema/ranges, goalkeeper OVR, generated names,
-manager levels, drag on desktop and touch, menus, narrow layouts, ownership,
-contract renewal, transfer accounting, match clock, physical goal completion and
-a full 14-round season.
-
-`flutter test tool/capture_ui_test.dart` additionally captures the key pages and
-onboarding steps to `artifacts/qa`. Set `FLUTTER_ROOT` to the SDK for QA fonts.
-
-With Python Playwright and Chrome installed, `python tool/web_smoke.py` runs the
-served web release with external requests blocked: onboarding, club selection,
-real-time 1x clock, match, next round and mobile viewport. Set `CHROME_BINARY` if
-Chrome is installed elsewhere. Its screenshots/report are in `artifacts/qa`.
+`flutter test` (33 tests: rules, engine, ratings, save/restore, corners,
+free kicks, widgets). `flutter test tool/capture_ui_test.dart` writes
+screenshots to `artifacts/qa`.

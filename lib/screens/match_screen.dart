@@ -6,50 +6,36 @@ import '../models/player.dart';
 import '../models/league.dart';
 import '../services/game_state.dart';
 import '../services/match_field.dart';
+import '../ui/face_avatar.dart';
+import '../ui/football_pitch.dart';
+import '../ui/match_widgets.dart';
+import '../ui/widgets.dart';
+import 'match_report_screen.dart';
 import 'widgets/opponent_squad_sheet.dart';
+import 'widgets/player_detail_view.dart';
 import 'tactics_screen.dart';
 
 /// O'yin davomidagi taktik kayfiyat (In-Game Mentality)
 enum InGameMentality {
-  ultraAttack(
-    'Ultra Hujum',
-    Icons.keyboard_double_arrow_up_rounded,
-    Color(0xFF1769E0),
-    1.35,
-    0.70,
-  ),
-  attack('Hujumkor', Icons.arrow_upward_rounded, Color(0xFF1769E0), 1.18, 0.85),
-  balanced(
-    'Muvozanat',
-    Icons.horizontal_rule_rounded,
-    Color(0xFF1769E0),
-    1.00,
-    1.00,
-  ),
-  defensive(
-    'Himoyaviy',
-    Icons.arrow_downward_rounded,
-    Color(0xFF1769E0),
-    0.80,
-    1.25,
-  ),
-  parkBus('Avtobus', Icons.shield_rounded, Color(0xFF1769E0), 0.55, 1.50);
+  ultraAttack('Ultra hujum', Icons.keyboard_double_arrow_up_rounded, 1.35, 0.70),
+  attack('Hujumkor', Icons.arrow_upward_rounded, 1.18, 0.85),
+  balanced('Muvozanat', Icons.horizontal_rule_rounded, 1.00, 1.00),
+  defensive('Himoyaviy', Icons.arrow_downward_rounded, 0.82, 1.22),
+  parkBus('Avtobus', Icons.shield_rounded, 0.58, 1.45);
 
   final String label;
   final IconData icon;
-  final Color color;
   final double attackMultiplier;
   final double defenseMultiplier;
   const InGameMentality(
     this.label,
     this.icon,
-    this.color,
     this.attackMultiplier,
     this.defenseMultiplier,
   );
 }
 
-/// 2D Match Engine va Jonli Uchrashuv Simulyatsiyasi Ekrani
+/// Live 2D match – SofaScore-style event page around a real-time pitch.
 class MatchScreen extends StatefulWidget {
   final Fixture fixture;
   const MatchScreen({super.key, required this.fixture});
@@ -57,589 +43,606 @@ class MatchScreen extends StatefulWidget {
   State<MatchScreen> createState() => _MatchScreenState();
 }
 
-class _MatchScreenState extends State<MatchScreen>
-    with SingleTickerProviderStateMixin {
-  late Club _homeClub;
-  late Club _awayClub;
-  late Timer _matchTimer;
-  final GameState _gameState = GameState();
-  bool _halfTimeTaken = false;
-  final Stopwatch _wallClock = Stopwatch();
-  Duration _lastTick = Duration.zero;
-  late MatchField _field;
-  final Set<String> _dismissed = {};
-  final Set<String> _subbedOff = {};
-  final Set<String> _participants = {};
-  int _minute = 0;
-  int _homeScore = 0;
-  int _awayScore = 0;
-  int _speedMultiplier = 1; // 1x, 2x, 5x
-  bool _isPlaying = true;
-  bool _isFinished = false;
-  // Real-time Match Statistics
-  int _homeShots = 0;
-  int _awayShots = 0;
-  int _homeShotsOnTarget = 0;
-  int _awayShotsOnTarget = 0;
-  int _homeCorners = 0;
-  int _awayCorners = 0;
-  int _homeFouls = 0;
-  int _awayFouls = 0;
-  int _homeYellowCards = 0;
-  int _awayYellowCards = 0;
-  int _homeRedCards = 0;
-  int _awayRedCards = 0;
-  double _homeXG = 0.0;
-  double _awayXG = 0.0;
-  int _homePossession = 50;
-  int _awayPossession = 50;
-  // Foydalanuvchi taktik kayfiyati va almashtirishlar
-  InGameMentality _userMentality = InGameMentality.balanced;
-  int _substitutionsRemaining = 5;
-  final List<MatchEvent> _events = [];
-  final ScrollController _commentaryScroll = ScrollController();
-  // 2D Maydondagi to'p va o'yinchilar koordinatalari
-  double _ballX = 0.5;
-  double _ballY = 0.5;
-  bool get _isUserHome => _homeClub.id == _gameState.userClubId;
-  Club get _userClub => _isUserHome ? _homeClub : _awayClub;
-  Club get _rivalClub => _isUserHome ? _awayClub : _homeClub;
+class _MatchScreenState extends State<MatchScreen> {
+  /// Match minutes per real second at each speed step (1x ≈ 3 min match).
+  static const speeds = <String, double>{'1x': 0.5, '2x': 1, '4x': 2, '8x': 4};
+  final GameState _game = GameState();
+  late final Club _home, _away;
+  late final MatchField _field;
+  late final Timer _timer;
+  final Stopwatch _clock = Stopwatch();
+  Duration _last = Duration.zero;
+  String _speed = '1x';
+  bool _playing = true;
+  bool _saved = false;
+  int _lineupTab = 0;
+  InGameMentality _mentality = InGameMentality.balanced;
+  final List<MatchEvent> _feed = [];
+  final Set<String> _handledInjuries = {};
+
+  bool get _userHome => _home.id == _game.userClubId;
+  Club get _user => _userHome ? _home : _away;
+  Club get _rival => _userHome ? _away : _home;
+  int get _subsLeft => 5 - (_userHome ? _field.homeSubsUsed : _field.awaySubsUsed);
+
   @override
   void initState() {
     super.initState();
-    _homeClub =
-        _gameState.getClubById(widget.fixture.homeClubId) ??
-        _gameState.userClub;
-    _awayClub =
-        _gameState.getClubById(widget.fixture.awayClubId) ??
-        _gameState.allClubs.first;
+    _home = _game.getClubById(widget.fixture.homeClubId)!;
+    _away = _game.getClubById(widget.fixture.awayClubId)!;
+    if (_home.id != _game.userClubId) _game.autoPickLineup(_home);
+    if (_away.id != _game.userClubId) _game.autoPickLineup(_away);
+    final coaching = _game.managerProfile.ratingFor(_user.tactics.playstyle);
     _field = MatchField(
-      _homeClub,
-      _awayClub,
-      seed: widget.fixture.id.codeUnits.fold<int>(
-        0,
-        (a, b) => (a * 31 + b) & 0x7fffffff,
-      ),
-      homeCoaching: _isUserHome
-          ? _gameState.managerProfile.ratingFor(_homeClub.tactics.playstyle)
-          : 70,
-      awayCoaching: !_isUserHome
-          ? _gameState.managerProfile.ratingFor(_awayClub.tactics.playstyle)
-          : 70,
+      _home,
+      _away,
+      // Every kick-off plays out differently.
+      seed: Random().nextInt(1 << 30),
+      homeCoaching: _userHome ? coaching : 66 + _home.reputation ~/ 10,
+      awayCoaching: _userHome ? 66 + _away.reputation ~/ 10 : coaching,
+      homeAI: !_userHome,
+      awayAI: _userHome,
     );
-    _participants.addAll([
-      ..._homeClub.startingLineupIds,
-      ..._awayClub.startingLineupIds,
-    ]);
-    _calculatePossession();
-    // Boshlang'ich hushtak voqeasi
-    _addEvent(
-      0,
-      MatchEventType.kickoff,
-      'Uchrashuv boshlandi! Hakam hushtagi chalindi. Muxlislar shiddatli bahs kutishmoqda.',
-      _homeClub.id,
-      true,
-    );
-    _startSimulationTimer();
+    _applyMentality();
+    _feed.addAll(_field.takeEvents().reversed);
+    _clock.start();
+    _timer = Timer.periodic(const Duration(milliseconds: 33), (_) => _tick());
   }
 
   @override
   void dispose() {
-    _matchTimer.cancel();
-    _commentaryScroll.dispose();
+    _timer.cancel();
     super.dispose();
   }
 
-  void _calculatePossession() {
-    if (_isUserHome) {
-      _field.homeCoaching = _gameState.managerProfile.ratingFor(
-        _homeClub.tactics.playstyle,
-      );
+  void _applyMentality() {
+    final m = _mentality;
+    if (_userHome) {
+      _field.homeAttack = m.attackMultiplier;
+      _field.awayAttack = 1 / m.defenseMultiplier;
     } else {
-      _field.awayCoaching = _gameState.managerProfile.ratingFor(
-        _awayClub.tactics.playstyle,
-      );
-    }
-    _field.homeAttack = _isUserHome
-        ? _userMentality.attackMultiplier
-        : 1 / _userMentality.defenseMultiplier;
-    _field.awayAttack = !_isUserHome
-        ? _userMentality.attackMultiplier
-        : 1 / _userMentality.defenseMultiplier;
-  }
-
-  void _syncField() {
-    final h = _field.homeStats, a = _field.awayStats;
-    _homeScore = h.goals;
-    _awayScore = a.goals;
-    _homeShots = h.shots;
-    _awayShots = a.shots;
-    _homeShotsOnTarget = h.onTarget;
-    _awayShotsOnTarget = a.onTarget;
-    _homeCorners = h.corners;
-    _awayCorners = a.corners;
-    _homeFouls = h.fouls;
-    _awayFouls = a.fouls;
-    _homeYellowCards = h.yellows;
-    _awayYellowCards = a.yellows;
-    _homeRedCards = h.reds;
-    _awayRedCards = a.reds;
-    _homeXG = h.xg;
-    _awayXG = a.xg;
-    _homePossession = _field.homePossessionPercent;
-    _awayPossession = 100 - _homePossession;
-    _ballX = _field.ball.dx;
-    _ballY = _field.ball.dy;
-    _minute = _field.time.floor().clamp(0, 90);
-    _dismissed.addAll(_field.dismissed);
-    for (final event in _field.takeEvents()) {
-      _events.insert(0, event);
+      _field.awayAttack = m.attackMultiplier;
+      _field.homeAttack = 1 / m.defenseMultiplier;
     }
   }
 
-  void _finish() {
-    _isFinished = true;
-    _matchTimer.cancel();
-    _addEvent(
-      90,
-      MatchEventType.fullTime,
-      'Uchrashuv yakunlandi.',
-      _homeClub.id,
-      true,
-    );
-    _saveMatchResult();
-  }
-
-  void _startSimulationTimer() {
-    _wallClock.start();
-    _matchTimer = Timer.periodic(const Duration(milliseconds: 33), (_) {
-      final now = _wallClock.elapsed, delta = now - _lastTick;
-      _lastTick = now;
-      if (!_isPlaying || _isFinished) return;
-      setState(() {
-        _calculatePossession();
-        final remaining = (_halfTimeTaken ? 90 : 45) - _field.time;
-        _field.update(
-          min(remaining, delta.inMicroseconds / 1000000 * _speedMultiplier),
-          _dismissed,
-        );
-        _syncField();
-        if (!_halfTimeTaken && _field.time >= 45) {
-          _halfTimeTaken = true;
-          _isPlaying = false;
-          _field.restart(false);
-          _addEvent(
-            45,
-            MatchEventType.halfTime,
-            'Tanaffus. Ko‘rsatmalarni tekshirib davom ettiring.',
-            _homeClub.id,
-            true,
-          );
-        }
-        if (_field.time >= 90) _finish();
-      });
+  void _tick() {
+    final now = _clock.elapsed, delta = now - _last;
+    _last = now;
+    if (!_playing || _field.isFinished || _field.isHalfTime) return;
+    setState(() {
+      _field.update(delta.inMicroseconds / 1e6 * speeds[_speed]!);
+      _drain();
     });
   }
 
-  void _addEvent(
-    int min,
-    MatchEventType type,
-    String desc,
-    String clubId,
-    bool isHome, {
-    String? playerName,
-  }) {
-    final event = MatchEvent(
-      minute: min,
-      type: type,
-      description: desc,
-      clubId: clubId,
-      playerName: playerName,
-      isHomeTeam: isHome,
-    );
-    _events.insert(0, event);
-    if (_commentaryScroll.hasClients) {
-      _commentaryScroll.animateTo(
-        0,
-        duration: const Duration(milliseconds: 200),
-        curve: Curves.easeOut,
-      );
+  void _drain() {
+    for (final e in _field.takeEvents()) {
+      _feed.insert(0, e);
     }
-  }
-
-  /// Tezkor yakunlash ("Instant Result")
-  void _instantFinish() {
-    _matchTimer.cancel();
-    _calculatePossession();
-    while (_field.time < 90 - 0.000001) {
-      final limit = _halfTimeTaken ? 90.0 : 45.0;
-      _field.update(min(1 / 30, limit - _field.time), _dismissed);
-      if (!_halfTimeTaken && _field.time >= 45 - 0.000001) {
-        _halfTimeTaken = true;
-        _field.restart(false);
+    if (_field.isHalfTime) _playing = false;
+    if (_field.isFinished) _save();
+    // Pause so the manager can react to an injury on their side.
+    for (final id in _field.injuredOnPitch) {
+      if (_handledInjuries.contains(id) || _user.playerById(id) == null) continue;
+      _handledInjuries.add(id);
+      if (_subsLeft > 0) {
+        _playing = false;
+        final p = _user.playerById(id)!;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('${p.shortName} jarohat oldi. Almashtirish kerak.'),
+              action: SnackBarAction(label: 'Almashtirish', onPressed: () => _openSubs(preselect: p)),
+            ),
+          );
+        });
       }
     }
-    _syncField();
-    _minute = 90;
-    _finish();
-    setState(() {});
   }
 
-  void _saveMatchResult() {
-    widget.fixture.homePasses = _field.homeStats.passes;
-    widget.fixture.awayPasses = _field.awayStats.passes;
-    widget.fixture.homeCompletedPasses = _field.homeStats.completedPasses;
-    widget.fixture.awayCompletedPasses = _field.awayStats.completedPasses;
-    widget.fixture.homeShots = _homeShots;
-    widget.fixture.awayShots = _awayShots;
-    widget.fixture.homeShotsOnTarget = _homeShotsOnTarget;
-    widget.fixture.awayShotsOnTarget = _awayShotsOnTarget;
-    widget.fixture.homePossession = _homePossession;
-    widget.fixture.awayPossession = _awayPossession;
-    widget.fixture.homeCorners = _homeCorners;
-    widget.fixture.awayCorners = _awayCorners;
-    widget.fixture.homeFouls = _homeFouls;
-    widget.fixture.awayFouls = _awayFouls;
-    widget.fixture.homeXG = double.parse(_homeXG.toStringAsFixed(2));
-    widget.fixture.awayXG = double.parse(_awayXG.toStringAsFixed(2));
-    GameState().finishMatch(
+  void _save() {
+    if (_saved) return;
+    _saved = true;
+    _game.finishMatch(
       fixture: widget.fixture,
-      homeScore: _homeScore,
-      awayScore: _awayScore,
-      events: _events,
-      participantIds: _participants,
+      homeScore: _field.homeStats.goals,
+      awayScore: _field.awayStats.goals,
+      events: _field.events,
+      engine: _field,
     );
+  }
+
+  void _instantFinish() {
+    setState(() {
+      _field.simulateToEnd();
+      _drain();
+      _save();
+    });
+  }
+
+  void _setMentality(InGameMentality m) {
+    setState(() {
+      _mentality = m;
+      _applyMentality();
+      _field.announce(
+        MatchEventType.info,
+        '${_user.shortName} murabbiyi jamoani "${m.label}" rejimiga o‘tkazdi.',
+        _userHome,
+      );
+      _drain();
+    });
   }
 
   bool _swapInMatch(Player a, Player b) {
-    if (_isFinished || _dismissed.contains(a.id) || _dismissed.contains(b.id)) {
+    if (_field.isFinished || _field.dismissed.contains(a.id) || _field.dismissed.contains(b.id)) {
       return false;
     }
-    final aStarts = _userClub.startingLineupIds.contains(a.id),
-        bStarts = _userClub.startingLineupIds.contains(b.id);
-    if (aStarts == bStarts) {
-      final ok = _gameState.swapPlayer(a.id, b.id);
-      if (ok && mounted) setState(() {});
-      return ok;
+    final aStarts = _user.startingLineupIds.contains(a.id), bStarts = _user.startingLineupIds.contains(b.id);
+    if (aStarts && bStarts) {
+      final i = _user.startingLineupIds.indexOf(a.id), j = _user.startingLineupIds.indexOf(b.id);
+      _user.startingLineupIds[i] = b.id;
+      _user.startingLineupIds[j] = a.id;
+      setState(() {});
+      return true;
     }
-    final outgoing = aStarts ? a : b, incoming = aStarts ? b : a;
-    if (_substitutionsRemaining <= 0 || _subbedOff.contains(incoming.id)) {
-      return false;
-    }
-    _subbedOff.add(outgoing.id);
-    _participants.add(incoming.id);
-    _substitutionsRemaining--;
-    final ok = _gameState.swapPlayer(outgoing.id, incoming.id);
-    _addEvent(
-      _minute,
-      MatchEventType.substitution,
-      '${outgoing.shortName} o‘rniga ${incoming.shortName} maydonga tushdi.',
-      _userClub.id,
-      _isUserHome,
-      playerName: incoming.name,
-    );
-    if (mounted) setState(() {});
+    if (!aStarts && !bStarts) return false;
+    final out = aStarts ? a : b, incoming = aStarts ? b : a;
+    final ok = _field.substitute(_userHome, out.id, incoming.id);
+    if (ok) setState(_drain);
     return ok;
   }
 
-  /// Jonli O'yinda Almashtirish (Live In-Match Substitution Modal)
-  void _showLiveSubstitutionModal() {
-    final user = _userClub;
-    final starters = user.startingXI
-        .where((p) => !_dismissed.contains(p.id))
-        .toList();
-    final bench = user.bench;
-    showModalBottomSheet(
+  Future<void> _openSubs({Player? preselect}) async {
+    final resume = _playing;
+    setState(() => _playing = false);
+    await showModalBottomSheet<void>(
       context: context,
-      backgroundColor: const Color(0xFFFFFFFF),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      isScrollControlled: true,
+      builder: (ctx) => _SubstitutionSheet(
+        field: _field,
+        club: _user,
+        isHome: _userHome,
+        preselect: preselect,
+        onDone: () => setState(_drain),
       ),
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (ctx, setModalState) {
-            return Container(
-              padding: const EdgeInsets.all(18),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    );
+    if (mounted && !_field.isHalfTime && !_field.isFinished) setState(() => _playing = resume || preselect != null);
+  }
+
+  Future<void> _openTactics() async {
+    final resume = _playing;
+    setState(() => _playing = false);
+    await Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (_) => TacticsScreen(
+          onSwap: _swapInMatch,
+          unavailable: {..._field.dismissed, ..._field.subbedOff},
+        ),
+      ),
+    );
+    if (mounted) setState(() => _playing = resume && !_field.isHalfTime);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = teamColors(_home, _away);
+    final finished = _field.isFinished;
+    return PopScope(
+      canPop: finished,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _confirmExit();
+      },
+      child: DefaultTabController(
+      length: 4,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Super League · ${widget.fixture.round}-tur', style: AppText.h3),
+          actions: [
+            IconButton(
+              tooltip: 'Raqib tarkibi',
+              icon: const Icon(Icons.groups_outlined),
+              onPressed: () => OpponentSquadSheet.show(context, opponentClub: _rival),
+            ),
+            if (!finished)
+              TextButton.icon(
+                onPressed: _instantFinish,
+                icon: const Icon(Icons.fast_forward_rounded, size: 18),
+                label: const Text('Tezkor'),
+              ),
+          ],
+        ),
+        body: LayoutBuilder(
+          builder: (context, box) {
+            final wide = box.maxWidth >= 980;
+            final pitchArea = Column(
+              children: [
+                Container(
+                  color: AppColors.surface,
+                  child: MatchHeader(
+                    home: _home,
+                    away: _away,
+                    homeScore: _field.homeStats.goals,
+                    awayScore: _field.awayStats.goals,
+                    status: _field.clockLabel,
+                    live: !finished && !_field.isHalfTime,
+                    events: _field.events,
+                  ),
+                ),
+                _pitch(colors, wide ? box.maxWidth * 0.58 : box.maxWidth, box.maxHeight),
+                _controls(),
+              ],
+            );
+            final tabs = Column(
+              children: [
+                Container(
+                  color: AppColors.surface,
+                  child: const TabBar(
+                    tabs: [
+                      Tab(text: 'Jonli'),
+                      Tab(text: 'Statistika'),
+                      Tab(text: 'Tarkiblar'),
+                      Tab(text: 'Izohlar'),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: TabBarView(
                     children: [
-                      Row(
+                      _liveTab(colors),
+                      ListView(
+                        padding: const EdgeInsets.all(12),
                         children: [
-                          const Icon(
-                            Icons.swap_horiz_rounded,
-                            color: Color(0xFF1769E0),
+                          StatGroupsView(
+                            groups: statGroupsFromEngine(_field),
+                            homeColor: colors.$1,
+                            awayColor: colors.$2,
                           ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Almashtirishlar ($substitutionsRemaining qoldi)',
-                            style: const TextStyle(
-                              color: Color(0xFF192B42),
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                          AppCard(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SectionHeader('Zarbalar xaritasi', icon: Icons.scatter_plot_outlined),
+                                ShotMap(shots: _field.shots, homeColor: colors.$1, awayColor: colors.$2),
+                                const SizedBox(height: 6),
+                                const Text('Doira kattaligi – xG, to‘ldirilgan – gol.', style: AppText.caption),
+                              ],
                             ),
                           ),
                         ],
                       ),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.close_rounded,
-                          color: Color(0xFF637184),
-                          size: 20,
+                      _lineupsTab(colors),
+                      ListView.builder(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        itemCount: _feed.length,
+                        itemBuilder: (context, i) => CommentaryTile(
+                          event: _feed[i],
+                          homeColor: colors.$1,
+                          awayColor: colors.$2,
                         ),
-                        onPressed: () => Navigator.pop(ctx),
                       ),
                     ],
                   ),
-                  const Text(
-                    'Maydondagi o\'yinchini tanlang, so\'ng uning o\'rniga tushadigan futbolchini bosing:',
-                    style: TextStyle(color: Color(0xFF637184), fontSize: 12),
-                  ),
-                  const SizedBox(height: 12),
-                  // Maydondagi o'yinchilar
-                  SizedBox(
-                    height: 280,
-                    child: ListView.builder(
-                      itemCount: starters.length,
-                      itemBuilder: (context, i) {
-                        final starter = starters[i];
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 6),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF3F5F8),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: Color(0xFFE9EDF3)),
-                          ),
-                          child: Material(
-                            color: Colors.transparent,
-                            child: ListTile(
-                              dense: true,
-                              leading: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFE8EDF3),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  starter.mainPosition.code,
-                                  style: const TextStyle(
-                                    color: Color(0xFF192B42),
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                              title: Text(
-                                starter.name,
-                                style: const TextStyle(
-                                  color: Color(0xFF192B42),
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              subtitle: Text(
-                                'Stamina: ${starter.currentStamina}% • OVR ${starter.ovr}',
-                                style: const TextStyle(
-                                  color: Color(0xFF778496),
-                                  fontSize: 11,
-                                ),
-                              ),
-                              trailing: ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF1769E0),
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 4,
-                                  ),
-                                  visualDensity: VisualDensity.compact,
-                                ),
-                                onPressed:
-                                    _substitutionsRemaining > 0 &&
-                                        bench.isNotEmpty
-                                    ? () {
-                                        _showPickBenchPlayerModal(starter, ctx);
-                                      }
-                                    : null,
-                                child: const Text(
-                                  'Almashtirish',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             );
+            if (wide) {
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(width: box.maxWidth * 0.58, child: SingleChildScrollView(child: pitchArea)),
+                  const VerticalDivider(width: 1),
+                  Expanded(child: tabs),
+                ],
+              );
+            }
+            return Column(children: [pitchArea, Expanded(child: tabs)]);
           },
-        );
-      },
+        ),
+      ),
+    ),
     );
   }
 
-  void _showPickBenchPlayerModal(Player starter, BuildContext parentCtx) {
-    final bench = _userClub.bench
-        .where((p) => !_subbedOff.contains(p.id) && !_dismissed.contains(p.id))
-        .toList();
-    showModalBottomSheet(
+  Future<void> _confirmExit() async {
+    final resume = _playing;
+    setState(() => _playing = false);
+    final leave = await showDialog<bool>(
       context: context,
-      backgroundColor: const Color(0xFFFFFFFF),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+      builder: (ctx) => AlertDialog(
+        title: const Text('O‘yindan chiqasizmi?'),
+        content: const Text(
+          'Uchrashuv to‘xtatilmaydi: qolgan vaqt avtomatik simulyatsiya qilinadi va natija jadvalga yoziladi.',
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Davom etish')),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Natijani hisoblab chiqish')),
+        ],
       ),
-      builder: (benchCtx) {
-        return Container(
-          padding: const EdgeInsets.all(18),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '${starter.name} o\'rniga zaxiradan kim tushadi?',
-                style: const TextStyle(
-                  color: Color(0xFF192B42),
-                  fontSize: 15,
-                  fontWeight: FontWeight.bold,
+    );
+    if (!mounted) return;
+    if (leave == true) {
+      _instantFinish();
+      Navigator.of(context).pop();
+    } else {
+      setState(() => _playing = resume);
+    }
+  }
+
+  void _showPlayer(Player p, Club club) => showPlayerMatchSheet(
+    context,
+    player: p,
+    club: club,
+    line: _field.lines[p.id],
+    rating: _field.ratingFor(p.id),
+    onOpenProfile: () => PlayerDetailView.show(context, player: p, club: club),
+  );
+
+  Widget _pitch((Color, Color) colors, double width, double maxHeight) {
+    final h = (width * 68 / 105).clamp(150.0, maxHeight < 700 ? 190.0 : 320.0);
+    return Container(
+      height: h,
+      margin: const EdgeInsets.fromLTRB(10, 8, 10, 6),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: CustomPaint(
+                painter: MatchPitchPainter(
+                  field: _field,
+                  homeColor: colors.$1,
+                  awayColor: colors.$2,
                 ),
               ),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 240,
-                child: ListView.builder(
-                  itemCount: bench.length,
-                  itemBuilder: (context, i) {
-                    final bp = bench[i];
-                    return Material(
-                      color: Colors.transparent,
-                      child: ListTile(
-                        dense: true,
-                        leading: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 6,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE8EDF3),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            bp.mainPosition.code,
-                            style: const TextStyle(
-                              color: Color(0xFF192B42),
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        title: Text(
-                          bp.name,
-                          style: const TextStyle(
-                            color: Color(0xFF192B42),
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        subtitle: Text(
-                          'OVR ${bp.ovr} • Stamina: ${bp.currentStamina}%',
-                          style: const TextStyle(
-                            color: Color(0xFF778496),
-                            fontSize: 11,
-                          ),
-                        ),
-                        trailing: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF1769E0),
-                            foregroundColor: Colors.white,
-                          ),
-                          onPressed: () {
-                            if (!_swapInMatch(starter, bp)) return;
-                            Navigator.pop(benchCtx);
-                            Navigator.pop(parentCtx);
-                          },
-                          child: const Text(
-                            'Maydonga',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 11,
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
+            ),
+            Positioned(
+              left: 10,
+              top: 8,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.35),
+                  borderRadius: BorderRadius.circular(20),
                 ),
+                child: Text(
+                  _field.actionLabel,
+                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+            if (_field.isHalfTime || _field.isFinished)
+              Positioned.fill(child: _breakOverlay(colors)),
+            if (_field.phase == FieldPhase.goal)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.black.withValues(alpha: 0.25),
+                  alignment: Alignment.center,
+                  child: const Text(
+                    'GOOOL!',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 40,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 3,
+                      shadows: [Shadow(color: Colors.black54, blurRadius: 12)],
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _controls() {
+    final done = _field.isFinished;
+    return Container(
+      color: AppColors.surface,
+      padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              IconButton.filled(
+                onPressed: done || _field.isHalfTime ? null : () => setState(() => _playing = !_playing),
+                icon: Icon(_playing ? Icons.pause_rounded : Icons.play_arrow_rounded),
+              ),
+              const SizedBox(width: 4),
+              for (final s in speeds.keys)
+                Padding(
+                  padding: const EdgeInsets.only(right: 4),
+                  child: ChoiceChip(
+                    label: Text(s),
+                    selected: _speed == s,
+                    showCheckmark: false,
+                    visualDensity: VisualDensity.compact,
+                    onSelected: (_) => setState(() => _speed = s),
+                  ),
+                ),
+              const Spacer(),
+              FilledButton.tonalIcon(
+                onPressed: done || _subsLeft <= 0 ? null : () => _openSubs(),
+                icon: const Icon(Icons.swap_vert_rounded, size: 18),
+                label: Text('$_subsLeft'),
               ),
             ],
           ),
-        );
-      },
+          SizedBox(
+            height: 36,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                for (final m in InGameMentality.values)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: ChoiceChip(
+                      avatar: Icon(m.icon, size: 15, color: _mentality == m ? AppColors.primary : AppColors.ink2),
+                      label: Text(m.label),
+                      selected: _mentality == m,
+                      showCheckmark: false,
+                      visualDensity: VisualDensity.compact,
+                      onSelected: done ? null : (_) => _setMentality(m),
+                    ),
+                  ),
+                ActionChip(
+                  avatar: const Icon(Icons.tune_rounded, size: 15),
+                  label: const Text('Taktika'),
+                  visualDensity: VisualDensity.compact,
+                  onPressed: done ? null : _openTactics,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
-  /// Jonli Statistika Modali (Live Stats Breakdown)
-  Widget _buildStatBar(
-    String label,
-    String val1,
-    String val2,
-    int flex1,
-    int flex2,
-  ) {
-    final f1 = max(1, flex1);
-    final f2 = max(1, flex2);
-    return Column(
+  Widget _breakOverlay((Color, Color) colors) {
+    final h = _field.homeStats, a = _field.awayStats;
+    final ft = _field.isFinished;
+    Widget stat(String l, String hv, String av) => Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        children: [
+          SizedBox(width: 44, child: Text(hv, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700))),
+          Expanded(child: Text(l, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white70, fontSize: 12))),
+          SizedBox(width: 44, child: Text(av, textAlign: TextAlign.right, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700))),
+        ],
+      ),
+    );
+    return Container(
+      color: const Color(0xE6121826),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            ft ? 'O‘YIN TUGADI' : 'TANAFFUS',
+            style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 2),
+          ),
+          Text(
+            '${_home.shortName}  ${h.goals} – ${a.goals}  ${_away.shortName}',
+            style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 6),
+          stat('To‘p nazorati', '${_field.homePossessionPercent}%', '${100 - _field.homePossessionPercent}%'),
+          stat('xG', h.xg.toStringAsFixed(2), a.xg.toStringAsFixed(2)),
+          stat('Zarbalar', '${h.shots}', '${a.shots}'),
+          const SizedBox(height: 8),
+          if (ft)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                OutlinedButton(
+                  style: OutlinedButton.styleFrom(foregroundColor: Colors.white, minimumSize: const Size(0, 38)),
+                  onPressed: () => Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute<void>(builder: (_) => MatchReportScreen(fixture: widget.fixture)),
+                  ),
+                  child: const Text('Hisobot'),
+                ),
+                const SizedBox(width: 10),
+                FilledButton(
+                  style: FilledButton.styleFrom(minimumSize: const Size(0, 38)),
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Boshqaruvga qaytish'),
+                ),
+              ],
+            )
+          else
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                OutlinedButton(
+                  style: OutlinedButton.styleFrom(foregroundColor: Colors.white, minimumSize: const Size(0, 38)),
+                  onPressed: _subsLeft > 0 ? () => _openSubs() : null,
+                  child: const Text('Almashtirish'),
+                ),
+                const SizedBox(width: 10),
+                FilledButton(
+                  style: FilledButton.styleFrom(minimumSize: const Size(0, 38)),
+                  onPressed: () => setState(() {
+                    _field.startSecondHalf();
+                    _drain();
+                    _playing = true;
+                  }),
+                  child: const Text('2-bo‘limni boshlash'),
+                ),
+              ],
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _liveTab((Color, Color) colors) {
+    final latest = _feed.where((e) => e.type != MatchEventType.info).take(4).toList();
+    return ListView(
+      padding: const EdgeInsets.all(12),
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              val1,
-              style: const TextStyle(
-                color: Color(0xFF192B42),
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Text(
-              label,
-              style: const TextStyle(color: Color(0xFF637184), fontSize: 11),
-            ),
-            Text(
-              val2,
-              style: const TextStyle(
-                color: Color(0xFF192B42),
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(3),
-          child: Row(
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                flex: f1,
-                child: Container(height: 4, color: const Color(0xFF1769E0)),
+              const SectionHeader('Hujum momenti', icon: Icons.insights_outlined),
+              MomentumChart(
+                values: _field.momentum,
+                events: _field.events,
+                homeColor: colors.$1,
+                awayColor: colors.$2,
               ),
-              const SizedBox(width: 2),
-              Expanded(
-                flex: f2,
-                child: Container(height: 4, color: const Color(0xFF3B82F6)),
+              const SizedBox(height: 10),
+              StatCompareRow(
+                label: 'To‘p nazorati',
+                homeText: '${_field.homePossessionPercent}%',
+                awayText: '${100 - _field.homePossessionPercent}%',
+                home: _field.homePossessionPercent.toDouble(),
+                away: 100.0 - _field.homePossessionPercent,
+                homeColor: colors.$1,
+                awayColor: colors.$2,
               ),
+              StatCompareRow(
+                label: 'xG',
+                homeText: _field.homeStats.xg.toStringAsFixed(2),
+                awayText: _field.awayStats.xg.toStringAsFixed(2),
+                home: _field.homeStats.xg,
+                away: _field.awayStats.xg,
+                homeColor: colors.$1,
+                awayColor: colors.$2,
+              ),
+              StatCompareRow(
+                label: 'Zarbalar (nishonga)',
+                homeText: '${_field.homeStats.shots} (${_field.homeStats.onTarget})',
+                awayText: '${_field.awayStats.shots} (${_field.awayStats.onTarget})',
+                home: _field.homeStats.shots.toDouble(),
+                away: _field.awayStats.shots.toDouble(),
+                homeColor: colors.$1,
+                awayColor: colors.$2,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        AppCard(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            children: [
+              for (final e in latest)
+                CommentaryTile(event: e, homeColor: colors.$1, awayColor: colors.$2),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        AppCard(
+          child: Column(
+            children: [
+              const SectionHeader('Muhim voqealar', icon: Icons.timeline_rounded),
+              IncidentTimeline(events: _field.events),
             ],
           ),
         ),
@@ -647,781 +650,283 @@ class _MatchScreenState extends State<MatchScreen>
     );
   }
 
-  int get substitutionsRemaining => _substitutionsRemaining;
-  @override
-  Widget build(BuildContext context) => DefaultTabController(
-    length: 3,
-    child: Scaffold(
-      backgroundColor: const Color(0xFFF3F5F8),
-      appBar: AppBar(
-        title: Text(
-          'Super League · ${widget.fixture.round}-tur',
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-        ),
-        actions: [
-          IconButton(
-            tooltip: 'Raqib tarkibi',
-            icon: const Icon(Icons.people_outline),
-            onPressed: () =>
-                OpponentSquadSheet.show(context, opponentClub: _rivalClub),
+  Widget _lineupsTab((Color, Color) colors) {
+    final club = _lineupTab == 0 ? _home : _away;
+    final xi = _lineupTab == 0 ? _field.homeXI : _field.awayXI;
+    final ratings = {for (final p in club.squad) p.id: _field.ratingFor(p.id)};
+    final ids = _field.lines.keys.where((id) => club.playerById(id) != null && _field.lines[id]!.minutes > 0).toList();
+    final goals = <String, int>{
+      for (final id in ids)
+        if (_field.lines[id]!.goals > 0) id: _field.lines[id]!.goals,
+    };
+    final booked = _field.bookings.keys.where((id) => club.playerById(id) != null).toSet()
+      ..addAll(_field.dismissed.where((id) => club.playerById(id) != null));
+    return ListView(
+      padding: const EdgeInsets.all(12),
+      children: [
+        Center(
+          child: PillTabs(
+            labels: [_home.shortName, _away.shortName],
+            index: _lineupTab,
+            onChanged: (i) => setState(() => _lineupTab = i),
           ),
-          if (!_isFinished)
-            TextButton.icon(
-              onPressed: _instantFinish,
-              icon: const Icon(Icons.fast_forward_outlined, size: 18),
-              label: const Text('Tezkor'),
+        ),
+        const SizedBox(height: 12),
+        LineupPitch(
+          club: club,
+          players: xi,
+          ratings: ratings,
+          dismissed: _field.dismissed,
+          goals: goals,
+          booked: booked,
+          lines: _field.lines,
+          shirt: _lineupTab == 0 ? colors.$1 : colors.$2,
+          onTap: (p) => _showPlayer(p, club),
+        ),
+        const SizedBox(height: 12),
+        AppCard(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: RatingsList(
+            club: club,
+            ids: ids,
+            ratings: ratings,
+            lines: _field.lines,
+            motmId: _field.isFinished ? _field.manOfTheMatch : null,
+            onTap: (p) => _showPlayer(p, club),
+          ),
+        ),
+        const SizedBox(height: 12),
+        AppCard(
+          padding: const EdgeInsets.only(bottom: 8),
+          child: SubstitutesList(
+            club: club,
+            benchIds: _lineupTab == 0 ? _field.homeBenchIds : _field.awayBenchIds,
+            lines: _field.lines,
+            ratings: ratings,
+            onTap: (p) => _showPlayer(p, club),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Two-step live substitution: choose who leaves, then who comes on.
+class _SubstitutionSheet extends StatefulWidget {
+  final MatchField field;
+  final Club club;
+  final bool isHome;
+  final Player? preselect;
+  final VoidCallback onDone;
+  const _SubstitutionSheet({
+    required this.field,
+    required this.club,
+    required this.isHome,
+    required this.onDone,
+    this.preselect,
+  });
+  @override
+  State<_SubstitutionSheet> createState() => _SubstitutionSheetState();
+}
+
+class _SubstitutionSheetState extends State<_SubstitutionSheet> {
+  Player? out;
+  @override
+  void initState() {
+    super.initState();
+    out = widget.preselect;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final f = widget.field, c = widget.club;
+    final used = widget.isHome ? f.homeSubsUsed : f.awaySubsUsed;
+    final starters = c.startingXI.where((p) => !f.dismissed.contains(p.id)).toList();
+    final bench = c.bench.where((p) => !f.subbedOff.contains(p.id) && p.isAvailable).toList();
+    final outIndex = out == null ? -1 : c.startingLineupIds.indexOf(out!.id);
+    final pos = outIndex < 0 ? null : c.slotPosition(outIndex);
+    if (pos != null) {
+      bench.sort((a, b) => b.getMatchOVR(pos).compareTo(a.getMatchOVR(pos)));
+    }
+    return SafeArea(
+      child: SizedBox(
+        height: MediaQuery.sizeOf(context).height * 0.72,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      out == null ? 'Kim maydonni tark etadi?' : '${out!.shortName} o‘rniga kim?',
+                      style: AppText.h3,
+                    ),
+                  ),
+                  Text('${5 - used}/5 qoldi', style: AppText.small),
+                ],
+              ),
             ),
-        ],
-        bottom: const TabBar(
-          tabs: [
-            Tab(text: 'Jonli'),
-            Tab(text: 'Statistika'),
-            Tab(text: 'Ko‘rsatmalar'),
+            Expanded(
+              child: ListView(
+                children: [
+                  if (out == null)
+                    for (final p in starters)
+                      _row(
+                        p,
+                        trailing: RatingBadge(f.ratingFor(p.id), size: 12),
+                        subtitle: f.isInjuredOnPitch(p.id) ? 'Jarohatlangan' : null,
+                        onTap: () => setState(() => out = p),
+                      )
+                  else ...[
+                    for (final p in bench)
+                      _row(
+                        p,
+                        trailing: ValueBadge(pos == null ? p.ovr : p.getEffectiveOVR(pos), size: 30),
+                        onTap: () {
+                          if (f.substitute(widget.isHome, out!.id, p.id)) {
+                            widget.onDone();
+                            Navigator.pop(context);
+                          }
+                        },
+                      ),
+                    TextButton.icon(
+                      onPressed: () => setState(() => out = null),
+                      icon: const Icon(Icons.arrow_back_rounded),
+                      label: const Text('Boshqa futbolchini tanlash'),
+                    ),
+                  ],
+                ],
+              ),
+            ),
           ],
         ),
       ),
-      body: Column(
+    );
+  }
+
+  Widget _row(Player p, {required Widget trailing, String? subtitle, required VoidCallback onTap}) => InkWell(
+    onTap: onTap,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
         children: [
-          _buildScoreboardHeader(),
+          FaceAvatar(config: p.face, size: 36, shirt: widget.club.primaryColor, circle: true),
+          const SizedBox(width: 10),
           Expanded(
-            child: TabBarView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Column(
+                Text(p.name, style: AppText.bodyStrong.copyWith(fontSize: 13)),
+                const SizedBox(height: 4),
+                Row(
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                      child: Row(
-                        children: [
-                          Icon(
-                            _field.phase == FieldPhase.goal
-                                ? Icons.sports_soccer
-                                : Icons.near_me_outlined,
-                            size: 14,
-                            color: const Color(0xFF1769E0),
-                          ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Text(
-                              _field.actionLabel,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: Color(0xFF526174),
-                              ),
-                            ),
-                          ),
-                        ],
+                    PositionChip(p.mainPosition.code),
+                    const SizedBox(width: 8),
+                    SizedBox(
+                      width: 70,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(3),
+                        child: LinearProgressIndicator(
+                          value: p.currentStamina / 100,
+                          minHeight: 5,
+                          color: p.currentStamina > 70
+                              ? AppColors.win
+                              : p.currentStamina > 50
+                              ? AppColors.warning
+                              : AppColors.loss,
+                        ),
                       ),
                     ),
-                    _build2DPitchCanvas(),
-                    _buildTacticsAndSimulationBar(),
-                    Expanded(child: _buildCommentaryFeed()),
-                  ],
-                ),
-                ListView(
-                  padding: const EdgeInsets.all(24),
-                  children: [
-                    _buildStatBar(
-                      'To‘p nazorati',
-                      '$_homePossession%',
-                      '$_awayPossession%',
-                      _homePossession,
-                      _awayPossession,
-                    ),
-                    const SizedBox(height: 24),
-                    _buildStatBar(
-                      'Kutilgan gollar · xG',
-                      _homeXG.toStringAsFixed(2),
-                      _awayXG.toStringAsFixed(2),
-                      (_homeXG * 100).round(),
-                      (_awayXG * 100).round(),
-                    ),
-                    const SizedBox(height: 24),
-                    _buildStatBar(
-                      'Zarbalar',
-                      '$_homeShots',
-                      '$_awayShots',
-                      _homeShots,
-                      _awayShots,
-                    ),
-                    const SizedBox(height: 24),
-                    _buildStatBar(
-                      'Aniq zarbalar',
-                      '$_homeShotsOnTarget',
-                      '$_awayShotsOnTarget',
-                      _homeShotsOnTarget,
-                      _awayShotsOnTarget,
-                    ),
-                    const SizedBox(height: 24),
-                    _buildStatBar(
-                      'Aniq pas / jami',
-                      '${_field.homeStats.completedPasses} / ${_field.homeStats.passes}',
-                      '${_field.awayStats.completedPasses} / ${_field.awayStats.passes}',
-                      _field.homeStats.completedPasses,
-                      _field.awayStats.completedPasses,
-                    ),
-                    const SizedBox(height: 24),
-                    _buildStatBar(
-                      'Burchaklar',
-                      '$_homeCorners',
-                      '$_awayCorners',
-                      _homeCorners,
-                      _awayCorners,
-                    ),
-                    const SizedBox(height: 24),
-                    _buildStatBar(
-                      'Qoidabuzarliklar',
-                      '$_homeFouls',
-                      '$_awayFouls',
-                      _homeFouls,
-                      _awayFouls,
-                    ),
-                    const SizedBox(height: 24),
-                    _buildStatBar(
-                      'Sariq kartochkalar',
-                      '$_homeYellowCards',
-                      '$_awayYellowCards',
-                      _homeYellowCards,
-                      _awayYellowCards,
-                    ),
-                    const SizedBox(height: 24),
-                    _buildStatBar(
-                      'Qizil kartochkalar',
-                      '$_homeRedCards',
-                      '$_awayRedCards',
-                      _homeRedCards,
-                      _awayRedCards,
-                    ),
-                    const SizedBox(height: 24),
-                    const Text(
-                      'xG har zarbaning imkoniyat sifatidan yig‘iladi. Gol bo‘lishi kafolatlanmaydi.',
-                      style: TextStyle(color: Color(0xFF637184), height: 1.5),
-                    ),
-                  ],
-                ),
-                ListView(
-                  padding: const EdgeInsets.all(20),
-                  children: [
-                    const Text(
-                      'Match rejasi',
-                      style: TextStyle(
-                        fontSize: 23,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Text(_userClub.tactics.formation.label),
-                    const SizedBox(height: 8),
-                    Text(
-                      _userClub.tactics.playstyle.description,
-                      style: const TextStyle(
-                        color: Color(0xFF637184),
-                        height: 1.5,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    _buildTacticsAndSimulationBar(),
-                    const SizedBox(height: 16),
-                    FilledButton.icon(
-                      onPressed: _isFinished
-                          ? null
-                          : () async {
-                              final resume = _isPlaying;
-                              setState(() => _isPlaying = false);
-                              await Navigator.push(
-                                context,
-                                MaterialPageRoute<void>(
-                                  builder: (_) => TacticsScreen(
-                                    onSwap: _swapInMatch,
-                                    unavailable: {..._dismissed, ..._subbedOff},
-                                  ),
-                                ),
-                              );
-                              if (mounted) {
-                                setState(() {
-                                  _isPlaying = resume;
-                                  _calculatePossession();
-                                });
-                              }
-                            },
-                      icon: const Icon(Icons.tune_outlined),
-                      label: const Text('Sxema va ko‘rsatmalarni o‘zgartirish'),
-                    ),
-                    const SizedBox(height: 20),
-                    const Text(
-                      'Hujumkor rejim ko‘proq imkoniyat yaratadi va himoyada bo‘shliq qoldiradi. Himoyaviy rejim zarbalarni kamaytiradi. Pressing va yuqori temp futbolchilarni tezroq charchatadi.',
-                      style: TextStyle(height: 1.6, color: Color(0xFF637184)),
-                    ),
+                    const SizedBox(width: 6),
+                    Text(subtitle ?? '${p.currentStamina}%', style: AppText.caption.copyWith(color: subtitle != null ? AppColors.live : null)),
                   ],
                 ),
               ],
             ),
           ),
-          if (_isFinished) _buildMatchCompletedBar(),
+          trailing,
         ],
       ),
     ),
   );
-  Widget _buildScoreboardHeader() {
-    return GestureDetector(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFFFFFF),
-          border: Border(
-            bottom: BorderSide(
-              color: Color(0xFF192B42).withValues(alpha: 0.08),
-            ),
-          ),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Uy jamoasi
-            Expanded(
-              child: Row(
-                children: [
-                  ClubCrestWidget(config: _homeClub.crestConfig, size: 38),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          _homeClub.shortName,
-                          style: const TextStyle(
-                            color: Color(0xFF192B42),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                          maxLines: 1,
-                        ),
-                        Text(
-                          'xG ${_homeXG.toStringAsFixed(2)} • $_homePossession%',
-                          style: const TextStyle(
-                            color: Color(0xFF778496),
-                            fontSize: 10,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Hisob va Daqiqa
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF3F5F8),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: const Color(0xFF1769E0).withValues(alpha: 0.3),
-                ),
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    '$_homeScore - $_awayScore',
-                    style: const TextStyle(
-                      color: Color(0xFF192B42),
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 2,
-                    ),
-                  ),
-                  Text(
-                    '$_minute\'',
-                    style: TextStyle(
-                      color: _isFinished
-                          ? const Color(0xFFEF4444)
-                          : const Color(0xFF1769E0),
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            // Mehmon jamoasi
-            Expanded(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          _awayClub.shortName,
-                          style: const TextStyle(
-                            color: Color(0xFF192B42),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                          maxLines: 1,
-                        ),
-                        Text(
-                          '$_awayPossession% • xG ${_awayXG.toStringAsFixed(2)}',
-                          style: const TextStyle(
-                            color: Color(0xFF778496),
-                            fontSize: 10,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  ClubCrestWidget(config: _awayClub.crestConfig, size: 38),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _build2DPitchCanvas() {
-    return Container(
-      height: MediaQuery.sizeOf(context).height < 650 ? 150 : 220,
-      width: double.infinity,
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0F5132),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Color(0xFF192B42).withValues(alpha: 0.2),
-          width: 1.5,
-        ),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(14),
-        child: CustomPaint(
-          painter: MatchPitchPainter(
-            ballX: _ballX,
-            ballY: _ballY,
-            homeColor: _homeClub.primaryColor,
-            awayColor: _awayClub.primaryColor == _homeClub.primaryColor
-                ? _awayClub.secondaryColor
-                : _awayClub.primaryColor,
-            homePositions: List.of(_field.homePositions),
-            awayPositions: List.of(_field.awayPositions),
-            homeClub: _homeClub,
-            awayClub: _awayClub,
-            dismissed: _dismissed,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTacticsAndSimulationBar() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      color: const Color(0xFFFFFFFF),
-      child: Column(
-        children: [
-          // Taktik Mentality Segmented Picker
-          Row(
-            children: [
-              const Text(
-                'Taktika:',
-                style: TextStyle(
-                  color: Color(0xFF778496),
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: SizedBox(
-                  height: 30,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    physics: const BouncingScrollPhysics(),
-                    itemCount: InGameMentality.values.length,
-                    itemBuilder: (context, i) {
-                      final m = InGameMentality.values[i];
-                      final isSel = m == _userMentality;
-                      return GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _userMentality = m;
-                            _addEvent(
-                              _minute,
-                              MatchEventType.pass,
-                              'Taktik ko\'rsatma (${_userClub.shortName}): Murabbiy jamoani "${m.label}" o\'yin uslubiga o\'tkazdi.',
-                              _userClub.id,
-                              _isUserHome,
-                            );
-                          });
-                        },
-                        child: Container(
-                          margin: const EdgeInsets.only(right: 6),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isSel ? m.color : const Color(0xFFF3F5F8),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: isSel ? m.color : Color(0xFFE4E9F0),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                m.icon,
-                                size: 12,
-                                color: isSel ? Colors.white : m.color,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                m.label,
-                                style: TextStyle(
-                                  color: isSel
-                                      ? Colors.white
-                                      : Color(0xFF526174),
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          // Controls & Actions Bar
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Play/Pause & Speed
-              Row(
-                children: [
-                  IconButton(
-                    visualDensity: VisualDensity.compact,
-                    onPressed: () => setState(() => _isPlaying = !_isPlaying),
-                    icon: Icon(
-                      _isPlaying
-                          ? Icons.pause_circle_filled_rounded
-                          : Icons.play_circle_fill_rounded,
-                      color: const Color(0xFF1769E0),
-                      size: 28,
-                    ),
-                  ),
-                  ...[1, 2, 5].map((spd) {
-                    final isCur = _speedMultiplier == spd;
-                    return GestureDetector(
-                      onTap: () => setState(() => _speedMultiplier = spd),
-                      child: Container(
-                        margin: const EdgeInsets.only(left: 4),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isCur
-                              ? const Color(0xFF1769E0)
-                              : const Color(0xFFF3F5F8),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text(
-                          '${spd}x',
-                          style: TextStyle(
-                            color: isCur ? Colors.white : Color(0xFF526174),
-                            fontWeight: FontWeight.bold,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
-                ],
-              ),
-              // Jonli almashtirish va Raqibni ko'rish tugmalari
-              Row(
-                children: [
-                  OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      side: const BorderSide(color: Color(0xFF3B82F6)),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      visualDensity: VisualDensity.compact,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    onPressed: () => OpponentSquadSheet.show(
-                      context,
-                      opponentClub: _rivalClub,
-                    ),
-                    icon: const Icon(
-                      Icons.remove_red_eye_rounded,
-                      size: 14,
-                      color: Color(0xFF3B82F6),
-                    ),
-                    label: const Text(
-                      'Raqib',
-                      style: TextStyle(
-                        color: Color(0xFF3B82F6),
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF1769E0),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      visualDensity: VisualDensity.compact,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    onPressed: _showLiveSubstitutionModal,
-                    icon: const Icon(Icons.swap_horiz_rounded, size: 15),
-                    label: Text(
-                      'Subs ($_substitutionsRemaining)',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCommentaryFeed() {
-    return ListView.builder(
-      controller: _commentaryScroll,
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.all(12),
-      itemCount: _events.length,
-      itemBuilder: (context, index) {
-        final ev = _events[index];
-        final isGoal = ev.type == MatchEventType.goal;
-        return Container(
-          margin: const EdgeInsets.only(bottom: 6),
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: isGoal
-                ? const Color(0xFF1769E0).withValues(alpha: 0.15)
-                : const Color(0xFFFFFFFF),
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(
-              color: isGoal
-                  ? const Color(0xFF1769E0)
-                  : Color(0xFF192B42).withValues(alpha: 0.05),
-            ),
-          ),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF3F5F8),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  '${ev.minute}\'',
-                  style: const TextStyle(
-                    color: Color(0xFF1769E0),
-                    fontWeight: FontWeight.bold,
-                    fontSize: 11,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Icon(ev.type.iconData, size: 17, color: const Color(0xFF637184)),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  ev.description,
-                  style: TextStyle(
-                    color: isGoal ? Color(0xFF192B42) : Color(0xFF526174),
-                    fontWeight: isGoal ? FontWeight.bold : FontWeight.normal,
-                    fontSize: 12.5,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildMatchCompletedBar() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFFFF),
-        border: Border(
-          top: BorderSide(color: Color(0xFF192B42).withValues(alpha: 0.08)),
-        ),
-      ),
-      child: SizedBox(
-        width: double.infinity,
-        height: 50,
-        child: ElevatedButton.icon(
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
-          label: const Text(
-            'BOSHQARUV PANELIGA QAYTISH',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w900,
-              fontSize: 14,
-            ),
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF1769E0),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
-/// 2D Futbol Maydoni Chizuvchi CustomPainter (Field lines, 22 ta o'yinchi nuqtalari va to'p)
+/// Horizontal 2D pitch with 22 players, ball height/shadow and pass trail.
 class MatchPitchPainter extends CustomPainter {
-  final double ballX;
-  final double ballY;
-  final Color homeColor;
-  final Color awayColor;
-  final List<Offset> homePositions, awayPositions;
-  final Club homeClub;
-  final Club awayClub;
-  final Set<String> dismissed;
-  MatchPitchPainter({
-    required this.ballX,
-    required this.ballY,
-    required this.homeColor,
-    required this.awayColor,
-    required this.homePositions,
-    required this.awayPositions,
-    required this.homeClub,
-    required this.awayClub,
-    required this.dismissed,
-  });
+  final MatchField field;
+  final Color homeColor, awayColor;
+  MatchPitchPainter({required this.field, required this.homeColor, required this.awayColor});
+
   @override
   void paint(Canvas canvas, Size size) {
-    final w = size.width;
-    final h = size.height;
-    // Maydon chiziqlari (Oq)
-    final linePaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.5)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-    // Chegara
-    canvas.drawRect(Rect.fromLTWH(8, 8, w - 16, h - 16), linePaint);
-    // O'rta chiziq
-    canvas.drawLine(Offset(w / 2, 8), Offset(w / 2, h - 8), linePaint);
-    // Markaziy aylana
-    canvas.drawCircle(Offset(w / 2, h / 2), h * 0.22, linePaint);
+    const inset = EdgeInsets.all(6);
+    const FootballPitchPainter(vertical: false, inset: inset).paint(canvas, size);
+    final r = FootballPitchPainter.field(size, inset);
+    Offset at(Offset p) => Offset(r.left + p.dx * r.width, r.top + p.dy * r.height);
+    final radius = max(6.5, size.height * 0.036);
+    final from = field.flightFrom, to = field.flightTo;
+    if (from != null && to != null) {
+      final trail = Paint()
+        ..color = Colors.white.withValues(alpha: field.flightIsShot ? 0.65 : 0.35)
+        ..strokeWidth = field.flightIsShot ? 2 : 1.4
+        ..strokeCap = StrokeCap.round;
+      canvas.drawLine(at(from), at(field.ball), trail);
+    }
+    void team(List<Player> xi, List<Offset> pts, Color color, bool home) {
+      final text = color.computeLuminance() > 0.55 ? const Color(0xFF14181F) : Colors.white;
+      for (var i = 0; i < min(xi.length, pts.length); i++) {
+        final p = xi[i];
+        if (field.dismissed.contains(p.id)) continue;
+        final c = at(pts[i]);
+        final carrier = field.ballCarrier == p;
+        canvas.drawCircle(c + const Offset(0, 1.5), radius, Paint()..color = Colors.black.withValues(alpha: 0.25));
+        canvas.drawCircle(c, radius, Paint()..color = i == 0 ? Color.lerp(color, Colors.black, 0.25)! : color);
+        canvas.drawCircle(
+          c,
+          radius,
+          Paint()
+            ..color = carrier ? const Color(0xFFFFE066) : Colors.white
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = carrier ? 2.4 : 1.3,
+        );
+        final tp = TextPainter(
+          text: TextSpan(
+            text: '${p.number}',
+            style: TextStyle(color: text, fontSize: radius * 0.95, fontWeight: FontWeight.w800, fontFamily: 'Roboto'),
+          ),
+          textDirection: TextDirection.ltr,
+        )..layout();
+        tp.paint(canvas, c - Offset(tp.width / 2, tp.height / 2));
+        if (field.isInjuredOnPitch(p.id)) {
+          canvas.drawCircle(c + Offset(radius * 0.8, -radius * 0.8), radius * 0.38, Paint()..color = AppColors.live);
+        }
+      }
+    }
+
+    team(field.homeXI, field.homePositions, homeColor, true);
+    team(field.awayXI, field.awayPositions, awayColor, false);
+    final b = at(field.ball);
+    final lift = field.ballHeight * radius * 1.6;
+    canvas.drawOval(
+      Rect.fromCenter(center: b + const Offset(0, 2), width: radius * 0.9, height: radius * 0.45),
+      Paint()..color = Colors.black.withValues(alpha: 0.3),
+    );
+    final ballR = radius * 0.5 * (1 + field.ballHeight * 0.35);
+    final bc = b - Offset(0, lift);
+    canvas.drawCircle(bc, ballR, Paint()..color = Colors.white);
     canvas.drawCircle(
-      Offset(w / 2, h / 2),
-      2,
-      linePaint..style = PaintingStyle.fill,
-    );
-    // Chap Jarima maydonchasi (Home Goal Box)
-    canvas.drawRect(
-      Rect.fromLTWH(8, h * 0.22, w * 0.16, h * 0.56),
-      linePaint..style = PaintingStyle.stroke,
-    );
-    // O'ng Jarima maydonchasi (Away Goal Box)
-    canvas.drawRect(
-      Rect.fromLTWH(w - 8 - (w * 0.16), h * 0.22, w * 0.16, h * 0.56),
-      linePaint,
-    );
-    // O'yinchilar nuqtalari (11 ta Home, 11 ta Away)
-    _drawTeamNodes(canvas, w, h, isHome: true, color: homeColor);
-    _drawTeamNodes(canvas, w, h, isHome: false, color: awayColor);
-    // To'p (Oq nuqta va soya)
-    final bx = 8 + (ballX * (w - 16));
-    final by = 8 + (ballY * (h - 16));
-    final ballPaint = Paint()..color = Colors.white;
-    canvas.drawCircle(Offset(bx, by), 4.5, ballPaint);
-    canvas.drawCircle(
-      Offset(bx, by),
-      4.5,
+      bc,
+      ballR,
       Paint()
-        ..color = Colors.white
+        ..color = const Color(0xFF222222)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1,
     );
-  }
-
-  void _drawTeamNodes(
-    Canvas canvas,
-    double w,
-    double h, {
-    required bool isHome,
-    required Color color,
-  }) {
-    final paint = Paint()..color = color;
-    final stroke = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2;
-    final club = isHome ? homeClub : awayClub;
-    final slots = club.tactics.formation.slots;
-    final players = club.startingXI;
-    for (var i = 0; i < min(players.length, slots.length); i++) {
-      if (dismissed.contains(players[i].id)) continue;
-      final pos = (isHome ? homePositions : awayPositions)[i];
-      final x = pos.dx;
-      final y = pos.dy;
-      final point = Offset(8 + x * (w - 16), 8 + y * (h - 16));
-      canvas.drawCircle(point, 8, paint);
-      canvas.drawCircle(point, 8, stroke);
-      final text = TextPainter(
-        text: TextSpan(
-          text: '${players[i].number}',
-          style: TextStyle(
-            color: color.computeLuminance() > 0.5
-                ? const Color(0xFF192B42)
-                : Colors.white,
-            fontSize: 8,
-            fontFamily: 'Roboto',
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      text.paint(canvas, point - Offset(text.width / 2, text.height / 2));
-    }
+    canvas.drawCircle(bc, ballR * 0.35, Paint()..color = const Color(0xFF222222));
   }
 
   @override
-  bool shouldRepaint(covariant MatchPitchPainter oldDelegate) {
-    return true;
-  }
+  bool shouldRepaint(covariant MatchPitchPainter oldDelegate) => true;
 }
