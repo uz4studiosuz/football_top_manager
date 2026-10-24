@@ -138,16 +138,18 @@ void main() {
     'Aware runners and pass choices do not loop through obvious offsides',
     () {
       final clubs = InitialDatabase.getSuperLeagueClubs();
-      final field = MatchField(clubs[0], clubs[7], seed: 0);
-      field.simulateToEnd();
-      expect(
-        field.homeStats.shots + field.awayStats.shots,
-        greaterThanOrEqualTo(6),
-      );
-      expect(
-        field.events.where((e) => e.type == MatchEventType.offside).length,
-        lessThanOrEqualTo(9),
-      );
+      var offsides = 0;
+      for (var seed = 0; seed < 10; seed++) {
+        final field = MatchField(clubs[0], clubs[7], seed: seed);
+        field.simulateToEnd();
+        expect(
+          field.homeStats.shots + field.awayStats.shots,
+          greaterThanOrEqualTo(6),
+        );
+        offsides += field.events.where((e) => e.type == MatchEventType.offside).length;
+      }
+      // Averaged over several matches so one wild game does not decide it.
+      expect(offsides / 10, lessThanOrEqualTo(7));
     },
   );
   Future<void> size(WidgetTester t, Size size) async {

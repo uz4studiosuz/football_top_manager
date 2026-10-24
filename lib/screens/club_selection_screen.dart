@@ -9,6 +9,8 @@ import 'custom_club_creator_screen.dart';
 import 'main_navigation_screen.dart';
 import '../models/manager_profile.dart';
 import '../l10n/l10n.dart';
+import '../services/coin_wallet.dart';
+import '../ui/coin.dart';
 
 /// Choose a club from any league (or create a new one).
 class ClubSelectionScreen extends StatefulWidget {
@@ -39,7 +41,19 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
   });
   Club get _club => _clubs[_selected];
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && CoinWallet().welcomePending) {
+        CoinWallet().welcomePending = false;
+        showWelcomeCoins(context);
+      }
+    });
+  }
+
   void _start(Club club) {
+    if (!CoinWallet().spend(CoinWallet.clubCost(club))) return;
     GameState().startCareerWithExistingClub(club, managerProfile: widget.managerProfile, league: _league);
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
@@ -81,7 +95,10 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
     final club = _club;
     final stars = List.of(club.squad)..sort((a, b) => b.ovr.compareTo(a.ovr));
     return Scaffold(
-      appBar: AppBar(title: Text(tr('Klubni tanlang'))),
+      appBar: AppBar(
+        title: Text(tr('Klubni tanlang')),
+        actions: [InkWell(borderRadius: BorderRadius.circular(20), onTap: () => showCoinInfo(context), child: const CoinBalance())],
+      ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
         children: [
@@ -105,6 +122,8 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
                         Text(_clubs[i].shortName, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
                         const SizedBox(height: 4),
                         ValueBadge(_clubs[i].teamOVR, size: 22),
+                        const SizedBox(height: 4),
+                        CoinAmount(CoinWallet.clubCost(_clubs[i]), size: 12),
                       ],
                     ),
                   ),
@@ -136,7 +155,7 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
                 physics: const NeverScrollableScrollPhysics(),
                 mainAxisSpacing: 8,
                 crossAxisSpacing: 8,
-                childAspectRatio: 0.82,
+                childAspectRatio: 0.7,
                 children: tiles,
               );
             },
@@ -192,13 +211,35 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
-          child: SizedBox(
-            height: 52,
-            child: FilledButton.icon(
-              onPressed: () => _start(club),
-              icon: const Icon(Icons.play_arrow_rounded),
-              label: FittedBox(child: Text(trf('{0}NI BOSHQARISH', [club.name.toUpperCase()]))),
-            ),
+          child: ValueListenableBuilder<int>(
+            valueListenable: CoinWallet().balance,
+            builder: (context, coins, _) {
+              final cost = CoinWallet.clubCost(club);
+              final ok = coins >= cost;
+              return SizedBox(
+                height: 52,
+                child: FilledButton(
+                  onPressed: ok ? () => _start(club) : () => showCoinInfo(context),
+                  style: ok ? null : FilledButton.styleFrom(backgroundColor: AppColors.ink3),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Flexible(
+                        child: FittedBox(
+                          child: Text(ok ? trf('{0}NI BOSHQARISH', [club.name.toUpperCase()]) : tr('TANGA YETARLI EMAS')),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Container(
+                        padding: const EdgeInsets.fromLTRB(3, 3, 9, 3),
+                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                        child: CoinAmount(cost, size: 18),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ),

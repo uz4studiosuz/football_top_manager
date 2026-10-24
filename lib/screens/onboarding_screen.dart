@@ -7,6 +7,8 @@ import 'custom_club_creator_screen.dart';
 import '../l10n/l10n.dart';
 import '../ui/language_picker.dart';
 import '../data/countries.dart';
+import '../services/coin_wallet.dart';
+import '../ui/coin.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -34,6 +36,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     tr('Har bir uslub 70 dan boshlanadi va o‘yinlar bilan o‘sadi.'),
     tr('Mavjud klubni boshqaring yoki o‘zingiznikini yarating.'),
   ];
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && CoinWallet().welcomePending) {
+        CoinWallet().welcomePending = false;
+        showWelcomeCoins(context);
+      }
+    });
+  }
+
   @override
   void dispose() {
     _name.dispose();

@@ -295,6 +295,7 @@ abstract final class SaveCodec {
         'mo': f.momentum.map((v) => v.round()).toList(),
       },
       if (shots && f.shots.isNotEmpty) 'sh': f.shots.map((s) => s.toMap()).toList(),
+      if (full && f.heat.isNotEmpty) 'hm': f.heat,
       if (f.motmId != null) 'motm': f.motmId,
     },
   };
@@ -368,6 +369,7 @@ abstract final class SaveCodec {
     f.momentum = [for (final v in (m['mo'] as List? ?? [])) (v as num).toDouble()];
     f.motmId = m['motm'];
     f.shots = [for (final s in (m['sh'] as List? ?? [])) ShotRecord.fromMap(Map<String, dynamic>.from(s))];
+    f.heat = Map<String, String>.from(m['hm'] ?? {});
     return f;
   }
 

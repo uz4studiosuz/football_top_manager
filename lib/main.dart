@@ -4,6 +4,7 @@ import 'screens/main_navigation_screen.dart';
 import 'screens/onboarding_screen.dart';
 import 'data/initial_database.dart';
 import 'services/save_service.dart';
+import 'services/coin_wallet.dart';
 import 'ui/widgets.dart';
 import 'ui/language_picker.dart';
 import 'services/game_state.dart';
@@ -62,6 +63,7 @@ class _StartupScreenState extends State<StartupScreen> {
   Future<bool> _load() async {
     await L10n.load();
     await InitialDatabase.load();
+    await CoinWallet().load();
     _askLanguage = !L10n.chosen;
     if (StartupScreen.keepCareer && GameState().isInitialized) return true;
     return SaveService.load();

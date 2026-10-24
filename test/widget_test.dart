@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:football_top_manager/main.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:football_top_manager/services/coin_wallet.dart';
 
 void main() {
   setUpAll(() async {
@@ -21,6 +22,11 @@ void main() {
     });
 
     await tester.pumpWidget(const FootballTopManagerApp());
+    await tester.pumpAndSettle();
+
+    // First launch: the welcome coin bonus is shown once.
+    expect(find.text('Xush kelibsiz!'), findsOneWidget);
+    await tester.tap(find.text('Boshladik'));
     await tester.pumpAndSettle();
 
     // Check Onboarding Screen elements
@@ -78,6 +84,8 @@ void main() {
   testWidgets('Can navigate to Custom Club Creator from Onboarding screen', (
     WidgetTester tester,
   ) async {
+    // The first test spent coins on Real Madrid; top up for the custom club.
+    CoinWallet().reward(CoinWallet.customClubCost);
     tester.view.physicalSize = const Size(800, 1600);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() {

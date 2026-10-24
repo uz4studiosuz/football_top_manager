@@ -13,6 +13,7 @@ import '../models/transfer_deal.dart';
 import 'division.dart';
 import 'lineup_solver.dart';
 import 'season_calendar.dart';
+import 'coin_wallet.dart';
 import '../l10n/l10n.dart';
 
 /// Yetakchi futbolchilar reytingi modeli
@@ -684,6 +685,8 @@ class GameState extends ChangeNotifier {
     );
     if (fixture.involves(_userClubId!)) {
       _recordManagerResult(fixture);
+      final mine = fixture.homeClubId == _userClubId ? homeScore - awayScore : awayScore - homeScore;
+      CoinWallet().reward(mine > 0 ? CoinWallet.winReward : mine == 0 ? CoinWallet.drawReward : 0);
       _restoreUserLineup();
     }
     _simulateOtherMatchesInRound(_currentRound, fixture.id);
@@ -1759,6 +1762,7 @@ class GameState extends ChangeNotifier {
       ),
     );
     final met = userPos <= objective.targetPosition;
+    CoinWallet().reward((champion.id == _userClubId ? CoinWallet.titleReward : 0) + (met ? CoinWallet.objectiveReward : 0));
     boardConfidence = (boardConfidence + (met ? 15 : -20)).clamp(5, 100);
     final style = ManagerPhilosophy.forStyle(userClub.tactics.playstyle);
     final bonus = (userPos == 1 ? 24 : userPos <= 3 ? 16 : 0) + (met ? 8 : 0);
@@ -1778,6 +1782,10 @@ class GameState extends ChangeNotifier {
       );
     }
     _resolvePyramid();
+    final move = pendingMoves[_userClubId];
+    if (move != null && InitialDatabase.info(move).tier < leagueInfo.tier) {
+      CoinWallet().reward(CoinWallet.promotionReward);
+    }
   }
 
   /// Finishes the background leagues, plays the play-offs and decides who

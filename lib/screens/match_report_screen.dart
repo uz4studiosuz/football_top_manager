@@ -7,6 +7,7 @@ import '../services/season_calendar.dart';
 import '../ui/face_avatar.dart';
 import '../ui/match_widgets.dart';
 import '../ui/shot_widgets.dart';
+import '../ui/heatmap.dart';
 import '../ui/widgets.dart';
 import 'widgets/player_detail_view.dart';
 import '../l10n/l10n.dart';
@@ -239,6 +240,7 @@ class _MatchReportScreenState extends State<MatchReportScreen> {
     club: club,
     line: f.playerStats[p.id],
     rating: f.ratings[p.id],
+    heat: decodeHeat(f.heat[p.id]),
     onOpenProfile: () => PlayerDetailView.show(context, player: p, club: club),
   );
 }

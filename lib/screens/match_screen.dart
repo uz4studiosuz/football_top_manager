@@ -408,6 +408,7 @@ class _MatchScreenState extends State<MatchScreen> {
     club: club,
     line: _field.lines[p.id],
     rating: _field.ratingFor(p.id),
+    heat: _field.heat[p.id],
     onOpenProfile: () => PlayerDetailView.show(context, player: p, club: club),
   );
 

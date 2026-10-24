@@ -7,6 +7,7 @@ import '../services/match_field.dart';
 import 'face_avatar.dart';
 import 'football_pitch.dart';
 import 'shot_widgets.dart';
+import 'heatmap.dart';
 import 'widgets.dart';
 import '../l10n/l10n.dart';
 
@@ -794,6 +795,7 @@ Future<void> showPlayerMatchSheet(
   required Club club,
   PlayerMatchStats? line,
   double? rating,
+  List<int>? heat,
   required VoidCallback onOpenProfile,
 }) => showModalBottomSheet<void>(
   context: context,
@@ -888,6 +890,11 @@ Future<void> showPlayerMatchSheet(
                       shrinkWrap: true,
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                       children: [
+                        if (heat != null && heat.any((v) => v > 0))
+                          Padding(
+                            padding: const EdgeInsets.only(top: 6, bottom: 10),
+                            child: PlayerHeatmap(cells: heat),
+                          ),
                         for (final r in rows)
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 7),

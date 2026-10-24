@@ -331,6 +331,9 @@ class Fixture {
   List<String> homeBench = [], awayBench = [];
   List<double> momentum = [];
   List<ShotRecord> shots = [];
+
+  /// Encoded player heatmaps (user's matches only; see ui/heatmap.dart).
+  Map<String, String> heat = {};
   String? motmId;
   Fixture({
     required this.id,

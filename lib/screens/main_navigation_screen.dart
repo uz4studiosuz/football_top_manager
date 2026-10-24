@@ -9,6 +9,8 @@ import 'tactics_screen.dart';
 import 'standings_screen.dart';
 import 'transfer_screen.dart';
 import '../l10n/l10n.dart';
+import '../services/coin_wallet.dart';
+import '../ui/coin.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -46,6 +48,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     super.initState();
     // Polling keeps banners queued while a match or sheet covers this screen.
     _poll = Timer.periodic(const Duration(milliseconds: 700), (_) => _pump());
+    // Careers saved before coins existed still get the welcome bonus shown.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && CoinWallet().welcomePending) {
+        CoinWallet().welcomePending = false;
+        showWelcomeCoins(context);
+      }
+    });
   }
 
   @override

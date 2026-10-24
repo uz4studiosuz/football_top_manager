@@ -10,6 +10,8 @@ import 'main_navigation_screen.dart';
 import '../models/manager_profile.dart';
 import '../l10n/l10n.dart';
 import '../ui/league_picker.dart';
+import '../services/coin_wallet.dart';
+import '../ui/coin.dart';
 
 /// Foydalanuvchi o'z jamoasini noldan yaratish ekrani
 class CustomClubCreatorScreen extends StatefulWidget {
@@ -81,6 +83,10 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
   );
 
   void _createAndStart() {
+    if (!CoinWallet().canAfford(CoinWallet.customClubCost)) {
+      showCoinInfo(context);
+      return;
+    }
     final name = _nameController.text.trim();
     final shortName = _shortNameController.text.trim();
     final stadium = _stadiumController.text.trim();
@@ -90,6 +96,7 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
       );
       return;
     }
+    CoinWallet().spend(CoinWallet.customClubCost);
     GameState().startCareerWithCustomClub(
       name: name,
       shortName: shortName,
@@ -370,10 +377,29 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
         const SizedBox(height: 16),
         SizedBox(
           height: 52,
-          child: FilledButton.icon(
-            onPressed: _createAndStart,
-            icon: const Icon(Icons.rocket_launch_rounded),
-            label: FittedBox(child: Text(tr('KLUBNI YARATISH VA BOSHLASH'))),
+          child: ValueListenableBuilder<int>(
+            valueListenable: CoinWallet().balance,
+            builder: (context, coins, _) {
+              final ok = coins >= CoinWallet.customClubCost;
+              return FilledButton(
+                onPressed: _createAndStart,
+                style: ok ? null : FilledButton.styleFrom(backgroundColor: AppColors.ink3),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Flexible(
+                      child: FittedBox(child: Text(ok ? tr('KLUBNI YARATISH VA BOSHLASH') : tr('TANGA YETARLI EMAS'))),
+                    ),
+                    const SizedBox(width: 10),
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(3, 3, 9, 3),
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                      child: const CoinAmount(CoinWallet.customClubCost, size: 18),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ),
         const SizedBox(height: 20),

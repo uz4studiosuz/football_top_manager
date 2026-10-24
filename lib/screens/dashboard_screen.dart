@@ -15,6 +15,7 @@ import 'match_screen.dart';
 import 'widgets/opponent_squad_sheet.dart';
 import 'widgets/player_detail_view.dart';
 import '../l10n/l10n.dart';
+import '../ui/coin.dart';
 
 class DashboardScreen extends StatelessWidget {
   final VoidCallback onNavigateToTactics;
@@ -75,6 +76,11 @@ class DashboardScreen extends StatelessWidget {
               ],
             ),
             actions: [
+              InkWell(
+                borderRadius: BorderRadius.circular(20),
+                onTap: () => showCoinInfo(context),
+                child: const CoinBalance(),
+              ),
               IconButton(
                 tooltip: tr('Yangiliklar'),
                 onPressed: () => Navigator.push(
