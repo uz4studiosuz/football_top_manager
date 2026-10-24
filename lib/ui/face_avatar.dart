@@ -1144,9 +1144,17 @@ class _FaceStudioState extends State<FaceStudio> {
           ],
         ),
         const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        Wrap(
+          alignment: WrapAlignment.center,
           children: [
+            TextButton.icon(
+              onPressed: () async {
+                final face = await faceFromPhoto(context, value);
+                if (face != null && mounted) setState(() => _set(face));
+              },
+              icon: const Icon(Icons.photo_camera_outlined, size: 18),
+              label: Text(tr('Rasmdan yuz')),
+            ),
             TextButton.icon(
               onPressed: _undo.isEmpty
                   ? null
@@ -1270,14 +1278,6 @@ class _FaceEditorState extends State<_FaceEditor> {
     appBar: AppBar(
       title: Text(tr('Portret yaratish')),
       actions: [
-        IconButton(
-          tooltip: tr('Rasmdan yuz'),
-          icon: const Icon(Icons.photo_camera_outlined),
-          onPressed: () async {
-            final face = await faceFromPhoto(context, current);
-            if (face != null && mounted) setState(() => current = face);
-          },
-        ),
         TextButton(
           onPressed: () => Navigator.pop(context, current),
           child: Text(tr('Saqlash')),

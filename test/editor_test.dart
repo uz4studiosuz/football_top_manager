@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:football_top_manager/data/initial_database.dart';
 import 'package:football_top_manager/models/player.dart';
 import 'package:football_top_manager/services/db_editor.dart';
+import 'package:football_top_manager/services/match_field.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -37,5 +38,25 @@ void main() {
     expect(moved, isTrue);
     await InitialDatabase.clearOverrides();
     expect(InitialDatabase.getClubs('uzb').first.squad.any((p) => p.id == starter), isFalse);
+  });
+
+  test('A great goalkeeper concedes clearly fewer goals than a weak one', () {
+    int conceded(int gk) {
+      var total = 0;
+      for (var i = 0; i < 40; i++) {
+        final clubs = InitialDatabase.getClubs('epl');
+        final home = clubs[i % clubs.length], away = clubs[(i + 5) % clubs.length];
+        final keeper = home.startingXI.first;
+        keeper.stats = PlayerStats.fromMap({
+          ...keeper.stats.toMap(),
+          for (final k in ['gkAwareness', 'gkCatching', 'gkParrying', 'gkReflexes', 'gkReach']) k: gk,
+        });
+        final f = MatchField(home, away, seed: 500 + i)..simulateToEnd();
+        total += f.awayStats.goals;
+      }
+      return total;
+    }
+
+    expect(conceded(99), lessThan(conceded(50) * 0.7));
   });
 }

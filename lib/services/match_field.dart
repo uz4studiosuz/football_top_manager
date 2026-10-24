@@ -151,6 +151,15 @@ class MatchField {
   FieldPhase phase = FieldPhase.kickoff;
   double homeAttack = 1, awayAttack = 1;
 
+  /// Training and team-talk effects: attack multiplier, the share of the
+  /// opponents' chance quality allowed (lower = tighter) and stamina drain.
+  double homeAttackBoost = 1, awayAttackBoost = 1;
+  double homeFocus = 1, awayFocus = 1;
+  double homeFitness = 1, awayFitness = 1;
+
+  /// VAR reviews so far (shown by the match screen as they happen).
+  int varReviews = 0;
+
   /// Team mentality as a shape: -2 park the bus … 0 balanced … +2 all-out attack.
   double homeShape = 0, awayShape = 0;
 
@@ -375,10 +384,10 @@ class MatchField {
     final positions = List<Offset>.unmodifiable(
       c.tactics.formation.slots.map((slot) {
         final x = 0.075 + (1 - slot.y) * 0.79;
-        return Offset(
-          isHome ? x : 1 - x,
-          0.5 + (slot.x - 0.5) * (0.62 + c.tactics.width * 0.065),
-        );
+        // Facing the opponents' goal, the right flank is +y for the home side
+        // (attacking towards x = 1) and -y for the away side.
+        final side = (slot.x - 0.5) * (0.62 + c.tactics.width * 0.065);
+        return Offset(isHome ? x : 1 - x, isHome ? 0.5 + side : 0.5 - side);
       }),
     );
     _basePositions[c] = positions;
@@ -515,7 +524,7 @@ class MatchField {
           PlayerInstruction.anchoring || PlayerInstruction.stayBack => -0.04,
           _ => 0.0,
         };
-        if (random.nextDouble() < (rate + extra) * (1.4 - p.stats.stamina / 170)) {
+        if (random.nextDouble() < (rate + extra) * (1.4 - p.stats.stamina / 170) * (club == home ? homeFitness : awayFitness)) {
           p.currentStamina = max(20, p.currentStamina - 1);
         }
       }
@@ -843,7 +852,9 @@ class MatchField {
       _duelCooldown[defender.id] = 0.6;
     }
     final mentality =
-        (homePossession ? homeAttack * _aiHomeMentality : awayAttack * _aiAwayMentality);
+        (homePossession
+            ? homeAttack * homeAttackBoost * _aiHomeMentality
+            : awayAttack * awayAttackBoost * _aiAwayMentality);
     final leading = homePossession
         ? homeStats.goals > awayStats.goals
         : awayStats.goals > homeStats.goals;
@@ -1140,6 +1151,17 @@ class MatchField {
     return true;
   }
 
+  /// Goalkeeping quality against one shot: reflexes up close, reach and
+  /// positioning from mid-range, handling and reading from distance.
+  double _keeperSkill(Player k, double meters, _Kind kind) {
+    final s = k.stats;
+    if (kind == _Kind.header) return s.gkReflexes * 0.4 + s.gkReach * 0.35 + s.gkAwareness * 0.25;
+    if (kind == _Kind.freeKick) return s.gkReach * 0.4 + s.gkAwareness * 0.4 + s.gkReflexes * 0.2;
+    if (meters < 12) return s.gkReflexes * 0.5 + s.gkAwareness * 0.3 + s.gkReach * 0.2;
+    if (meters < 20) return s.gkReach * 0.35 + s.gkReflexes * 0.3 + s.gkAwareness * 0.35;
+    return s.gkAwareness * 0.35 + s.gkCatching * 0.3 + s.gkReach * 0.25 + s.gkReflexes * 0.1;
+  }
+
   /// Open-play strike quality: finishing in the box, power and curl from
   /// range, and a penalty for the weaker foot.
   double _openPlayStrike(Player p, double meters) {
@@ -1400,7 +1422,7 @@ class MatchField {
     final dist = sqrt(dx * dx + dy * dy);
     var angle = atan((7.32 * dx) / max(0.01, dx * dx + dy * dy - 3.66 * 3.66));
     if (angle < 0) angle += pi;
-    return 1 / (1 + exp(0.12 * dist - 1.2 * angle + 0.24));
+    return 1 / (1 + exp(0.12 * dist - 1.2 * angle + 0.1));
   }
 
   void _startShot(
@@ -1444,6 +1466,8 @@ class MatchField {
           (_onCounter(isHome) ? 1 + _shape(!isHome) * 0.25 : 1) *
           (1 + max(0.0, _shape(isHome)) * 0.14);
     }
+    // A focused defence (training, team talk) concedes slightly worse chances.
+    if (effectiveKind != _Kind.penalty) xg *= isHome ? awayFocus : homeFocus;
     xg = xg.clamp(0.01, 0.96).toDouble();
     final big = xg >= 0.3;
     _att.shots++;
@@ -1473,12 +1497,12 @@ class MatchField {
     }
     _error = null;
     _spike(isHome, xg * 110 + (big ? 18 : 0));
+    // The keeper's attributes for this kind of shot decide how much of the
+    // chance he takes away: a 90+ keeper turns big chances into saves.
     final gkFactor = keeper == null
         ? 2.4
-        : (1 - (keeper.stats.gkRating - 75) / 80).clamp(0.6, 1.4) *
-              (keeper.playingStyle == PlayingStyle.defensiveGoalkeeper
-                  ? 0.96
-                  : 1);
+        : (1 - (_keeperSkill(keeper, distance, effectiveKind) - 75) / 46).clamp(0.38, 1.65) *
+              (keeper.playingStyle == PlayingStyle.defensiveGoalkeeper && distance < 14 ? 0.95 : 1);
     // From range only real strikers of the ball hurt the keeper.
     final skill = (1.24 + (strike - 75) / (distance > 18 ? 30 : 48)).clamp(0.3, 1.9);
     final pGoal = effectiveKind == _Kind.penalty
@@ -1779,10 +1803,11 @@ class MatchField {
         (!dismissed.contains(_xi(defendClub)[0].id) &&
             (defendPts[0] - ball).distance < 0.05 &&
             random.nextDouble() <
-                _xi(defendClub)[0].stats.gkCatching /
-                    (_xi(defendClub)[0].defendingStyle == DefendingStyle.sweeperGk
-                        ? 215
-                        : 260));
+                (_xi(defendClub)[0].stats.gkCatching * 0.45 +
+                        _xi(defendClub)[0].stats.gkReach * 0.35 +
+                        _xi(defendClub)[0].stats.gkAwareness * 0.2 -
+                        40) /
+                    (_xi(defendClub)[0].defendingStyle == DefendingStyle.sweeperGk ? 95 : 120));
     final atk = attacker.stats.heading * 0.5 +
         attacker.stats.jumping * 0.35 +
         attacker.stats.physicalContact * 0.15 +
@@ -1917,7 +1942,10 @@ class MatchField {
       _lastPasser = null;
       final parried =
           random.nextDouble() >
-          (keeper.stats.gkCatching + keeper.stats.gkParrying) / 240;
+          (keeper.stats.gkCatching + keeper.stats.gkParrying) / 200;
+      final spilled = parried &&
+          f.kind != _Kind.penalty &&
+          random.nextDouble() < ((90 - keeper.stats.gkParrying) / 120).clamp(0.03, 0.4);
       if (f.kind == _Kind.penalty) {
         _line(keeper).penaltiesSaved += 1;
         _emit(
@@ -1935,6 +1963,16 @@ class MatchField {
           !f.home,
           keeper,
         );
+      }
+      if (spilled) {
+        // A loose ball in front of goal: whoever is quickest to it.
+        ball = Offset(f.home ? 0.9 : 0.1, 0.5 + (random.nextDouble() - 0.5) * 0.2);
+        final h = _nearestDistance(homePositions, ball, home);
+        final a = _nearestDistance(awayPositions, ball, away);
+        homePossession = h.$2 < a.$2;
+        owner = homePossession ? h.$1 : a.$1;
+        _hold = 1.2;
+        return;
       }
       if (parried) _awardCorner(f.home);
       return;
@@ -2273,16 +2311,45 @@ class MatchField {
     final progress = homePossession ? spot.dx : 1 - spot.dx;
     final inBox = progress > 0.843 && (spot.dy - 0.5).abs() < 0.296;
     final dangerous = progress > 0.62;
+    // VAR looks at some penalty calls; a few are overturned.
+    if (inBox && random.nextDouble() < 0.35) {
+      varReviews++;
+      _emit(MatchEventType.varCheck, tr('VAR: ehtimoliy penalti tekshirilmoqda…'), homePossession, victim);
+      if (random.nextDouble() < 0.2) {
+        stats.fouls--;
+        _line(defender).fouls -= 1;
+        _line(victim).fouled -= 1;
+        _emit(MatchEventType.info, tr('VAR qarori: penalti yo‘q, qoidabuzarlik bo‘lmagan.'), defendingHome, defender);
+        homePossession = defendingHome;
+        owner = 0;
+        _setStoppage(_SetPiece.none, 0.5);
+        return;
+      }
+      _emit(MatchEventType.info, tr('VAR qarori: penalti tasdiqlandi!'), homePossession, victim);
+    }
     final yellowChance =
         0.11 +
         (defender.stats.aggression - 60) / 420 +
         (dangerous ? 0.08 : 0) +
         (inBox ? 0.1 : 0);
-    final straightRed = random.nextDouble() < 0.0012 + (inBox ? 0.004 : 0);
+    var straightRed = random.nextDouble() < 0.0012 + (inBox ? 0.004 : 0);
+    var downgraded = false;
+    if (straightRed && random.nextDouble() < 0.5) {
+      varReviews++;
+      _emit(MatchEventType.varCheck, tr('VAR: qizil kartochka tekshirilmoqda…'), defendingHome, defender);
+      downgraded = random.nextDouble() < 0.3;
+      straightRed = !downgraded;
+      _emit(
+        MatchEventType.info,
+        downgraded ? tr('VAR qarori: qizil kartochka sariqqa almashtirildi.') : tr('VAR qarori: qizil kartochka tasdiqlandi.'),
+        defendingHome,
+        defender,
+      );
+    }
     final booked = bookings.containsKey(defender.id);
     final yellow =
         !straightRed &&
-        random.nextDouble() < yellowChance * (booked ? 0.2 : 1);
+        (downgraded || random.nextDouble() < yellowChance * (booked ? 0.2 : 1));
     final secondYellow = yellow && (bookings[defender.id] ?? 0) > 0;
     final red = straightRed || secondYellow;
     if (red) {

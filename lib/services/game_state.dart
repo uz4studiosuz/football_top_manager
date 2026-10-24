@@ -14,6 +14,7 @@ import 'division.dart';
 import 'lineup_solver.dart';
 import 'season_calendar.dart';
 import 'coin_wallet.dart';
+import 'club_life.dart';
 import '../l10n/l10n.dart';
 
 /// Yetakchi futbolchilar reytingi modeli
@@ -246,7 +247,11 @@ class GameState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Facilities, training, academy, fans, press and the club's history.
+  final ClubLife life = ClubLife();
+
   void _resetRecords() {
+    life.reset();
     ledger.clear();
     transferHistory.clear();
     news.clear();
@@ -701,6 +706,7 @@ class GameState extends ChangeNotifier {
     );
     if (fixture.involves(_userClubId!)) {
       _recordManagerResult(fixture);
+      _afterUserMatch(fixture);
       final mine = fixture.homeClubId == _userClubId ? homeScore - awayScore : awayScore - homeScore;
       CoinWallet().reward(mine > 0 ? CoinWallet.winReward : mine == 0 ? CoinWallet.drawReward : 0);
       _restoreUserLineup();
@@ -854,7 +860,8 @@ class GameState extends ChangeNotifier {
     for (final entry in e.injuries.entries) {
       final p = homeClub.playerById(entry.key) ?? awayClub.playerById(entry.key);
       if (p == null) continue;
-      p.injuryRounds = max(p.injuryRounds, entry.value);
+      final rounds = userClub.squad.contains(p) ? max(1, (entry.value * life.injuryFactor).round()) : entry.value;
+      p.injuryRounds = max(p.injuryRounds, rounds);
       p.injury = names[rnd.nextInt(names.length)];
       if (homeClub.id == _userClubId || awayClub.id == _userClubId) {
         if (userClub.squad.contains(p)) {
@@ -874,7 +881,8 @@ class GameState extends ChangeNotifier {
   void _inSeasonGrowth(Player p, double rating, double minutes) {
     if (minutes < 30) return;
     final youth = p.age <= 21 ? 0.12 : p.age <= 24 ? 0.06 : p.age >= 31 ? -0.04 : 0.0;
-    p.growth += (rating - 6.6) * 0.18 * (minutes / 90) + youth;
+    final boost = userClub.squad.contains(p) ? life.growthFactor : 1.0;
+    p.growth += ((rating - 6.6) * 0.18 * (minutes / 90) + youth) * (youth > 0 || rating > 6.6 ? boost : 1);
     if (p.growth < 1 || p.ovr >= p.potential) {
       if (p.growth < -1) p.growth = -1;
       return;
@@ -979,6 +987,7 @@ class GameState extends ChangeNotifier {
           ? _managerProfile.ratingFor(away.tactics.playstyle)
           : 66 + away.reputation ~/ 10,
     );
+    applyClubBoosts(engine, userHome);
     return engine;
   }
 
@@ -1115,6 +1124,7 @@ class GameState extends ChangeNotifier {
     }
     _processDeals();
     _revalueMarket();
+    _weeklyClubLife(days);
     final open = isTransferWindowOpen;
     if (!wasOpen && open) {
       _news(
@@ -1259,6 +1269,9 @@ class GameState extends ChangeNotifier {
 
   void _completeTransfer(Player p, Club seller, Club buyer, [int? agreedFee, int? wage, int years = 3]) {
     final fee = agreedFee ?? transferFee(p);
+    if ((buyer.id == _userClubId || seller.id == _userClubId) && (fee >= 10000000 || p.ovr >= 78)) {
+      life.post(life.transferPost(userClub, p, fee, buyer.id == _userClubId, trf('{0} · {1}-tur', [seasonLabel, _currentRound]), Random(_salt(p.id.hashCode))));
+    }
     final costs = signingCost(p, fee);
     _post(buyer, trf('{0}: transfer', [p.shortName]), -fee,
         category: FinanceCategory.transferOut);
@@ -1804,6 +1817,8 @@ class GameState extends ChangeNotifier {
     );
     final met = userPos <= objective.targetPosition;
     CoinWallet().reward((champion.id == _userClubId ? CoinWallet.titleReward : 0) + (met ? CoinWallet.objectiveReward : 0));
+    if (champion.id == _userClubId) life.trophies.insert(0, trf('{0} · {1} chempioni', [seasonLabel, leagueInfo.name]));
+    _seasonAwards();
     boardConfidence = (boardConfidence + (met ? 15 : -20)).clamp(5, 100);
     final style = ManagerPhilosophy.forStyle(userClub.tactics.playstyle);
     final bonus = (userPos == 1 ? 24 : userPos <= 3 ? 16 : 0) + (met ? 8 : 0);
@@ -1826,6 +1841,7 @@ class GameState extends ChangeNotifier {
     final move = pendingMoves[_userClubId];
     if (move != null && InitialDatabase.info(move).tier < leagueInfo.tier) {
       CoinWallet().reward(CoinWallet.promotionReward);
+      life.trophies.insert(0, trf('{0} · {1}ga ko‘tarilish', [seasonLabel, InitialDatabase.info(move).name]));
     }
   }
 
@@ -1975,10 +1991,14 @@ class GameState extends ChangeNotifier {
           p.contract = p.contract.copyWith(contractYears: years);
         }
       }
-      for (var i = 0; i < 2; i++) {
-        if (club.squad.length >= maxSquad) break;
-        final youth = _youthProspect(club, rnd, i);
-        club.squad.add(youth);
+      if (user) {
+        _academyIntake(club, rnd);
+      } else {
+        for (var i = 0; i < 2; i++) {
+          if (club.squad.length >= maxSquad) break;
+          final youth = _youthProspect(club, rnd, i);
+          club.squad.add(youth);
+        }
       }
       if (!user) {
         while (club.squad.length > 25) {
@@ -2012,7 +2032,7 @@ class GameState extends ChangeNotifier {
     _news(
       NewsKind.board,
       trf('Yangi mavsum: {0}{1}', [seasonLabel, wasLeague != leagueId ? ' · ${leagueInfo.name}' : '']),
-      trf('Kengash maqsadi: {0}. Akademiyadan 2 ta yosh futbolchi asosiy jamoaga ko‘tarildi.{1}', [objective.title, released.isNotEmpty ? trf(' Klubni tark etganlar: {0}.', [released.join(', ')]) : '']),
+      trf('Kengash maqsadi: {0}. Akademiyadan {1} ta yosh futbolchi asosiy jamoaga ko‘tarildi.{2}', [objective.title, life.lastIntake.length, released.isNotEmpty ? trf(' Klubni tark etganlar: {0}.', [released.join(', ')]) : '']),
     );
     _news(
       NewsKind.window,
@@ -2074,14 +2094,14 @@ class GameState extends ChangeNotifier {
     p.marketValue = Player.valuation(p.ovr, p.age, p.potential);
   }
 
-  Player _youthProspect(Club club, Random rnd, int i) {
+  Player _youthProspect(Club club, Random rnd, int i, {int? ovr, int? potential, int? age}) {
     final pools = InitialDatabase.namePools;
     final pool = pools[rnd.nextInt(pools.length)];
     final first = pool['firstNames'] as List, last = pool['lastNames'] as List;
     final name = '${first[rnd.nextInt(first.length)]} ${last[rnd.nextInt(last.length)]}';
     const positions = ['CB', 'CMF', 'CF', 'LWF', 'RB', 'DMF', 'AMF', 'GK'];
     final pos = PlayerPosition.fromCode(positions[rnd.nextInt(positions.length)]);
-    final target = 58 + rnd.nextInt(9);
+    final target = ovr ?? 58 + rnd.nextInt(9);
     final stats = _statsFor(pos, target, rnd);
     final used = club.squad.map((p) => p.number).toSet();
     var number = 30 + rnd.nextInt(40);
@@ -2093,7 +2113,7 @@ class GameState extends ChangeNotifier {
       id: id,
       name: name,
       shortName: '${name.split(' ').first[0]}. ${name.split(' ').last}',
-      age: 17 + rnd.nextInt(2),
+      age: age ?? 17 + rnd.nextInt(2),
       nationality: pool['nationality'] as String,
       countryFlag: pool['flag'] as String,
       number: number,
@@ -2104,8 +2124,270 @@ class GameState extends ChangeNotifier {
       stats: stats,
       contract: PlayerContract(contractYears: 3, weeklyWage: 8000),
       marketValue: Player.valuation(target, 17, target + 18),
-      potential: (target + 12 + rnd.nextInt(16)).clamp(70, 92),
+      potential: potential ?? (target + 12 + rnd.nextInt(16)).clamp(70, 92),
     );
+  }
+
+  // ------------------------------------------------------------ club life
+  /// Academy graduates: more and better with a bigger academy, sometimes a
+  /// "golden generation" wonderkid with 85–92 potential.
+  void _academyIntake(Club club, Random rnd) {
+    final level = life.level(Facility.academy);
+    final count = 2 + (level >= 2 ? 1 : 0) + (level >= 4 ? 1 : 0) - (rnd.nextDouble() < 0.3 ? 1 : 0) + 1;
+    life.lastIntake.clear();
+    final names = <String>[];
+    for (var i = 0; i < count && club.squad.length < maxSquad; i++) {
+      final wonderkid = rnd.nextDouble() < 0.04 + 0.04 * level;
+      final ovr = 55 + level * 2 + rnd.nextInt(8) + (wonderkid ? 5 : 0);
+      final potential = wonderkid ? 85 + rnd.nextInt(8) : (ovr + 10 + rnd.nextInt(12) + level).clamp(68, 86);
+      final youth = _youthProspect(club, rnd, i, ovr: ovr, potential: potential, age: 16 + rnd.nextInt(3));
+      youth.marketValue = Player.valuation(youth.ovr, youth.age, youth.potential);
+      club.squad.add(youth);
+      life.lastIntake.add(youth.id);
+      names.add('${wonderkid ? '⭐ ' : ''}${youth.name} (${youth.mainPosition.code}, ${youth.ovr}→${youth.potential})');
+    }
+    if (names.isNotEmpty) {
+      _news(NewsKind.board, tr('Akademiyadan yangi avlod'), names.join(', '), alert: names.any((n) => n.startsWith('⭐')));
+    }
+  }
+
+  /// Starts a facility upgrade; returns an error message or null.
+  String? upgradeFacility(Facility f) {
+    final c = userClub;
+    final level = life.level(f);
+    if (level >= Facility.maxLevel) return tr('Eng yuqori darajaga yetgan.');
+    if (life.building.containsKey(f)) return tr('Qurilish allaqachon ketmoqda.');
+    if (f == Facility.stadium && c.stadiumCapacity >= 80000) return tr('Stadion maksimal sig‘imda.');
+    final cost = ClubLife.upgradeCost(f, level, _economyOf(c));
+    if (c.transferBudget < cost) return tr('Byudjet yetarli emas.');
+    _post(c, trf('{0}: {1}-bosqich qurilishi', [f.label, level + 1]), -cost, category: FinanceCategory.operations);
+    life.building[f] = _currentRound + ClubLife.buildRounds(f);
+    _news(NewsKind.board, trf('{0}: qurilish boshlandi', [f.label]),
+        trf('{0}-bosqich {1} turdan keyin ishga tushadi. Narxi {2}.', [level + 1, ClubLife.buildRounds(f), _m(cost)]));
+    notifyListeners();
+    return null;
+  }
+
+  int facilityCost(Facility f) => ClubLife.upgradeCost(f, life.level(f), _economyOf(userClub));
+
+  void setTrainingFocus(TrainingFocus f) {
+    life.focus = f;
+    notifyListeners();
+  }
+
+  /// Sets (or clears with null) a player's individual training target: an
+  /// attribute key or `style:<PlayingStyle name>`.
+  void setTrainingTarget(Player p, String? target) {
+    if (target == null) {
+      life.targets.remove(p.id);
+    } else {
+      life.targets[p.id] = target;
+    }
+    life.progress.remove(p.id);
+    notifyListeners();
+  }
+
+  static const _focusAttributes = <TrainingFocus, List<String>>{
+    TrainingFocus.attacking: ['finishing', 'attackingAwareness', 'dribbling', 'kickingPower', 'curl'],
+    TrainingFocus.defensive: ['defensiveAwareness', 'tackling', 'defensiveEngagement', 'heading'],
+    TrainingFocus.fitness: ['stamina', 'speed', 'acceleration', 'physicalContact'],
+    TrainingFocus.tactical: ['lowPass', 'loftedPass', 'ballControl', 'tightPossession'],
+  };
+
+  /// Weekly: constructions finish, individual and team training progress.
+  void _weeklyClubLife(int days) {
+    final c = userClub;
+    for (final f in List.of(life.building.keys)) {
+      if (_currentRound < life.building[f]!) continue;
+      life.building.remove(f);
+      life.levels[f] = life.level(f) + 1;
+      var detail = trf('{0}-bosqich ishga tushdi.', [life.level(f)]);
+      if (f == Facility.stadium) {
+        final add = ClubLife.seatsAdded(c.stadiumCapacity);
+        c.stadiumCapacity += add;
+        detail = trf('+{0} o‘rindiq. Yangi sig‘im: {1}.', [add, c.stadiumCapacity]);
+      }
+      _news(NewsKind.board, trf('{0} tayyor', [f.label]), detail, alert: true);
+    }
+    final rnd = Random(_salt(_currentRound * 7919));
+    final focusKeys = _focusAttributes[life.focus];
+    for (final p in c.squad) {
+      if (life.focus == TrainingFocus.fitness) p.currentStamina = min(100, p.currentStamina + 5);
+      final rate = (p.age <= 21 ? 0.42 : p.age <= 24 ? 0.3 : p.age <= 28 ? 0.18 : p.age <= 31 ? 0.1 : 0.05) *
+          life.growthFactor *
+          (p.isInjured ? 0.2 : 1);
+      final target = life.targets[p.id];
+      if (target != null && target.startsWith('style:')) {
+        final style = PlayingStyle.values.asNameMap()[target.substring(6)];
+        if (style == null) continue;
+        final v = (life.progress[p.id] ?? 0) + rate;
+        if (v >= 4) {
+          life.progress.remove(p.id);
+          life.targets.remove(p.id);
+          p.playingStyle = style;
+          _news(NewsKind.award, trf('{0} yangi uslubni o‘zlashtirdi', [p.shortName]), trf('Endi u {0} sifatida o‘ynaydi.', [style.title]));
+        } else {
+          life.progress[p.id] = v;
+        }
+        continue;
+      }
+      final key = target ?? (focusKeys == null ? null : focusKeys[rnd.nextInt(focusKeys.length)]);
+      if (key == null) continue;
+      final v = (life.progress[p.id] ?? 0) + rate * (target != null ? 1 : 0.3) * (focusKeys?.contains(key) == true ? 1.2 : 1);
+      if (v < 1) {
+        life.progress[p.id] = v;
+        continue;
+      }
+      life.progress[p.id] = v - 1;
+      final m = p.stats.toMap().map((k, x) => MapEntry(k, x as int));
+      // Beyond the player's potential, gains become rare.
+      if ((m[key] ?? 99) >= 99 || (p.ovr >= p.potential && rnd.nextDouble() < 0.7)) continue;
+      m[key] = m[key]! + 1;
+      p.stats = PlayerStats.fromMap(m);
+      if (target != null && rnd.nextDouble() < 0.35) {
+        _news(NewsKind.award, trf('{0}: mashg‘ulot natijasi', [p.shortName]),
+            trf('{0} {1} ga oshdi.', [PlayerStats.labels[key], m[key]]),
+            alert: false);
+      }
+    }
+  }
+
+  /// Applies the user's training focus to a match engine.
+  void applyClubBoosts(MatchField f, bool userHome) {
+    switch (life.focus) {
+      case TrainingFocus.attacking:
+        if (userHome) {
+          f.homeAttackBoost *= 1.04;
+        } else {
+          f.awayAttackBoost *= 1.04;
+        }
+      case TrainingFocus.defensive:
+        if (userHome) {
+          f.homeFocus *= 0.95;
+        } else {
+          f.awayFocus *= 0.95;
+        }
+      case TrainingFocus.fitness:
+        if (userHome) {
+          f.homeFitness *= 0.88;
+        } else {
+          f.awayFitness *= 0.88;
+        }
+      case TrainingFocus.tactical:
+        if (userHome) {
+          f.homeCoaching += 4;
+        } else {
+          f.awayCoaching += 4;
+        }
+      case TrainingFocus.balanced:
+        break;
+    }
+  }
+
+  /// Press questions before a big match (null when none is due).
+  List<PressQuestion>? pressFor(Fixture f) {
+    if (!f.involves(_userClubId!) || f.isPlayed || life.pressDone.contains(f.id)) return null;
+    final rival = getClubById(f.homeClubId == _userClubId ? f.awayClubId : f.homeClubId)!;
+    // Big games only: a stronger rival, a title rival, or a top-of-table clash.
+    final table = _standingsMap.isNotEmpty && _currentRound > 1;
+    final big = rival.teamOVR >= userClub.teamOVR + 2 ||
+        (table && positionOf(rival.id) <= 3) ||
+        (table && positionOf(rival.id) <= 6 && positionOf(_userClubId!) <= 6);
+    if (!big) return null;
+    final star = (List.of(rival.squad)..sort((a, b) => b.ovr.compareTo(a.ovr))).firstOrNull;
+    return ClubLife.pressQuestions(rival, star);
+  }
+
+  void answerPress(Fixture f, List<(String, int, int)> answers) {
+    final morale = answers.fold<int>(0, (a, b) => a + b.$2), fans = answers.fold<int>(0, (a, b) => a + b.$3);
+    for (final p in userClub.squad) {
+      p.morale = (p.morale + morale).clamp(0, 100);
+    }
+    userClub.fanMood = (userClub.fanMood + fans).clamp(0, 100);
+    life.pressDone.add(f.id);
+    notifyListeners();
+  }
+
+  /// Fans react and records update after one of the user's matches.
+  void _afterUserMatch(Fixture f) {
+    final userHome = f.homeClubId == _userClubId;
+    final user = userClub, rival = getClubById(userHome ? f.awayClubId : f.homeClubId)!;
+    final scored = (userHome ? f.homeScore : f.awayScore) ?? 0, conceded = (userHome ? f.awayScore : f.homeScore) ?? 0;
+    final goals = <String, int>{};
+    int? firstSub;
+    for (final e in f.events) {
+      if (e.isHomeTeam != userHome) continue;
+      if (e.type == MatchEventType.goal && e.playerName != null) goals[e.playerName!] = (goals[e.playerName!] ?? 0) + 1;
+      if (e.type == MatchEventType.substitution && (firstSub == null || e.minute < firstSub)) firstSub = e.minute;
+    }
+    final ratings = [
+      for (final e in f.ratings.entries)
+        if (user.playerById(e.key) != null) (user.playerById(e.key)!, e.value),
+    ];
+    final rnd = Random(_salt(f.id.hashCode + 7));
+    for (final post in life.matchPosts(
+      user: user,
+      rival: rival,
+      scored: scored,
+      conceded: conceded,
+      userGoals: goals,
+      ratings: ratings,
+      firstSubMinute: firstSub,
+      when: trf('{0} · {1}-tur', [seasonLabel, f.round]),
+      rnd: rnd,
+    ).reversed) {
+      life.post(post);
+    }
+    life.recordMatch(user, rival, scored, conceded, seasonLabel, f.events);
+  }
+
+  /// Season honours across every club in the career's leagues.
+  void _seasonAwards() {
+    final all = [for (final c in marketClubs) for (final p in c.squad) (p, c)];
+    double score(Player p) =>
+        (p.averageRating ?? 6) * 10 + p.seasonGoals * 1.2 + p.seasonAssists * 0.8 + p.seasonMotm * 1.5;
+    final eligible = all.where((e) => e.$1.seasonMinutes >= 900).toList()
+      ..sort((a, b) => score(b.$1).compareTo(score(a.$1)));
+    if (eligible.isEmpty) return;
+    final ballon = eligible.first;
+    final boot = (List.of(all)..sort((a, b) => b.$1.seasonGoals.compareTo(a.$1.seasonGoals))).first;
+    final young = eligible.where((e) => e.$1.age <= 21).firstOrNull ?? eligible.first;
+    final used = <String>{};
+    List<String> pick(bool Function(PlayerPosition) at, int n) {
+      final list = [
+        for (final e in eligible)
+          if (at(e.$1.mainPosition) && !used.contains(e.$1.id)) e,
+      ].take(n).toList();
+      used.addAll(list.map((e) => e.$1.id));
+      return [for (final e in list) '${e.$1.mainPosition.code} · ${e.$1.name} · ${e.$2.shortName}'];
+    }
+
+    final tots = [
+      ...pick((p) => p.isGoalkeeper, 1),
+      ...pick((p) => p == PlayerPosition.cb, 2),
+      ...pick((p) => p == PlayerPosition.lb || p == PlayerPosition.rb, 2),
+      ...pick((p) => p.category == PositionCategory.midfield, 3),
+      ...pick((p) => p.isAttacker, 3),
+    ];
+    final awards = SeasonAwards(
+      seasonLabel,
+      '${ballon.$1.name} (${ballon.$2.name})',
+      '${boot.$1.name} (${boot.$2.name}) · ${boot.$1.seasonGoals}',
+      '${young.$1.name} (${young.$2.name})',
+      tots,
+    );
+    life.awards.insert(0, awards);
+    _news(
+      NewsKind.award,
+      trf('Oltin to‘p: {0}', [ballon.$1.name]),
+      trf('Oltin butsa: {0}. Eng yaxshi yosh futbolchi: {1}. Mavsum ramziy jamoasi e’lon qilindi.', [awards.goldenBoot, awards.youngPlayer]),
+      alert: ballon.$2.id == _userClubId,
+    );
+    final mine = (List.of(userClub.squad)..sort((a, b) => b.seasonGoals.compareTo(a.seasonGoals))).firstOrNull;
+    if (mine != null && mine.seasonGoals > life.bestSeasonGoals) {
+      life.bestSeasonGoals = mine.seasonGoals;
+      life.bestSeasonScorer = '${mine.name} · $seasonLabel';
+    }
   }
 
   static PlayerStats _statsFor(PlayerPosition pos, int target, Random random) {
@@ -2333,11 +2615,13 @@ class GameState extends ChangeNotifier {
         },
     ],
     'moves': pendingMoves,
+    'life': life.toMap(),
   };
 
   /// Restores a career written by [toSave]. Returns false for unknown data.
   bool restore(Map<String, dynamic> m) {
     if (m['v'] != saveVersion) return false;
+    life.restore(m['life'] == null ? null : Map<String, dynamic>.from(m['life']));
     _allClubs = [for (final c in m['clubs'] as List) SaveCodec.clubFrom(Map<String, dynamic>.from(c))];
     _userClubId = m['user'];
     careerSeed = m['seed'] ?? careerSeed;

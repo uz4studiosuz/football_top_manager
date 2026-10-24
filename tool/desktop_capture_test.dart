@@ -12,6 +12,7 @@ import 'package:football_top_manager/screens/match_report_screen.dart';
 import 'package:football_top_manager/screens/player_match_screen.dart';
 import 'package:football_top_manager/screens/db_editor_screen.dart';
 import 'package:football_top_manager/screens/tactics_screen.dart';
+import 'package:football_top_manager/screens/club_life_screen.dart';
 import 'package:football_top_manager/ui/app_theme.dart';
 import 'package:football_top_manager/ui/heatmap.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -67,6 +68,10 @@ void main() {
     }
 
     const desktop = Size(1366, 820), phone = Size(390, 844);
+    for (var t = 0; t < 5; t++) {
+      await mount(ClubLifeScreen(key: ValueKey('life$t'), initialTab: t), phone);
+      await shot('m-club-$t');
+    }
     await mount(const MainNavigationScreen(), desktop);
     await shot('d-dashboard');
     for (final tab in ['Jadval', 'Transfer', 'Moliya']) {

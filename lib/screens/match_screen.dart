@@ -69,6 +69,107 @@ class _MatchScreenState extends State<MatchScreen> {
   final List<MatchEvent> _feed = [];
   final Set<String> _handledInjuries = {};
 
+  /// VAR review on screen (text) and whether the half-time talk was given.
+  String? _varText;
+  bool _talkGiven = false;
+
+  /// Play stops while VAR looks at the incident, then resumes.
+  void _showVar(String text) {
+    final resume = _playing;
+    _varText = text;
+    _playing = false;
+    Timer(const Duration(milliseconds: 2600), () {
+      if (!mounted) return;
+      setState(() {
+        _varText = null;
+        if (!_field.isHalfTime && !_field.isFinished) _playing = resume;
+      });
+    });
+  }
+
+  /// Half-time team talk: each choice changes morale and how the team plays.
+  void _teamTalk(int choice) {
+    final rnd = Random();
+    final xi = _user.startingXI.where((p) => !_field.dismissed.contains(p.id)).toList();
+    final my = _userHome ? _field.homeStats.goals : _field.awayStats.goals;
+    final their = _userHome ? _field.awayStats.goals : _field.homeStats.goals;
+    String said;
+    switch (choice) {
+      case 0:
+        for (final p in xi) {
+          p.morale = min(100, p.morale + 8);
+        }
+        if (_userHome) {
+          _field.homeAttackBoost *= 1.06;
+        } else {
+          _field.awayAttackBoost *= 1.06;
+        }
+        said = tr('“Sizlar bundan yaxshisiga qodirsizlar! Oldinga!” Jamoa hujumga ruhlandi.');
+      case 1:
+        for (final p in xi) {
+          p.morale = min(100, p.morale + 3);
+        }
+        if (_userHome) {
+          _field.homeFocus *= 0.93;
+        } else {
+          _field.awayFocus *= 0.93;
+        }
+        said = tr('“Himoyani ushlanglar, xato qilmanglar!” Jamoa diqqatini jamladi.');
+      default:
+        // Shouting wakes some players up and breaks others, more so when ahead.
+        final wake = my < their ? 0.6 : my == their ? 0.5 : 0.35;
+        var woke = 0;
+        for (final p in xi) {
+          if (rnd.nextDouble() < wake) {
+            p.morale = min(100, p.morale + 12);
+            p.currentStamina = min(100, p.currentStamina + 6);
+            woke++;
+          } else {
+            p.morale = max(0, p.morale - 12);
+          }
+        }
+        if (woke > xi.length / 2) {
+          if (_userHome) {
+            _field.homeAttackBoost *= 1.05;
+          } else {
+            _field.awayAttackBoost *= 1.05;
+          }
+        }
+        said = trf('Murabbiy kiyinish xonasida baqirdi: {0} futbolchi uyg‘ondi, {1} tasi ruhan cho‘kdi.', [woke, xi.length - woke]);
+    }
+    _field.announce(MatchEventType.info, said, _userHome);
+    setState(() {
+      _talkGiven = true;
+      _drain();
+    });
+  }
+
+  Future<void> _askTeamTalk() async {
+    final choice = await showDialog<int>(
+      context: context,
+      builder: (ctx) => SimpleDialog(
+        title: Text(tr('Tanaffusdagi nutq')),
+        children: [
+          for (final (i, icon, title, hint) in [
+            (0, Icons.campaign_outlined, tr('Ruhlantirish'), tr('Kayfiyat +8, hujum kuchayadi')),
+            (1, Icons.shield_outlined, tr('Diqqat va himoya'), tr('Xatolar kamayadi, raqib imkoniyatlari pasayadi')),
+            (2, Icons.sports_kabaddi_outlined, tr('Baqirish'), tr('Ba’zilar uyg‘onadi, ba’zilar ruhan cho‘kadi')),
+          ])
+            SimpleDialogOption(
+              onPressed: () => Navigator.pop(ctx, i),
+              child: ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(icon, color: AppColors.primary),
+                title: Text(title, style: AppText.bodyStrong),
+                subtitle: Text(hint, style: AppText.caption),
+              ),
+            ),
+        ],
+      ),
+    );
+    if (choice != null && mounted) _teamTalk(choice);
+  }
+
   bool get _userHome => _home.id == _game.userClubId;
   Club get _user => _userHome ? _home : _away;
   Club get _rival => _userHome ? _away : _home;
@@ -94,6 +195,7 @@ class _MatchScreenState extends State<MatchScreen> {
       awayAI: _userHome,
     );
     _applyMentality();
+    _game.applyClubBoosts(_field, _userHome);
     _feed.addAll(_field.takeEvents().reversed);
     _clock.start();
     _timer = Timer.periodic(const Duration(milliseconds: 33), (_) => _tick());
@@ -136,8 +238,17 @@ class _MatchScreenState extends State<MatchScreen> {
   void _drain() {
     for (final e in _field.takeEvents()) {
       _feed.insert(0, e);
+      if (e.type == MatchEventType.varCheck) _showVar(e.description);
     }
-    if (_field.isHalfTime) _playing = false;
+    if (_field.isHalfTime) {
+      _playing = false;
+      if (!_talkGiven) {
+        _talkGiven = true;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _askTeamTalk();
+        });
+      }
+    }
     if (_field.isFinished) _save();
     // Pause so the manager can react to an injury on their side.
     for (final id in _field.injuredOnPitch) {
@@ -523,6 +634,34 @@ class _MatchScreenState extends State<MatchScreen> {
             ),
             if (_field.isHalfTime || _field.isFinished)
               Positioned.fill(child: _breakOverlay(colors)),
+            if (_varText != null)
+              Positioned(
+                left: 0,
+                right: 0,
+                top: 34,
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.fromLTRB(6, 6, 14, 6),
+                    decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.82), borderRadius: BorderRadius.circular(10)),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(color: AppColors.primary, borderRadius: BorderRadius.circular(6)),
+                          child: const Text('VAR', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, letterSpacing: 1.5)),
+                        ),
+                        const SizedBox(width: 10),
+                        Flexible(
+                          child: Text(_varText!, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 12)),
+                        ),
+                        const SizedBox(width: 10),
+                        const SizedBox.square(dimension: 14, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
             if (_field.phase == FieldPhase.goal)
               Positioned.fill(
                 child: Container(
@@ -848,8 +987,11 @@ class _SubstitutionSheetState extends State<_SubstitutionSheet> {
     final outIndex = out == null ? -1 : c.startingLineupIds.indexOf(out!.id);
     final pos = outIndex < 0 ? null : c.slotPosition(outIndex);
     if (pos != null) {
-      bench.sort((a, b) => b.getMatchOVR(pos).compareTo(a.getMatchOVR(pos)));
+      bench.sort((a, b) => GameState.slotFit(b, pos).compareTo(GameState.slotFit(a, pos)));
     }
+    // Stars mark substitutes who know the position; the best one is filled.
+    bool suits(Player p) =>
+        pos != null && (p.fitFor(pos) == PositionFit.natural || p.fitFor(pos) == PositionFit.alternative);
     return SafeArea(
       child: SizedBox(
         height: MediaQuery.sizeOf(context).height * 0.72,
@@ -885,6 +1027,7 @@ class _SubstitutionSheetState extends State<_SubstitutionSheet> {
                     for (final p in bench)
                       _row(
                         p,
+                        star: !suits(p) ? null : p == bench.first,
                         trailing: ValueBadge(pos == null ? p.ovr : p.getEffectiveOVR(pos), size: 30),
                         onTap: () {
                           if (f.substitute(widget.isHome, out!.id, p.id)) {
@@ -908,9 +1051,11 @@ class _SubstitutionSheetState extends State<_SubstitutionSheet> {
     );
   }
 
-  Widget _row(Player p, {required Widget trailing, String? subtitle, required VoidCallback onTap}) => InkWell(
+  /// [star]: null = no star, false = suits the position, true = best choice.
+  Widget _row(Player p, {required Widget trailing, String? subtitle, bool? star, required VoidCallback onTap}) => InkWell(
     onTap: onTap,
-    child: Padding(
+    child: Container(
+      color: star == true ? AppColors.gold.withValues(alpha: 0.09) : null,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Row(
         children: [
@@ -920,7 +1065,23 @@ class _SubstitutionSheetState extends State<_SubstitutionSheet> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(p.name, style: AppText.bodyStrong.copyWith(fontSize: 13)),
+                Row(
+                  children: [
+                    if (star != null) ...[
+                      Icon(
+                        star ? Icons.star_rounded : Icons.star_outline_rounded,
+                        size: 18,
+                        color: AppColors.gold,
+                      ),
+                      const SizedBox(width: 4),
+                    ],
+                    Flexible(child: Text(p.name, style: AppText.bodyStrong.copyWith(fontSize: 13))),
+                    if (star == true) ...[
+                      const SizedBox(width: 6),
+                      Text(tr('Eng mos'), style: AppText.caption.copyWith(color: AppColors.gold, fontWeight: FontWeight.w700)),
+                    ],
+                  ],
+                ),
                 const SizedBox(height: 4),
                 Row(
                   children: [

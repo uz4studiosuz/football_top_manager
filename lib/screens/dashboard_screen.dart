@@ -16,6 +16,8 @@ import 'widgets/opponent_squad_sheet.dart';
 import 'widgets/player_detail_view.dart';
 import '../l10n/l10n.dart';
 import '../ui/coin.dart';
+import '../services/club_life.dart';
+import 'club_life_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   final VoidCallback onNavigateToTactics;
@@ -152,9 +154,13 @@ class DashboardScreen extends StatelessWidget {
                     children: [
                       if (game.seasonFinished)
                         _seasonEnd(context, game)
-                      else if (next != null)
-                        _matchCard(context, game, club, next)
-                      else
+                      else if (next != null) ...[
+                        if (game.pressFor(next) != null) ...[
+                          _pressCard(context, game, next),
+                          const SizedBox(height: 12),
+                        ],
+                        _matchCard(context, game, club, next),
+                      ] else
                         _roundDone(context, game),
                       if (game.unavailableStarters.isNotEmpty) ...[
                         const SizedBox(height: 12),
@@ -170,6 +176,8 @@ class DashboardScreen extends StatelessWidget {
                   );
                   final side = Column(
                     children: [
+                      _clubLifeCard(context, game),
+                      const SizedBox(height: 12),
                       _boardCard(game),
                       const SizedBox(height: 12),
                       AppCard(
@@ -381,6 +389,114 @@ class DashboardScreen extends StatelessWidget {
             icon: const Icon(Icons.fast_forward_rounded, size: 18),
             label: Text(tr('Tezkor natija')),
           ),
+        ],
+      ),
+    );
+  }
+
+  /// Press conference before a big match: two questions, answers move
+  /// the squad's morale and the fans' mood.
+  Widget _pressCard(BuildContext context, GameState game, Fixture f) => AppCard(
+    child: Row(
+      children: [
+        const Icon(Icons.mic_none_rounded, color: AppColors.primary, size: 28),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(tr('Matbuot anjumani'), style: AppText.bodyStrong),
+              Text(tr('Muhim o‘yin oldidan jurnalistlar savollari kutmoqda.'), style: AppText.caption),
+            ],
+          ),
+        ),
+        FilledButton.tonal(onPressed: () => _runPress(context, game, f), child: Text(tr('Boshlash'))),
+      ],
+    ),
+  );
+
+  Future<void> _runPress(BuildContext context, GameState game, Fixture f) async {
+    final questions = game.pressFor(f);
+    if (questions == null) return;
+    final picked = <(String, int, int)>[];
+    for (final q in questions) {
+      final a = await showDialog<(String, int, int)>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => SimpleDialog(
+          title: Text(q.question),
+          children: [
+            for (final a in q.answers)
+              SimpleDialogOption(
+                onPressed: () => Navigator.pop(ctx, a),
+                child: Padding(padding: const EdgeInsets.symmetric(vertical: 6), child: Text('“${a.$1}”', style: AppText.body)),
+              ),
+          ],
+        ),
+      );
+      if (a == null || !context.mounted) return;
+      picked.add(a);
+    }
+    game.answerPress(f, picked);
+    final morale = picked.fold<int>(0, (s, a) => s + a.$2);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(trf('Matbuot anjumani tugadi. Jamoa kayfiyati {0}{1}.', [morale >= 0 ? '+' : '', morale]))),
+      );
+    }
+  }
+
+  /// Entry to facilities, training, academy, fans and the hall of fame.
+  Widget _clubLifeCard(BuildContext context, GameState game) {
+    final post = game.life.feed.firstOrNull;
+    Widget item(int tab, IconData icon, String label) => Expanded(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: () => ClubLifeScreen.show(context, tab),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            children: [
+              Icon(icon, color: AppColors.primary),
+              const SizedBox(height: 4),
+              Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.caption.copyWith(color: AppColors.ink)),
+            ],
+          ),
+        ),
+      ),
+    );
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SectionHeader(tr('Klub boshqaruvi'), icon: Icons.apartment_outlined),
+          Row(
+            children: [
+              item(0, Icons.stadium_outlined, tr('Inshootlar')),
+              item(1, Icons.fitness_center_outlined, tr('Mashg‘ulot')),
+              item(2, Icons.school_outlined, tr('Akademiya')),
+              item(3, Icons.forum_outlined, tr('Muxlislar')),
+              item(4, Icons.emoji_events_outlined, tr('Shon-sharaf')),
+            ],
+          ),
+          if (post != null) ...[
+            const Divider(height: 18),
+            InkWell(
+              onTap: () => ClubLifeScreen.show(context, 3),
+              child: Row(
+                children: [
+                  Icon(post.positive ? Icons.sentiment_satisfied_alt : Icons.sentiment_dissatisfied,
+                      color: post.positive ? AppColors.win : AppColors.live, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text('${post.author}: ${post.text}', maxLines: 2, overflow: TextOverflow.ellipsis, style: AppText.small)),
+                ],
+              ),
+            ),
+          ],
+          if (game.life.focus != TrainingFocus.balanced) ...[
+            const SizedBox(height: 8),
+            Text(trf('Mashg‘ulot: {0}', [game.life.focus.label]), style: AppText.caption),
+          ],
         ],
       ),
     );

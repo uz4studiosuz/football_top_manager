@@ -21,7 +21,8 @@ enum MatchEventType {
   injury('Jarohat'),
   woodwork('Ustun'),
   bigChance('Katta imkoniyat'),
-  info('Ma’lumot');
+  info('Ma’lumot'),
+  varCheck('VAR tekshiruvi');
 
   const MatchEventType(this._label);
   final String _label;
@@ -45,6 +46,7 @@ enum MatchEventType {
     woodwork => Icons.vertical_align_center_rounded,
     bigChance => Icons.local_fire_department_outlined,
     info => Icons.info_outline_rounded,
+    varCheck => Icons.tv_rounded,
   };
 
   /// Key moments shown in the SofaScore-like incident timeline.

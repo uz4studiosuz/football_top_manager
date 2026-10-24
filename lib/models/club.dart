@@ -496,7 +496,7 @@ class Club {
   final Color secondaryColor;
   final Color accentColor;
   final String stadiumName;
-  final int stadiumCapacity;
+  int stadiumCapacity; // grows with stadium upgrades
   final String city;
   final String nickname;
   final int founded;
