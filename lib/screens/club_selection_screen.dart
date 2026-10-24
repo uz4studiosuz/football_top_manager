@@ -3,6 +3,7 @@ import '../data/initial_database.dart';
 import '../models/club.dart';
 import '../services/game_state.dart';
 import '../ui/team_widgets.dart';
+import '../ui/league_picker.dart';
 import '../ui/widgets.dart';
 import 'custom_club_creator_screen.dart';
 import 'main_navigation_screen.dart';
@@ -19,18 +20,21 @@ class ClubSelectionScreen extends StatefulWidget {
 
 class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
   String _league = 'super';
-  late List<Club> _clubs = InitialDatabase.getClubs(_league);
+  late List<Club> _clubs = _load(_league);
+
+  /// Clubs strongest first, with each club's real best XI picked.
+  static List<Club> _load(String id) {
+    final clubs = InitialDatabase.getClubs(id);
+    for (final c in clubs) {
+      GameState().autoPickLineup(c);
+    }
+    return clubs..sort((a, b) => b.teamOVR.compareTo(a.teamOVR));
+  }
   int _selected = 0;
 
   void _switchLeague(String id) => setState(() {
     _league = id;
-    _clubs = InitialDatabase.getClubs(id)..sort((a, b) => b.reputation.compareTo(a.reputation));
-    // Big-league seed files list squads only; show each club's real best XI.
-    if (id != 'super') {
-      for (final c in _clubs) {
-        GameState().autoPickLineup(c);
-      }
-    }
+    _clubs = _load(id);
     _selected = 0;
   });
   Club get _club => _clubs[_selected];
@@ -81,56 +85,61 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
         children: [
-          PillTabs(
-            labels: [
-              for (final l in InitialDatabase.leagues)
-                trf('{0} · {1} klub', [l.name, InitialDatabase.getClubs(l.id).length]),
-            ],
-            index: InitialDatabase.leagues.indexWhere((l) => l.id == _league),
-            onChanged: (i) => _switchLeague(InitialDatabase.leagues[i].id),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 112,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: _clubs.length + 1,
-              separatorBuilder: (_, _) => const SizedBox(width: 8),
-              itemBuilder: (context, i) {
-                if (i == _clubs.length) {
-                  return _clubChip(
-                    selected: false,
-                    onTap: () => Navigator.push(
-                      context,
-                      MaterialPageRoute<void>(
-                        builder: (_) => CustomClubCreatorScreen(managerProfile: widget.managerProfile, league: _league),
-                      ),
-                    ),
+          SectionHeader(tr('Liga'), icon: Icons.emoji_events_outlined),
+          LeaguePicker(selected: _league, onChanged: _switchLeague),
+          const SizedBox(height: 16),
+          SectionHeader(trf('Klublar ({0})', [_clubs.length]), icon: Icons.shield_outlined),
+          LayoutBuilder(
+            builder: (context, box) {
+              final perRow = (box.maxWidth / 112).floor().clamp(3, 8);
+              final tiles = <Widget>[
+                for (var i = 0; i < _clubs.length; i++)
+                  _clubChip(
+                    selected: i == _selected,
+                    onTap: () => setState(() => _selected = i),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.add_circle_outline_rounded, size: 38, color: AppColors.primary),
-                        SizedBox(height: 8),
-                        Text(tr('Yangi klub'), style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                        ClubCrestWidget(config: _clubs[i].crestConfig, size: 40),
+                        const SizedBox(height: 6),
+                        Text(_clubs[i].shortName, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                        const SizedBox(height: 4),
+                        ValueBadge(_clubs[i].teamOVR, size: 22),
                       ],
                     ),
-                  );
-                }
-                final c = _clubs[i];
-                return _clubChip(
-                  selected: i == _selected,
-                  onTap: () => setState(() => _selected = i),
+                  ),
+                _clubChip(
+                  selected: false,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (_) => CustomClubCreatorScreen(managerProfile: widget.managerProfile, league: _league),
+                    ),
+                  ),
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      ClubCrestWidget(config: c.crestConfig, size: 50),
+                      const Icon(Icons.add_circle_outline_rounded, size: 34, color: AppColors.primary),
                       const SizedBox(height: 6),
-                      Text(c.shortName, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                      Text(
+                        tr('Yangi klub'),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primary),
+                      ),
                     ],
                   ),
-                );
-              },
-            ),
+                ),
+              ];
+              return GridView.count(
+                crossAxisCount: perRow,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                mainAxisSpacing: 8,
+                crossAxisSpacing: 8,
+                childAspectRatio: 0.82,
+                children: tiles,
+              );
+            },
           ),
           const SizedBox(height: 12),
           AppCard(
@@ -177,8 +186,13 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 16),
-          SizedBox(
+        ],
+      ),
+      // Always reachable, however long the club list is.
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+          child: SizedBox(
             height: 52,
             child: FilledButton.icon(
               onPressed: () => _start(club),
@@ -186,13 +200,12 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
               label: FittedBox(child: Text(trf('{0}NI BOSHQARISH', [club.name.toUpperCase()]))),
             ),
           ),
-        ],
+        ),
       ),
     );
   }
 
   Widget _clubChip({required bool selected, required VoidCallback onTap, required Widget child}) => SizedBox(
-    width: 92,
     child: Material(
       color: selected ? AppColors.primarySoft : AppColors.surface,
       shape: RoundedRectangleBorder(

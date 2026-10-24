@@ -774,8 +774,8 @@ class RatingsList extends StatelessWidget {
     final parts = <String>[
       '${min(90, l.minutes.round())}′',
       if (l.goals > 0) trf('{0} gol', [l.goals]),
-      if (l.assists > 0) '${l.assists} assist',
-      if (l.saves > 0) '${l.saves} seyv',
+      if (l.assists > 0) trf('{0} assist', [l.assists]),
+      if (l.saves > 0) trf('{0} seyv', [l.saves]),
       '${l.passesCompleted}/${l.passes} pas',
       if (l.tackles + l.interceptions > 0) trf('{0} Olib qo‘yish', [l.tackles + l.interceptions]),
       if (l.keyPasses > 0) '${l.keyPasses} key pas',

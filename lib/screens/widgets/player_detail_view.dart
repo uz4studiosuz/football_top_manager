@@ -325,7 +325,7 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
               InfoRow(tr('Haftalik maosh'), formatMoney(p.contract.weeklyWage)),
               InfoRow(
                 tr('Qolgan muddat'),
-                '${p.contract.contractYears} yil',
+                trf('{0} yil', [p.contract.contractYears]),
                 valueColor: p.contract.contractYears <= 1 ? AppColors.live : null,
               ),
               if (p.contract.releaseClause > 0) InfoRow(tr('Tovon puli'), formatMoney(p.contract.releaseClause)),
@@ -339,12 +339,14 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
                 const SizedBox(height: 8),
                 OutlinedButton.icon(
                   onPressed: () {
-                    final ok = game.sellPlayer(p);
-                    message(ok ? trf('{0} sotildi', [p.name]) : game.lastTransferError ?? tr('Sotilmadi'));
-                    if (ok) Navigator.pop(context);
+                    game.toggleTransferList(p);
+                    setState(() {});
+                    message(game.transferListed.contains(p.id)
+                        ? tr('Sotuvga qo‘yildi: transfer oynasida klublar taklif yuboradi.')
+                        : tr('Sotuv ro‘yxatidan olindi.'));
                   },
-                  icon: const Icon(Icons.sell_outlined),
-                  label: Text(tr('Xaridor topish va sotish')),
+                  icon: Icon(game.transferListed.contains(p.id) ? Icons.remove_shopping_cart_outlined : Icons.sell_outlined),
+                  label: Text(game.transferListed.contains(p.id) ? tr('Sotuv ro‘yxatidan olish') : tr('Sotuvga qo‘yish')),
                 ),
               ],
             ],

@@ -435,7 +435,14 @@ class MatchField {
           (t.pressing - 3) * 0.03;
       for (final p in _xi(club)) {
         if (dismissed.contains(p.id)) continue;
-        if (random.nextDouble() < rate * (1.4 - p.stats.stamina / 170)) {
+        // Running instructions cost energy.
+        final extra = switch (p.instruction) {
+          PlayerInstruction.pressing => 0.14,
+          PlayerInstruction.makeRuns || PlayerInstruction.trackBack => 0.07,
+          PlayerInstruction.anchoring || PlayerInstruction.stayBack => -0.04,
+          _ => 0.0,
+        };
+        if (random.nextDouble() < (rate + extra) * (1.4 - p.stats.stamina / 170)) {
           p.currentStamina = max(20, p.currentStamina - 1);
         }
       }
@@ -685,7 +692,12 @@ class MatchField {
     final defender = _xi(_opponent)[pressure];
     final distance = (_rivals[pressure] - ball).distance;
     final progress = homePossession ? ball.dx : 1 - ball.dx;
-    final pressRadius = 0.042 + (_opponent.tactics.pressing - 3) * 0.002;
+    final pressRadius = 0.042 +
+        (_opponent.tactics.pressing - 3) * 0.002 +
+        (_xi(_opponent)[_nearest(_rivals, ball, _opponent, ignoreKeeper: true)].instruction ==
+                PlayerInstruction.pressing
+            ? 0.012
+            : 0);
     // A keeper with the ball in hand cannot be tackled.
     if (owner != 0 &&
         distance < pressRadius &&
@@ -714,7 +726,7 @@ class MatchField {
                       ? 0.02
                       : 0) +
                   (defender.instruction == PlayerInstruction.tightMarking ||
-                          defender.instruction == PlayerInstruction.manMarking
+                          defender.instruction == PlayerInstruction.pressing
                       ? 0.03
                       : 0) +
                   (defender.stats.tackling +
@@ -972,6 +984,9 @@ class MatchField {
         score += progress * 0.65 + mate.stats.physicalContact / 1000;
       }
       if (mate.instruction == PlayerInstruction.playmaker) score += 0.08;
+      // Runners are found more often going forward; holders get the safe ball.
+      if (mate.instruction == PlayerInstruction.makeRuns && progress > 0.05) score += 0.07;
+      if (mate.instruction == PlayerInstruction.stayBack && progress > 0.1) score -= 0.05;
       if (_is(carrier, _creators)) score += progress * 0.3;
       if (mate.playingStyle == PlayingStyle.targetMan &&
           (style == TeamPlaystyle.longBall ||
@@ -2420,18 +2435,11 @@ class MatchField {
               target -= Offset(direction * 0.04, 0);
             case PlayerInstruction.anchoring:
               target = Offset.lerp(target, bases[i], 0.5)!;
-            case PlayerInstruction.manMarking:
-              final opp = isHome ? away : home;
-              final oppXi = _xi(opp);
-              var best = -1, bestOvr = -1;
-              for (var j = 1; j < 11; j++) {
-                if (dismissed.contains(oppXi[j].id)) continue;
-                if (oppXi[j].ovr > bestOvr) {
-                  bestOvr = oppXi[j].ovr;
-                  best = j;
-                }
-              }
-              if (best > 0) target = rivals[best] - Offset(direction * 0.015, 0);
+            case PlayerInstruction.pressing:
+              // Closes down the ball when it is near.
+              if ((ball - points[i]).distance < 0.2) target = Offset.lerp(target, ball, 0.55)!;
+            case PlayerInstruction.trackBack:
+              target = Offset.lerp(target, bases[i] - Offset(direction * 0.12, 0), 0.6)!;
             case PlayerInstruction.tightMarking:
               final m = rivals[_nearest(rivals, points[i], opponent, ignoreKeeper: true)];
               target = Offset.lerp(target, m - Offset(direction * 0.012, 0), 0.6)!;

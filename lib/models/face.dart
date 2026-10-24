@@ -26,7 +26,7 @@ class FaceConfig {
     'Tugun',
     'Dredlar',
     'Irokez',
-    'Orqaga',
+    'Orqaga taralgan',
     'Chakka',
     'Chelka',
     'Feyd',
@@ -46,7 +46,7 @@ class FaceConfig {
   static const noseLabels = ['Kichik', 'O‘rta', 'Keng', 'Uzun'];
   static const mouthLabels = ['Ingichka', 'O‘rta', 'To‘liq', 'Tabassum'];
   static const browLabels = ['Ingichka', 'O‘rta', 'Qalin', 'Kamon'];
-  static const ageLabels = ['Yosh', 'O‘rta', 'Tajribali'];
+  static const ageLabels = ['Navqiron', 'O‘rta', 'Tajribali'];
 
   final int skin, hair, cut, shape, eyes, nose, mouth, brow, age, eyeColor;
   final int beardStyle;

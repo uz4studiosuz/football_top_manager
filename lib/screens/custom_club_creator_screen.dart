@@ -9,6 +9,7 @@ import '../ui/widgets.dart';
 import 'main_navigation_screen.dart';
 import '../models/manager_profile.dart';
 import '../l10n/l10n.dart';
+import '../ui/league_picker.dart';
 
 /// Foydalanuvchi o'z jamoasini noldan yaratish ekrani
 class CustomClubCreatorScreen extends StatefulWidget {
@@ -130,45 +131,8 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SectionHeader(tr('Qaysi ligada o‘ynaysiz?'), icon: Icons.emoji_events_outlined),
-          for (final l in InitialDatabase.leagues)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Material(
-                color: l.id == _league ? AppColors.primarySoft : AppColors.surfaceAlt,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: l.id == _league ? AppColors.primary : AppColors.line, width: l.id == _league ? 2 : 1),
-                ),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () => setState(() => _league = l.id),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Row(
-                      children: [
-                        Icon(
-                          l.id == _league ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                          color: l.id == _league ? AppColors.primary : AppColors.ink3,
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(l.name, style: AppText.bodyStrong),
-                              Text(
-                                trf('{0} klub · {1} tur', [InitialDatabase.getClubs(l.id).length, (InitialDatabase.getClubs(l.id).length - 1) * 2]),
-                                style: AppText.caption,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
+          LeaguePicker(selected: _league, onChanged: (id) => setState(() => _league = id)),
+          const SizedBox(height: 10),
           Text(
             trf('Klubingiz {0} o‘rnini egallaydi · {1} tur.', [clubs.first.name, rounds]),
             style: AppText.small,

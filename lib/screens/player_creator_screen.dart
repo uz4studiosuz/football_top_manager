@@ -6,6 +6,7 @@ import '../ui/face_avatar.dart';
 import '../ui/widgets.dart';
 import 'widgets/player_detail_view.dart';
 import '../l10n/l10n.dart';
+import '../data/countries.dart';
 
 /// Build a player completely from scratch and sign him to your club.
 class PlayerCreatorScreen extends StatefulWidget {
@@ -15,30 +16,7 @@ class PlayerCreatorScreen extends StatefulWidget {
 }
 
 class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
-  static const countries = {
-    'O‘zbekiston': '🇺🇿',
-    'Qozog‘iston': '🇰🇿',
-    'Angliya': '🏴',
-    'Ispaniya': '🇪🇸',
-    'Italiya': '🇮🇹',
-    'Germaniya': '🇩🇪',
-    'Fransiya': '🇫🇷',
-    'Portugaliya': '🇵🇹',
-    'Niderlandiya': '🇳🇱',
-    'Belgiya': '🇧🇪',
-    'Xorvatiya': '🇭🇷',
-    'Braziliya': '🇧🇷',
-    'Argentina': '🇦🇷',
-    'Urugvay': '🇺🇾',
-    'Kolumbiya': '🇨🇴',
-    'Marokash': '🇲🇦',
-    'Senegal': '🇸🇳',
-    'Nigeriya': '🇳🇬',
-    'Misr': '🇪🇬',
-    'Yaponiya': '🇯🇵',
-    'Janubiy Koreya': '🇰🇷',
-    'Turkiya': '🇹🇷',
-  };
+  static const countries = countryFlags;
 
   /// Positions each playing style suits (PlayerPlayingStyles.md).
   static const styleFits = <PlayingStyle, Set<String>>{
@@ -80,7 +58,7 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
   int target = 72;
   int potential = 85;
   late Map<String, int> attrs = _template();
-  late FaceConfig face = FaceConfig.forPlayer('creator', nationality, age);
+  late FaceConfig face = const FaceConfig();
 
   @override
   void dispose() {

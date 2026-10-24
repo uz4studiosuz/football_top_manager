@@ -76,6 +76,7 @@ class _MatchScreenState extends State<MatchScreen> {
     if (_home.id != _game.userClubId) _game.autoPickLineup(_home);
     if (_away.id != _game.userClubId) _game.autoPickLineup(_away);
     final coaching = _game.managerProfile.ratingFor(_user.tactics.playstyle);
+    _game.beginUserMatch();
     _field = MatchField(
       _home,
       _away,

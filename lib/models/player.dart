@@ -423,7 +423,8 @@ enum PlayerInstruction {
   holdWidth('Qanotni ushlash', 'Yon chiziq bo‘ylab kenglik yaratadi', true),
   playmaker('Pas markazi', 'To‘pga ochilib sheriklarni bog‘laydi', true),
   counterTarget('Counter Target', 'Himoyaga qaytmaydi, qarshi hujumni kutadi', false),
-  manMarking('Man Marking', 'Raqibning eng xavfli o‘yinchisini shaxsan qo‘riqlaydi', false),
+  pressing('Faol pressing', 'To‘p egasiga birinchi bo‘lib boradi: ko‘proq to‘p qaytarish, lekin tez charchaydi', false),
+  trackBack('Himoyaga qaytish', 'Hujumchi yoki vinger to‘p yo‘qotilganda himoyaga yordamga qaytadi', false),
   tightMarking('Tight Marking', 'Yaqin masofadan bosim: ko‘proq Olib qo‘yish va qoidabuzarlik', false),
   deepLine('Deep Line', 'Himoyada chuqurroq turib, orqa zonani sug‘urtalaydi', false);
 
@@ -643,9 +644,9 @@ class Player {
             ...FaceConfig.forPlayer(m['id'], m['nationality'], m['age']).toMap(),
             ...Map<String, dynamic>.from(m['face']),
           }),
-    instruction: PlayerInstruction.values.byName(
-      m['instruction'] ?? 'balanced',
-    ),
+    // "manMarking" was retired: old saves get the closest instruction.
+    instruction: PlayerInstruction.values.asNameMap()[m['instruction']] ??
+        (m['instruction'] == 'manMarking' ? PlayerInstruction.tightMarking : PlayerInstruction.balanced),
     id: m['id'],
     name: m['name'],
     shortName: m['shortName'],

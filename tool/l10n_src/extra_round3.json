@@ -1,0 +1,510 @@
+{
+ "Afg‘oniston": [
+  "Afghanistan",
+  "Афганистан"
+ ],
+ "BAA": [
+  "UAE",
+  "ОАЭ"
+ ],
+ "Belarus": [
+  "Belarus",
+  "Беларусь"
+ ],
+ "Boliviya": [
+  "Bolivia",
+  "Боливия"
+ ],
+ "Estoniya": [
+  "Estonia",
+  "Эстония"
+ ],
+ "Fiji": [
+  "Fiji",
+  "Фиджи"
+ ],
+ "Gonduras": [
+  "Honduras",
+  "Гондурас"
+ ],
+ "Hindiston": [
+  "India",
+  "Индия"
+ ],
+ "Kosta-Rika": [
+  "Costa Rica",
+  "Коста-Рика"
+ ],
+ "Kuba": [
+  "Cuba",
+  "Куба"
+ ],
+ "Latviya": [
+  "Latvia",
+  "Латвия"
+ ],
+ "Liberiya": [
+  "Liberia",
+  "Либерия"
+ ],
+ "Litva": [
+  "Lithuania",
+  "Литва"
+ ],
+ "Lyuksemburg": [
+  "Luxembourg",
+  "Люксембург"
+ ],
+ "Malayziya": [
+  "Malaysia",
+  "Малайзия"
+ ],
+ "Mo‘g‘uliston": [
+  "Mongolia",
+  "Монголия"
+ ],
+ "Moldova": [
+  "Moldova",
+  "Молдова"
+ ],
+ "Peru": [
+  "Peru",
+  "Перу"
+ ],
+ "Pokiston": [
+  "Pakistan",
+  "Пакистан"
+ ],
+ "Qatar": [
+  "Qatar",
+  "Катар"
+ ],
+ "Ruminiya": [
+  "Romania",
+  "Румыния"
+ ],
+ "Saudiya Arabistoni": [
+  "Saudi Arabia",
+  "Саудовская Аравия"
+ ],
+ "Shimoliy Makedoniya": [
+  "North Macedonia",
+  "Северная Македония"
+ ],
+ "Tailand": [
+  "Thailand",
+  "Таиланд"
+ ],
+ "Vyetnam": [
+  "Vietnam",
+  "Вьетнам"
+ ],
+ "Xitoy": [
+  "China",
+  "Китай"
+ ],
+ "jarohat": [
+  "injury",
+  "травма"
+ ],
+ "diskvalifikatsiya": [
+  "suspension",
+  "дисквалификация"
+ ],
+ "hafta": [
+  "week",
+  "нед."
+ ],
+ "Asosiy tarkibda o‘ynay olmaydigan futbolchilar bor: {0}. Ularni tarkibdan chiqaring.": [
+  "Your starting XI has players who can't play: {0}. Take them out of the line-up.",
+  "В стартовом составе есть игроки, которые не могут играть: {0}. Уберите их из состава."
+ ],
+ "Avtomatik almashtirish": [
+  "Replace automatically",
+  "Заменить автоматически"
+ ],
+ "Bekor bo‘ldi": [
+  "Collapsed",
+  "Сорвалась"
+ ],
+ "Bu futbolchi bo‘yicha boshqa muzokara bor.": [
+  "There is already another negotiation for this player.",
+  "По этому игроку уже идут другие переговоры."
+ ],
+ "Bu nima?": [
+  "What is this?",
+  "Что это?"
+ ],
+ "Darvozabon to‘pni himoyachiga beradi va hujum orqadan quriladi. O‘chirilsa darvozabon uzun uradi – xavfsizroq, lekin to‘p ko‘pincha yo‘qotiladi.": [
+  "The keeper passes to a defender and attacks are built from the back. Switched off, the keeper kicks long – safer, but possession is often lost.",
+  "Вратарь отдаёт защитнику, атака строится сзади. Если выключить, вратарь бьёт длинно – безопаснее, но мяч часто теряется."
+ ],
+ "Faol pressing": [
+  "Active pressing",
+  "Активный прессинг"
+ ],
+ "Frontline Pressure – raqibni yuqorida siqish. Muvozanat – o‘rtacha. All-out Defence – hamma orqada, gol o‘tkazish qiyin, lekin hujum sust.": [
+  "Frontline Pressure – squeeze the opponent high up. Balance – in between. All-out Defence – everyone behind the ball: hard to score against, but little attack.",
+  "Frontline Pressure – давление на сопернике высоко. Баланс – середина. All-out Defence – все сзади: пропустить трудно, но атака слабая."
+ ],
+ "Futbolchi endi bu klubda emas.": [
+  "The player is no longer at this club.",
+  "Игрок больше не в этом клубе."
+ ],
+ "Futbolchi haftasiga {0} so‘ramoqda.": [
+  "The player wants {0} a week.",
+  "Игрок просит {0} в неделю."
+ ],
+ "Futbolchi javobini kutmoqda": [
+  "Waiting for the player",
+  "Ждём ответа игрока"
+ ],
+ "Futbolchi talabi": [
+  "Player's demand",
+  "Требование игрока"
+ ],
+ "Futbolchilar orasidagi masofa. Zich – markazda bo‘shliq kam, lekin qanotlar ochiladi. Keng – maydonni ko‘proq yopadi, lekin chiziqlar orasida bo‘shliq qoladi.": [
+  "Distance between the players. Compact – little space in the middle, but the flanks open up. Wide – covers more of the pitch, but leaves gaps between the lines.",
+  "Расстояние между игроками. Плотно – мало места в центре, но открываются фланги. Широко – закрывает больше поля, но между линиями остаются зазоры."
+ ],
+ "Haftalik maosh limiti yetarli emas.": [
+  "Not enough room in the weekly wage limit.",
+  "Недостаточно недельного лимита зарплат."
+ ],
+ "Himoyachilar bir chiziqda oldinga chiqib hujumchini ofsaydda qoldiradi. Ko‘p ofsayd beradi, lekin xato bo‘lsa raqib darvozabon bilan yakkama-yakka qoladi.": [
+  "Defenders step up together to catch forwards offside. Produces many offsides, but one mistake leaves an attacker one-on-one with your keeper.",
+  "Защитники синхронно выходят вперёд, оставляя нападающего в офсайде. Много офсайдов, но ошибка – и соперник один на один с вратарём."
+ ],
+ "Himoyachilar qanchalik yuqorida turadi. Baland chiziq – jamoa ixcham, raqib ofsaydga ko‘p tushadi, lekin himoya ortiga uzun pasga zaif. Past blok – orqada xavfsiz, lekin raqib ko‘proq to‘p nazorat qiladi.": [
+  "How high the defenders stand. High line – compact team and more offsides, but vulnerable to long balls in behind. Low block – safe at the back, but the opponent has more of the ball.",
+  "Насколько высоко стоят защитники. Высокая линия – команда компактна, больше офсайдов, но уязвимость к забросам за спину. Низкий блок – надёжно сзади, но соперник больше владеет мячом."
+ ],
+ "Himoyaga qaytish": [
+  "Track back",
+  "Отработка в обороне"
+ ],
+ "Hisobda oldinda bo‘lsangiz 75-daqiqadan keyin jamoa o‘yinni sekinlashtiradi: kamroq xavf, lekin sariq kartochka ehtimoli oshadi.": [
+  "When you are ahead, the team slows the game down after the 75th minute: less risk, but a higher chance of yellow cards.",
+  "При ведении в счёте после 75-й минуты команда замедляет игру: меньше риска, но выше шанс жёлтых карточек."
+ ],
+ "Hozircha muzokaralar yo‘q. Bozordan futbolchiga taklif yuboring yoki o‘z futbolchingizni sotuvga qo‘ying.": [
+  "No negotiations yet. Make an offer from the market or put one of your players up for sale.",
+  "Переговоров пока нет. Сделайте предложение на рынке или выставьте своего игрока на продажу."
+ ],
+ "Hujumchi yoki vinger to‘p yo‘qotilganda himoyaga yordamga qaytadi": [
+  "The forward or winger drops back to help defend after losing the ball",
+  "Нападающий или вингер после потери мяча возвращается помогать в обороне"
+ ],
+ "Hujumda futbolchilar qanchalik keng joylashadi. Keng – raqib himoyasi cho‘ziladi, qanotdan kross ko‘p. Tor – markazda ko‘proq odam, qisqa paslar.": [
+  "How wide the players spread in attack. Wide – stretches the defence, more crosses. Narrow – more bodies in the middle, short passing.",
+  "Насколько широко игроки располагаются в атаке. Широко – оборона растягивается, больше навесов. Узко – больше людей в центре, короткий пас."
+ ],
+ "Hujumga nechta futbolchi qo‘shilishi. Yuqori qiymat – ko‘proq zarba va imkoniyat, lekin orqada bo‘shliq qoladi va raqib qarshi hujumiga zaif bo‘lasiz.": [
+  "How many players join the attack. Higher – more shots and chances, but gaps at the back and more exposure to counter-attacks.",
+  "Сколько игроков подключается к атаке. Выше – больше ударов и моментов, но сзади остаётся пространство и вы уязвимы к контратакам."
+ ],
+ "Jamoa qanchalik tez qaror qabul qiladi. Tez – ko‘proq hujum, lekin paslar aniqligi pasayadi va futbolchilar tezroq charchaydi. Sekin – to‘p nazorati va aniq paslar.": [
+  "How quickly the team makes decisions. Fast – more attacks, but passing accuracy drops and players tire sooner. Slow – ball control and accurate passing.",
+  "Насколько быстро команда принимает решения. Быстро – больше атак, но точность передач падает и игроки быстрее устают. Медленно – контроль мяча и точный пас."
+ ],
+ "Javob berilmagani uchun muzokara bekor bo‘ldi.": [
+  "The negotiation collapsed because you didn't reply.",
+  "Переговоры сорвались, потому что вы не ответили."
+ ],
+ "Javob keyingi turda": [
+  "Answer next round",
+  "Ответ в следующем туре"
+ ],
+ "Javob: {0}-turda": [
+  "Answer: round {0}",
+  "Ответ: {0}-й тур"
+ ],
+ "Javobingiz kutilmoqda": [
+  "Waiting for your reply",
+  "Ждут вашего ответа"
+ ],
+ "Juda baland narx so‘rasangiz, xaridor muzokaradan chiqishi mumkin.": [
+  "Ask too much and the buyer may walk away.",
+  "Если запросить слишком много, покупатель может выйти из переговоров."
+ ],
+ "Klub javobini kutmoqda": [
+  "Waiting for the club",
+  "Ждём ответа клуба"
+ ],
+ "Klub qarshi taklif qildi": [
+  "Club counter-offered",
+  "Клуб сделал встречное предложение"
+ ],
+ "Klublar ({0})": [
+  "Clubs ({0})",
+  "Клубы ({0})"
+ ],
+ "Kutilayotgan maosh talabi": [
+  "Expected wage demand",
+  "Ожидаемые зарплатные требования"
+ ],
+ "Liga": [
+  "League",
+  "Лига"
+ ],
+ "Maosh: {0}/hafta": [
+  "Wage: {0}/week",
+  "Зарплата: {0}/нед."
+ ],
+ "Muddat: {0} yil": [
+  "Length: {0} years",
+  "Срок: {0} г."
+ ],
+ "Muzokara to‘xtatildi.": [
+  "Negotiation stopped.",
+  "Переговоры остановлены."
+ ],
+ "Muzokaralar": [
+  "Negotiations",
+  "Переговоры"
+ ],
+ "Muzokaralar ({0})": [
+  "Negotiations ({0})",
+  "Переговоры ({0})"
+ ],
+ "Narx kelishildi. Endi futbolchiga shartnoma taklif qiling.": [
+  "Fee agreed. Now offer the player a contract.",
+  "Сумма согласована. Теперь предложите игроку контракт."
+ ],
+ "Qabul qilish ({0})": [
+  "Accept ({0})",
+  "Принять ({0})"
+ ],
+ "Qanotlar – hujum qanotdan, krosslar ko‘payadi. Markaz – qisqa paslar va markazdan yorib kirish. Muvozanatli – ikkalasi aralash.": [
+  "Wings – attack down the flanks, more crosses. Centre – short passes and breaking through the middle. Balanced – a mix of both.",
+  "Фланги – атаки по краям, больше навесов. Центр – короткий пас и проходы через центр. Баланс – и то и другое."
+ ],
+ "Qarshi taklif": [
+  "Counter-offer",
+  "Встречное предложение"
+ ],
+ "Qisqa – himoyadan pas bilan chiqish: to‘p nazorati yuqori, lekin o‘z yarmingizda to‘p yo‘qotish xavfi bor. Uzun – to‘p tezda oldinga uzatiladi: xavf kam, lekin to‘p tez-tez yo‘qotiladi. Aralash – vaziyatga qarab.": [
+  "Short – pass out from the back: lots of possession, but risk of losing it in your own half. Long – the ball goes forward quickly: low risk, but possession is lost often. Mixed – depends on the situation.",
+  "Короткий – выход через пас от обороны: высокий контроль, но риск потери на своей половине. Длинный – мяч быстро уходит вперёд: риск мал, но мяч часто теряется. Смешанный – по ситуации."
+ ],
+ "Raqibni qayerga yo‘naltirish. Markazni yopish – raqib qanotga chiqishga majbur. Qanotlarni yopish – raqib markazdan o‘ynaydi.": [
+  "Where to push the opponent. Close the centre – they are forced out wide. Close the flanks – they have to play through the middle.",
+  "Куда направлять соперника. Закрыть центр – соперник вынужден идти на фланг. Закрыть фланги – соперник играет через центр."
+ ],
+ "Shartnoma muzokarasi": [
+  "Contract talks",
+  "Переговоры по контракту"
+ ],
+ "Shartnoma taklif qilish": [
+  "Offer contract",
+  "Предложить контракт"
+ ],
+ "Shartnoma taklifi futbolchiga yuborildi.": [
+  "Contract offer sent to the player.",
+  "Предложение контракта отправлено игроку."
+ ],
+ "Shartnoma taklifi yuborildi. Futbolchi keyingi turda javob beradi.": [
+  "Contract offer sent. The player answers next round.",
+  "Предложение отправлено. Игрок ответит в следующем туре."
+ ],
+ "Siz {0} so‘radingiz. Xaridor keyingi turda javob beradi.": [
+  "You asked for {0}. The buyer answers next round.",
+  "Вы запросили {0}. Покупатель ответит в следующем туре."
+ ],
+ "Sotuv ro‘yxatidan olindi.": [
+  "Removed from the transfer list.",
+  "Снят с трансферного листа."
+ ],
+ "Sotuv ro‘yxatidan olish": [
+  "Remove from transfer list",
+  "Снять с трансферного листа"
+ ],
+ "Sotuvga qo‘yildi: transfer oynasida klublar taklif yuboradi.": [
+  "Transfer-listed: clubs will make offers while the window is open.",
+  "Выставлен на трансфер: при открытом окне клубы пришлют предложения."
+ ],
+ "Sotuvga qo‘yish": [
+  "Put on transfer list",
+  "Выставить на трансфер"
+ ],
+ "Standart": [
+  "Default",
+  "Стандарт"
+ ],
+ "Taklif qabul qilindi. Futbolchi xaridor bilan shartlarni kelishmoqda.": [
+  "Offer accepted. The player is agreeing terms with the buyer.",
+  "Предложение принято. Игрок согласовывает условия с покупателем."
+ ],
+ "Taklif yuborildi. Klub keyingi turda javob beradi.": [
+  "Offer sent. The club answers next round.",
+  "Предложение отправлено. Клуб ответит в следующем туре."
+ ],
+ "Taklif yuborildi: {0} keyingi turda javob beradi.": [
+  "Offer sent: {0} will answer next round.",
+  "Предложение отправлено: {0} ответит в следующем туре."
+ ],
+ "Talabdan kam taklif qilsangiz, futbolchi rad etishi yoki ko‘proq so‘rashi mumkin.": [
+  "Offer less than he asks and the player may refuse or ask for more.",
+  "Если предложить меньше требования, игрок может отказаться или попросить больше."
+ ],
+ "Tarkib tayyor emas": [
+  "Line-up not ready",
+  "Состав не готов"
+ ],
+ "Tarkibga o‘tish": [
+  "Go to line-up",
+  "Перейти к составу"
+ ],
+ "Tibbiy ko‘rik va shartlar": [
+  "Medical and terms",
+  "Медосмотр и условия"
+ ],
+ "To‘p egasiga birinchi bo‘lib boradi: ko‘proq to‘p qaytarish, lekin tez charchaydi": [
+  "First to close down the ball carrier: wins more balls back, but tires quickly",
+  "Первым атакует игрока с мячом: больше отборов, но быстро устаёт"
+ ],
+ "To‘p egasiga qanchalik tez va ko‘p bosim qilinadi. Agressiv – to‘pni yuqorida qaytarib olish ko‘payadi, lekin charchoq va qoidabuzarlik ham ko‘payadi.": [
+  "How fast and how much the ball carrier is pressed. Aggressive – more balls won high up, but more fatigue and fouls too.",
+  "Как быстро и сильно давят на игрока с мячом. Агрессивно – больше отборов высоко, но больше усталости и фолов."
+ ],
+ "To‘p yo‘qotilgan zahoti uni qaytarib olishga urinish (gegenpress). Raqib qarshi hujumi qiyinlashadi, lekin futbolchilar tez charchaydi.": [
+  "Try to win the ball back right after losing it (gegenpress). Counter-attacks get harder for the opponent, but players tire quickly.",
+  "Попытка сразу вернуть мяч после потери (гегенпрессинг). Сопернику труднее контратаковать, но игроки быстро устают."
+ ],
+ "Transfer oynasi yopildi – muzokara bekor bo‘ldi.": [
+  "The transfer window closed – the negotiation collapsed.",
+  "Трансферное окно закрылось – переговоры сорвались."
+ ],
+ "Transfer oynasi yopiq. {0}.": [
+  "The transfer window is closed. {0}.",
+  "Трансферное окно закрыто. {0}."
+ ],
+ "Ularning taklifi": [
+  "Their offer",
+  "Их предложение"
+ ],
+ "Xaridor javobini kutmoqda": [
+  "Waiting for the buyer",
+  "Ждём ответа покупателя"
+ ],
+ "Yangi taklif": [
+  "New offer",
+  "Новое предложение"
+ ],
+ "Yangi taklif yuborildi.": [
+  "New offer sent.",
+  "Новое предложение отправлено."
+ ],
+ "Yoqilsa futbolchilar o‘z joyidan chiqib bo‘sh joy qidiradi: raqib uchun kutilmagan, lekin himoyaga qaytish sekinlashadi.": [
+  "When on, players leave their positions to find space: unpredictable for the opponent, but slower to get back and defend.",
+  "Если включено, игроки покидают позиции в поисках пространства: неожиданно для соперника, но возврат в оборону медленнее."
+ ],
+ "Yuborish": [
+  "Send",
+  "Отправить"
+ ],
+ "{0} bilan shartnoma": [
+  "Contract with {0}",
+  "Контракт с {0}"
+ ],
+ "{0} javob kutib, taklifini qaytarib oldi.": [
+  "{0} got tired of waiting and withdrew the offer.",
+  "{0} не дождался ответа и отозвал предложение."
+ ],
+ "{0} muzokaradan chiqdi.": [
+  "{0} walked away from the talks.",
+  "{0} вышел из переговоров."
+ ],
+ "{0} o‘rtada kelishishni taklif qildi: {1}.": [
+  "{0} proposed meeting in the middle: {1}.",
+  "{0} предложил сойтись посередине: {1}."
+ ],
+ "{0} shartnoma taklifini rad etdi.": [
+  "{0} rejected the contract offer.",
+  "{0} отклонил предложение контракта."
+ ],
+ "{0} ta muzokara": [
+  "{0} negotiations",
+  "Переговоров: {0}"
+ ],
+ "{0} taklifni qabul qildi. Endi futbolchiga shartnoma taklif qiling.": [
+  "{0} accepted the offer. Now offer the player a contract.",
+  "{0} принял предложение. Теперь предложите игроку контракт."
+ ],
+ "{0} taklifni rad etdi. Klub kamida {1} kutmoqda.": [
+  "{0} rejected the offer. The club wants at least {1}.",
+  "{0} отклонил предложение. Клуб ждёт минимум {1}."
+ ],
+ "{0} {1} so‘ramoqda.": [
+  "{0} want {1}.",
+  "{0} просит {1}."
+ ],
+ "{0} {1} taklif qildi.": [
+  "{0} offered {1}.",
+  "{0} предложил {1}."
+ ],
+ "{0} {1} to‘lashga rozi bo‘ldi.": [
+  "{0} agreed to pay {1}.",
+  "{0} согласился заплатить {1}."
+ ],
+ "{0} {1} yillik shartnoma imzoladi.": [
+  "{0} signed a {1}-year contract.",
+  "{0} подписал контракт на {1} г."
+ ],
+ "{0} {1}ga o‘tdi.": [
+  "{0} joined {1}.",
+  "{0} перешёл в {1}."
+ ],
+ "{0} {1}ga o‘tishni rad etdi.": [
+  "{0} refused to join {1}.",
+  "{0} отказался переходить в {1}."
+ ],
+ "{0}-daraja": [
+  "Tier {0}",
+  "{0}-й уровень"
+ ],
+ "{0}: maosh talabi": [
+  "{0}: wage demand",
+  "{0}: требования по зарплате"
+ ],
+ "{0}: muzokara tugadi": [
+  "{0}: talks ended",
+  "{0}: переговоры завершены"
+ ],
+ "{0}: narx kelishildi": [
+  "{0}: fee agreed",
+  "{0}: сумма согласована"
+ ],
+ "{0}: qarshi taklif": [
+  "{0}: counter-offer",
+  "{0}: встречное предложение"
+ ],
+ "{0}: taklif qabul qilindi": [
+  "{0}: offer accepted",
+  "{0}: предложение принято"
+ ],
+ "{0}: yangi taklif": [
+  "{0}: new offer",
+  "{0}: новое предложение"
+ ],
+ "{0}dan {1} evaziga. Shartnoma: {2} yil, {3}/hafta.": [
+  "From {0} for {1}. Contract: {2} years, {3}/week.",
+  "Из {0} за {1}. Контракт: {2} г., {3}/нед."
+ ],
+ "{0} jarohat": [
+  "{0} injured",
+  "Травмы: {0}"
+ ],
+ "{0} yangilik": [
+  "{0} updates",
+  "Новости: {0}"
+ ],
+ "{0} assist": [
+  "{0} assists",
+  "{0} пер."
+ ],
+ "{0} seyv": [
+  "{0} saves",
+  "{0} сейв."
+ ]
+}

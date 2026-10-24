@@ -1,19 +1,23 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import '../models/club.dart';
+import '../l10n/l10n.dart';
 
 /// One playable competition from the asset manifest. Leagues sharing a
 /// [pyramid] exchange clubs every summer: the bottom [relegate] go down,
 /// the top [promote] plus the play-off winner ([playoffFrom]–[playoffTo])
 /// go up. [economy] scales TV money, sponsorship, prizes and running costs.
 class LeagueInfo {
-  final String id, name, country;
+  final String id, _name, country;
+
+  /// Display name in the interface language.
+  String get name => tr(_name);
   final String? pyramid;
   final int tier, promote, relegate, playoffFrom, playoffTo;
   final double economy;
   const LeagueInfo(
     this.id,
-    this.name,
+    this._name,
     this.country, {
     this.pyramid,
     this.tier = 1,

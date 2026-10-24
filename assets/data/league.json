@@ -15,6 +15,14 @@
       "playersFile": "players.json"
     },
     {
+      "id": "uzb",
+      "name": "O‘zbekiston Superligasi",
+      "country": "O‘zbekiston",
+      "clubsFile": "clubs_uzb.json",
+      "playersFile": "players_uzb.json",
+      "economy": 0.06
+    },
+    {
       "id": "epl",
       "name": "Premier League",
       "country": "Angliya",

@@ -6,6 +6,7 @@ import 'club_selection_screen.dart';
 import 'custom_club_creator_screen.dart';
 import '../l10n/l10n.dart';
 import '../ui/language_picker.dart';
+import '../data/countries.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -18,22 +19,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final _form = GlobalKey<FormState>();
   int step = 0, age = 35;
   String nationality = 'O‘zbekiston';
-  FaceConfig face = FaceConfig.forPlayer('new_manager', 'O‘zbekiston', 35);
+  FaceConfig face = const FaceConfig();
   ManagerPhilosophy philosophy = ManagerPhilosophy.possession;
-  static const countries = {
-    'O‘zbekiston': '🇺🇿',
-    'Qozog‘iston': '🇰🇿',
-    'Angliya': '🏴',
-    'Ispaniya': '🇪🇸',
-    'Italiya': '🇮🇹',
-    'Germaniya': '🇩🇪',
-    'Fransiya': '🇫🇷',
-    'Portugaliya': '🇵🇹',
-    'Niderlandiya': '🇳🇱',
-    'Braziliya': '🇧🇷',
-    'Argentina': '🇦🇷',
-    'Turkiya': '🇹🇷',
-  };
+  static const countries = countryFlags;
   static List<String> get titles => [
     tr('Menejer Karyerasi'),
     tr('O‘z portretingiz'),

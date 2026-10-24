@@ -40,7 +40,10 @@ void main() {
     await tester.tap(selectClubBtn);
     await tester.pumpAndSettle();
 
-    // Verify ClubSelectionScreen loaded
+    // Clubs are listed strongest first: pick Real Madrid's tile.
+    await tester.ensureVisible(find.text('RMA'));
+    await tester.tap(find.text('RMA'));
+    await tester.pumpAndSettle();
     expect(find.text('Real Madrid'), findsWidgets);
 
     // Select Real Madrid

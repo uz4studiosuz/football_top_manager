@@ -1153,7 +1153,11 @@ class _FaceStudioState extends State<FaceStudio> {
               icon: const Icon(Icons.undo_rounded, size: 18),
               label: Text(tr('Orqaga')),
             ),
-            const SizedBox(width: 6),
+            TextButton.icon(
+              onPressed: () => _set(const FaceConfig()),
+              icon: const Icon(Icons.face_outlined, size: 18),
+              label: Text(tr('Standart')),
+            ),
             TextButton.icon(
               onPressed: _random,
               icon: const Icon(Icons.casino_outlined, size: 18),

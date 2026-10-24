@@ -345,7 +345,7 @@ class DashboardScreen extends StatelessWidget {
               Expanded(
                 child: FilledButton.icon(
                   onPressed: () {
-                    if (game.unavailableStarters.isNotEmpty) game.fixUnavailableStarters();
+                    if (!_lineupReady(context, game)) return;
                     Navigator.push(
                       context,
                       MaterialPageRoute<void>(builder: (_) => MatchScreen(fixture: f)),
@@ -360,7 +360,7 @@ class DashboardScreen extends StatelessWidget {
           const SizedBox(height: 4),
           TextButton.icon(
             onPressed: () async {
-              if (game.unavailableStarters.isNotEmpty) game.fixUnavailableStarters();
+              if (!_lineupReady(context, game)) return;
               await runWithLoading(context, tr('Uchrashuv simulyatsiya qilinmoqda…'), () => game.simulateUserFixture(f));
               if (!context.mounted) return;
               Navigator.push(
@@ -451,6 +451,41 @@ class DashboardScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// The match starts only with the manager's own XI: injured or
+  /// suspended starters must be replaced first.
+  bool _lineupReady(BuildContext context, GameState game) {
+    final out = game.unavailableStarters;
+    if (out.isEmpty) return true;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(tr('Tarkib tayyor emas')),
+        content: Text(
+          trf('Asosiy tarkibda o‘ynay olmaydigan futbolchilar bor: {0}. Ularni tarkibdan chiqaring.', [
+            out.map((p) => '${p.shortName} (${p.injury != null || p.injuryRounds > 0 ? tr('jarohat') : tr('diskvalifikatsiya')})').join(', '),
+          ]),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              game.fixUnavailableStarters();
+            },
+            child: Text(tr('Avtomatik almashtirish')),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              onNavigateToTactics();
+            },
+            child: Text(tr('Tarkibga o‘tish')),
+          ),
+        ],
+      ),
+    );
+    return false;
   }
 
   Widget _availabilityWarning(GameState game) {
@@ -628,19 +663,24 @@ class DashboardScreen extends StatelessWidget {
     final unread = game.news.where((n) => !n.read).toList();
     int count(NewsKind k) => unread.where((n) => n.kind == k).length;
     final tiles = <Widget>[
-      if (game.offers.isNotEmpty)
-        _inboxTile(NewsKind.transfer, '${game.offers.length} ta taklif', tr('Sotish takliflari kutmoqda'), onNavigateToTransfers),
+      if (game.dealsNeedingAction.isNotEmpty)
+        _inboxTile(
+          NewsKind.transfer,
+          trf('{0} ta muzokara', [game.dealsNeedingAction.length]),
+          tr('Javobingiz kutilmoqda'),
+          onNavigateToTransfers,
+        ),
       if (count(NewsKind.injury) > 0)
         _inboxTile(
           NewsKind.injury,
-          '${count(NewsKind.injury)} jarohat',
+          trf('{0} jarohat', [count(NewsKind.injury)]),
           unread.firstWhere((n) => n.kind == NewsKind.injury).title,
           () => _openNews(context, game),
         ),
       if (count(NewsKind.award) > 0)
         _inboxTile(
           NewsKind.award,
-          '${count(NewsKind.award)} yangilik',
+          trf('{0} yangilik', [count(NewsKind.award)]),
           unread.firstWhere((n) => n.kind == NewsKind.award).title,
           () => _openNews(context, game),
         ),
