@@ -112,7 +112,7 @@ class _ReplayPainter extends CustomPainter {
     final k = pos - i;
     final a = frames[i], b = frames[j];
     Offset mix(Offset x, Offset y) => Offset.lerp(x, y, k)!;
-    final radius = max(6.0, size.height * 0.034);
+    final radius = max(4.5, size.height * 0.024);
     void team(List<Offset> pa, List<Offset> pb, Color color) {
       for (var n = 0; n < min(pa.length, pb.length); n++) {
         final c = at(mix(pa[n], pb[n]));

@@ -1269,7 +1269,9 @@ class MatchPitchPainter extends CustomPainter {
     const FootballPitchPainter(vertical: false, inset: inset).paint(canvas, size);
     final r = FootballPitchPainter.field(size, inset);
     Offset at(Offset p) => Offset(r.left + p.dx * r.width, r.top + p.dy * r.height);
-    final radius = max(6.5, size.height * 0.036);
+    // Small markers like broadcast match trackers; numbers only when legible.
+    final radius = max(4.5, size.height * 0.024);
+    final showNumbers = radius >= 6.5;
     final from = field.flightFrom, to = field.flightTo;
     if (from != null && to != null) {
       final trail = Paint()
@@ -1295,14 +1297,16 @@ class MatchPitchPainter extends CustomPainter {
             ..style = PaintingStyle.stroke
             ..strokeWidth = carrier ? 2.4 : 1.3,
         );
-        final tp = TextPainter(
-          text: TextSpan(
-            text: '${p.number}',
-            style: TextStyle(color: text, fontSize: radius * 0.95, fontWeight: FontWeight.w800, fontFamily: 'Roboto'),
-          ),
-          textDirection: TextDirection.ltr,
-        )..layout();
-        tp.paint(canvas, c - Offset(tp.width / 2, tp.height / 2));
+        if (showNumbers) {
+          final tp = TextPainter(
+            text: TextSpan(
+              text: '${p.number}',
+              style: TextStyle(color: text, fontSize: radius * 0.95, fontWeight: FontWeight.w800, fontFamily: 'Roboto'),
+            ),
+            textDirection: TextDirection.ltr,
+          )..layout();
+          tp.paint(canvas, c - Offset(tp.width / 2, tp.height / 2));
+        }
         if (field.isInjuredOnPitch(p.id)) {
           canvas.drawCircle(c + Offset(radius * 0.8, -radius * 0.8), radius * 0.38, Paint()..color = AppColors.live);
         }

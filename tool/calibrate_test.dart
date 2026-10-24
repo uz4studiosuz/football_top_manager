@@ -1,9 +1,11 @@
+import 'dart:io';
 import 'dart:math';
 // Prints league-wide averages from many simulated matches so the engine can
 // be tuned toward real football numbers. Run: flutter test tool/calibrate_test.dart
 import 'package:flutter_test/flutter_test.dart';
 import 'package:football_top_manager/data/initial_database.dart';
 import 'package:football_top_manager/services/match_field.dart';
+import 'package:football_top_manager/services/game_state.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -18,8 +20,13 @@ void main() {
     var xg = 0.0, ratingSum = 0.0, ratingN = 0, ratingMin = 10.0, ratingMax = 0.0;
     final sw = Stopwatch()..start();
     for (var i = 0; i < n; i++) {
-      final clubs = InitialDatabase.getSuperLeagueClubs();
-      final h = clubs[i % 8], a = clubs[(i * 3 + 1) % 8 == i % 8 ? (i + 1) % 8 : (i * 3 + 1) % 8];
+      // Premier League: 20 clubs of every level, like a real season.
+      final clubs = InitialDatabase.getClubs(Platform.environment['LEAGUE'] ?? 'epl');
+      final k = clubs.length;
+      final h = clubs[i % k], a = clubs[(i * 7 + 3) % k == i % k ? (i + 1) % k : (i * 7 + 3) % k];
+      // Real careers pick each club's best XI; the seed files only list squads.
+      GameState().autoPickLineup(h);
+      GameState().autoPickLineup(a);
       final f = MatchField(h, a, seed: i * 977);
       f.simulateToEnd();
       breaks += f.breakaways;
