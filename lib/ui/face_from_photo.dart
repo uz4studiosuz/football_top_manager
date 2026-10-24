@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:image_picker/image_picker.dart';
@@ -15,6 +16,25 @@ import 'widgets.dart';
 /// hair shape, brows, eye colour, facial hair, glasses and face shape are
 /// read from the right spots. An approximation, refined in the editor.
 Future<FaceConfig?> faceFromPhoto(BuildContext context, FaceConfig base) async {
+  Uint8List? bytes;
+  if (kIsWeb) {
+    // Browsers only open the file dialog during the click itself, so pick
+    // straight away; phone browsers offer the camera in the same dialog.
+    try {
+      final file = await FilePicker.pickFile(type: FileType.image);
+      bytes = await file?.readAsBytes();
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Rasmni o‘qib bo‘lmadi.'))));
+      }
+      return null;
+    }
+    if (bytes == null || !context.mounted) return null;
+    return Navigator.push<FaceConfig>(
+      context,
+      MaterialPageRoute(builder: (_) => _FitFaceScreen(bytes: bytes!, base: base)),
+    );
+  }
   final source = await showModalBottomSheet<ImageSource>(
     context: context,
     builder: (ctx) => SafeArea(
@@ -36,7 +56,6 @@ Future<FaceConfig?> faceFromPhoto(BuildContext context, FaceConfig base) async {
     ),
   );
   if (source == null || !context.mounted) return null;
-  Uint8List? bytes;
   try {
     final shot = await ImagePicker().pickImage(source: source, preferredCameraDevice: CameraDevice.front, maxWidth: 1400);
     bytes = await shot?.readAsBytes();
