@@ -2153,6 +2153,13 @@ class GameState extends ChangeNotifier {
     pendingMoves
       ..clear()
       ..addAll(Map<String, String>.from(m['moves'] ?? {}));
+    // Portrait hints may have improved since the save was written.
+    for (final c in marketClubs) {
+      for (final p in c.squad) {
+        final hint = InitialDatabase.faceHints[p.id];
+        if (hint != null) p.face = FaceConfig.fromMap({...p.face.toMap(), ...hint});
+      }
+    }
     lastTransferError = null;
     _isInitialized = true;
     notifyListeners();

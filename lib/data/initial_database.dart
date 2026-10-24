@@ -49,6 +49,9 @@ class InitialDatabase {
   static final List<LeagueInfo> leagues = [];
   static List<Map<String, dynamic>> _custom = [];
   static List<Map<String, dynamic>> _names = [];
+
+  /// Look-alike portrait hints from the data files (player id → partial face).
+  static final Map<String, Map<String, dynamic>> faceHints = {};
   static List<Map<String, dynamic>> get customSquadTemplates =>
       _custom.map((m) => Map<String, dynamic>.from(m)).toList();
   static List<Map<String, dynamic>> get namePools =>
@@ -97,6 +100,7 @@ class InitialDatabase {
         throw FormatException('Duplicate player ${p['id']}');
       }
       players[p['id']] = p;
+      if (p['face'] != null) faceHints[p['id']] = Map<String, dynamic>.from(p['face']);
     }
     final joined = <Map<String, dynamic>>[];
     final owners = <String>{};

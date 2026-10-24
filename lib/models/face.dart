@@ -3,15 +3,15 @@
 class FaceConfig {
   static const skinCount = 10,
       hairColorCount = 9,
-      cutCount = 14,
+      cutCount = 16,
       shapeCount = 5,
-      eyesCount = 4,
+      eyesCount = 5,
       eyeColorCount = 5,
       noseCount = 4,
       mouthCount = 4,
       browCount = 4,
       ageCount = 3,
-      beardCount = 6;
+      beardCount = 8;
 
   static const cutLabels = [
     'Qisqa',
@@ -28,6 +28,8 @@ class FaceConfig {
     'Irokez',
     'Orqaga',
     'Chakka',
+    'Chelka',
+    'Feyd',
   ];
   static const beardLabels = [
     'Yo‘q',
@@ -36,8 +38,15 @@ class FaceConfig {
     'To‘liq',
     'Echkisoqol',
     'Mo‘ylov',
+    'Iyak tasmasi',
+    'Uzun',
   ];
   static const shapeLabels = ['Oval', 'Kvadrat', 'Dumaloq', 'Uzun', 'Yurak'];
+  static const eyeLabels = ['Oddiy', 'Tor', 'Keng', 'Katta', 'Bodom'];
+  static const noseLabels = ['Kichik', 'O‘rta', 'Keng', 'Uzun'];
+  static const mouthLabels = ['Ingichka', 'O‘rta', 'To‘liq', 'Tabassum'];
+  static const browLabels = ['Ingichka', 'O‘rta', 'Qalin', 'Kamon'];
+  static const ageLabels = ['Yosh', 'O‘rta', 'Tajribali'];
 
   final int skin, hair, cut, shape, eyes, nose, mouth, brow, age, eyeColor;
   final int beardStyle;
@@ -102,34 +111,41 @@ class FaceConfig {
       _Region.african => pick([6, 7, 8, 8, 9, 9]),
       _Region.mena => pick([3, 4, 4, 5, 5]),
       _Region.asian => pick([1, 2, 2, 3, 3]),
+      _Region.central => pick([1, 2, 2, 2, 3, 3]),
       _Region.mixed => pick([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]),
     };
     final dark = skin >= 6;
     final hair = region == _Region.north && next(3) == 0
         ? pick([2, 3, 5])
+        : region == _Region.central || region == _Region.asian
+        ? pick([0, 0, 0, 1])
         : pick([0, 0, 1, 1, 2]);
     final cut = dark
-        ? pick([4, 6, 6, 3, 7, 10, 0, 5, 11])
-        : region == _Region.asian
-        ? pick([0, 1, 13, 2, 12])
-        : pick([0, 1, 2, 3, 8, 9, 12, 13, 4, 6]);
+        ? pick([4, 6, 6, 3, 7, 10, 0, 5, 11, 15])
+        : region == _Region.asian || region == _Region.central
+        ? pick([0, 1, 13, 14, 14, 15, 2])
+        : pick([0, 1, 2, 3, 8, 9, 12, 13, 4, 6, 15]);
+    // Beards are rarer in East/Central Asia and among the young.
+    final beardChance = region == _Region.asian || region == _Region.central
+        ? (age < 24 ? 0.05 : 0.3)
+        : (age < 21 ? 0.0 : 0.5);
     final ageLines = age >= 33 ? 2 : (age >= 28 ? 1 : 0);
     return FaceConfig(
       skin: skin,
       hair: age >= 36 && next(2) == 0 ? 4 : hair,
       cut: age >= 34 && next(3) == 0 ? pick([4, 5, 12]) : cut,
       shape: next(shapeCount),
-      eyes: next(eyesCount),
+      eyes: region == _Region.asian || region == _Region.central ? pick([1, 4, 4, 0]) : next(4),
       nose: next(noseCount),
       mouth: next(mouthCount),
-      brow: next(browCount),
+      brow: region == _Region.central ? pick([1, 2, 2]) : next(browCount),
       age: ageLines,
       eyeColor: dark || region == _Region.asian
           ? pick([0, 3])
           : region == _Region.north
           ? pick([0, 1, 2, 4, 1])
           : pick([0, 0, 3, 2]),
-      beardStyle: age < 20 ? 0 : (next(10) < 5 ? 0 : 1 + next(beardCount - 1)),
+      beardStyle: next(100) >= beardChance * 100 ? 0 : 1 + next(beardCount - 1),
       freckles: region == _Region.north && next(9) == 0,
     );
   }
@@ -181,7 +197,7 @@ class FaceConfig {
   int get hashCode => toMap().toString().hashCode;
 }
 
-enum _Region { north, south, latin, african, mena, asian, mixed }
+enum _Region { north, south, latin, african, mena, asian, central, mixed }
 
 _Region _region(String nationality) {
   const north = {
@@ -219,7 +235,9 @@ _Region _region(String nationality) {
     'Armaniston',
     'Albaniya',
     'Gretsiya',
-    'O‘zbekiston',
+  };
+  const central = {
+    'O‘zbekiston', 'Qozog‘iston', 'Qirg‘iziston', 'Tojikiston', 'Turkmaniston', 'Ozarbayjon',
   };
   const latin = {'Argentina', 'Urugvay', 'Kolumbiya', 'Ekvador', 'Braziliya', 'Meksika', 'Paragvay', 'Venesuela', 'Chili'};
   const african = {
@@ -234,5 +252,6 @@ _Region _region(String nationality) {
   if (african.contains(nationality)) return _Region.african;
   if (mena.contains(nationality)) return _Region.mena;
   if (asian.contains(nationality)) return _Region.asian;
+  if (central.contains(nationality)) return _Region.central;
   return _Region.mixed;
 }

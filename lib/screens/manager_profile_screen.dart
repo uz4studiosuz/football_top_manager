@@ -103,7 +103,7 @@ class _ManagerProfileScreenState extends State<ManagerProfileScreen> {
                 ],
                 TextButton.icon(
                   onPressed: () async {
-                    final v = await editFace(context, m.face);
+                    final v = await editFace(context, m.face, nationality: m.nationality, age: m.age);
                     if (v != null && mounted) {
                       game.updateManagerProfile(m.copyWith(face: v));
                       setState(() {});

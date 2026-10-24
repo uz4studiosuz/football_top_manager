@@ -51,7 +51,13 @@
         "weeklyWage": 289000,
         "releaseClause": 0
       },
-      "marketValue": 49500000
+      "marketValue": 49500000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 0,
+        "beardStyle": 2
+      }
     },
     {
       "id": "epl_ars_kepa",
@@ -202,7 +208,13 @@
         "weeklyWage": 362000,
         "releaseClause": 0
       },
-      "marketValue": 107500000
+      "marketValue": 107500000,
+      "face": {
+        "skin": 9,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 2
+      }
     },
     {
       "id": "epl_ars_gabriel",
@@ -254,7 +266,13 @@
         "weeklyWage": 313000,
         "releaseClause": 0
       },
-      "marketValue": 73500000
+      "marketValue": 73500000,
+      "face": {
+        "skin": 6,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 3
+      }
     },
     {
       "id": "epl_ars_jtimber",
@@ -306,7 +324,13 @@
         "weeklyWage": 246000,
         "releaseClause": 0
       },
-      "marketValue": 74500000
+      "marketValue": 74500000,
+      "face": {
+        "skin": 7,
+        "hair": 0,
+        "cut": 6,
+        "beardStyle": 0
+      }
     },
     {
       "id": "epl_ars_rcalafiori",
@@ -358,7 +382,13 @@
         "weeklyWage": 206000,
         "releaseClause": 0
       },
-      "marketValue": 58500000
+      "marketValue": 58500000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 8,
+        "beardStyle": 3
+      }
     },
     {
       "id": "epl_ars_phincapié",
@@ -410,7 +440,13 @@
         "weeklyWage": 206000,
         "releaseClause": 0
       },
-      "marketValue": 58500000
+      "marketValue": 58500000,
+      "face": {
+        "skin": 6,
+        "hair": 0,
+        "cut": 15,
+        "beardStyle": 0
+      }
     },
     {
       "id": "epl_ars_cmosquera",
@@ -514,7 +550,13 @@
         "weeklyWage": 206000,
         "releaseClause": 0
       },
-      "marketValue": 41000000
+      "marketValue": 41000000,
+      "face": {
+        "skin": 1,
+        "hair": 2,
+        "cut": 0,
+        "beardStyle": 3
+      }
     },
     {
       "id": "epl_ars_mlewisskelly",
@@ -618,7 +660,13 @@
         "weeklyWage": 337000,
         "releaseClause": 0
       },
-      "marketValue": 97500000
+      "marketValue": 97500000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 0,
+        "beardStyle": 1
+      }
     },
     {
       "id": "epl_ars_mzubimendi",
@@ -670,7 +718,13 @@
         "weeklyWage": 289000,
         "releaseClause": 0
       },
-      "marketValue": 78500000
+      "marketValue": 78500000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 13,
+        "beardStyle": 0
+      }
     },
     {
       "id": "epl_ars_mødegaard",
@@ -722,7 +776,13 @@
         "weeklyWage": 313000,
         "releaseClause": 0
       },
-      "marketValue": 87500000
+      "marketValue": 87500000,
+      "face": {
+        "skin": 1,
+        "hair": 2,
+        "cut": 1,
+        "beardStyle": 1
+      }
     },
     {
       "id": "epl_ars_mmerino",
@@ -774,7 +834,13 @@
         "weeklyWage": 225000,
         "releaseClause": 0
       },
-      "marketValue": 46500000
+      "marketValue": 46500000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 1,
+        "beardStyle": 2
+      }
     },
     {
       "id": "epl_ars_cnørgaard",
@@ -878,7 +944,13 @@
         "weeklyWage": 246000,
         "releaseClause": 0
       },
-      "marketValue": 62500000
+      "marketValue": 62500000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 1
+      }
     },
     {
       "id": "epl_ars_bsaka",
@@ -930,7 +1002,13 @@
         "weeklyWage": 337000,
         "releaseClause": 0
       },
-      "marketValue": 116000000
+      "marketValue": 116000000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 0
+      }
     },
     {
       "id": "epl_ars_nmadueke",
@@ -1034,7 +1112,13 @@
         "weeklyWage": 188000,
         "releaseClause": 0
       },
-      "marketValue": 51500000
+      "marketValue": 51500000,
+      "face": {
+        "skin": 3,
+        "hair": 1,
+        "cut": 3,
+        "beardStyle": 0
+      }
     },
     {
       "id": "epl_ars_ltrossard",
@@ -1138,7 +1222,13 @@
         "weeklyWage": 289000,
         "releaseClause": 0
       },
-      "marketValue": 78500000
+      "marketValue": 78500000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 12,
+        "beardStyle": 2
+      }
     },
     {
       "id": "epl_ars_khavertz",
@@ -1190,7 +1280,13 @@
         "weeklyWage": 206000,
         "releaseClause": 0
       },
-      "marketValue": 49000000
+      "marketValue": 49000000,
+      "face": {
+        "skin": 1,
+        "hair": 2,
+        "cut": 13,
+        "beardStyle": 1
+      }
     },
     {
       "id": "epl_ars_gjesus",
@@ -1294,7 +1390,13 @@
         "weeklyWage": 258000,
         "releaseClause": 0
       },
-      "marketValue": 28000000
+      "marketValue": 28000000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 15,
+        "beardStyle": 2
+      }
     },
     {
       "id": "epl_avl_mbizot",
@@ -1445,7 +1547,13 @@
         "weeklyWage": 199000,
         "releaseClause": 0
       },
-      "marketValue": 41000000
+      "marketValue": 41000000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 1
+      }
     },
     {
       "id": "epl_avl_ptorres",
@@ -1497,7 +1605,13 @@
         "weeklyWage": 199000,
         "releaseClause": 0
       },
-      "marketValue": 41000000
+      "marketValue": 41000000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 1,
+        "beardStyle": 1
+      }
     },
     {
       "id": "epl_avl_tmings",
@@ -1861,7 +1975,13 @@
         "weeklyWage": 218000,
         "releaseClause": 0
       },
-      "marketValue": 55500000
+      "marketValue": 55500000,
+      "face": {
+        "skin": 7,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 2
+      }
     },
     {
       "id": "epl_avl_aonana",
@@ -1913,7 +2033,13 @@
         "weeklyWage": 199000,
         "releaseClause": 0
       },
-      "marketValue": 58500000
+      "marketValue": 58500000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 1
+      }
     },
     {
       "id": "epl_avl_ytielemans",
@@ -1965,7 +2091,13 @@
         "weeklyWage": 218000,
         "releaseClause": 0
       },
-      "marketValue": 46500000
+      "marketValue": 46500000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 0,
+        "beardStyle": 2
+      }
     },
     {
       "id": "epl_avl_jmcginn",
@@ -2172,7 +2304,13 @@
         "weeklyWage": 218000,
         "releaseClause": 0
       },
-      "marketValue": 66500000
+      "marketValue": 66500000,
+      "face": {
+        "skin": 6,
+        "hair": 0,
+        "cut": 3,
+        "beardStyle": 0
+      }
     },
     {
       "id": "epl_avl_jsancho",
@@ -2328,7 +2466,13 @@
         "weeklyWage": 238000,
         "releaseClause": 0
       },
-      "marketValue": 39500000
+      "marketValue": 39500000,
+      "face": {
+        "skin": 7,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 2
+      }
     },
     {
       "id": "epl_avl_helliott",
@@ -5528,7 +5672,13 @@
         "weeklyWage": 176000,
         "releaseClause": 0
       },
-      "marketValue": 60000000
+      "marketValue": 60000000,
+      "face": {
+        "skin": 9,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 0
+      }
     },
     {
       "id": "epl_bha_pgroß",
@@ -7809,7 +7959,13 @@
         "weeklyWage": 204000,
         "releaseClause": 0
       },
-      "marketValue": 58500000
+      "marketValue": 58500000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 0,
+        "beardStyle": 0
+      }
     },
     {
       "id": "epl_che_wfofana",
@@ -8121,7 +8277,13 @@
         "weeklyWage": 243000,
         "releaseClause": 0
       },
-      "marketValue": 62500000
+      "marketValue": 62500000,
+      "face": {
+        "skin": 7,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 2
+      }
     },
     {
       "id": "epl_che_mgusto",
@@ -8225,7 +8387,13 @@
         "weeklyWage": 204000,
         "releaseClause": 0
       },
-      "marketValue": 49000000
+      "marketValue": 49000000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 8,
+        "beardStyle": 0
+      }
     },
     {
       "id": "epl_che_mcaicedo",
@@ -8277,7 +8445,13 @@
         "weeklyWage": 310000,
         "releaseClause": 0
       },
-      "marketValue": 104500000
+      "marketValue": 104500000,
+      "face": {
+        "skin": 6,
+        "hair": 0,
+        "cut": 15,
+        "beardStyle": 1
+      }
     },
     {
       "id": "epl_che_efernández",
@@ -8329,7 +8503,13 @@
         "weeklyWage": 265000,
         "releaseClause": 0
       },
-      "marketValue": 84000000
+      "marketValue": 84000000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 12,
+        "beardStyle": 1
+      }
     },
     {
       "id": "epl_che_rlavia",
@@ -8485,7 +8665,13 @@
         "weeklyWage": 334000,
         "releaseClause": 0
       },
-      "marketValue": 116000000
+      "marketValue": 116000000,
+      "face": {
+        "skin": 1,
+        "hair": 5,
+        "cut": 15,
+        "beardStyle": 0
+      }
     },
     {
       "id": "epl_che_pneto",
@@ -8537,7 +8723,13 @@
         "weeklyWage": 204000,
         "releaseClause": 0
       },
-      "marketValue": 49000000
+      "marketValue": 49000000,
+      "face": {
+        "skin": 3,
+        "hair": 0,
+        "cut": 15,
+        "beardStyle": 1
+      }
     },
     {
       "id": "epl_che_estêvão",
@@ -8745,7 +8937,13 @@
         "weeklyWage": 223000,
         "releaseClause": 0
       },
-      "marketValue": 66500000
+      "marketValue": 66500000,
+      "face": {
+        "skin": 6,
+        "hair": 0,
+        "cut": 15,
+        "beardStyle": 0
+      }
     },
     {
       "id": "epl_che_ldelap",
@@ -9047,7 +9245,13 @@
         "weeklyWage": 228000,
         "releaseClause": 0
       },
-      "marketValue": 62500000
+      "marketValue": 62500000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 0
+      }
     },
     {
       "id": "epl_cry_mlacroix",
@@ -10288,7 +10492,13 @@
         "weeklyWage": 212000,
         "releaseClause": 0
       },
-      "marketValue": 22500000
+      "marketValue": 22500000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 15,
+        "beardStyle": 1
+      }
     },
     {
       "id": "epl_eve_mtravers",
@@ -11479,7 +11689,13 @@
         "weeklyWage": 172000,
         "releaseClause": 0
       },
-      "marketValue": 17500000
+      "marketValue": 17500000,
+      "face": {
+        "skin": 1,
+        "hair": 2,
+        "cut": 1,
+        "beardStyle": 2
+      }
     },
     {
       "id": "epl_ful_blecomte",
@@ -13906,7 +14122,13 @@
         "weeklyWage": 340000,
         "releaseClause": 0
       },
-      "marketValue": 39000000
+      "marketValue": 39000000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 1,
+        "beardStyle": 3
+      }
     },
     {
       "id": "epl_liv_gmamardashvili",
@@ -14062,7 +14284,13 @@
         "weeklyWage": 366000,
         "releaseClause": 0
       },
-      "marketValue": 22500000
+      "marketValue": 22500000,
+      "face": {
+        "skin": 6,
+        "hair": 0,
+        "cut": 15,
+        "beardStyle": 2
+      }
     },
     {
       "id": "epl_liv_ikonaté",
@@ -14114,7 +14342,13 @@
         "weeklyWage": 248000,
         "releaseClause": 0
       },
-      "marketValue": 62500000
+      "marketValue": 62500000,
+      "face": {
+        "skin": 9,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 1
+      }
     },
     {
       "id": "epl_liv_jgomez",
@@ -14269,7 +14503,13 @@
         "weeklyWage": 208000,
         "releaseClause": 0
       },
-      "marketValue": 58500000
+      "marketValue": 58500000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 3,
+        "beardStyle": 0
+      }
     },
     {
       "id": "epl_liv_cbradley",
@@ -14477,7 +14717,13 @@
         "weeklyWage": 292000,
         "releaseClause": 0
       },
-      "marketValue": 93500000
+      "marketValue": 93500000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 3,
+        "beardStyle": 0
+      }
     },
     {
       "id": "epl_liv_amacallister",
@@ -14529,7 +14775,13 @@
         "weeklyWage": 292000,
         "releaseClause": 0
       },
-      "marketValue": 78500000
+      "marketValue": 78500000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 3,
+        "beardStyle": 1
+      }
     },
     {
       "id": "epl_liv_dszoboszlai",
@@ -14581,7 +14833,13 @@
         "weeklyWage": 270000,
         "releaseClause": 0
       },
-      "marketValue": 70500000
+      "marketValue": 70500000,
+      "face": {
+        "skin": 1,
+        "hair": 3,
+        "cut": 12,
+        "beardStyle": 0
+      }
     },
     {
       "id": "epl_liv_cjones",
@@ -14737,7 +14995,13 @@
         "weeklyWage": 340000,
         "releaseClause": 0
       },
-      "marketValue": 116000000
+      "marketValue": 116000000,
+      "face": {
+        "skin": 1,
+        "hair": 2,
+        "cut": 0,
+        "beardStyle": 0
+      }
     },
     {
       "id": "epl_liv_msalah",
@@ -14789,7 +15053,13 @@
         "weeklyWage": 366000,
         "releaseClause": 0
       },
-      "marketValue": 43000000
+      "marketValue": 43000000,
+      "face": {
+        "skin": 5,
+        "hair": 0,
+        "cut": 7,
+        "beardStyle": 3
+      }
     },
     {
       "id": "epl_liv_cgakpo",
@@ -14841,7 +15111,13 @@
         "weeklyWage": 228000,
         "releaseClause": 0
       },
-      "marketValue": 55500000
+      "marketValue": 55500000,
+      "face": {
+        "skin": 7,
+        "hair": 0,
+        "cut": 15,
+        "beardStyle": 0
+      }
     },
     {
       "id": "epl_liv_fchiesa",
@@ -14996,7 +15272,13 @@
         "weeklyWage": 340000,
         "releaseClause": 0
       },
-      "marketValue": 97500000
+      "marketValue": 97500000,
+      "face": {
+        "skin": 7,
+        "hair": 0,
+        "cut": 15,
+        "beardStyle": 1
+      }
     },
     {
       "id": "epl_liv_hekitiké",
@@ -15048,7 +15330,13 @@
         "weeklyWage": 248000,
         "releaseClause": 0
       },
-      "marketValue": 74500000
+      "marketValue": 74500000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 3,
+        "beardStyle": 0
+      }
     },
     {
       "id": "epl_mci_gdonnarumma",
@@ -15100,7 +15388,13 @@
         "weeklyWage": 342000,
         "releaseClause": 0
       },
-      "marketValue": 97500000
+      "marketValue": 97500000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 0,
+        "beardStyle": 2
+      }
     },
     {
       "id": "epl_mci_jtrafford",
@@ -15204,7 +15498,13 @@
         "weeklyWage": 317000,
         "releaseClause": 0
       },
-      "marketValue": 73500000
+      "marketValue": 73500000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 1,
+        "beardStyle": 3
+      }
     },
     {
       "id": "epl_mci_jgvardiol",
@@ -15256,7 +15556,13 @@
         "weeklyWage": 294000,
         "releaseClause": 0
       },
-      "marketValue": 93500000
+      "marketValue": 93500000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 0,
+        "beardStyle": 1
+      }
     },
     {
       "id": "epl_mci_jstones",
@@ -15308,7 +15614,13 @@
         "weeklyWage": 209000,
         "releaseClause": 0
       },
-      "marketValue": 31000000
+      "marketValue": 31000000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 1,
+        "beardStyle": 1
+      }
     },
     {
       "id": "epl_mci_akhusanov",
@@ -15360,7 +15672,20 @@
         "weeklyWage": 140000,
         "releaseClause": 0
       },
-      "marketValue": 39500000
+      "marketValue": 39500000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 14,
+        "beardStyle": 0,
+        "shape": 0,
+        "eyes": 4,
+        "eyeColor": 0,
+        "brow": 2,
+        "nose": 1,
+        "mouth": 0,
+        "age": 0
+      }
     },
     {
       "id": "epl_mci_naké",
@@ -15568,7 +15893,13 @@
         "weeklyWage": 190000,
         "releaseClause": 0
       },
-      "marketValue": 51500000
+      "marketValue": 51500000,
+      "face": {
+        "skin": 5,
+        "hair": 0,
+        "cut": 3,
+        "beardStyle": 1
+      }
     },
     {
       "id": "epl_mci_rodri",
@@ -15620,7 +15951,13 @@
         "weeklyWage": 367000,
         "releaseClause": 0
       },
-      "marketValue": 90500000
+      "marketValue": 90500000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 1,
+        "beardStyle": 2
+      }
     },
     {
       "id": "epl_mci_treijnders",
@@ -15672,7 +16009,13 @@
         "weeklyWage": 271000,
         "releaseClause": 0
       },
-      "marketValue": 70500000
+      "marketValue": 70500000,
+      "face": {
+        "skin": 4,
+        "hair": 0,
+        "cut": 3,
+        "beardStyle": 2
+      }
     },
     {
       "id": "epl_mci_bsilva",
@@ -15724,7 +16067,13 @@
         "weeklyWage": 271000,
         "releaseClause": 0
       },
-      "marketValue": 44000000
+      "marketValue": 44000000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 13,
+        "beardStyle": 3
+      }
     },
     {
       "id": "epl_mci_mkovačić",
@@ -15880,7 +16229,13 @@
         "weeklyWage": 209000,
         "releaseClause": 0
       },
-      "marketValue": 58500000
+      "marketValue": 58500000,
+      "face": {
+        "skin": 5,
+        "hair": 0,
+        "cut": 3,
+        "beardStyle": 0
+      }
     },
     {
       "id": "epl_mci_pfoden",
@@ -15932,7 +16287,13 @@
         "weeklyWage": 294000,
         "releaseClause": 0
       },
-      "marketValue": 78500000
+      "marketValue": 78500000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 4,
+        "beardStyle": 1
+      }
     },
     {
       "id": "epl_mci_jdoku",
@@ -15984,7 +16345,13 @@
         "weeklyWage": 229000,
         "releaseClause": 0
       },
-      "marketValue": 66500000
+      "marketValue": 66500000,
+      "face": {
+        "skin": 9,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 0
+      }
     },
     {
       "id": "epl_mci_savinho",
@@ -16088,7 +16455,13 @@
         "weeklyWage": 422000,
         "releaseClause": 0
       },
-      "marketValue": 131000000
+      "marketValue": 131000000,
+      "face": {
+        "skin": 0,
+        "hair": 3,
+        "cut": 9,
+        "beardStyle": 0
+      }
     },
     {
       "id": "epl_mci_omarmoush",
@@ -16140,7 +16513,13 @@
         "weeklyWage": 229000,
         "releaseClause": 0
       },
-      "marketValue": 55500000
+      "marketValue": 55500000,
+      "face": {
+        "skin": 4,
+        "hair": 0,
+        "cut": 3,
+        "beardStyle": 2
+      }
     },
     {
       "id": "epl_mci_asemenyo",
@@ -16192,7 +16571,13 @@
         "weeklyWage": 209000,
         "releaseClause": 0
       },
-      "marketValue": 49000000
+      "marketValue": 49000000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 1
+      }
     },
     {
       "id": "epl_mci_mguehi",
@@ -16244,7 +16629,13 @@
         "weeklyWage": 249000,
         "releaseClause": 0
       },
-      "marketValue": 62500000
+      "marketValue": 62500000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 0
+      }
     },
     {
       "id": "epl_mci_snypan",
@@ -16499,7 +16890,13 @@
         "weeklyWage": 205000,
         "releaseClause": 0
       },
-      "marketValue": 49000000
+      "marketValue": 49000000,
+      "face": {
+        "skin": 0,
+        "hair": 3,
+        "cut": 0,
+        "beardStyle": 0
+      }
     },
     {
       "id": "epl_mun_lyoro",
@@ -16603,7 +17000,13 @@
         "weeklyWage": 205000,
         "releaseClause": 0
       },
-      "marketValue": 49000000
+      "marketValue": 49000000,
+      "face": {
+        "skin": 3,
+        "hair": 0,
+        "cut": 9,
+        "beardStyle": 3
+      }
     },
     {
       "id": "epl_mun_hmaguire",
@@ -16966,7 +17369,13 @@
         "weeklyWage": 288000,
         "releaseClause": 0
       },
-      "marketValue": 49500000
+      "marketValue": 49500000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 1,
+        "beardStyle": 2
+      }
     },
     {
       "id": "epl_mun_casemiro",
@@ -17226,7 +17635,13 @@
         "weeklyWage": 224000,
         "releaseClause": 0
       },
-      "marketValue": 55500000
+      "marketValue": 55500000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 4,
+        "beardStyle": 2
+      }
     },
     {
       "id": "epl_mun_mcunha",
@@ -17278,7 +17693,13 @@
         "weeklyWage": 224000,
         "releaseClause": 0
       },
-      "marketValue": 55500000
+      "marketValue": 55500000,
+      "face": {
+        "skin": 5,
+        "hair": 0,
+        "cut": 15,
+        "beardStyle": 1
+      }
     },
     {
       "id": "epl_mun_amad",
@@ -17533,7 +17954,13 @@
         "weeklyWage": 201000,
         "releaseClause": 0
       },
-      "marketValue": 19500000
+      "marketValue": 19500000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 0,
+        "beardStyle": 1
+      }
     },
     {
       "id": "epl_new_aramsdale",
@@ -17689,7 +18116,13 @@
         "weeklyWage": 183000,
         "releaseClause": 0
       },
-      "marketValue": 43500000
+      "marketValue": 43500000,
+      "face": {
+        "skin": 1,
+        "hair": 2,
+        "cut": 1,
+        "beardStyle": 2
+      }
     },
     {
       "id": "epl_new_fschär",
@@ -18100,7 +18533,13 @@
         "weeklyWage": 283000,
         "releaseClause": 0
       },
-      "marketValue": 78500000
+      "marketValue": 78500000,
+      "face": {
+        "skin": 4,
+        "hair": 0,
+        "cut": 15,
+        "beardStyle": 3
+      }
     },
     {
       "id": "epl_new_stonali",
@@ -18152,7 +18591,13 @@
         "weeklyWage": 240000,
         "releaseClause": 0
       },
-      "marketValue": 62500000
+      "marketValue": 62500000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 8,
+        "beardStyle": 1
+      }
     },
     {
       "id": "epl_new_joelinton",
@@ -18412,7 +18857,13 @@
         "weeklyWage": 220000,
         "releaseClause": 0
       },
-      "marketValue": 66500000
+      "marketValue": 66500000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 15,
+        "beardStyle": 0
+      }
     },
     {
       "id": "epl_new_hbarnes",
@@ -18620,7 +19071,13 @@
         "weeklyWage": 183000,
         "releaseClause": 0
       },
-      "marketValue": 51500000
+      "marketValue": 51500000,
+      "face": {
+        "skin": 1,
+        "hair": 2,
+        "cut": 1,
+        "beardStyle": 0
+      }
     },
     {
       "id": "epl_new_ywissa",
@@ -18984,7 +19441,13 @@
         "weeklyWage": 174000,
         "releaseClause": 0
       },
-      "marketValue": 36500000
+      "marketValue": 36500000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 0,
+        "beardStyle": 2
+      }
     },
     {
       "id": "epl_nfo_morato",
@@ -19343,7 +19806,13 @@
         "weeklyWage": 191000,
         "releaseClause": 0
       },
-      "marketValue": 58500000
+      "marketValue": 58500000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 0,
+        "beardStyle": 0
+      }
     },
     {
       "id": "epl_nfo_isangaré",
@@ -19551,7 +20020,13 @@
         "weeklyWage": 209000,
         "releaseClause": 0
       },
-      "marketValue": 55500000
+      "marketValue": 55500000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 1,
+        "beardStyle": 1
+      }
     },
     {
       "id": "epl_nfo_chudsonodoi",
@@ -21397,7 +21872,13 @@
         "weeklyWage": 202000,
         "releaseClause": 0
       },
-      "marketValue": 41000000
+      "marketValue": 41000000,
+      "face": {
+        "skin": 2,
+        "hair": 1,
+        "cut": 1,
+        "beardStyle": 2
+      }
     },
     {
       "id": "epl_tot_akinský",
@@ -21552,7 +22033,13 @@
         "weeklyWage": 262000,
         "releaseClause": 0
       },
-      "marketValue": 70500000
+      "marketValue": 70500000,
+      "face": {
+        "skin": 3,
+        "hair": 0,
+        "cut": 15,
+        "beardStyle": 2
+      }
     },
     {
       "id": "epl_tot_mvandeven",
@@ -21599,7 +22086,13 @@
         "weeklyWage": 241000,
         "releaseClause": 0
       },
-      "marketValue": 74500000
+      "marketValue": 74500000,
+      "face": {
+        "skin": 1,
+        "hair": 3,
+        "cut": 0,
+        "beardStyle": 0
+      }
     },
     {
       "id": "epl_tot_rdrăgușin",
@@ -21755,7 +22248,13 @@
         "weeklyWage": 202000,
         "releaseClause": 0
       },
-      "marketValue": 49000000
+      "marketValue": 49000000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 0,
+        "beardStyle": 2
+      }
     },
     {
       "id": "epl_tot_dspence",
@@ -21963,7 +22462,13 @@
         "weeklyWage": 202000,
         "releaseClause": 0
       },
-      "marketValue": 31000000
+      "marketValue": 31000000,
+      "face": {
+        "skin": 2,
+        "hair": 0,
+        "cut": 0,
+        "beardStyle": 3
+      }
     },
     {
       "id": "epl_tot_rbentancur",
@@ -22275,7 +22780,13 @@
         "weeklyWage": 221000,
         "releaseClause": 0
       },
-      "marketValue": 66500000
+      "marketValue": 66500000,
+      "face": {
+        "skin": 5,
+        "hair": 0,
+        "cut": 3,
+        "beardStyle": 0
+      }
     },
     {
       "id": "epl_tot_jmaddison",
@@ -22379,7 +22890,13 @@
         "weeklyWage": 202000,
         "releaseClause": 0
       },
-      "marketValue": 49000000
+      "marketValue": 49000000,
+      "face": {
+        "skin": 8,
+        "hair": 0,
+        "cut": 15,
+        "beardStyle": 2
+      }
     },
     {
       "id": "epl_tot_mtel",
@@ -23611,7 +24128,13 @@
         "weeklyWage": 193000,
         "releaseClause": 0
       },
-      "marketValue": 41000000
+      "marketValue": 41000000,
+      "face": {
+        "skin": 1,
+        "hair": 1,
+        "cut": 12,
+        "beardStyle": 2
+      }
     },
     {
       "id": "epl_whu_csummerville",

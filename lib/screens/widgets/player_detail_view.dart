@@ -63,7 +63,7 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
                 tooltip: 'Portretni tahrirlash',
                 icon: const Icon(Icons.face_retouching_natural_outlined),
                 onPressed: () async {
-                  final face = await editFace(context, p.face, shirt: shirt);
+                  final face = await editFace(context, p.face, shirt: shirt, nationality: p.nationality, age: p.age);
                   if (face != null && mounted) {
                     setState(() => p.face = face);
                     GameState().touch();

@@ -99,7 +99,7 @@ manager's proficiency in the chosen playstyle.
 | `assets/data/names.json` | Locale name pools for generated players |
 | `assets/data/squad_templates.json` | 23-slot template for new clubs |
 
-Generators: `tool/expand_squads.py`, `tool/star_faces.py`,
+Generators: `tool/expand_squads.py`, `tool/star_faces.py`, `tool/epl_faces.py`,
 `tool/playing_styles.py`.
 
 ## Verification

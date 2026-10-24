@@ -887,6 +887,8 @@ def main():
         })
         wages = sum(p['contract']['weeklyWage'] for p in players if p['id'] in ids)
         clubs[-1]['wageBudget'] = int(wages * 1.2 / 100000) * 100000
+    from epl_faces import apply as apply_faces
+    apply_faces(players)
     (DATA / 'players_epl.json').write_text(
         json.dumps({'schemaVersion': 2, 'players': players}, ensure_ascii=False, indent=2) + '\n', encoding='utf8')
     (DATA / 'clubs_epl.json').write_text(

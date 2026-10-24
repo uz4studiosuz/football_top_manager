@@ -190,7 +190,7 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
               children: [
                 GestureDetector(
                   onTap: () async {
-                    final f = await editFace(context, face, shirt: shirt);
+                    final f = await editFace(context, face, shirt: shirt, nationality: nationality, age: age);
                     if (f != null && mounted) setState(() => face = f);
                   },
                   child: Stack(

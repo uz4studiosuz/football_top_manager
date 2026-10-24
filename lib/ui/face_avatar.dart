@@ -148,16 +148,16 @@ class FacePainter extends CustomPainter {
       );
     }
     _ageLines(canvas, skin, cheek);
-    _beard(canvas, hair, skin, cheek, jaw, chin);
+    if (c.beardStyle == 1) _stubble(canvas, hair, cheek, jaw, chin);
     canvas.restore();
-    if (c.beardStyle == 3) _fullBeardBulge(canvas, hair, jaw, chin);
+    // Beards follow the jaw and may grow past it, so they are drawn
+    // outside the head clip.
+    _beard(canvas, hair, cheek, jaw, chin);
     _eyes(canvas, skin);
     _brows(canvas, hair);
     _nose(canvas, skin, chin);
     _mouth(canvas, skin, chin);
-    if (c.beardStyle >= 2) {
-      _moustache(canvas, hair, chin);
-    }
+    if (_moustacheStyles.contains(c.beardStyle)) _moustache(canvas, hair, chin);
     if (c.freckles) _freckles(canvas, skin);
     _frontHair(canvas, hair, skin, cheek, top);
     if (c.glasses) _glasses(canvas, cheek);
@@ -248,7 +248,8 @@ class FacePainter extends CustomPainter {
 
   void _eyes(Canvas canvas, Color skin) {
     final spacing = 9.5 + (c.eyes == 2 ? 1.0 : 0);
-    final h = const [4.0, 3.1, 4.4, 5.0][c.eyes.clamp(0, 3)];
+    final h = const [4.0, 3.1, 4.4, 5.0, 2.7][c.eyes.clamp(0, 4)];
+    final almond = c.eyes == 4;
     const y = 47.5;
     for (final s in [-1.0, 1.0]) {
       final x = 50 + s * spacing;
@@ -257,10 +258,12 @@ class FacePainter extends CustomPainter {
         Rect.fromCenter(center: Offset(x, y - 1.6), width: 12, height: 5),
         Paint()..color = _shade(skin, 0.18).withValues(alpha: 0.35),
       );
+      // Almond eyes rise slightly towards the outer corner.
+      final tilt = almond ? -0.9 : 0.0;
       final eye = Path()
-        ..moveTo(x - 5.2, y + 0.2)
-        ..quadraticBezierTo(x - 0.6 * s, y - h, x + 5.2, y - 0.2 * s)
-        ..quadraticBezierTo(x + 0.4 * s, y + h * 0.72, x - 5.2, y + 0.2)
+        ..moveTo(x - 5.2, y + 0.2 + (s < 0 ? tilt : 0))
+        ..quadraticBezierTo(x + (almond ? 0.8 : -0.6) * s, y - h, x + 5.2, y - 0.2 * s + (s > 0 ? tilt : 0))
+        ..quadraticBezierTo(x + 0.4 * s, y + h * (almond ? 0.6 : 0.72), x - 5.2, y + 0.2 + (s < 0 ? tilt : 0))
         ..close();
       canvas.drawPath(eye, Paint()..color = const Color(0xFFF6F3EE));
       canvas.save();
@@ -301,15 +304,18 @@ class FacePainter extends CustomPainter {
           ..strokeWidth = 1.15
           ..strokeCap = StrokeCap.round,
       );
-      canvas.drawPath(
-        Path()
-          ..moveTo(x - 3.5, y - h - 1.4)
-          ..quadraticBezierTo(x, y - h - 2.4, x + 3.8, y - h - 1.0),
-        Paint()
-          ..color = _shade(skin, 0.2)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 0.55,
-      );
+      if (!almond) {
+        // Lid crease (monolid almond eyes have none).
+        canvas.drawPath(
+          Path()
+            ..moveTo(x - 3.5, y - h - 1.4)
+            ..quadraticBezierTo(x, y - h - 2.4, x + 3.8, y - h - 1.0),
+          Paint()
+            ..color = _shade(skin, 0.2)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 0.55,
+        );
+      }
     }
   }
 
@@ -408,83 +414,175 @@ class FacePainter extends CustomPainter {
     );
   }
 
-  void _beard(
-    Canvas canvas,
-    Color hair,
-    Color skin,
+  static const _moustacheStyles = {2, 3, 4, 5, 7};
+
+  Color _beardColor(Color hair) =>
+      Color.lerp(hair, Colors.black, hair.computeLuminance() > 0.3 ? 0.18 : 0.04)!;
+
+  /// Lower face outline from the left sideburn round the chin to the right
+  /// one, following this face shape and pushed out by [grow] (beard volume).
+  Path _jaw(double cheek, double jaw, double chin, double grow, double from) {
+    final l = 50 - cheek - grow * 0.3, r = 50 + cheek + grow * 0.3;
+    final ch = chin + grow;
+    return Path()
+      ..moveTo(l + 0.2, from)
+      ..lineTo(l + 0.4, 54)
+      ..cubicTo(l + 1 - grow * 0.2, 64 + grow * 0.3, 50 - jaw - 2 - grow * 0.4, ch - 6, 50 - jaw * 0.5 - grow * 0.2, ch - 1.2)
+      ..quadraticBezierTo(50, ch + 1.2 + grow * 0.2, 50 + jaw * 0.5 + grow * 0.2, ch - 1.2)
+      ..cubicTo(50 + jaw + 2 + grow * 0.4, ch - 6, r - 1 + grow * 0.2, 64 + grow * 0.3, r - 0.4, 54)
+      ..lineTo(r - 0.2, from);
+  }
+
+  /// Beard area: the jaw outline, then back along the cheek line to the
+  /// corners of the mouth, leaving the lips (and a soul-patch gap) clear.
+  Path _beardArea(
     double cheek,
     double jaw,
-    double chin,
-  ) {
-    if (c.beardStyle == 0 || c.beardStyle == 5) return;
+    double chin, {
+    required double grow,
+    required double from,
+    required double cheekLine,
+    required double corner,
+  }) {
     final y = chin - 13.2;
     final mw = 9.0 + c.mouth * 1.2;
-    final alpha = switch (c.beardStyle) {
-      1 => 0.26,
-      2 => 0.7,
-      _ => 0.94,
-    };
-    final paint = Paint()..color = Color.lerp(hair, skin, 0.08)!.withValues(alpha: alpha);
-    if (c.beardStyle == 4) {
+    final l = 50 - cheek, r = 50 + cheek;
+    return _jaw(cheek, jaw, chin, grow, from)
+      ..lineTo(r - 2.6, from + 2)
+      ..quadraticBezierTo(r - 3.5, cheekLine, 50 + mw / 2 + corner, y - 1.0)
+      ..quadraticBezierTo(50 + mw * 0.32, y + 4.6, 50, y + 4.2)
+      ..quadraticBezierTo(50 - mw * 0.32, y + 4.6, 50 - mw / 2 - corner, y - 1.0)
+      ..quadraticBezierTo(l + 3.5, cheekLine, l + 2.6, from + 2)
+      ..close();
+  }
+
+  void _stubble(Canvas canvas, Color hair, double cheek, double jaw, double chin) {
+    final y = chin - 13.2;
+    final mw = 9.0 + c.mouth * 1.2;
+    final area = _beardArea(cheek, jaw, chin, grow: 0, from: 49, cheekLine: 61, corner: 2.4);
+    final color = _beardColor(hair);
+    canvas.drawPath(
+      area,
+      Paint()
+        ..color = color.withValues(alpha: 0.17)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 0.9),
+    );
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(50, y - 2.7), width: mw + 3.5, height: 3.2),
+      Paint()
+        ..color = color.withValues(alpha: 0.15)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 0.6),
+    );
+    canvas.save();
+    canvas.clipPath(area);
+    final dot = Paint()..color = color.withValues(alpha: 0.32);
+    final rnd = Random(c.skin * 31 + c.shape);
+    final box = area.getBounds();
+    for (var i = 0; i < 150; i++) {
+      canvas.drawCircle(
+        Offset(box.left + rnd.nextDouble() * box.width, box.top + rnd.nextDouble() * box.height),
+        0.24,
+        dot,
+      );
+    }
+    canvas.restore();
+  }
+
+  void _beard(Canvas canvas, Color hair, double cheek, double jaw, double chin) {
+    final s = c.beardStyle;
+    if (s == 0 || s == 1 || s == 5) return;
+    final color = _beardColor(hair);
+    if (s == 6) {
+      // Chinstrap: a thin band hugging the jawline.
       canvas.drawPath(
-        Path()
-          ..moveTo(50 - mw / 2 - 1, y + 1)
-          ..quadraticBezierTo(50 - mw / 2 - 2, chin + 1, 50, chin + 1.5)
-          ..quadraticBezierTo(50 + mw / 2 + 2, chin + 1, 50 + mw / 2 + 1, y + 1)
-          ..quadraticBezierTo(50, y + 4.5, 50 - mw / 2 - 1, y + 1)
-          ..close(),
-        paint,
+        _jaw(cheek, jaw, chin, 0.5, 46),
+        Paint()
+          ..color = color.withValues(alpha: 0.88)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.1
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round,
       );
       return;
     }
-    final l = 50 - cheek - 2, r = 50 + cheek + 2;
-    canvas.drawPath(
-      Path()
-        ..moveTo(l, 49)
-        ..lineTo(l, 100)
-        ..lineTo(r, 100)
-        ..lineTo(r, 49)
-        ..quadraticBezierTo(r - 6, 59, 50 + mw / 2 + 2.2, y - 1.5)
-        ..quadraticBezierTo(50, y + 4.2, 50 - mw / 2 - 2.2, y - 1.5)
-        ..quadraticBezierTo(l + 6, 59, l, 49)
+    final y = chin - 13.2;
+    final mw = 9.0 + c.mouth * 1.2;
+    final area = switch (s) {
+      2 => _beardArea(cheek, jaw, chin, grow: 1.0, from: 49, cheekLine: 62, corner: 2.4),
+      4 => Path()
+        ..moveTo(50 - mw / 2 - 1.2, y - 0.6)
+        ..quadraticBezierTo(50 - mw / 2 - 3.2, chin - 4, 50 - jaw * 0.6 - 1, chin)
+        ..quadraticBezierTo(50, chin + 3, 50 + jaw * 0.6 + 1, chin)
+        ..quadraticBezierTo(50 + mw / 2 + 3.2, chin - 4, 50 + mw / 2 + 1.2, y - 0.6)
+        ..lineTo(50 + mw / 2 + 0.2, y + 0.6)
+        ..quadraticBezierTo(50, y + 3.8, 50 - mw / 2 - 0.2, y + 0.6)
         ..close(),
-      paint,
+      7 => _beardArea(cheek, jaw, chin, grow: 7, from: 47, cheekLine: 59, corner: 2.8),
+      _ => _beardArea(cheek, jaw, chin, grow: 2.8, from: 47, cheekLine: 60, corner: 2.8),
+    };
+    final box = area.getBounds();
+    canvas.drawPath(
+      area,
+      Paint()
+        ..color = color.withValues(alpha: s == 2 ? 0.9 : 0.97)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 0.35),
     );
-    if (c.beardStyle == 1) {
-      final dot = Paint()..color = hair.withValues(alpha: 0.35);
-      final rnd = Random(c.skin * 31 + c.shape);
-      for (var i = 0; i < 70; i++) {
-        final px = 50 - cheek + rnd.nextDouble() * cheek * 2;
-        final py = 56 + rnd.nextDouble() * (chin - 54);
-        canvas.drawCircle(Offset(px, py), 0.28, dot);
-      }
+    canvas.save();
+    canvas.clipPath(area);
+    // Volume: lighter near the cheeks, darker toward the jaw edge.
+    canvas.drawRect(
+      box,
+      Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            _tint(color, 0.15).withValues(alpha: 0.35),
+            Colors.transparent,
+            Colors.black.withValues(alpha: 0.28),
+          ],
+        ).createShader(box),
+    );
+    final strand = Paint()
+      ..color = _tint(color, 0.28).withValues(alpha: 0.45)
+      ..strokeWidth = 0.45
+      ..strokeCap = StrokeCap.round;
+    final rnd = Random(c.skin * 7 + c.hair * 13 + s);
+    for (var i = 0; i < (s == 4 ? 40 : 110); i++) {
+      final x = box.left + rnd.nextDouble() * box.width;
+      final yy = box.top + rnd.nextDouble() * box.height;
+      canvas.drawLine(Offset(x, yy), Offset(x + (x - 50) * 0.05, yy + 1.7), strand);
     }
-  }
-
-  void _fullBeardBulge(Canvas canvas, Color hair, double jaw, double chin) {
-    canvas.drawPath(
-      Path()
-        ..moveTo(50 - jaw - 3, chin - 7)
-        ..quadraticBezierTo(50 - jaw, chin + 4.5, 50, chin + 5)
-        ..quadraticBezierTo(50 + jaw, chin + 4.5, 50 + jaw + 3, chin - 7)
-        ..close(),
-      Paint()..color = hair.withValues(alpha: 0.94),
-    );
+    canvas.restore();
   }
 
   void _moustache(Canvas canvas, Color hair, double chin) {
     final y = chin - 13.2;
     final mw = 9.0 + c.mouth * 1.2;
-    final alpha = c.beardStyle == 2 ? 0.72 : 0.95;
+    final full = c.beardStyle == 3 || c.beardStyle == 7;
+    final drop = full ? 1.6 : 0.2; // full beards join the moustache at the corners
+    final color = _beardColor(hair);
+    final path = Path()
+      ..moveTo(50 - mw / 2 - 1.4, y + drop)
+      ..quadraticBezierTo(50 - mw / 4, y - 4.4, 50, y - 3.3)
+      ..quadraticBezierTo(50 + mw / 4, y - 4.4, 50 + mw / 2 + 1.4, y + drop)
+      ..quadraticBezierTo(50 + mw / 4, y - 1.2, 50, y - 1.5)
+      ..quadraticBezierTo(50 - mw / 4, y - 1.2, 50 - mw / 2 - 1.4, y + drop)
+      ..close();
     canvas.drawPath(
-      Path()
-        ..moveTo(50 - mw / 2 - 1.2, y + 0.2)
-        ..quadraticBezierTo(50 - mw / 4, y - 4.2, 50, y - 3.1)
-        ..quadraticBezierTo(50 + mw / 4, y - 4.2, 50 + mw / 2 + 1.2, y + 0.2)
-        ..quadraticBezierTo(50, y - 1.6, 50 - mw / 2 - 1.2, y + 0.2)
-        ..close(),
-      Paint()..color = hair.withValues(alpha: alpha),
+      path,
+      Paint()
+        ..color = color.withValues(alpha: c.beardStyle == 2 ? 0.8 : 0.96)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 0.3),
     );
+    final strand = Paint()
+      ..color = _tint(color, 0.3).withValues(alpha: 0.4)
+      ..strokeWidth = 0.4
+      ..strokeCap = StrokeCap.round;
+    for (var i = -3; i <= 3; i++) {
+      final x = 50 + i * mw / 8;
+      canvas.drawLine(Offset(x, y - 3.4), Offset(x + i * 0.35, y - 1.8), strand);
+    }
   }
 
   void _ageLines(Canvas canvas, Color skin, double cheek) {
@@ -617,9 +715,10 @@ class FacePainter extends CustomPainter {
       return;
     }
     final l = 50 - cheek, r = 50 + cheek;
-    final volume = const [2.2, 3.2, 7.0, 5.0, 0.6, 0.0, 1.4, 8.5, 2.6, 1.2, 3.0, 0.4, 3.2, 4.2][c.cut];
-    final hairline = const [30.0, 29.5, 29.0, 30.0, 31.0, 0.0, 30.5, 28.0, 30.0, 29.0, 29.5, 31.5, 27.5, 34.5][c.cut];
+    final volume = const [2.2, 3.2, 7.0, 5.0, 0.6, 0.0, 1.4, 8.5, 2.6, 1.2, 3.0, 0.4, 3.2, 4.2, 5.2, 3.0][c.cut];
+    final hairline = const [30.0, 29.5, 29.0, 30.0, 31.0, 0.0, 30.5, 28.0, 30.0, 29.0, 29.5, 31.5, 27.5, 34.5, 36.5, 30.0][c.cut];
     final shaved = c.cut == 4 || c.cut == 11;
+    final fade = c.cut == 15;
     final path = Path()
       ..moveTo(l - 1.6, 47)
       ..lineTo(l - 1.8, 36)
@@ -647,6 +746,18 @@ class FacePainter extends CustomPainter {
           ..lineTo(41, hairline + 2.2)
           ..lineTo(l + 4, hairline - 0.5)
           ..lineTo(l + 1.4, hairline + 5);
+      case 14: // heavy straight fringe falling over the forehead
+        path
+          ..lineTo(r - 3.5, hairline - 2.2)
+          ..lineTo(r - 6.5, hairline + 0.6)
+          ..lineTo(57, hairline - 1.4)
+          ..lineTo(53.5, hairline + 1.2)
+          ..lineTo(50, hairline - 1.0)
+          ..lineTo(46, hairline + 1.6)
+          ..lineTo(42, hairline - 0.6)
+          ..lineTo(38.5, hairline + 1.0)
+          ..lineTo(l + 3, hairline - 1.6)
+          ..lineTo(l + 1.4, hairline + 3);
       case 12: // slick back – high, rounded hairline
         path
           ..quadraticBezierTo(r - 6, hairline - 1, 50, hairline - 1.6)
@@ -660,7 +771,19 @@ class FacePainter extends CustomPainter {
       ..lineTo(l + 0.8, 47)
       ..close();
     final base = shaved ? hair.withValues(alpha: c.cut == 11 ? 0.32 : 0.78) : hair;
-    canvas.drawPath(path, Paint()..color = base);
+    if (fade) {
+      // Skin fade: faint sides, full hair only on top.
+      canvas.save();
+      canvas.clipRect(Rect.fromLTRB(l + 0.4, 0, r - 0.4, 100));
+      canvas.drawPath(path, Paint()..color = hair.withValues(alpha: 0.3));
+      canvas.restore();
+      canvas.save();
+      canvas.clipRect(Rect.fromLTRB(l + 2.2, 0, r - 2.2, 37.5));
+      canvas.drawPath(path, Paint()..color = hair);
+      canvas.restore();
+    } else {
+      canvas.drawPath(path, Paint()..color = base);
+    }
     if (!shaved) {
       canvas.drawPath(
         path,
@@ -678,6 +801,21 @@ class FacePainter extends CustomPainter {
       ..strokeWidth = 0.6
       ..strokeCap = StrokeCap.round;
     switch (c.cut) {
+      case 14:
+        for (var i = 0; i < 7; i++) {
+          final x = l + 4 + i * (cheek * 2 - 8) / 6;
+          canvas.drawPath(
+            Path()
+              ..moveTo(x + 2.5, top - 1)
+              ..quadraticBezierTo(x + 1, top + 6, x - 0.6, hairline - 0.8),
+            strand,
+          );
+        }
+      case 15:
+        for (var i = 0; i < 4; i++) {
+          final x = l + 7 + i * (cheek * 2 - 14) / 3;
+          canvas.drawLine(Offset(x, top - 2), Offset(x + 1.5, hairline - 1.5), strand);
+        }
       case 0:
       case 13:
         for (var i = 0; i < 5; i++) {
@@ -791,11 +929,17 @@ class FaceStudio extends StatefulWidget {
   final FaceConfig value;
   final ValueChanged<FaceConfig> onChanged;
   final Color shirt;
+
+  /// When known, "random" draws a face typical of this nationality and age.
+  final String? nationality;
+  final int? age;
   const FaceStudio({
     super.key,
     required this.value,
     required this.onChanged,
     this.shirt = const Color(0xFF2B3A55),
+    this.nationality,
+    this.age,
   });
   @override
   State<FaceStudio> createState() => _FaceStudioState();
@@ -803,15 +947,56 @@ class FaceStudio extends StatefulWidget {
 
 class _FaceStudioState extends State<FaceStudio> {
   int tab = 0;
+  final List<FaceConfig> _undo = [];
   FaceConfig get value => widget.value;
 
-  Widget _choices(String key, String label, int count, {List<String>? labels}) => Column(
+  void _set(FaceConfig next) {
+    if (next == value) return;
+    _undo.add(value);
+    if (_undo.length > 40) _undo.removeAt(0);
+    widget.onChanged(next);
+  }
+
+  void _random() {
+    final id = DateTime.now().microsecondsSinceEpoch.toString();
+    _set(widget.nationality == null
+        ? FaceConfig.seed(id)
+        : FaceConfig.forPlayer(id, widget.nationality!, widget.age ?? 25));
+  }
+
+  /// Thumbnail zoomed on the feature being edited (eyes, mouth, beard...).
+  Widget _thumb(FaceConfig f, ({double scale, double y}) zoom) => ClipRRect(
+    borderRadius: BorderRadius.circular(11),
+    child: SizedBox.square(
+      dimension: 56,
+      child: Transform.scale(
+        scale: zoom.scale,
+        alignment: Alignment(0, zoom.y),
+        child: FaceAvatar(config: f, size: 56, shirt: widget.shirt),
+      ),
+    ),
+  );
+
+  static const _full = (scale: 1.0, y: 0.0);
+  static const _eyesZoom = (scale: 2.3, y: -0.08);
+  static const _browZoom = (scale: 2.3, y: -0.22);
+  static const _noseZoom = (scale: 2.2, y: 0.12);
+  static const _mouthZoom = (scale: 2.2, y: 0.38);
+  static const _beardZoom = (scale: 1.45, y: 0.5);
+
+  Widget _choices(
+    String key,
+    String label,
+    int count, {
+    List<String>? labels,
+    ({double scale, double y}) zoom = _full,
+  }) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
       Text(label, style: AppText.bodyStrong),
       const SizedBox(height: 10),
       SizedBox(
-        height: labels == null ? 66 : 88,
+        height: labels == null ? 66 : 84,
         child: ListView.separated(
           scrollDirection: Axis.horizontal,
           itemCount: count,
@@ -819,7 +1004,7 @@ class _FaceStudioState extends State<FaceStudio> {
           itemBuilder: (context, i) {
             final selected = value.toMap()[key] == i;
             return InkWell(
-              onTap: () => widget.onChanged(value.change(key, i)),
+              onTap: () => _set(value.change(key, i)),
               borderRadius: BorderRadius.circular(12),
               child: Column(
                 children: [
@@ -832,11 +1017,7 @@ class _FaceStudioState extends State<FaceStudio> {
                         width: selected ? 2.2 : 1,
                       ),
                     ),
-                    child: FaceAvatar(
-                      config: value.change(key, i),
-                      size: 54,
-                      shirt: widget.shirt,
-                    ),
+                    child: _thumb(value.change(key, i), zoom),
                   ),
                   if (labels != null) ...[
                     const SizedBox(height: 4),
@@ -870,7 +1051,7 @@ class _FaceStudioState extends State<FaceStudio> {
         children: [
           for (var i = 0; i < colors.length; i++)
             InkWell(
-              onTap: () => widget.onChanged(value.change(key, i)),
+              onTap: () => _set(value.change(key, i)),
               customBorder: const CircleBorder(),
               child: Container(
                 width: 34,
@@ -895,7 +1076,7 @@ class _FaceStudioState extends State<FaceStudio> {
     contentPadding: EdgeInsets.zero,
     title: Text(label, style: AppText.bodyStrong),
     value: value.toMap()[key] as bool,
-    onChanged: (v) => widget.onChanged(value.change(key, v)),
+    onChanged: (v) => _set(value.change(key, v)),
   );
 
   @override
@@ -904,54 +1085,85 @@ class _FaceStudioState extends State<FaceStudio> {
       [
         _swatches('skin', 'Teri rangi', FacePainter.skins),
         _choices('shape', 'Yuz shakli', FaceConfig.shapeCount, labels: FaceConfig.shapeLabels),
-        _choices('eyes', 'Ko‘z shakli', FaceConfig.eyesCount),
+        _choices('nose', 'Burun', FaceConfig.noseCount, labels: FaceConfig.noseLabels, zoom: _noseZoom),
+        _choices('mouth', 'Lab', FaceConfig.mouthCount, labels: FaceConfig.mouthLabels, zoom: _mouthZoom),
+      ],
+      [
+        _choices('eyes', 'Ko‘z shakli', FaceConfig.eyesCount, labels: FaceConfig.eyeLabels, zoom: _eyesZoom),
         _swatches('eyeColor', 'Ko‘z rangi', FacePainter.eyeColors),
-        _choices('nose', 'Burun', FaceConfig.noseCount),
-        _choices('mouth', 'Lab', FaceConfig.mouthCount),
+        _choices('brow', 'Qosh', FaceConfig.browCount, labels: FaceConfig.browLabels, zoom: _browZoom),
       ],
       [
         _choices('cut', 'Soch turmagi', FaceConfig.cutCount, labels: FaceConfig.cutLabels),
-        _swatches('hair', 'Soch rangi', FacePainter.hairs),
-        _choices('brow', 'Qosh', FaceConfig.browCount),
-        _choices('beardStyle', 'Soqol', FaceConfig.beardCount, labels: FaceConfig.beardLabels),
+        _swatches('hair', 'Soch va soqol rangi', FacePainter.hairs),
       ],
       [
-        _choices('age', 'Yosh chiziqlari', FaceConfig.ageCount),
+        _choices('beardStyle', 'Soqol', FaceConfig.beardCount, labels: FaceConfig.beardLabels, zoom: _beardZoom),
+        const Text(
+          'Soqol yuz shakli va jag‘ chizig‘iga moslashadi.',
+          style: AppText.caption,
+        ),
+      ],
+      [
+        _choices('age', 'Yosh chiziqlari', FaceConfig.ageCount, labels: FaceConfig.ageLabels, zoom: _browZoom),
         _toggle('glasses', 'Ko‘zoynak'),
         _toggle('freckles', 'Sepkil'),
-        const SizedBox(height: 12),
-        OutlinedButton.icon(
-          onPressed: () => widget.onChanged(
-            FaceConfig.seed(DateTime.now().microsecondsSinceEpoch.toString()),
-          ),
-          icon: const Icon(Icons.casino_outlined),
-          label: const Text('Tasodifiy yuz'),
-        ),
       ],
     ];
     return Column(
       children: [
         const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(22),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.08),
-                blurRadius: 18,
-                offset: const Offset(0, 6),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(22),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 18,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: FaceAvatar(config: value, size: 136, shirt: widget.shirt),
+              child: FaceAvatar(config: value, size: 136, shirt: widget.shirt),
+            ),
+            const SizedBox(width: 14),
+            // How the portrait reads at list size.
+            Column(
+              children: [
+                FaceAvatar(config: value, size: 44, shirt: widget.shirt, circle: true),
+                const SizedBox(height: 6),
+                FaceAvatar(config: value, size: 28, shirt: widget.shirt, circle: true),
+              ],
+            ),
+          ],
         ),
-        const SizedBox(height: 10),
-        const Text('Yuzingizga mos shakl va detallarni tanlang', style: AppText.small),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TextButton.icon(
+              onPressed: _undo.isEmpty
+                  ? null
+                  : () => setState(() => widget.onChanged(_undo.removeLast())),
+              icon: const Icon(Icons.undo_rounded, size: 18),
+              label: const Text('Orqaga'),
+            ),
+            const SizedBox(width: 6),
+            TextButton.icon(
+              onPressed: _random,
+              icon: const Icon(Icons.casino_outlined, size: 18),
+              label: Text(widget.nationality == null ? 'Tasodifiy' : 'Tasodifiy (${widget.nationality})'),
+            ),
+          ],
+        ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: PillTabsInline(
-            labels: const ['Yuz', 'Soch', 'Detallar'],
+            labels: const ['Yuz', 'Ko‘z', 'Soch', 'Soqol', 'Boshqa'],
             index: tab,
             onChanged: (i) => setState(() => tab = i),
           ),
@@ -1027,15 +1239,19 @@ Future<FaceConfig?> editFace(
   BuildContext context,
   FaceConfig initial, {
   Color shirt = const Color(0xFF2B3A55),
+  String? nationality,
+  int? age,
 }) => Navigator.push<FaceConfig>(
   context,
-  MaterialPageRoute(builder: (_) => _FaceEditor(initial, shirt)),
+  MaterialPageRoute(builder: (_) => _FaceEditor(initial, shirt, nationality, age)),
 );
 
 class _FaceEditor extends StatefulWidget {
   final FaceConfig initial;
   final Color shirt;
-  const _FaceEditor(this.initial, this.shirt);
+  final String? nationality;
+  final int? age;
+  const _FaceEditor(this.initial, this.shirt, this.nationality, this.age);
   @override
   State<_FaceEditor> createState() => _FaceEditorState();
 }
@@ -1057,6 +1273,8 @@ class _FaceEditorState extends State<_FaceEditor> {
     body: FaceStudio(
       value: current,
       shirt: widget.shirt,
+      nationality: widget.nationality,
+      age: widget.age,
       onChanged: (v) => setState(() => current = v),
     ),
   );
