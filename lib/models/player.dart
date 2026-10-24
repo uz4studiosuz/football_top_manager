@@ -1,10 +1,13 @@
+import 'dart:math';
 import 'face.dart';
+import 'playing_style.dart';
+export 'playing_style.dart';
 import 'package:flutter/foundation.dart';
+import '../l10n/l10n.dart';
 
 /// O'yinchi pozitsiyalari (eFootball / PES standarti)
 enum PlayerPosition {
   // Hujum (Attack)
-  st('ST', 'Striker', PositionCategory.attack),
   cf('CF', 'Centre Forward', PositionCategory.attack),
   ss('SS', 'Second Striker', PositionCategory.attack),
   lwf('LWF', 'Left Wing Forward', PositionCategory.attack),
@@ -30,6 +33,8 @@ enum PlayerPosition {
   bool get isDefender => category == PositionCategory.defense;
   bool get isGoalkeeper => category == PositionCategory.goalkeeper;
   static PlayerPosition fromCode(String code) {
+    // eFootball has no separate "ST": every centre forward is CF.
+    if (code.toUpperCase() == 'ST') return PlayerPosition.cf;
     return PlayerPosition.values.firstWhere(
       (pos) => pos.code.toUpperCase() == code.toUpperCase(),
       orElse: () => PlayerPosition.cmf,
@@ -44,8 +49,9 @@ enum PositionCategory {
   defense('Himoya'),
   goalkeeper('Darvoza');
 
-  const PositionCategory(this.label);
-  final String label;
+  const PositionCategory(this._label);
+  final String _label;
+  String get label => tr(_label);
 }
 
 /// Yetakchi oyoq
@@ -53,8 +59,9 @@ enum PreferredFoot {
   right('O\'ng (Right)'),
   left('Chap (Left)');
 
-  const PreferredFoot(this.label);
-  final String label;
+  const PreferredFoot(this._label);
+  final String _label;
+  String get label => tr(_label);
 }
 
 /// Canonical eFootball-style attributes, each bounded to 40–100.
@@ -407,16 +414,51 @@ class PlayerContract {
   }
 }
 
+/// eFootball-style individual instructions (offence and defence).
 enum PlayerInstruction {
-  balanced('Muvozanat', 'Sxema va jamoaviy rejaga amal qilish'),
-  stayBack('Orqada qolish', 'Hujumda ham himoya sug‘urtasini saqlash'),
-  makeRuns('Oldinga yugurish', 'Himoya ortidagi bo‘shliqni izlash'),
-  holdWidth('Qanotni ushlash', 'Yon chiziq bo‘ylab kenglik yaratish'),
-  playmaker('Pas markazi', 'To‘pga ochilish va sheriklarni bog‘lash');
+  balanced('Muvozanat', 'Sxema va jamoaviy rejaga amal qiladi', true),
+  makeRuns('Offensive · Hujumkor', 'Hujumda doim oldinga yuguradi, himoya ortini izlaydi', true),
+  stayBack('Defensive · Himoyaviy', 'Hujumda ham orqada qolib sug‘urta qiladi', true),
+  anchoring('Anchoring · Tayanch', 'O‘z zonasidan chiqmaydi, markazni yopadi', true),
+  holdWidth('Qanotni ushlash', 'Yon chiziq bo‘ylab kenglik yaratadi', true),
+  playmaker('Pas markazi', 'To‘pga ochilib sheriklarni bog‘laydi', true),
+  counterTarget('Counter Target', 'Himoyaga qaytmaydi, qarshi hujumni kutadi', false),
+  manMarking('Man Marking', 'Raqibning eng xavfli o‘yinchisini shaxsan qo‘riqlaydi', false),
+  tightMarking('Tight Marking', 'Yaqin masofadan bosim: ko‘proq Olib qo‘yish va qoidabuzarlik', false),
+  deepLine('Deep Line', 'Himoyada chuqurroq turib, orqa zonani sug‘urtalaydi', false);
 
-  const PlayerInstruction(this.label, this.description);
-  final String label, description;
+  const PlayerInstruction(this._label, this._description, this.offence);
+  final String _label;
+  String get label => tr(_label);
+  final String _description;
+  String get description => tr(_description);
+  final bool offence;
 }
+
+/// How well a player suits a position.
+enum PositionFit {
+  natural('Asosiy pozitsiya'),
+  alternative('Muqobil pozitsiya'),
+  similar('Yaqin pozitsiya'),
+  poor('Begona pozitsiya');
+
+  const PositionFit(this._label);
+  final String _label;
+  String get label => tr(_label);
+}
+
+const _families = <Set<PlayerPosition>>[
+  {PlayerPosition.lb, PlayerPosition.rb},
+  {PlayerPosition.dmf, PlayerPosition.cmf},
+  {PlayerPosition.cmf, PlayerPosition.amf},
+  {PlayerPosition.lmf, PlayerPosition.lwf},
+  {PlayerPosition.rmf, PlayerPosition.rwf},
+  {PlayerPosition.lmf, PlayerPosition.rmf},
+  {PlayerPosition.lwf, PlayerPosition.rwf},
+  {PlayerPosition.amf, PlayerPosition.ss},
+  {PlayerPosition.ss, PlayerPosition.cf},
+  {PlayerPosition.dmf, PlayerPosition.cb},
+];
 
 /// Futbolchi modeli
 class Player {
@@ -425,7 +467,7 @@ class Player {
   final String id;
   final String name;
   final String shortName;
-  final int age;
+  int age;
   final String nationality;
   final String countryFlag;
   final int number;
@@ -433,19 +475,35 @@ class Player {
   final List<PlayerPosition> altPositions;
   final PreferredFoot preferredFoot;
   final int weakFoot; // 1 dan 5 yulduzgacha
-  final PlayerStats stats;
+  PlayerStats stats;
   PlayerContract contract;
-  final int marketValue; // Bozor bahosi (EUR)
+  int marketValue; // Bozor bahosi (EUR)
+  int potential; // Kelajakdagi eng yuqori OVR
+  int? height; // sm
+  List<String> traits; // maxsus mahoratlar (masalan "Tezlik", "Havo o‘yini")
+  late PlayingStyle playingStyle;
+  late DefendingStyle defendingStyle;
+  late Set<AiStyle> aiStyles;
   // Real-time o'yin va mavsum holati
-  int currentStamina; // 0.0.100
-  int morale; // 0.0.100 (Masalan: 85)
-  // Mavsumiy statistika (To'purarlar, assistentlar, quruq o'yinlar)
+  int currentStamina; // 0–100
+  int morale; // 0–100
+  int injuryRounds; // jarohat: o'tkazib yuboriladigan turlar
+  String? injury;
+  int suspensionRounds; // diskvalifikatsiya
+  // Mavsumiy statistika
   int seasonGoals;
   int seasonAssists;
   int seasonMatches;
   int seasonCleanSheets;
   int seasonYellowCards;
   int seasonRedCards;
+  int seasonMinutes = 0;
+  double growth = 0; // progress toward the next attribute gain
+  int seasonMotm = 0;
+  double seasonRatingSum = 0;
+  int seasonRated = 0;
+  final List<double> recentRatings = [];
+  final List<String> history = []; // mavsumlar bo'yicha qisqa yozuvlar
   Player({
     FaceConfig? face,
     this.instruction = PlayerInstruction.balanced,
@@ -463,19 +521,98 @@ class Player {
     required this.stats,
     required this.contract,
     required this.marketValue,
+    int? potential,
+    PlayingStyle? playingStyle,
+    this.height,
+    List<String>? traits,
     int? currentStamina,
     this.morale = 85,
+    this.injuryRounds = 0,
+    this.injury,
+    this.suspensionRounds = 0,
     this.seasonGoals = 0,
     this.seasonAssists = 0,
     this.seasonMatches = 0,
     this.seasonCleanSheets = 0,
     this.seasonYellowCards = 0,
     this.seasonRedCards = 0,
-  }) : face = face ?? FaceConfig.seed(id),
-       currentStamina = currentStamina ?? 100;
+  }) : face = face ?? FaceConfig.forPlayer(id, nationality, age),
+       currentStamina = currentStamina ?? 100,
+       traits = traits ?? [],
+       potential = potential ?? 0 {
+    final profile = PlayingProfile.derive(mainPosition.code, stats.toMap());
+    this.playingStyle = playingStyle ?? profile.style;
+    defendingStyle = profile.defending;
+    aiStyles = profile.ai;
+    if (this.potential == 0) {
+      final base = ovr;
+      this.potential = (base +
+              (age <= 19
+                  ? 10
+                  : age <= 21
+                  ? 7
+                  : age <= 23
+                  ? 4
+                  : age <= 26
+                  ? 1
+                  : 0))
+          .clamp(min(base, 97), 97);
+      if (this.potential < base) this.potential = base;
+    }
+  }
   double get goalsPerMatch =>
       seasonMatches > 0 ? (seasonGoals / seasonMatches) : 0.0;
   int get goalContributions => seasonGoals + seasonAssists;
+  bool get isInjured => injuryRounds > 0;
+  bool get isSuspended => suspensionRounds > 0;
+  bool get isAvailable => !isInjured && !isSuspended;
+
+  /// SofaScore-style season average rating (null before the first rating).
+  double? get averageRating =>
+      seasonRated == 0 ? null : seasonRatingSum / seasonRated;
+
+  void recordRating(double rating) {
+    seasonRatingSum += rating;
+    seasonRated++;
+    recentRatings.add(rating);
+    if (recentRatings.length > 5) recentRatings.removeAt(0);
+  }
+
+  void resetSeasonStats() {
+    seasonGoals = 0;
+    seasonAssists = 0;
+    seasonMatches = 0;
+    seasonCleanSheets = 0;
+    seasonYellowCards = 0;
+    seasonRedCards = 0;
+    seasonMinutes = 0;
+    seasonMotm = 0;
+    seasonRatingSum = 0;
+    seasonRated = 0;
+    recentRatings.clear();
+  }
+
+  /// Market value from ability, age and potential.
+  static int valuation(int ovr, int age, int potential) {
+    final base = pow(max(0, ovr - 55) / 10, 3.4) * 1600000;
+    final ageFactor = age <= 21
+        ? 1.45
+        : age <= 24
+        ? 1.25
+        : age <= 27
+        ? 1.05
+        : age <= 29
+        ? 0.88
+        : age <= 31
+        ? 0.66
+        : age <= 33
+        ? 0.42
+        : 0.22;
+    final growth = 1 + max(0, potential - ovr) * 0.035;
+    final v = (base * ageFactor * growth).round();
+    final step = v >= 10000000 ? 500000 : 100000;
+    return max(250000, (v / step).round() * step);
+  }
   Map<String, dynamic> toMap() => {
     'face': face.toMap(),
     'instruction': instruction.name,
@@ -493,11 +630,19 @@ class Player {
     'stats': stats.toMap(),
     'contract': contract.toMap(),
     'marketValue': marketValue,
+    'potential': potential,
+    'playingStyle': playingStyle.name,
+    'height': ?height,
+    if (traits.isNotEmpty) 'traits': traits,
   };
   factory Player.fromMap(Map<String, dynamic> m) => Player(
+    // Data may carry partial look-alike hints; the rest stays procedural.
     face: m['face'] == null
         ? null
-        : FaceConfig.fromMap(Map<String, dynamic>.from(m['face'])),
+        : FaceConfig.fromMap({
+            ...FaceConfig.forPlayer(m['id'], m['nationality'], m['age']).toMap(),
+            ...Map<String, dynamic>.from(m['face']),
+          }),
     instruction: PlayerInstruction.values.byName(
       m['instruction'] ?? 'balanced',
     ),
@@ -517,6 +662,10 @@ class Player {
     stats: PlayerStats.fromMap(Map<String, dynamic>.from(m['stats'])),
     contract: PlayerContract.fromMap(Map<String, dynamic>.from(m['contract'])),
     marketValue: m['marketValue'],
+    potential: m['potential'],
+    playingStyle: PlayingStyle.values.asNameMap()[m['playingStyle']],
+    height: m['height'],
+    traits: m['traits'] == null ? null : List<String>.from(m['traits']),
   );
   // ===========================================================================
   // OVR (Overall) HISOBLASH ALGORITMI (PRD 3.4)
@@ -524,7 +673,7 @@ class Player {
   /// O'yinchining berilgan pozitsiyadagi asosiy raw OVR balli
   int calculateRawOVR(PlayerPosition pos) {
     final weights = switch (pos) {
-      PlayerPosition.st || PlayerPosition.cf => {
+      PlayerPosition.cf => {
         'finishing': 0.27,
         'attackingAwareness': 0.22,
         'kickingPower': 0.12,
@@ -634,6 +783,20 @@ class Player {
     }
     return (raw * familiarity).round().clamp(40, 100);
   }
+
+  PositionFit fitFor(PlayerPosition pos) {
+    if (pos == mainPosition) return PositionFit.natural;
+    if (altPositions.contains(pos)) return PositionFit.alternative;
+    if (_families.any((f) => f.contains(pos) && f.contains(mainPosition))) {
+      return PositionFit.similar;
+    }
+    return PositionFit.poor;
+  }
+
+  /// Positions sorted by how well he plays them (best first).
+  List<PlayerPosition> get bestPositions =>
+      List.of(PlayerPosition.values)
+        ..sort((a, b) => getEffectiveOVR(b).compareTo(getEffectiveOVR(a)));
 
   /// Natural ability is stable; fitness and morale affect match strength only.
   int get ovr => getEffectiveOVR(mainPosition);

@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FTM27 DB Studio</title>
+<style>
+  :root {
+    --bg: #edf1f6; --surface: #fff; --alt: #f5f7fa; --ink: #222226; --ink2: #5b6270; --ink3: #9aa1ad;
+    --line: #e6e9ef; --primary: #374df5; --soft: #ebeefe; --win: #12a150; --warn: #f5a524; --loss: #e5352b;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font: 14px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--ink); }
+  header { display: flex; gap: 8px; align-items: center; padding: 10px 16px; background: var(--surface); border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 5; flex-wrap: wrap; }
+  header h1 { font-size: 16px; margin: 0 12px 0 0; }
+  button, select, input, textarea { font: inherit; }
+  button { border: 1px solid var(--line); background: var(--surface); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+  button.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+  button.danger { color: var(--loss); }
+  button:disabled { opacity: .45; cursor: default; }
+  main { display: grid; grid-template-columns: 260px 1fr; gap: 12px; padding: 12px; min-height: calc(100vh - 54px); }
+  @media (max-width: 800px) { main { grid-template-columns: 1fr; } }
+  .card { background: var(--surface); border-radius: 14px; padding: 14px; margin-bottom: 12px; }
+  .card h2 { font-size: 15px; margin: 0 0 10px; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .list { max-height: calc(100vh - 140px); overflow: auto; }
+  .item { display: flex; align-items: center; gap: 8px; padding: 7px 8px; border-radius: 8px; cursor: pointer; }
+  .item:hover { background: var(--alt); }
+  .item.sel { background: var(--soft); font-weight: 600; }
+  .muted { color: var(--ink2); font-size: 12px; }
+  .badge { font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 6px; color: #fff; min-width: 26px; text-align: center; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 10px; }
+  label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--ink2); }
+  input, select, textarea { border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; background: var(--surface); color: var(--ink); }
+  input[type=color] { padding: 2px; height: 32px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  th { font-size: 12px; color: var(--ink2); cursor: pointer; user-select: none; }
+  tr.row:hover { background: var(--alt); cursor: pointer; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 4px 16px; }
+  .stat { display: grid; grid-template-columns: 1fr 120px 36px; gap: 8px; align-items: center; font-size: 12px; }
+  .issues li { margin: 3px 0; }
+  .err { color: var(--loss); } .wrn { color: #b7791f; } .ok { color: var(--win); }
+  .crest { width: 54px; height: 64px; }
+  .row-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .empty { padding: 40px; text-align: center; color: var(--ink2); }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 10px; background: var(--alt); font-size: 12px; margin: 2px; }
+  dialog { border: none; border-radius: 14px; padding: 0; width: min(980px, 96vw); max-height: 92vh; }
+  dialog .card { margin: 0; }
+  .dirty::after { content: " •"; color: var(--warn); }
+</style>
+</head>
+<body>
+<header>
+  <h1>⚽ FTM27 DB Studio</h1>
+  <button class="primary" id="openDir">📂 assets/data papkasini ochish</button>
+  <label style="flex-direction:row;align-items:center;gap:6px">yoki fayllar:
+    <input type="file" id="openFiles" multiple accept=".json"></label>
+  <button id="openProject" hidden>🌐 Loyihadan yuklash</button>
+  <button id="validate" disabled>✔ Tekshirish</button>
+  <button id="save" disabled>💾 Saqlash</button>
+  <button id="download" disabled>⬇ Yuklab olish</button>
+  <span class="muted" id="status">Fayllar yuklanmagan</span>
+</header>
+<main>
+  <aside>
+    <div class="card">
+      <h2>Ligalar <button id="addLeague" disabled title="Yangi liga">＋</button></h2>
+      <div id="leagues" class="list"></div>
+    </div>
+  </aside>
+  <section id="content"><div class="card empty">
+    <p><b>Boshlash:</b> «assets/data papkasini ochish» tugmasini bosing (Chrome/Edge) — fayllar to‘g‘ridan-to‘g‘ri saqlanadi.
+    Boshqa brauzerda fayllarni tanlang va o‘zgarishlarni «Yuklab olish» orqali oling.</p>
+    <p class="muted">Kerakli fayllar: league.json, clubs*.json, players*.json, names.json, squad_templates.json</p>
+  </div></section>
+</main>
+<dialog id="dlg"></dialog>
+
+<script>
+'use strict';
+// --------------------------------------------------------------- game rules
+const KEYS = ['attackingAwareness','ballControl','dribbling','tightPossession','lowPass','loftedPass','finishing','heading',
+  'setPieceTaking','curl','defensiveAwareness','defensiveEngagement','tackling','aggression','gkAwareness','gkCatching',
+  'gkParrying','gkReflexes','gkReach','speed','acceleration','kickingPower','jumping','physicalContact','balance','stamina'];
+const STAT_GROUPS = {
+  'Hujum': ['attackingAwareness','finishing','kickingPower','heading','curl','setPieceTaking'],
+  'Texnika': ['ballControl','dribbling','tightPossession','lowPass','loftedPass'],
+  'Himoya': ['defensiveAwareness','defensiveEngagement','tackling','aggression'],
+  'Jismoniy': ['speed','acceleration','jumping','physicalContact','balance','stamina'],
+  'Darvozabon': ['gkAwareness','gkCatching','gkParrying','gkReflexes','gkReach'],
+};
+const POSITIONS = ['GK','CB','LB','RB','DMF','CMF','AMF','LMF','RMF','LWF','RWF','SS','CF'];
+const GROUP = {CF:'ST',ST:'ST',SS:'SS',LWF:'WF',RWF:'WF',LMF:'MF',RMF:'MF',AMF:'AMF',CMF:'CMF',DMF:'DMF',CB:'CB',LB:'FB',RB:'FB',GK:'GK'};
+const WEIGHTS = {
+  ST:{finishing:.27,attackingAwareness:.22,kickingPower:.12,heading:.10,ballControl:.10,physicalContact:.08,speed:.06,acceleration:.05},
+  SS:{attackingAwareness:.18,tightPossession:.18,dribbling:.16,ballControl:.16,lowPass:.14,finishing:.12,acceleration:.06},
+  WF:{speed:.18,acceleration:.17,dribbling:.18,ballControl:.14,tightPossession:.10,lowPass:.08,loftedPass:.07,attackingAwareness:.08},
+  MF:{lowPass:.16,loftedPass:.18,dribbling:.14,speed:.14,acceleration:.10,stamina:.12,tightPossession:.08,attackingAwareness:.08},
+  AMF:{lowPass:.23,tightPossession:.18,ballControl:.18,attackingAwareness:.14,dribbling:.12,finishing:.08,curl:.07},
+  CMF:{lowPass:.25,loftedPass:.18,tightPossession:.15,ballControl:.12,defensiveEngagement:.10,stamina:.12,balance:.08},
+  DMF:{defensiveAwareness:.20,defensiveEngagement:.18,tackling:.20,lowPass:.18,physicalContact:.14,stamina:.10},
+  CB:{defensiveAwareness:.25,defensiveEngagement:.19,tackling:.23,heading:.12,physicalContact:.14,jumping:.07},
+  FB:{speed:.14,acceleration:.10,stamina:.15,defensiveAwareness:.15,tackling:.14,defensiveEngagement:.12,loftedPass:.12,lowPass:.08},
+  GK:{gkAwareness:.25,gkCatching:.15,gkParrying:.15,gkReflexes:.30,gkReach:.15},
+};
+const PROFILE = {
+  ST:{defensiveAwareness:-38,defensiveEngagement:-35,tackling:-38,lowPass:-8,loftedPass:-12,setPieceTaking:-10,stamina:-6},
+  SS:{defensiveAwareness:-35,defensiveEngagement:-30,tackling:-35,heading:-14},
+  WF:{defensiveAwareness:-36,defensiveEngagement:-30,tackling:-36,heading:-18,finishing:-4,physicalContact:-14},
+  MF:{defensiveAwareness:-18,tackling:-18,heading:-16,finishing:-10},
+  AMF:{defensiveAwareness:-28,tackling:-30,defensiveEngagement:-24,heading:-18,physicalContact:-12},
+  CMF:{defensiveAwareness:-10,tackling:-10,finishing:-14,heading:-14,speed:-8},
+  DMF:{finishing:-22,dribbling:-10,curl:-14,speed:-8,attackingAwareness:-18},
+  CB:{finishing:-36,dribbling:-22,curl:-28,attackingAwareness:-34,tightPossession:-18,setPieceTaking:-30,lowPass:-8,loftedPass:-10},
+  FB:{finishing:-30,attackingAwareness:-20,heading:-12,curl:-14,setPieceTaking:-24},
+  GK:{},
+};
+const STYLES = ['goalPoacher','advancedStriker','dummyRunner','foxInTheBox','targetMan','deepLyingForward','prolificWinger',
+  'roamingFlank','crossSpecialist','creativePlaymaker','classicNo10','holePlayer','boxToBox','anchorMan','destroyer',
+  'orchestrator','buildUp','extraFrontman','attackingFullBack','defensiveFullBack','fullBackFinisher','attackingGoalkeeper','defensiveGoalkeeper'];
+const FORMATIONS = ['f433','f4231','f442','f352','f532','f4141','f343','f41212','f433d','f4222','f4411','f451','f3412','f3421','f541','f4321'];
+const PLAYSTYLES = ['outWide','longBallCounter','possession','quickCounter','highPressing','longBall','overload'];
+const SHAPES = ['shield','modernShield','circle','oval','roundel','pointed','heater','badge'];
+const PATTERNS = ['solid','verticalStripes','pinstripes','hoops','diagonalSash','halves','quarters','lozenges','chevron','rings','splitCross'];
+const EMBLEMS = ['monogram','ball','star','cannon','bird','ship','tower','lion','trident','tree','hammers','wolf'];
+const FACE = {
+  skin: ['Juda oq','Oq','Och bug‘doy','Bug‘doy','Qorachadan','Qoracha','To‘q qoracha','Qora','To‘q qora','Juda qora'],
+  hair: ['Qora','To‘q jigarrang','Jigarrang','Sariq','Oqargan','Malla','Oq-sariq','Ko‘kish qora','Oq'],
+  cut: ['Qisqa','Yon farq','Kok','Jingalak','Nol','Kal','To‘lqin','Afro','Uzun','Tugun','Dredlar','Irokez','Orqaga','Chakka','Chelka','Feyd'],
+  beardStyle: ['Yo‘q','Tuk','Qisqa','To‘liq','Echkisoqol','Mo‘ylov','Iyak tasmasi','Uzun'],
+};
+
+const ovrAt = (p, pos) => {
+  const w = WEIGHTS[GROUP[pos] || 'CMF'];
+  let s = 0, t = 0;
+  for (const k in w) { s += (p.stats[k] ?? 70) * w[k]; t += w[k]; }
+  return Math.max(40, Math.min(100, Math.round(s / t)));
+};
+const ovr = p => ovrAt(p, p.mainPosition);
+function valuation(o, age, pot) {
+  const base = Math.pow(Math.max(0, o - 55) / 10, 3.4) * 1600000;
+  const f = age <= 21 ? 1.45 : age <= 24 ? 1.25 : age <= 27 ? 1.05 : age <= 29 ? .88 : age <= 31 ? .66 : age <= 33 ? .42 : .22;
+  const v = Math.round(base * f * (1 + Math.max(0, (pot ?? o) - o) * .035));
+  const step = v >= 1e7 ? 5e5 : 1e5;
+  return Math.max(250000, Math.round(v / step) * step);
+}
+function generateStats(pos, target) {
+  const g = GROUP[pos] || 'CMF', rnd = () => Math.floor(Math.random() * 9) - 4, s = {};
+  for (const k of KEYS) {
+    let base = target + (PROFILE[g][k] ?? -3) + rnd();
+    if (k.startsWith('gk') && g !== 'GK') base = 40;
+    s[k] = Math.max(40, Math.min(99, base));
+  }
+  if (g === 'GK') for (const k of KEYS) if (!k.startsWith('gk')) s[k] = Math.max(40, Math.min(80, target - 40 + Math.floor(Math.random() * 21) - 2));
+  for (let i = 0; i < 60; i++) {
+    const d = target - ovrAt({stats: s}, pos);
+    if (!d) break;
+    for (const k in WEIGHTS[g]) s[k] = Math.max(40, Math.min(99, s[k] + Math.sign(d)));
+  }
+  return s;
+}
+const argbToHex = v => '#' + ((v >>> 0) & 0xffffff).toString(16).padStart(6, '0');
+const money = v => v >= 1e6 ? '€' + (v / 1e6).toFixed(1) + 'M' : '€' + Math.round(v / 1e3) + 'K';
+const ovrColor = o => o >= 90 ? '#0ea5e9' : o >= 80 ? '#12a150' : o >= 70 ? '#c9a000' : '#e5352b';
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const slug = s => s.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '').slice(0, 14);
+
+// --------------------------------------------------------------- state
+const S = {
+  dir: null,          // FileSystemDirectoryHandle when opened as a folder
+  files: {},          // file name -> parsed JSON
+  dirty: new Set(),   // file names changed since load/save
+  league: null, club: null, sort: 'ovr',
+};
+const manifest = () => S.files['league.json'];
+const leagueList = () => manifest()?.leagues ?? [];
+const clubsDoc = l => S.files[l.clubsFile] ??= {schemaVersion: 2, clubs: []};
+const playersDoc = l => S.files[l.playersFile] ??= {schemaVersion: 2, players: []};
+function playerMap(l) { const m = {}; for (const p of playersDoc(l).players) m[p.id] = p; return m; }
+const touch = (...names) => { names.forEach(n => S.dirty.add(n)); refreshHeader(); };
+
+// --------------------------------------------------------------- IO
+async function openDirectory() {
+  if (!window.showDirectoryPicker) { alert('Bu brauzer papka ochishni qo‘llamaydi. Fayllarni tanlang.'); return; }
+  const dir = await window.showDirectoryPicker({mode: 'readwrite'});
+  const files = {};
+  for await (const [name, h] of dir.entries()) {
+    if (h.kind === 'file' && name.endsWith('.json')) files[name] = JSON.parse(await (await h.getFile()).text());
+  }
+  load(files, dir);
+}
+// Served over http from the repository (python -m http.server): read the
+// project's own assets; changes are then downloaded.
+async function openProject() {
+  const base = new URL('../../assets/data/', location.href);
+  const get = async name => (await fetch(new URL(name, base))).json();
+  const files = {'league.json': await get('league.json')};
+  const m = files['league.json'];
+  for (const name of [m.templatesFile, m.namesFile, ...m.leagues.flatMap(l => [l.clubsFile, l.playersFile])]) {
+    if (name && !files[name]) files[name] = await get(name);
+  }
+  load(files, null);
+}
+async function openFiles(list) {
+  const files = {};
+  for (const f of list) files[f.name] = JSON.parse(await f.text());
+  load(files, null);
+}
+function load(files, dir) {
+  if (!files['league.json']) { alert('league.json topilmadi — assets/data papkasini tanlang.'); return; }
+  S.files = files; S.dir = dir; S.dirty.clear();
+  S.league = leagueList()[0] ?? null; S.club = null;
+  render();
+}
+async function saveAll() {
+  if (!S.dir) return downloadAll();
+  const problems = validate();
+  if (problems.some(p => p.level === 'err') && !confirm('Xatolar bor — o‘yin bu ma’lumotni yuklamaydi. Baribir saqlansinmi?')) return;
+  for (const name of S.dirty) {
+    const h = await S.dir.getFileHandle(name, {create: true});
+    const w = await h.createWritable();
+    await w.write(JSON.stringify(S.files[name], null, name.startsWith('players') ? 0 : 2) + '\n');
+    await w.close();
+  }
+  setStatus(`${S.dirty.size} ta fayl saqlandi`);
+  S.dirty.clear(); refreshHeader();
+}
+function downloadAll() {
+  const names = S.dirty.size ? [...S.dirty] : Object.keys(S.files);
+  for (const name of names) {
+    const blob = new Blob([JSON.stringify(S.files[name], null, 2) + '\n'], {type: 'application/json'});
+    const a = Object.assign(document.createElement('a'), {href: URL.createObjectURL(blob), download: name});
+    a.click(); URL.revokeObjectURL(a.href);
+  }
+}
+function download(name, text, type = 'text/csv') {
+  const a = Object.assign(document.createElement('a'), {href: URL.createObjectURL(new Blob([text], {type})), download: name});
+  a.click();
+}
+
+// --------------------------------------------------------------- validation (mirrors InitialDatabase._join)
+function validate() {
+  const out = [];
+  const add = (level, where, msg) => out.push({level, where, msg});
+  const m = manifest();
+  if (!m) return [{level: 'err', where: 'league.json', msg: 'Manifest yo‘q'}];
+  if (m.schemaVersion !== 2) add('err', 'league.json', 'schemaVersion 2 bo‘lishi kerak');
+  for (const f of [m.templatesFile, m.namesFile]) if (!S.files[f]) add('wrn', 'league.json', `${f} yuklanmagan (o‘yin uchun kerak)`);
+  const leagueIds = new Set(), allClubIds = new Set();
+  for (const l of leagueList()) {
+    const where = l.name;
+    if (leagueIds.has(l.id)) add('err', where, `Liga id takrorlangan: ${l.id}`);
+    leagueIds.add(l.id);
+    if (!S.files[l.clubsFile]) { add('err', where, `${l.clubsFile} yo‘q`); continue; }
+    if (!S.files[l.playersFile]) { add('err', where, `${l.playersFile} yo‘q`); continue; }
+    const players = {}, owners = new Set();
+    for (const p of playersDoc(l).players) {
+      if (players[p.id]) add('err', where, `Futbolchi id takrorlangan: ${p.id}`);
+      players[p.id] = p;
+      if (!POSITIONS.includes(p.mainPosition)) add('err', p.name, `Noma’lum pozitsiya ${p.mainPosition}`);
+      for (const k of KEYS) {
+        const v = p.stats?.[k];
+        if (typeof v !== 'number') add('err', p.name, `stats.${k} yo‘q`);
+        else if (v < 40 || v > 100) add('wrn', p.name, `stats.${k}=${v} (40–100 oralig‘ida bo‘lishi kerak)`);
+      }
+      if (p.playingStyle && !STYLES.includes(p.playingStyle)) add('wrn', p.name, `Noma’lum o‘yin uslubi ${p.playingStyle}`);
+      if (!p.countryFlag) add('wrn', p.name, 'Bayroq (countryFlag) yo‘q');
+      if (!(p.age >= 15 && p.age <= 45)) add('wrn', p.name, `Yosh ${p.age}`);
+    }
+    for (const c of clubsDoc(l).clubs) {
+      const cw = `${l.name} · ${c.name}`;
+      if (allClubIds.has(c.id)) add('err', cw, `Klub id takrorlangan: ${c.id}`);
+      allClubIds.add(c.id);
+      const ids = new Set();
+      for (const id of c.squadIds ?? []) {
+        if (!players[id]) add('err', cw, `Tarkibda mavjud bo‘lmagan futbolchi: ${id}`);
+        else if (owners.has(id)) add('err', cw, `${players[id].name} ikki klubda`);
+        owners.add(id); ids.add(id);
+      }
+      const xi = c.startingLineupIds ?? [];
+      if (xi.length !== 11 || new Set(xi).size !== 11) add('err', cw, `Asosiy tarkib 11 ta noyob futbolchi emas (${xi.length})`);
+      if (!xi.every(id => ids.has(id))) add('err', cw, 'Asosiy tarkibda klubga tegishli bo‘lmagan futbolchi');
+      if (!(c.benchIds ?? []).every(id => ids.has(id))) add('err', cw, 'Zaxirada klubga tegishli bo‘lmagan futbolchi');
+      if ((c.benchIds ?? []).some(id => xi.includes(id))) add('err', cw, 'Futbolchi ham asosiyda, ham zaxirada');
+      if (!FORMATIONS.includes(c.tactics?.formation)) add('err', cw, `Noma’lum sxema ${c.tactics?.formation}`);
+      if (!PLAYSTYLES.includes(c.tactics?.playstyle)) add('err', cw, `Noma’lum o‘yin uslubi ${c.tactics?.playstyle}`);
+      if (!c.crest) add('err', cw, 'Emblema (crest) yo‘q');
+      const squad = [...ids].map(id => players[id]).filter(Boolean);
+      if (squad.length < 18) add('wrn', cw, `Tarkib kichik: ${squad.length} (kamida 18)`);
+      if (squad.length > 28) add('wrn', cw, `Tarkib katta: ${squad.length} (ko‘pi 28)`);
+      if (squad.filter(p => p.mainPosition === 'GK').length < 2) add('wrn', cw, 'Darvozabon 2 tadan kam');
+    }
+    const orphans = Object.keys(players).filter(id => !owners.has(id));
+    if (orphans.length) add('wrn', where, `${orphans.length} ta futbolchi hech qaysi klubda emas`);
+    const n = clubsDoc(l).clubs.length;
+    if (n % 2) add('err', where, `Klublar soni juft bo‘lishi kerak (${n})`);
+    if (l.pyramid && !l.tier) add('wrn', where, 'Piramida ligasida tier ko‘rsatilmagan');
+  }
+  return out;
+}
+function showValidation() {
+  const issues = validate();
+  const errs = issues.filter(i => i.level === 'err').length, wrns = issues.length - errs;
+  openDialog(`<div class="card"><h2>Tekshiruv natijasi <button onclick="dlg.close()">✕</button></h2>
+    <p class="${errs ? 'err' : 'ok'}"><b>${errs} xato</b>, ${wrns} ogohlantirish.
+    ${errs ? 'Xatolar tuzatilmaguncha o‘yin ma’lumotni yuklamaydi.' : 'O‘yin bu ma’lumotni yuklay oladi.'}</p>
+    <ul class="issues">${issues.slice(0, 400).map(i => `<li class="${i.level}"><b>${esc(i.where)}:</b> ${esc(i.msg)}</li>`).join('')}</ul></div>`);
+}
+
+// --------------------------------------------------------------- rendering
+const $ = id => document.getElementById(id);
+function setStatus(t) { $('status').textContent = t; }
+function refreshHeader() {
+  const loaded = !!manifest();
+  for (const id of ['validate', 'download', 'addLeague']) $(id).disabled = !loaded;
+  $('save').disabled = !loaded || !S.dirty.size;
+  $('save').textContent = S.dir ? `💾 Saqlash${S.dirty.size ? ` (${S.dirty.size})` : ''}` : '💾 Saqlash (yuklab olish)';
+  if (loaded) setStatus(`${Object.keys(S.files).length} fayl · ${S.dirty.size ? [...S.dirty].join(', ') + ' o‘zgargan' : 'o‘zgarish yo‘q'}`);
+}
+function render() { refreshHeader(); renderLeagues(); renderContent(); }
+function renderLeagues() {
+  $('leagues').innerHTML = leagueList().map((l, i) => {
+    const clubs = S.files[l.clubsFile]?.clubs ?? [];
+    return `<div class="item ${l === S.league && !S.club ? 'sel' : ''}" onclick="selLeague(${i})">
+      <div style="flex:1"><div>${esc(l.name)}</div><div class="muted">${clubs.length} klub${l.pyramid ? ` · ${l.pyramid} ${l.tier}-daraja` : ''}</div></div></div>
+      ${l === S.league ? clubs.map((c, j) => `<div class="item ${c === S.club ? 'sel' : ''}" style="padding-left:20px" onclick="selClub(${j})">
+        ${crestSvg(c, 22)}<span style="flex:1">${esc(c.name)}</span></div>`).join('') : ''}`;
+  }).join('');
+}
+function selLeague(i) { S.league = leagueList()[i]; S.club = null; render(); }
+function selClub(j) { S.club = clubsDoc(S.league).clubs[j]; render(); }
+
+function crestSvg(c, size = 54) {
+  const cr = c.crest ?? {}, p = argbToHex(cr.primaryColor ?? c.primaryColor ?? 0xff374df5),
+    s = argbToHex(cr.secondaryColor ?? c.secondaryColor ?? 0xffffffff), t = argbToHex(cr.trimColor ?? c.accentColor ?? 0xffe8c46a);
+  const round = ['circle', 'roundel', 'oval'].includes(cr.shape);
+  const shape = round ? `<ellipse cx="25" cy="30" rx="${cr.shape === 'oval' ? 20 : 23}" ry="${cr.shape === 'oval' ? 27 : 23}"/>`
+    : `<path d="M3 4 H47 V30 Q47 50 25 57 Q3 50 3 30 Z"/>`;
+  const stripes = cr.pattern === 'verticalStripes' ? [10, 20, 30, 40].map(x => `<rect x="${x}" y="0" width="5" height="60" fill="${s}"/>`).join('')
+    : cr.pattern === 'hoops' ? [12, 24, 36, 48].map(y => `<rect x="0" y="${y}" width="50" height="5" fill="${s}"/>`).join('')
+    : cr.pattern === 'halves' ? `<rect x="25" y="0" width="25" height="60" fill="${s}"/>` : '';
+  return `<svg viewBox="0 0 50 60" width="${size}" height="${size * 1.2}"><defs><clipPath id="k${esc(c.id)}">${shape}</clipPath></defs>
+    <g clip-path="url(#k${esc(c.id)})"><rect width="50" height="60" fill="${p}"/>${stripes}</g>
+    <g fill="none" stroke="${t}" stroke-width="2.5">${shape}</g>
+    <text x="25" y="35" text-anchor="middle" font-size="11" font-weight="800" fill="${t}">${esc((cr.monogram ?? c.shortName ?? '').slice(0, 4))}</text></svg>`;
+}
+
+function renderContent() {
+  const el = $('content');
+  if (!manifest()) return;
+  if (!S.club) return el.innerHTML = leagueView(S.league);
+  el.innerHTML = clubView(S.league, S.club);
+}
+
+// ----- league
+function leagueView(l) {
+  if (!l) return '<div class="card empty">Liga tanlang yoki yarating.</div>';
+  const pm = playerMap(l), clubs = clubsDoc(l).clubs;
+  const rows = clubs.map((c, j) => {
+    const squad = (c.squadIds ?? []).map(id => pm[id]).filter(Boolean);
+    const xi = (c.startingLineupIds ?? []).map(id => pm[id]).filter(Boolean);
+    const team = xi.length ? Math.round(xi.reduce((s, p) => s + ovr(p), 0) / xi.length) : 0;
+    return `<tr class="row" onclick="selClub(${j})"><td>${crestSvg(c, 20)}</td><td><b>${esc(c.name)}</b><div class="muted">${esc(c.id)}</div></td>
+      <td><span class="badge" style="background:${ovrColor(team)}">${team}</span></td><td>${squad.length}</td><td>${c.reputation ?? ''}</td>
+      <td>${money(c.transferBudget ?? 0)}</td><td>${esc(c.managerName ?? '')}</td></tr>`;
+  }).join('');
+  return `<div class="card"><h2>Liga sozlamalari <span><button class="danger" onclick="deleteLeague()">Ligani o‘chirish</button></span></h2>
+    <div class="grid">
+      ${field('id', l.id, 'lg', 'text', 'Ichki id (o‘zgartirmang)')}${field('name', l.name, 'lg')}${field('country', l.country ?? '', 'lg')}
+      ${field('clubsFile', l.clubsFile, 'lg')}${field('playersFile', l.playersFile, 'lg')}
+      ${field('pyramid', l.pyramid ?? '', 'lg', 'text', 'Bir xil piramida = ko‘tarilish/tushish')}${field('tier', l.tier ?? '', 'lg', 'number')}
+      ${field('promote', l.promote ?? '', 'lg', 'number', 'Avtomatik ko‘tariladiganlar')}${field('relegate', l.relegate ?? '', 'lg', 'number')}
+      ${field('playoff', (l.playoff ?? []).join('-'), 'lg', 'text', 'Masalan 3-6')}${field('economy', l.economy ?? 1, 'lg', 'number', 'Daromad koeffitsienti (1 = top liga)')}
+    </div></div>
+    <div class="card"><h2>Klublar (${clubs.length}) <span><button onclick="addClub()">＋ Klub</button>
+      <button onclick="exportCsv()">CSV eksport</button> <label style="display:inline-flex;flex-direction:row;gap:4px;align-items:center">CSV import
+      <input type="file" accept=".csv" onchange="importCsv(this.files[0])"></label></span></h2>
+      <table><tr><th></th><th>Klub</th><th>OVR</th><th>Tarkib</th><th>Obro‘</th><th>Byudjet</th><th>Murabbiy</th></tr>${rows}</table></div>`;
+}
+function field(key, value, scope, type = 'text', hint = '') {
+  return `<label>${esc(key)}${hint ? ` <span class="muted">(${esc(hint)})</span>` : ''}
+    <input type="${type}" value="${esc(value)}" onchange="setField('${scope}','${key}',this.value,'${type}')"></label>`;
+}
+function setField(scope, key, raw, type) {
+  const v = type === 'number' ? (raw === '' ? undefined : Number(raw)) : raw;
+  if (scope === 'lg') {
+    if (key === 'playoff') S.league.playoff = raw ? raw.split('-').map(Number) : undefined;
+    else if (v === '' || v === undefined) delete S.league[key]; else S.league[key] = v;
+    touch('league.json');
+  } else if (scope === 'club') {
+    S.club[key] = v; touch(S.league.clubsFile);
+  } else if (scope === 'tactics') {
+    S.club.tactics[key] = v; touch(S.league.clubsFile);
+  } else if (scope === 'crest') {
+    S.club.crest[key] = v; touch(S.league.clubsFile);
+  }
+  if (key === 'name' || scope === 'crest') renderLeagues();
+}
+function addLeague() {
+  const name = prompt('Liga nomi (masalan: Uzbekistan Super League)');
+  if (!name) return;
+  const id = slug(name) || 'league' + Date.now();
+  const l = {id, name, country: '', clubsFile: `clubs_${id}.json`, playersFile: `players_${id}.json`};
+  manifest().leagues.push(l);
+  S.files[l.clubsFile] = {schemaVersion: 2, clubs: []};
+  S.files[l.playersFile] = {schemaVersion: 2, players: []};
+  touch('league.json', l.clubsFile, l.playersFile);
+  S.league = l; S.club = null; render();
+}
+function deleteLeague() {
+  if (!confirm(`${S.league.name} manifestdan olib tashlansinmi? (fayllar diskda qoladi)`)) return;
+  manifest().leagues = leagueList().filter(l => l !== S.league);
+  touch('league.json'); S.league = leagueList()[0] ?? null; render();
+}
+function addClub() {
+  const name = prompt('Klub nomi');
+  if (!name) return;
+  const l = S.league, id = `${l.id}_${slug(name)}`.slice(0, 24);
+  const c = {
+    id, name, shortName: name.slice(0, 3).toUpperCase(), primaryColor: 0xff374df5, secondaryColor: 0xffffffff, accentColor: 0xffe8c46a,
+    stadiumName: name + ' Stadium', stadiumCapacity: 20000, city: '', nickname: '', founded: 1950, reputation: 60,
+    transferBudget: 10000000, wageBudget: 500000, ticketPrice: 30,
+    tactics: {formation: 'f433', playstyle: 'possession', defensiveLine: 3, attackingIntensity: 3},
+    crest: {shape: 'shield', pattern: 'solid', primaryColor: 0xff374df5, secondaryColor: 0xffffffff, trimColor: 0xffe8c46a,
+      monogram: name.slice(0, 2).toUpperCase(), stars: 0, crown: false, emblem: 'monogram'},
+    managerName: '', startingLineupIds: [], benchIds: [], squadIds: [],
+  };
+  clubsDoc(l).clubs.push(c);
+  if (confirm('23 kishilik tarkib avtomatik yaratilsinmi? (keyin tahrirlaysiz)')) fillSquad(c, 68);
+  touch(l.clubsFile, l.playersFile); S.club = c; render();
+}
+function fillSquad(c, level) {
+  const plan = ['GK','GK','GK','CB','CB','CB','CB','LB','LB','RB','RB','DMF','DMF','CMF','CMF','CMF','AMF','LWF','LWF','RWF','RWF','CF','CF'];
+  plan.forEach((pos, i) => newPlayer(c, pos, level + Math.floor(Math.random() * 9) - 4, i + 1));
+  autoLineup(c);
+}
+function newPlayer(c, pos = 'CMF', target = 65, number = 0) {
+  const l = S.league, n = playersDoc(l).players.length + 1, name = `Yangi futbolchi ${n}`;
+  let id = `${c.id}_p${n}`;
+  const pm = playerMap(l); while (pm[id]) id += 'x';
+  const age = 18 + Math.floor(Math.random() * 15);
+  const p = {
+    id, name, shortName: name, age, nationality: 'O‘zbekiston', countryFlag: '🇺🇿', number: number || n % 99 || 1,
+    mainPosition: pos, altPositions: [], preferredFoot: Math.random() < .25 ? 'left' : 'right', weakFoot: 3,
+    stats: generateStats(pos, target), contract: {contractYears: 3, weeklyWage: Math.max(2000, (target - 50) ** 2 * 40), releaseClause: 0},
+    marketValue: valuation(target, age, target + 3), potential: target + 3,
+  };
+  playersDoc(l).players.push(p);
+  c.squadIds.push(id);
+  return p;
+}
+// Best XI for the club's formation, one per slot family (simple, like the game's fallback).
+const SLOTS = {f433:['GK','LB','CB','CB','RB','CMF','DMF','CMF','LWF','CF','RWF'], f4231:['GK','LB','CB','CB','RB','DMF','DMF','LWF','AMF','RWF','CF'],
+  f442:['GK','LB','CB','CB','RB','LMF','CMF','CMF','RMF','CF','CF'], f352:['GK','CB','CB','CB','LMF','CMF','DMF','CMF','RMF','CF','CF']};
+function autoLineup(c) {
+  const pm = playerMap(S.league), pool = (c.squadIds ?? []).map(id => pm[id]).filter(Boolean);
+  const slots = SLOTS[c.tactics.formation] ?? SLOTS.f433, used = new Set(), xi = [];
+  for (const pos of slots) {
+    const best = pool.filter(p => !used.has(p.id) && (pos === 'GK') === (p.mainPosition === 'GK'))
+      .sort((a, b) => (ovrAt(b, pos) + (b.mainPosition === pos ? 6 : 0)) - (ovrAt(a, pos) + (a.mainPosition === pos ? 6 : 0)))[0];
+    if (best) { used.add(best.id); xi.push(best.id); }
+  }
+  c.startingLineupIds = xi;
+  c.benchIds = pool.filter(p => !used.has(p.id)).sort((a, b) => ovr(b) - ovr(a)).slice(0, 9).map(p => p.id);
+  touch(S.league.clubsFile);
+}
+
+// ----- club
+function clubView(l, c) {
+  const pm = playerMap(l), squad = (c.squadIds ?? []).map(id => pm[id]).filter(Boolean);
+  const sorters = {ovr: (a, b) => ovr(b) - ovr(a), pos: (a, b) => POSITIONS.indexOf(a.mainPosition) - POSITIONS.indexOf(b.mainPosition),
+    age: (a, b) => a.age - b.age, name: (a, b) => a.name.localeCompare(b.name), value: (a, b) => b.marketValue - a.marketValue};
+  squad.sort(sorters[S.sort] ?? sorters.ovr);
+  const role = id => c.startingLineupIds.includes(id) ? '<span class="pill" style="background:#dcfce7">XI</span>'
+    : c.benchIds.includes(id) ? '<span class="pill">Zaxira</span>' : '<span class="pill" style="opacity:.6">Rezerv</span>';
+  const sel = (key, opts, scope = 'club', val) => `<label>${key}<select onchange="setField('${scope}','${key}',this.value)">
+    ${opts.map(o => `<option ${o === (val ?? (scope === 'tactics' ? c.tactics : scope === 'crest' ? c.crest : c)[key]) ? 'selected' : ''}>${o}</option>`).join('')}</select></label>`;
+  const color = (key, scope = 'club') => {
+    const v = (scope === 'crest' ? c.crest : c)[key];
+    return `<label>${key}<input type="color" value="${argbToHex(v ?? 0xff000000)}" onchange="setField('${scope}','${key}',0xff000000 + parseInt(this.value.slice(1),16),'raw')"></label>`;
+  };
+  return `<div class="card"><h2><span style="display:flex;gap:10px;align-items:center">${crestSvg(c)} ${esc(c.name)}</span>
+      <span><button onclick="S.club=null;render()">← Liga</button> <button class="danger" onclick="deleteClub()">Klubni o‘chirish</button></span></h2>
+    <div class="grid">
+      ${field('name', c.name, 'club')}${field('shortName', c.shortName, 'club')}${field('nickname', c.nickname ?? '', 'club')}${field('city', c.city ?? '', 'club')}
+      ${field('founded', c.founded ?? '', 'club', 'number')}${field('stadiumName', c.stadiumName, 'club')}${field('stadiumCapacity', c.stadiumCapacity, 'club', 'number')}
+      ${field('reputation', c.reputation ?? 70, 'club', 'number', '1–100')}${field('transferBudget', c.transferBudget, 'club', 'number', '€')}
+      ${field('wageBudget', c.wageBudget, 'club', 'number', '€/hafta')}${field('ticketPrice', c.ticketPrice ?? 40, 'club', 'number')}${field('managerName', c.managerName ?? '', 'club')}
+      ${color('primaryColor')}${color('secondaryColor')}${color('accentColor')}
+    </div></div>
+    <div class="card"><h2>Taktika va emblema</h2><div class="grid">
+      ${sel('formation', FORMATIONS, 'tactics')}${sel('playstyle', PLAYSTYLES, 'tactics')}
+      ${sel('shape', SHAPES, 'crest')}${sel('pattern', PATTERNS, 'crest')}${sel('emblem', EMBLEMS, 'crest')}
+      ${field('monogram', c.crest.monogram ?? '', 'crest')}${field('stars', c.crest.stars ?? 0, 'crest', 'number')}
+      ${color('primaryColor', 'crest')}${color('secondaryColor', 'crest')}${color('trimColor', 'crest')}
+    </div></div>
+    <div class="card"><h2>Tarkib (${squad.length}) <span>
+      <button onclick="addPlayerDialog()">＋ Futbolchi</button> <button onclick="autoLineup(S.club);render()">Avto tarkib (XI + zaxira)</button></span></h2>
+      <table><tr>${[['name','Ism'],['pos','Poz.'],['ovr','OVR'],['age','Yosh'],['value','Qiymat']].map(([k, t]) => `<th onclick="S.sort='${k}';render()">${t}${S.sort === k ? ' ▾' : ''}</th>`).join('')}
+        <th>Millat</th><th>Maosh</th><th>Rol</th></tr>
+      ${squad.map(p => `<tr class="row" onclick="editPlayer('${esc(p.id)}')"><td><b>${esc(p.name)}</b> <span class="muted">#${p.number}</span></td>
+        <td>${p.mainPosition}${p.altPositions?.length ? ` <span class="muted">${p.altPositions.join(',')}</span>` : ''}</td>
+        <td><span class="badge" style="background:${ovrColor(ovr(p))}">${ovr(p)}</span></td><td>${p.age}</td><td>${money(p.marketValue)}</td>
+        <td>${p.countryFlag ?? ''} ${esc(p.nationality)}</td><td>${money(p.contract.weeklyWage)}</td><td>${role(p.id)}</td></tr>`).join('')}
+      </table></div>`;
+}
+function deleteClub() {
+  if (!confirm(`${S.club.name} va uning futbolchilari o‘chirilsinmi?`)) return;
+  const l = S.league, ids = new Set(S.club.squadIds);
+  clubsDoc(l).clubs = clubsDoc(l).clubs.filter(c => c !== S.club);
+  playersDoc(l).players = playersDoc(l).players.filter(p => !ids.has(p.id));
+  touch(l.clubsFile, l.playersFile); S.club = null; render();
+}
+function addPlayerDialog() {
+  const pos = prompt(`Pozitsiya (${POSITIONS.join(', ')})`, 'CMF');
+  if (!pos || !POSITIONS.includes(pos.toUpperCase())) return;
+  const target = Number(prompt('Maqsadli OVR (40–95)', '70')) || 70;
+  const p = newPlayer(S.club, pos.toUpperCase(), Math.max(40, Math.min(95, target)));
+  touch(S.league.clubsFile, S.league.playersFile); editPlayer(p.id);
+}
+
+// ----- player editor
+let draft = null;
+function editPlayer(id) {
+  const p = playersDoc(S.league).players.find(x => x.id === id);
+  draft = {orig: p, p: JSON.parse(JSON.stringify(p))};
+  renderPlayer();
+}
+function renderPlayer() {
+  const p = draft.p, o = ovr(p);
+  const inp = (k, type = 'text', v = p[k]) => `<label>${k}<input type="${type}" value="${esc(v ?? '')}" onchange="pSet('${k}',this.value,'${type}')"></label>`;
+  const opt = (k, list, v = p[k], allowEmpty = false) => `<label>${k}<select onchange="pSet('${k}',this.value)">${allowEmpty ? '<option value="">—</option>' : ''}
+    ${list.map(x => `<option ${x === v ? 'selected' : ''}>${x}</option>`).join('')}</select></label>`;
+  const face = p.face ?? {};
+  const faceSel = k => `<label>face.${k}<select onchange="pFace('${k}',this.value)"><option value="">avto</option>
+    ${FACE[k].map((t, i) => `<option value="${i}" ${face[k] === i ? 'selected' : ''}>${i} · ${t}</option>`).join('')}</select></label>`;
+  const clubs = clubsDoc(S.league).clubs;
+  openDialog(`<div class="card"><h2>${esc(p.name)} <span class="badge" style="background:${ovrColor(o)}">${o}</span>
+      <span><button onclick="dlg.close()">Bekor</button> <button class="primary" onclick="savePlayer()">Saqlash</button></span></h2>
+    <div class="grid">
+      ${inp('name')}${inp('shortName')}${inp('id')}${inp('age', 'number')}${inp('number', 'number')}${inp('nationality')}${inp('countryFlag')}
+      ${opt('mainPosition', POSITIONS)}
+      <label>altPositions <input value="${esc((p.altPositions ?? []).join(','))}" onchange="pSet('altPositions',this.value,'list')"></label>
+      ${opt('preferredFoot', ['right', 'left'])}${inp('weakFoot', 'number')}${inp('potential', 'number')}${opt('playingStyle', STYLES, p.playingStyle, true)}
+      ${inp('height', 'number')}<label>traits <input value="${esc((p.traits ?? []).join(', '))}" onchange="pSet('traits',this.value,'list')"></label>
+      <label>contract.contractYears<input type="number" value="${p.contract.contractYears}" onchange="draft.p.contract.contractYears=+this.value"></label>
+      <label>contract.weeklyWage<input type="number" value="${p.contract.weeklyWage}" onchange="draft.p.contract.weeklyWage=+this.value"></label>
+      <label>marketValue <span class="muted">(tavsiya: ${money(valuation(o, p.age, p.potential))})</span><input type="number" value="${p.marketValue}" onchange="pSet('marketValue',this.value,'number')"></label>
+      <label>Klub<select onchange="moveTo(this.value)">${clubs.map(c => `<option value="${esc(c.id)}" ${c.squadIds.includes(draft.orig.id) ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>
+    </div>
+    <h2 style="margin-top:14px">Portret (bo‘sh = avtomatik)</h2>
+    <div class="grid">${faceSel('skin')}${faceSel('hair')}${faceSel('cut')}${faceSel('beardStyle')}</div>
+    <h2 style="margin-top:14px">Atributlar <span><input id="target" type="number" value="${o}" style="width:70px">
+      <button onclick="regen()">Shu OVR uchun qayta yaratish</button> <button onclick="draft.p.marketValue=valuation(ovr(draft.p),draft.p.age,draft.p.potential);renderPlayer()">Qiymatni hisoblash</button></span></h2>
+    ${Object.entries(STAT_GROUPS).map(([g, keys]) => `<div class="muted" style="margin:8px 0 4px"><b>${g}</b></div><div class="stats">
+      ${keys.map(k => `<div class="stat"><span>${k}</span><input type="range" min="40" max="99" value="${p.stats[k]}" oninput="pStat('${k}',this.value)">
+        <b id="sv_${k}">${p.stats[k]}</b></div>`).join('')}</div>`).join('')}
+    <div class="row-actions"><button class="danger" onclick="deletePlayer()">Futbolchini o‘chirish</button>
+      <span class="muted">Pozitsiyalar bo‘yicha OVR: ${POSITIONS.map(x => `${x} ${ovrAt(p, x)}`).join(' · ')}</span></div></div>`);
+}
+function pSet(k, v, type) {
+  if (type === 'number') v = v === '' ? undefined : Number(v);
+  if (type === 'list') v = v.split(',').map(s => s.trim()).filter(Boolean);
+  if (v === '' || v === undefined) delete draft.p[k]; else draft.p[k] = v;
+  if (k === 'mainPosition') renderPlayer();
+}
+function pStat(k, v) { draft.p.stats[k] = Number(v); $('sv_' + k).textContent = v; }
+function pFace(k, v) {
+  draft.p.face ??= {};
+  if (v === '') delete draft.p.face[k]; else draft.p.face[k] = Number(v);
+  if (!Object.keys(draft.p.face).length) delete draft.p.face;
+}
+function regen() { draft.p.stats = generateStats(draft.p.mainPosition, Number($('target').value) || 70); renderPlayer(); }
+let pendingMove = null;
+function moveTo(clubId) { pendingMove = clubId; }
+function savePlayer() {
+  const l = S.league, list = playersDoc(l).players, i = list.indexOf(draft.orig);
+  const oldId = draft.orig.id, p = draft.p;
+  if (p.id !== oldId && list.some(x => x.id === p.id)) { alert('Bu id band'); return; }
+  list[i] = p;
+  for (const c of clubsDoc(l).clubs) {
+    for (const key of ['squadIds', 'startingLineupIds', 'benchIds']) c[key] = c[key].map(x => x === oldId ? p.id : x);
+    for (const key of ['captainId', 'cornerTakerId', 'freeKickTakerId', 'penaltyTakerId']) if (c[key] === oldId) c[key] = p.id;
+  }
+  if (pendingMove) {
+    for (const c of clubsDoc(l).clubs) for (const key of ['squadIds', 'startingLineupIds', 'benchIds']) c[key] = c[key].filter(x => x !== p.id);
+    clubsDoc(l).clubs.find(c => c.id === pendingMove).squadIds.push(p.id);
+    pendingMove = null;
+  }
+  touch(l.playersFile, l.clubsFile); dlg.close(); render();
+}
+function deletePlayer() {
+  if (!confirm(`${draft.orig.name} o‘chirilsinmi?`)) return;
+  const l = S.league, id = draft.orig.id;
+  playersDoc(l).players = playersDoc(l).players.filter(x => x !== draft.orig);
+  for (const c of clubsDoc(l).clubs) for (const key of ['squadIds', 'startingLineupIds', 'benchIds']) c[key] = c[key].filter(x => x !== id);
+  touch(l.playersFile, l.clubsFile); dlg.close(); render();
+}
+
+// ----- CSV (spreadsheet round trip)
+const CSV_COLS = ['club', 'id', 'name', 'shortName', 'mainPosition', 'altPositions', 'age', 'nationality', 'countryFlag', 'number',
+  'preferredFoot', 'weakFoot', 'potential', 'marketValue', 'weeklyWage', 'contractYears', 'playingStyle', 'height', ...KEYS];
+function csvCell(v) { v = String(v ?? ''); return /[",;\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v; }
+function exportCsv() {
+  const l = S.league, pm = playerMap(l), lines = [CSV_COLS.join(',')];
+  for (const c of clubsDoc(l).clubs) for (const id of c.squadIds) {
+    const p = pm[id]; if (!p) continue;
+    const row = {...p, ...p.stats, club: c.id, altPositions: (p.altPositions ?? []).join('|'),
+      weeklyWage: p.contract.weeklyWage, contractYears: p.contract.contractYears};
+    lines.push(CSV_COLS.map(k => csvCell(row[k])).join(','));
+  }
+  download(`${l.id}_players.csv`, '﻿' + lines.join('\n'));
+}
+function parseCsv(text) {
+  const rows = [], row = [], push = () => { rows.push(row.splice(0)); };
+  let cur = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (q) { if (ch === '"' && text[i + 1] === '"') { cur += '"'; i++; } else if (ch === '"') q = false; else cur += ch; }
+    else if (ch === '"') q = true;
+    else if (ch === ',' || ch === ';') { row.push(cur); cur = ''; }
+    else if (ch === '\n') { row.push(cur.replace(/\r$/, '')); cur = ''; push(); }
+    else cur += ch;
+  }
+  if (cur || row.length) { row.push(cur); push(); }
+  return rows.filter(r => r.some(x => x !== ''));
+}
+async function importCsv(file) {
+  if (!file) return;
+  const [head, ...rows] = parseCsv((await file.text()).replace(/^﻿/, ''));
+  const l = S.league, pm = playerMap(l), clubs = Object.fromEntries(clubsDoc(l).clubs.map(c => [c.id, c]));
+  let added = 0, updated = 0;
+  for (const r of rows) {
+    const o = Object.fromEntries(head.map((h, i) => [h.trim(), r[i]]));
+    if (!o.id || !clubs[o.club]) continue;
+    const num = k => o[k] === undefined || o[k] === '' ? undefined : Number(o[k]);
+    let p = pm[o.id];
+    if (!p) {
+      p = {id: o.id, stats: {}, contract: {contractYears: 2, weeklyWage: 10000, releaseClause: 0}, altPositions: []};
+      playersDoc(l).players.push(p); pm[o.id] = p; added++;
+    } else updated++;
+    for (const k of ['name', 'shortName', 'mainPosition', 'nationality', 'countryFlag', 'preferredFoot', 'playingStyle']) if (o[k]) p[k] = o[k];
+    for (const k of ['age', 'number', 'weakFoot', 'potential', 'marketValue', 'height']) if (num(k) !== undefined) p[k] = num(k);
+    if (o.altPositions !== undefined) p.altPositions = o.altPositions ? o.altPositions.split('|') : [];
+    if (num('weeklyWage') !== undefined) p.contract.weeklyWage = num('weeklyWage');
+    if (num('contractYears') !== undefined) p.contract.contractYears = num('contractYears');
+    for (const k of KEYS) if (num(k) !== undefined) p.stats[k] = num(k);
+    if (KEYS.some(k => p.stats[k] === undefined)) p.stats = {...generateStats(p.mainPosition, 65), ...p.stats};
+    p.marketValue ??= valuation(ovr(p), p.age ?? 25, p.potential);
+    for (const c of Object.values(clubs)) if (c.id !== o.club) for (const key of ['squadIds', 'startingLineupIds', 'benchIds']) c[key] = c[key].filter(x => x !== p.id);
+    if (!clubs[o.club].squadIds.includes(p.id)) clubs[o.club].squadIds.push(p.id);
+  }
+  touch(l.playersFile, l.clubsFile);
+  alert(`${added} ta qo‘shildi, ${updated} ta yangilandi. Tarkiblar uchun «Avto tarkib» tugmasini bosing va tekshiring.`);
+  render();
+}
+
+// --------------------------------------------------------------- wiring
+const dlg = $('dlg');
+function openDialog(html) { dlg.innerHTML = html; if (!dlg.open) dlg.showModal(); }
+$('openDir').onclick = () => openDirectory().catch(e => e.name !== 'AbortError' && alert(e.message));
+$('openFiles').onchange = e => openFiles(e.target.files);
+if (location.protocol.startsWith('http')) {
+  $('openProject').hidden = false;
+  $('openProject').onclick = () => openProject().catch(e => alert('Yuklab bo‘lmadi: ' + e.message));
+}
+$('validate').onclick = showValidation;
+$('save').onclick = () => saveAll().catch(e => alert(e.message));
+$('download').onclick = downloadAll;
+$('addLeague').onclick = addLeague;
+window.addEventListener('beforeunload', e => { if (S.dirty.size) { e.preventDefault(); e.returnValue = ''; } });
+</script>
+</body>
+</html>

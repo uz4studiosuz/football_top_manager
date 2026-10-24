@@ -1,10 +1,18 @@
-import 'player_attributes_view.dart';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../models/player.dart';
 import '../../models/club.dart';
 import '../../services/game_state.dart';
 import '../../ui/face_avatar.dart';
+import '../../ui/widgets.dart';
+import 'player_attributes_view.dart';
+import '../../models/league.dart';
+import '../../services/season_calendar.dart';
+import '../match_report_screen.dart';
+import '../../l10n/l10n.dart';
 
+/// SofaScore-like player page: header card, season numbers, rating form,
+/// attributes, positional map and contract actions.
 class PlayerDetailView extends StatefulWidget {
   final Player player;
   final Club? club;
@@ -35,303 +43,507 @@ class PlayerDetailView extends StatefulWidget {
 
 class _PlayerDetailViewState extends State<PlayerDetailView> {
   Player get p => widget.player;
+  Club? get club => widget.club ?? (GameState().isInitialized ? GameState().clubOfPlayer(p) : null);
   bool get owned =>
-      GameState().isInitialized &&
-      GameState().userClub.squad.any((q) => identical(p, q));
+      GameState().isInitialized && GameState().userClub.squad.any((q) => identical(p, q));
   void message(String text) =>
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
-  Widget metric(String label, String value) => Expanded(
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w700,
-            fontFeatures: [FontFeature.tabularFigures()],
+
+  @override
+  Widget build(BuildContext context) {
+    final c = club;
+    final shirt = c?.primaryColor ?? AppColors.primary;
+    return DefaultTabController(
+      length: 4,
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(tr('Futbolchi profili')),
+          actions: [
+            if (owned)
+              IconButton(
+                tooltip: tr('Portretni tahrirlash'),
+                icon: const Icon(Icons.face_retouching_natural_outlined),
+                onPressed: () async {
+                  final face = await editFace(context, p.face, shirt: shirt, nationality: p.nationality, age: p.age);
+                  if (face != null && mounted) {
+                    setState(() => p.face = face);
+                    GameState().touch();
+                  }
+                },
+              ),
+          ],
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(170),
+            child: Column(
+              children: [
+                _header(c, shirt),
+                TabBar(
+                  tabs: [
+                    Tab(text: tr('Umumiy')),
+                    Tab(text: tr('Atributlar')),
+                    Tab(text: tr('Pozitsiyalar')),
+                    Tab(text: tr('O‘yinlar')),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 12, color: Color(0xFF637184)),
+        body: TabBarView(
+          children: [
+            _overview(c),
+            PlayerAttributesView(player: p),
+            PositionRatingsView(player: p),
+            _matches(),
+          ],
         ),
-      ],
-    ),
-  );
-  Widget row(String label, String value) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 12),
+      ),
+    );
+  }
+
+  Widget _header(Club? c, Color shirt) => Padding(
+    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
     child: Row(
       children: [
-        Expanded(
-          child: Text(label, style: const TextStyle(color: Color(0xFF637184))),
+        Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.08), blurRadius: 12, offset: const Offset(0, 4))],
+          ),
+          child: FaceAvatar(config: p.face, size: 96, shirt: shirt, trim: c?.secondaryColor),
         ),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
-      ],
-    ),
-  );
-  Widget panel(List<Widget> children) => Container(
-    padding: const EdgeInsets.all(20),
-    color: Colors.white,
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: children,
-    ),
-  );
-  @override
-  Widget build(BuildContext context) => DefaultTabController(
-    length: 4,
-    child: Scaffold(
-      appBar: AppBar(
-        title: const Text('Futbolchi profili'),
-        actions: [
-          if (owned)
-            IconButton(
-              tooltip: 'Portretni tahrirlash',
-              icon: const Icon(Icons.face_outlined),
-              onPressed: () async {
-                final face = await editFace(context, p.face);
-                if (face != null && mounted) setState(() => p.face = face);
-              },
-            ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Container(
-            color: Colors.white,
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                FaceAvatar(
-                  config: p.face,
-                  size: 86,
-                  shirt: widget.club?.primaryColor ?? const Color(0xFF1769E0),
-                ),
-                const SizedBox(width: 18),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        p.name,
-                        style: const TextStyle(
-                          fontSize: 23,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        '${p.mainPosition.code}  ·  #${p.number}  ·  ${p.age} yosh',
-                        style: const TextStyle(color: Color(0xFF637184)),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(widget.club?.name ?? p.nationality),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF1769E0),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Column(
-                    children: [
-                      Text(
-                        '${p.ovr}',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 26,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const Text(
-                        'OVR',
-                        style: TextStyle(color: Colors.white, fontSize: 10),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Material(
-            color: Colors.white,
-            child: TabBar(
-              isScrollable: true,
-              labelPadding: EdgeInsets.symmetric(horizontal: 18),
-              tabAlignment: TabAlignment.start,
-              tabs: [
-                Tab(text: 'Umumiy'),
-                Tab(text: 'Atributlar'),
-                Tab(text: 'Pozitsiyalar'),
-                Tab(text: 'Shartnoma'),
-              ],
-            ),
-          ),
-          Expanded(
-            child: TabBarView(
-              children: [
-                ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    panel([
-                      const Text(
-                        'Mavsum statistikasi',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        children: [
-                          metric('Uchrashuv', '${p.seasonMatches}'),
-                          metric('Gol', '${p.seasonGoals}'),
-                          metric('Assist', '${p.seasonAssists}'),
-                          metric(
-                            'Gol / o‘yin',
-                            p.goalsPerMatch.toStringAsFixed(2),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
-                      const Divider(),
-                      row('Quruq o‘yinlar', '${p.seasonCleanSheets}'),
-                      row(
-                        'Sariq / qizil kartochka',
-                        '${p.seasonYellowCards} / ${p.seasonRedCards}',
-                      ),
-                    ]),
-                    const SizedBox(height: 12),
-                    panel([
-                      const Text(
-                        'Holat va ma’lumot',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      row('Jismoniy tayyorlik', '${p.currentStamina}%'),
-                      row('Ruhiyat', '${p.morale}%'),
-                      row('Millati', p.nationality),
-                      row(
-                        'Yetakchi oyoq',
-                        p.preferredFoot == PreferredFoot.right
-                            ? 'O‘ng'
-                            : 'Chap',
-                      ),
-                      row('Zaif oyoq', '${p.weakFoot} / 5'),
-                      row('Bozor bahosi', p.formattedMarketValue),
-                    ]),
-                  ],
-                ),
-                PlayerAttributesView(player: p),
-                PositionRatingsView(player: p),
-                ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    panel([
-                      const Text(
-                        'Amaldagi shartnoma',
-                        style: TextStyle(
-                          fontSize: 17,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      row('Qolgan muddat', '${p.contract.contractYears} yil'),
-                      row('Haftalik maosh', p.formattedWeeklyWage),
-                      row(
-                        'Yillik maosh',
-                        '€${(p.contract.weeklyWage * 52 / 1000000).toStringAsFixed(2)}M',
-                      ),
-                      row(
-                        'Tovon puli',
-                        p.contract.releaseClause > 0
-                            ? '€${(p.contract.releaseClause / 1000000).toStringAsFixed(1)}M'
-                            : 'Belgilanmagan',
-                      ),
-                      if (owned) ...[
-                        const SizedBox(height: 12),
-                        FilledButton.icon(
-                          onPressed: _renew,
-                          icon: const Icon(Icons.edit_document),
-                          label: const Text('Yangi shartnoma taklif qilish'),
-                        ),
-                        const SizedBox(height: 8),
-                        OutlinedButton.icon(
-                          onPressed: () {
-                            final ok = GameState().sellPlayer(p);
-                            if (ok) {
-                              Navigator.pop(context);
-                            } else {
-                              message(
-                                GameState().lastTransferError ??
-                                    'Transfer amalga oshmadi',
-                              );
-                            }
-                          },
-                          icon: const Icon(Icons.swap_horiz),
-                          label: const Text('Xaridor topish va sotish'),
-                        ),
-                      ],
-                    ]),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
-  void _renew() {
-    var years = 3;
-    final wage = p.calculatedRenewalWageDemand;
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, update) => AlertDialog(
-          title: const Text('Shartnoma taklifi'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Talab: €${(wage / 1000).toStringAsFixed(0)}K / hafta'),
-              const SizedBox(height: 16),
-              const Text('Yangi umumiy muddat'),
-              Wrap(
-                spacing: 6,
+              Text(p.name, maxLines: 2, overflow: TextOverflow.ellipsis, style: AppText.h2),
+              const SizedBox(height: 6),
+              Row(
                 children: [
-                  for (final y in [1, 2, 3, 4, 5])
-                    ChoiceChip(
-                      label: Text('$y yil'),
-                      selected: y == years,
-                      onSelected: (_) => update(() => years = y),
+                  if (c != null) ...[
+                    ClubCrestWidget(config: c.crestConfig, size: 18),
+                    const SizedBox(width: 6),
+                    Flexible(child: Text(c.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.small)),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 6),
+              Row(
+                children: [
+                  PositionChip(p.mainPosition.code, fontSize: 11),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      '${p.countryFlag} #${p.number} · ${p.playingStyle.title}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppText.caption,
                     ),
+                  ),
                 ],
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Bekor qilish'),
+        ),
+        Column(
+          children: [
+            ValueBadge(p.ovr, size: 46),
+            const SizedBox(height: 6),
+            RatingBadge(p.averageRating, size: 12),
+          ],
+        ),
+      ],
+    ),
+  );
+
+  Widget _overview(Club? c) {
+    final game = GameState();
+    return ListView(
+      padding: const EdgeInsets.all(12),
+      children: [
+        if (!p.isAvailable)
+          AppCard(
+            color: const Color(0xFFFFF4F2),
+            margin: const EdgeInsets.only(bottom: 12),
+            child: Row(
+              children: [
+                const Icon(Icons.local_hospital_outlined, color: AppColors.live),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    p.isInjured
+                        ? trf('{0} · {1} tur o‘tkazib yuboradi', [p.injury ?? 'Jarohat', p.injuryRounds])
+                        : trf('Diskvalifikatsiya · {0} tur', [p.suspensionRounds]),
+                    style: AppText.bodyStrong,
+                  ),
+                ),
+              ],
             ),
+          ),
+        AppCard(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SectionHeader(tr('O‘yin uslubi'), icon: Icons.style_outlined),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.primarySoft,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      p.playingStyle.title,
+                      style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.primary),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(p.playingStyle.uzbek, style: AppText.bodyStrong)),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(p.playingStyle.description, style: AppText.small.copyWith(height: 1.4)),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  const Icon(Icons.shield_outlined, size: 16, color: AppColors.ink3),
+                  const SizedBox(width: 8),
+                  Text(tr('Himoyada:'), style: AppText.small),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      '${p.defendingStyle.title} (${p.defendingStyle.uzbek})',
+                      style: AppText.bodyStrong.copyWith(fontSize: 13),
+                    ),
+                  ),
+                ],
+              ),
+              if (p.aiStyles.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    for (final a in p.aiStyles)
+                      Chip(
+                        visualDensity: VisualDensity.compact,
+                        avatar: const Icon(Icons.auto_awesome_rounded, size: 14, color: AppColors.gold),
+                        label: Text('${a.title} · ${a.uzbek}', style: const TextStyle(fontSize: 11.5)),
+                      ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SectionHeader(tr('Ma’lumot'), icon: Icons.badge_outlined),
+              Row(
+                children: [
+                  Expanded(child: StatTile('${p.age}', 'Yosh')),
+                  Expanded(child: StatTile(p.preferredFoot == PreferredFoot.left ? 'Chap' : 'O‘ng', 'Oyoq')),
+                  Expanded(child: StatTile('${p.weakFoot}/5', 'Kuchsiz oyoq')),
+                  Expanded(child: StatTile('${p.potential}', 'Salohiyat', color: AppColors.attribute(p.potential))),
+                ],
+              ),
+              const SizedBox(height: 10),
+              MeterRow(
+                label: tr('Jismoniy tayyorgarlik'),
+                value: p.currentStamina / 100,
+                trailing: '${p.currentStamina}%',
+                color: p.currentStamina > 75 ? AppColors.win : p.currentStamina > 55 ? AppColors.warning : AppColors.loss,
+              ),
+              MeterRow(label: tr('Kayfiyat'), value: p.morale / 100, trailing: '${p.morale}%'),
+              if (p.altPositions.isNotEmpty)
+                InfoRow(tr('Muqobil pozitsiyalar'), p.altPositions.map((e) => e.code).join(', ')),
+              InfoRow(tr('Ko‘rsatma'), p.instruction.label),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SectionHeader(trf('Mavsum {0}', [game.isInitialized ? game.seasonLabel : '']), icon: Icons.query_stats_rounded),
+              Row(
+                children: [
+                  Expanded(child: StatTile('${p.seasonMatches}', 'O‘yin')),
+                  Expanded(child: StatTile('${p.seasonGoals}', 'Gol')),
+                  Expanded(child: StatTile('${p.seasonAssists}', 'Assist')),
+                  Expanded(child: StatTile('${p.seasonMinutes}′', 'Daqiqa')),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: p.mainPosition.isGoalkeeper
+                        ? StatTile('${p.seasonCleanSheets}', 'Quruq o‘yin')
+                        : StatTile(p.goalsPerMatch.toStringAsFixed(2), 'Gol/o‘yin'),
+                  ),
+                  Expanded(child: StatTile('${p.seasonMotm}', 'O‘yin qahramoni')),
+                  Expanded(child: StatTile('${p.seasonYellowCards}', 'Sariq')),
+                  Expanded(child: StatTile('${p.seasonRedCards}', 'Qizil')),
+                ],
+              ),
+              const Divider(height: 26),
+              Row(
+                children: [
+                  Expanded(child: Text(tr('Oxirgi reytinglar'), style: AppText.small)),
+                  if (p.recentRatings.isEmpty) const Text('—', style: AppText.caption),
+                  for (final r in p.recentRatings)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 4),
+                      child: RatingBadge(r, size: 11),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(child: Text(tr('O‘rtacha reyting'), style: AppText.small)),
+                  RatingBadge(p.averageRating, size: 14),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SectionHeader(tr('Shartnoma va qiymat'), icon: Icons.description_outlined),
+              InfoRow(tr('Bozor bahosi'), p.formattedMarketValue),
+              InfoRow(tr('Haftalik maosh'), formatMoney(p.contract.weeklyWage)),
+              InfoRow(
+                tr('Qolgan muddat'),
+                '${p.contract.contractYears} yil',
+                valueColor: p.contract.contractYears <= 1 ? AppColors.live : null,
+              ),
+              if (p.contract.releaseClause > 0) InfoRow(tr('Tovon puli'), formatMoney(p.contract.releaseClause)),
+              if (owned) ...[
+                const SizedBox(height: 12),
+                FilledButton.icon(
+                  onPressed: _renew,
+                  icon: const Icon(Icons.edit_document),
+                  label: Text(tr('Yangi shartnoma taklif qilish')),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: () {
+                    final ok = game.sellPlayer(p);
+                    message(ok ? trf('{0} sotildi', [p.name]) : game.lastTransferError ?? tr('Sotilmadi'));
+                    if (ok) Navigator.pop(context);
+                  },
+                  icon: const Icon(Icons.sell_outlined),
+                  label: Text(tr('Xaridor topish va sotish')),
+                ),
+              ],
+            ],
+          ),
+        ),
+        if (p.history.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SectionHeader(tr('Karyera'), icon: Icons.history_rounded),
+                for (final h in p.history)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 5),
+                    child: Text(h, style: AppText.small),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  /// Every fixture this season in which the player took the field.
+  Widget _matches() {
+    final game = GameState();
+    if (!game.isInitialized) return const SizedBox();
+    final games = game.fixtures
+        .where((f) => f.isPlayed && (f.playerStats[p.id]?.minutes ?? 0) > 0)
+        .toList()
+        .reversed
+        .toList();
+    if (games.isEmpty) {
+      return EmptyState(icon: Icons.event_busy_outlined, text: tr('Bu mavsumda hali maydonga tushmagan'));
+    }
+    var goals = 0, assists = 0, minutes = 0;
+    for (final f in games) {
+      final l = f.playerStats[p.id]!;
+      goals += l.goals;
+      assists += l.assists;
+      minutes += l.minutes.round();
+    }
+    return ListView(
+      padding: const EdgeInsets.all(12),
+      children: [
+        AppCard(
+          child: Row(
+            children: [
+              Expanded(child: StatTile('${games.length}', 'O‘yin')),
+              Expanded(child: StatTile('$goals', 'Gol')),
+              Expanded(child: StatTile('$assists', 'Assist')),
+              Expanded(child: StatTile('$minutes′', 'Daqiqa')),
+              RatingBadge(p.averageRating, size: 14),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        AppCard(
+          padding: const EdgeInsets.symmetric(vertical: 6),
+          child: Column(children: [for (final f in games) _matchRow(game, f)]),
+        ),
+      ],
+    );
+  }
+
+  Widget _matchRow(GameState game, Fixture f) {
+    final l = f.playerStats[p.id]!;
+    // Line-ups record the side he played for, even after a later transfer.
+    final inLineups = f.homeLineup.isNotEmpty || f.awayLineup.isNotEmpty;
+    final playedHome = inLineups
+        ? f.homeLineup.contains(p.id) || f.homeBench.contains(p.id)
+        : game.getClubById(f.homeClubId)!.playerById(p.id) != null;
+    final mine = playedHome ? f.homeClubId : f.awayClubId;
+    final home = mine == f.homeClubId;
+    final opp = game.getClubById(home ? f.awayClubId : f.homeClubId)!;
+    return InkWell(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute<void>(builder: (_) => MatchReportScreen(fixture: f)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 44,
+              child: Column(
+                children: [
+                  Text(f.date == null ? '${f.round}-tur' : SeasonCalendar.short(f.date!), style: AppText.caption),
+                  Text(home ? tr('Uyda') : tr('Safarda'), style: AppText.caption.copyWith(fontSize: 10)),
+                ],
+              ),
+            ),
+            const SizedBox(width: 6),
+            ClubCrestWidget(config: opp.crestConfig, size: 24),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(opp.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.bodyStrong.copyWith(fontSize: 13)),
+                  Row(
+                    children: [
+                      Text('${min(90, l.minutes.round())}′', style: AppText.caption),
+                      if (l.subOnMinute != null || l.subOffMinute != null) ...[
+                        const SizedBox(width: 6),
+                        _subMark(l),
+                      ],
+                      for (var i = 0; i < l.goals; i++)
+                        const Padding(
+                          padding: EdgeInsets.only(left: 4),
+                          child: Icon(Icons.sports_soccer, size: 13, color: AppColors.ink),
+                        ),
+                      if (l.assists > 0)
+                        Padding(
+                          padding: const EdgeInsets.only(left: 6),
+                          child: Text('${l.assists} A', style: AppText.caption.copyWith(fontWeight: FontWeight.w700)),
+                        ),
+                      if (l.yellow > 0)
+                        Container(
+                          width: 8,
+                          height: 11,
+                          margin: const EdgeInsets.only(left: 6),
+                          color: const Color(0xFFF5C518),
+                        ),
+                      if (l.red > 0)
+                        Container(width: 8, height: 11, margin: const EdgeInsets.only(left: 4), color: AppColors.live),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Text('${f.homeScore}–${f.awayScore}', style: AppText.number.copyWith(fontSize: 13)),
+            const SizedBox(width: 6),
+            FormChip(f.resultFor(mine), size: 20),
+            const SizedBox(width: 6),
+            RatingBadge(f.ratings[p.id], size: 12),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _subMark(PlayerMatchStats l) => Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      if (l.subOnMinute != null) const Icon(Icons.arrow_upward_rounded, size: 12, color: AppColors.win),
+      if (l.subOffMinute != null) const Icon(Icons.arrow_downward_rounded, size: 12, color: AppColors.live),
+    ],
+  );
+
+  void _renew() {
+    final game = GameState();
+    final wage = p.calculatedRenewalWageDemand;
+    var years = 3;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, update) => AlertDialog(
+          title: Text(tr('Shartnoma taklifi')),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(trf('Talab: €{0}K / hafta', [(wage / 1000).toStringAsFixed(0)]), style: AppText.bodyStrong),
+              const SizedBox(height: 12),
+              Text(tr('Yangi umumiy muddat'), style: AppText.small),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                children: [
+                  for (final y in [1, 2, 3, 4, 5])
+                    ChoiceChip(
+                      label: Text(trf('{0} yil', [y])),
+                      selected: years == y,
+                      onSelected: (_) => update(() => years = y),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Text(
+                trf('Bo‘sh maosh limiti: {0}/hafta', [formatMoney(game.userClub.remainingWageBudget + p.contract.weeklyWage)]),
+                style: AppText.caption,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Bekor qilish'))),
             FilledButton(
               onPressed: () {
-                if (GameState().renewContract(p, years, wage)) {
-                  Navigator.pop(ctx);
-                  setState(() {});
-                  widget.onContractRenewed?.call();
-                  message('Shartnoma imzolandi');
-                } else {
-                  message('Maosh limiti yetarli emas');
-                }
+                final ok = game.renewContract(p, years, wage);
+                Navigator.pop(ctx);
+                setState(() {});
+                widget.onContractRenewed?.call();
+                message(ok ? tr('Shartnoma imzolandi') : tr('Maosh limiti yetarli emas'));
               },
-              child: const Text('Imzolash'),
+              child: Text(tr('Imzolash')),
             ),
           ],
         ),

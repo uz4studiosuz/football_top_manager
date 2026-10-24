@@ -2,11 +2,14 @@ import 'package:flutter/material.dart';
 import '../data/initial_database.dart';
 import '../models/club.dart';
 import '../services/game_state.dart';
+import '../ui/team_widgets.dart';
+import '../ui/widgets.dart';
 import 'custom_club_creator_screen.dart';
 import 'main_navigation_screen.dart';
 import '../models/manager_profile.dart';
+import '../l10n/l10n.dart';
 
-/// O'yinga kirganda klub tanlash yoki yangi jamoa yaratish ekrani
+/// Choose a club from any league (or create a new one).
 class ClubSelectionScreen extends StatefulWidget {
   final ManagerProfile? managerProfile;
   const ClubSelectionScreen({super.key, this.managerProfile});
@@ -15,521 +18,202 @@ class ClubSelectionScreen extends StatefulWidget {
 }
 
 class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
-  late List<Club> _clubs;
-  int _selectedClubIndex = 0;
-  @override
-  void initState() {
-    super.initState();
-    _clubs = InitialDatabase.getSuperLeagueClubs();
-  }
+  String _league = 'super';
+  late List<Club> _clubs = InitialDatabase.getClubs(_league);
+  int _selected = 0;
 
-  Club get _currentClub => _clubs[_selectedClubIndex];
-  void _chooseClubAndStart(Club club) {
-    GameState().startCareerWithExistingClub(
-      club,
-      managerProfile: widget.managerProfile,
-    );
+  void _switchLeague(String id) => setState(() {
+    _league = id;
+    _clubs = InitialDatabase.getClubs(id)..sort((a, b) => b.reputation.compareTo(a.reputation));
+    // Big-league seed files list squads only; show each club's real best XI.
+    if (id != 'super') {
+      for (final c in _clubs) {
+        GameState().autoPickLineup(c);
+      }
+    }
+    _selected = 0;
+  });
+  Club get _club => _clubs[_selected];
+
+  void _start(Club club) {
+    GameState().startCareerWithExistingClub(club, managerProfile: widget.managerProfile, league: _league);
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
       (route) => false,
     );
   }
 
+  String _expectation(Club c) {
+    final ranked = List<Club>.of(_clubs)..sort((a, b) => b.squadDepthRating.compareTo(a.squadDepthRating));
+    final rank = ranked.indexOf(c) + 1;
+    final info = InitialDatabase.info(_league);
+    if (info.tier > 1) {
+      return switch (rank) {
+        <= 2 => tr('Avtomatik ko‘tarilish'),
+        <= 6 => trf('Pley-off (top-{0})', [info.playoffTo]),
+        <= 12 => tr('Top-12'),
+        _ => info.relegate > 0 ? tr('Ligada qolish') : tr('Top-16'),
+      };
+    }
+    if (_clubs.length > 10) {
+      return switch (rank) {
+        1 => tr('Chempionlik'),
+        <= 4 => tr('Top-4 (Chempionlar ligasi)'),
+        <= 7 => tr('Top-6 (Yevrokubok)'),
+        <= 12 => tr('Top-10'),
+        _ => tr('Ligada qolish'),
+      };
+    }
+    return switch (rank) {
+      1 => tr('Chempionlik'),
+      2 || 3 => tr('Top-3'),
+      4 || 5 => tr('Top-4'),
+      _ => tr('Top-6'),
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
-    final club = _currentClub;
+    final club = _club;
+    final stars = List.of(club.squad)..sort((a, b) => b.ovr.compareTo(a.ovr));
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F5F8),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Sarlavha (Header)
-            _buildAppHeader(),
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 18,
-                  vertical: 10,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // O'Z JAMOANGNI YARATISH BANNERI
-                    _buildCreateCustomClubBanner(),
-                    const SizedBox(height: 24),
-                    // YOKI MAVJUD TOP KLUBNI TANLANG
-                    const Row(
-                      children: [
-                        Expanded(child: Divider(color: Color(0xFFE4E9F0))),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 12),
-                          child: Text(
-                            'YOKI SUPER LEAGUE KLUBLARIDAN TANLANG',
-                            style: TextStyle(
-                              color: Color(0xFF778496),
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ),
-                        Expanded(child: Divider(color: Color(0xFFE4E9F0))),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    // 8 ta Klub Navigatsiya Selectori
-                    _buildClubHorizontalSelector(),
-                    const SizedBox(height: 16),
-                    // Tanlangan Klub Katta Kartasi
-                    _buildClubHeroCard(club),
-                    const SizedBox(height: 20),
-                    // Boshqaruvni qabul qilish tugmasi
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: ElevatedButton.icon(
-                        onPressed: () => _chooseClubAndStart(club),
-                        icon: const Icon(
-                          Icons.sports_soccer_rounded,
-                          color: Colors.white,
-                        ),
-                        label: Text(
-                          '${club.name.toUpperCase()}NI BOSHQARISH',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w900,
-                            fontSize: 14,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF1769E0),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          elevation: 0,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildAppHeader() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFFFF),
-        border: Border(
-          bottom: BorderSide(color: Color(0xFF192B42).withValues(alpha: 0.08)),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      appBar: AppBar(title: Text(tr('Klubni tanlang'))),
+      body: ListView(
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1769E0),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: const Text(
-                  'FTM 27',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 13,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 10),
-              const Text(
-                'Football Top Manager',
-                style: TextStyle(
-                  color: Color(0xFF192B42),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
+          PillTabs(
+            labels: [
+              for (final l in InitialDatabase.leagues)
+                '${l.name} · ${InitialDatabase.getClubs(l.id).length} klub',
             ],
+            index: InitialDatabase.leagues.indexWhere((l) => l.id == _league),
+            onChanged: (i) => _switchLeague(InitialDatabase.leagues[i].id),
           ),
-          const Icon(Icons.sports_rounded, color: Color(0xFF1769E0), size: 22),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCreateCustomClubBanner() {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: const Color(0xFF1769E0).withValues(alpha: 0.4),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF1769E0).withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFF1769E0)),
-                ),
-                child: const Icon(
-                  Icons.add_circle_outline_rounded,
-                  color: Color(0xFF1769E0),
-                  size: 26,
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'O\'zingizning Yangi Klubingiz',
-                      style: TextStyle(
-                        color: Color(0xFF192B42),
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(height: 2),
-                    Text(
-                      'Nomi, ranglari, original logosini tanlang va o\'z jamoangizni yarating!',
-                      style: TextStyle(color: Color(0xFF526174), fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(
-                    builder: (_) => CustomClubCreatorScreen(
-                      managerProfile: widget.managerProfile,
-                    ),
-                  ),
-                );
-              },
-              icon: const Icon(
-                Icons.draw_rounded,
-                color: Color(0xFF1769E0),
-                size: 18,
-              ),
-              label: const Text(
-                'YANGI JAMOA YARATISH',
-                style: TextStyle(
-                  color: Color(0xFF1769E0),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                ),
-              ),
-              style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0xFF1769E0), width: 1.5),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildClubHorizontalSelector() {
-    return SizedBox(
-      height: 64,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        itemCount: _clubs.length,
-        itemBuilder: (context, index) {
-          final c = _clubs[index];
-          final isSelected = index == _selectedClubIndex;
-          return GestureDetector(
-            onTap: () {
-              setState(() => _selectedClubIndex = index);
-            },
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              margin: const EdgeInsets.only(right: 10),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? const Color(0xFF1769E0).withValues(alpha: 0.18)
-                    : const Color(0xFFFFFFFF),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color: isSelected
-                      ? const Color(0xFF1769E0)
-                      : Color(0xFFE4E9F0),
-                  width: isSelected ? 2 : 1,
-                ),
-              ),
-              child: Row(
-                children: [
-                  ClubCrestWidget(config: c.crestConfig, size: 28),
-                  const SizedBox(width: 8),
-                  Text(
-                    c.shortName,
-                    style: TextStyle(
-                      color: isSelected
-                          ? const Color(0xFF1769E0)
-                          : Color(0xFF526174),
-                      fontWeight: isSelected
-                          ? FontWeight.w900
-                          : FontWeight.w600,
-                      fontSize: 13,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildClubHeroCard(Club club) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFFFFF),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: Color(0xFF192B42).withValues(alpha: 0.08)),
-      ),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              ClubCrestWidget(config: club.crestConfig, size: 68),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      club.name,
-                      style: const TextStyle(
-                        color: Color(0xFF192B42),
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
+            height: 112,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: _clubs.length + 1,
+              separatorBuilder: (_, _) => const SizedBox(width: 8),
+              itemBuilder: (context, i) {
+                if (i == _clubs.length) {
+                  return _clubChip(
+                    selected: false,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute<void>(
+                        builder: (_) => CustomClubCreatorScreen(managerProfile: widget.managerProfile, league: _league),
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${club.stadiumName} • ${(club.stadiumCapacity / 1000).toStringAsFixed(0)}K muxlis',
-                      style: const TextStyle(
-                        color: Color(0xFF637184),
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Team OVR Badge
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF59E0B),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  children: [
-                    const Text(
-                      'OVR',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      '${club.teamOVR}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          // Ratinglar va Byudjet paneli
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF3F5F8),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: Color(0xFF192B42).withValues(alpha: 0.05),
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _buildMetricCol(
-                  'HUJUM',
-                  '${club.attackRating}',
-                  const Color(0xFFEF4444),
-                ),
-                _buildMetricCol(
-                  'YARIM H.',
-                  '${club.midfieldRating}',
-                  const Color(0xFFF59E0B),
-                ),
-                _buildMetricCol(
-                  'HIMOYA',
-                  '${club.defenseRating}',
-                  const Color(0xFF3B82F6),
-                ),
-                Container(width: 1, height: 32, color: Color(0xFFE4E9F0)),
-                _buildMetricCol(
-                  'TRANSFER',
-                  club.formattedTransferBudget,
-                  const Color(0xFF1769E0),
-                ),
-                _buildMetricCol(
-                  'MAOSH',
-                  club.formattedWageBudget,
-                  Color(0xFF526174),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 18),
-          // Yetakchi futbolchilar ko'rgazmasi
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Row(
-                children: [
-                  Icon(Icons.star_rounded, color: Color(0xFFF59E0B), size: 16),
-                  SizedBox(width: 6),
-                  Text(
-                    'Asosiy Yulduzlar',
-                    style: TextStyle(
-                      color: Color(0xFF526174),
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: club.squad.take(4).map((p) {
-                  return Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFE8EDF3),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Color(0xFFE9EDF3)),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(
-                          Icons.public_outlined,
-                          size: 14,
-                          color: Color(0xFF637184),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          p.shortName,
-                          style: const TextStyle(
-                            color: Color(0xFF192B42),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 4,
-                            vertical: 1,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xFF1769E0),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            '${p.ovr}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 10,
-                            ),
-                          ),
-                        ),
+                        Icon(Icons.add_circle_outline_rounded, size: 38, color: AppColors.primary),
+                        SizedBox(height: 8),
+                        Text(tr('Yangi klub'), style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primary)),
                       ],
                     ),
                   );
-                }).toList(),
-              ),
-            ],
+                }
+                final c = _clubs[i];
+                return _clubChip(
+                  selected: i == _selected,
+                  onTap: () => setState(() => _selected = i),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      ClubCrestWidget(config: c.crestConfig, size: 50),
+                      const SizedBox(height: 6),
+                      Text(c.shortName, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 12),
+          AppCard(
+            child: Column(
+              children: [
+                ClubCrestWidget(config: club.crestConfig, size: 104),
+                const SizedBox(height: 10),
+                Text(club.name, style: AppText.h1),
+                const SizedBox(height: 2),
+                Text('${club.nickname} · ${club.city} · ${club.founded}', style: AppText.caption),
+                const SizedBox(height: 4),
+                Text(
+                  trf('{0} · {1}K muxlis', [club.stadiumName, (club.stadiumCapacity / 1000).toStringAsFixed(0)]),
+                  style: AppText.caption,
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    _metric('OVR', ValueBadge(club.teamOVR, size: 40)),
+                    _metric(tr('HUJUM'), ValueBadge(club.attackRating, size: 40, filled: false)),
+                    _metric(tr('MARKAZ'), ValueBadge(club.midfieldRating, size: 40, filled: false)),
+                    _metric(tr('HIMOYA'), ValueBadge(club.defenseRating, size: 40, filled: false)),
+                  ],
+                ),
+                const Divider(height: 28),
+                InfoRow(tr('Transfer byudjeti'), club.formattedTransferBudget),
+                InfoRow(tr('Maosh limiti'), club.formattedWageBudget),
+                InfoRow(tr('Tarkib'), '${club.squad.length} futbolchi · qiymati ${formatMoney(club.squadValue)}'),
+                InfoRow(tr('Kengash kutmoqda'), _expectation(club)),
+                InfoRow(tr('O‘yin uslubi'), club.tactics.playstyle.displayName),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          AppCard(
+            padding: const EdgeInsets.fromLTRB(0, 14, 0, 6),
+            child: Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  child: SectionHeader(tr('Asosiy yulduzlar'), icon: Icons.star_outline_rounded),
+                ),
+                for (final p in stars.take(5)) PlayerTile(player: p, club: club, showRating: false),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 52,
+            child: FilledButton.icon(
+              onPressed: () => _start(club),
+              icon: const Icon(Icons.play_arrow_rounded),
+              label: FittedBox(child: Text(trf('{0}NI BOSHQARISH', [club.name.toUpperCase()]))),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildMetricCol(String label, String value, Color color) {
-    return Column(
+  Widget _clubChip({required bool selected, required VoidCallback onTap, required Widget child}) => SizedBox(
+    width: 92,
+    child: Material(
+      color: selected ? AppColors.primarySoft : AppColors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: BorderSide(color: selected ? AppColors.primary : AppColors.line, width: selected ? 2 : 1),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: child,
+      ),
+    ),
+  );
+
+  Widget _metric(String label, Widget value) => Expanded(
+    child: Column(
       children: [
-        Text(
-          label,
-          style: const TextStyle(
-            color: Color(0xFF778496),
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 3),
-        Text(
-          value,
-          style: TextStyle(
-            color: color,
-            fontSize: 14,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
+        value,
+        const SizedBox(height: 6),
+        Text(label, style: AppText.overline.copyWith(fontSize: 10)),
       ],
-    );
-  }
+    ),
+  );
 }

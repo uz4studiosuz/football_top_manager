@@ -6,6 +6,11 @@
       "num": 1
     },
     {
+      "pos": "LB",
+      "ovr": 75,
+      "num": 3
+    },
+    {
       "pos": "CB",
       "ovr": 78,
       "num": 4
@@ -14,11 +19,6 @@
       "pos": "CB",
       "ovr": 76,
       "num": 5
-    },
-    {
-      "pos": "LB",
-      "ovr": 75,
-      "num": 3
     },
     {
       "pos": "RB",
@@ -41,44 +41,79 @@
       "num": 10
     },
     {
-      "pos": "RWF",
-      "ovr": 81,
-      "num": 7
-    },
-    {
       "pos": "LWF",
       "ovr": 77,
       "num": 11
     },
     {
-      "pos": "ST",
+      "pos": "CF",
       "ovr": 82,
       "num": 9
     },
     {
+      "pos": "RWF",
+      "ovr": 81,
+      "num": 7
+    },
+    {
       "pos": "GK",
-      "ovr": 72,
+      "ovr": 71,
       "num": 12
     },
     {
-      "pos": "LB",
-      "ovr": 74,
-      "num": 13
-    },
-    {
       "pos": "CB",
-      "ovr": 75,
-      "num": 14
-    },
-    {
-      "pos": "CMF",
-      "ovr": 76,
+      "ovr": 73,
       "num": 15
     },
     {
-      "pos": "ST",
-      "ovr": 77,
+      "pos": "CMF",
+      "ovr": 74,
+      "num": 14
+    },
+    {
+      "pos": "CF",
+      "ovr": 74,
+      "num": 19
+    },
+    {
+      "pos": "LB",
+      "ovr": 70,
+      "num": 17
+    },
+    {
+      "pos": "RWF",
+      "ovr": 72,
+      "num": 20
+    },
+    {
+      "pos": "CB",
+      "ovr": 70,
+      "num": 23
+    },
+    {
+      "pos": "RB",
+      "ovr": 69,
+      "num": 22
+    },
+    {
+      "pos": "DMF",
+      "ovr": 71,
       "num": 16
+    },
+    {
+      "pos": "AMF",
+      "ovr": 70,
+      "num": 18
+    },
+    {
+      "pos": "LWF",
+      "ovr": 69,
+      "num": 21
+    },
+    {
+      "pos": "GK",
+      "ovr": 64,
+      "num": 31
     }
   ]
 }

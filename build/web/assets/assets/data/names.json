@@ -1,0 +1,136 @@
+{
+  "pools": [
+    {
+      "nationality": "O‘zbekiston",
+      "flag": "🇺🇿",
+      "firstNames": [
+        "Azizbek",
+        "Sardor",
+        "Javohir",
+        "Bekzod",
+        "Otabek",
+        "Diyorbek",
+        "Asadbek",
+        "Shoxrux",
+        "Kamron",
+        "Miraziz",
+        "Bobur",
+        "Jahongir",
+        "Shohjahon",
+        "Murod",
+        "Akmal",
+        "Abbos",
+        "Sirojiddin",
+        "Sanjar",
+        "Dilshod",
+        "Temurbek"
+      ],
+      "lastNames": [
+        "Rahimov",
+        "Qosimov",
+        "Karimov",
+        "Abdullayev",
+        "Ismoilov",
+        "Rasulov",
+        "Saidov",
+        "Ergashev",
+        "Tursunov",
+        "Usmonov",
+        "Yusupov",
+        "Raxmatov",
+        "Nazarov",
+        "Mirzayev",
+        "Nurmatov",
+        "Sobirov",
+        "Mahmudov",
+        "Olimov",
+        "Xolmatov",
+        "Sharipov"
+      ]
+    },
+    {
+      "nationality": "Ispaniya",
+      "flag": "🇪🇸",
+      "firstNames": [
+        "Alejandro",
+        "Mateo",
+        "Diego",
+        "Pablo",
+        "Sergio",
+        "Hugo",
+        "Adrian",
+        "Nicolas",
+        "Marcos",
+        "Rafael"
+      ],
+      "lastNames": [
+        "Vidal",
+        "Romero",
+        "Navarro",
+        "Delgado",
+        "Ortega",
+        "Marin",
+        "Rojas",
+        "Serrano",
+        "Castillo",
+        "Iglesias"
+      ]
+    },
+    {
+      "nationality": "Fransiya",
+      "flag": "🇫🇷",
+      "firstNames": [
+        "Lucas",
+        "Theo",
+        "Jules",
+        "Hugo",
+        "Louis",
+        "Adam",
+        "Nathan",
+        "Enzo",
+        "Mathis",
+        "Leo"
+      ],
+      "lastNames": [
+        "Moreau",
+        "Laurent",
+        "Dubois",
+        "Girard",
+        "Martin",
+        "Bernard",
+        "Mercier",
+        "Garnier",
+        "Perrin",
+        "Roche"
+      ]
+    },
+    {
+      "nationality": "Angliya",
+      "flag": "🏴",
+      "firstNames": [
+        "Oliver",
+        "Ethan",
+        "Jack",
+        "Mason",
+        "Harry",
+        "Charlie",
+        "Samuel",
+        "Oscar",
+        "Isaac",
+        "Jacob"
+      ],
+      "lastNames": [
+        "Bennett",
+        "Walker",
+        "Hayes",
+        "Foster",
+        "Clarke",
+        "Palmer",
+        "Brooks",
+        "Morgan",
+        "Reed",
+        "Turner"
+      ]
+    }
+  ]
+}

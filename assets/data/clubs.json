@@ -11,7 +11,7 @@
       "stadiumName": "Santiago Bernabéu",
       "stadiumCapacity": 84744,
       "transferBudget": 160000000,
-      "wageBudget": 4800000,
+      "wageBudget": 5600000,
       "tactics": {
         "formation": "f433",
         "playstyle": "quickCounter",
@@ -22,10 +22,12 @@
         "shape": "circle",
         "pattern": "diagonalSash",
         "primaryColor": 4294967295,
-        "secondaryColor": 4283183228,
-        "trimColor": 4293834539,
+        "secondaryColor": 4281089681,
+        "trimColor": 4293047296,
         "monogram": "RM",
-        "stars": 3
+        "stars": 0,
+        "emblem": "monogram",
+        "crown": true
       },
       "startingLineupIds": [
         "rma_courtois",
@@ -45,7 +47,11 @@
         "rma_brahim",
         "rma_endrick",
         "rma_camavinga",
-        "rma_lunin"
+        "rma_lunin",
+        "rma_guler",
+        "rma_ceballos",
+        "rma_vazquez",
+        "rma_alaba"
       ],
       "squadIds": [
         "rma_mbappe",
@@ -63,8 +69,20 @@
         "rma_brahim",
         "rma_endrick",
         "rma_mendy",
-        "rma_lunin"
-      ]
+        "rma_lunin",
+        "rma_guler",
+        "rma_ceballos",
+        "rma_vazquez",
+        "rma_alaba",
+        "rma_fgarcia",
+        "rma_asencio",
+        "rma_fgonzalez"
+      ],
+      "city": "Madrid",
+      "nickname": "Los Blancos",
+      "founded": 1902,
+      "reputation": 96,
+      "ticketPrice": 83
     },
     {
       "id": "manchester_city",
@@ -76,7 +94,7 @@
       "stadiumName": "Etihad Stadium",
       "stadiumCapacity": 53400,
       "transferBudget": 150000000,
-      "wageBudget": 4900000,
+      "wageBudget": 6000000,
       "tactics": {
         "formation": "f433",
         "playstyle": "possession",
@@ -84,13 +102,17 @@
         "attackingIntensity": 4
       },
       "crest": {
-        "shape": "circle",
-        "pattern": "halves",
+        "shape": "roundel",
+        "pattern": "solid",
         "primaryColor": 4285311965,
         "secondaryColor": 4280036443,
-        "trimColor": 4294967295,
+        "trimColor": 4294231088,
         "monogram": "MC",
-        "stars": 0
+        "stars": 0,
+        "emblem": "ship",
+        "crown": false,
+        "ringText": "MANCHESTER CITY",
+        "ringColor": 4280036443
       },
       "startingLineupIds": [
         "mci_ederson",
@@ -110,7 +132,11 @@
         "mci_kovacic",
         "mci_savinho",
         "mci_stones",
-        "mci_ortega"
+        "mci_ortega",
+        "mci_marmoush",
+        "mci_khusanov",
+        "mci_ake",
+        "mci_lewis"
       ],
       "squadIds": [
         "mci_haaland",
@@ -128,8 +154,20 @@
         "mci_kovacic",
         "mci_savinho",
         "mci_stones",
-        "mci_ortega"
-      ]
+        "mci_ortega",
+        "mci_marmoush",
+        "mci_khusanov",
+        "mci_ake",
+        "mci_lewis",
+        "mci_nunes",
+        "mci_grealish",
+        "mci_bobb"
+      ],
+      "city": "Manchester",
+      "nickname": "The Citizens",
+      "founded": 1880,
+      "reputation": 93,
+      "ticketPrice": 81
     },
     {
       "id": "arsenal",
@@ -141,7 +179,7 @@
       "stadiumName": "Emirates Stadium",
       "stadiumCapacity": 60704,
       "transferBudget": 110000000,
-      "wageBudget": 4200000,
+      "wageBudget": 4600000,
       "tactics": {
         "formation": "f433",
         "playstyle": "highPressing",
@@ -149,13 +187,15 @@
         "attackingIntensity": 4
       },
       "crest": {
-        "shape": "shield",
-        "pattern": "halves",
-        "primaryColor": 4293853447,
-        "secondaryColor": 4278597234,
-        "trimColor": 4288447050,
+        "shape": "heater",
+        "pattern": "solid",
+        "primaryColor": 4292542471,
+        "secondaryColor": 4294967295,
+        "trimColor": 4293444714,
         "monogram": "AFC",
-        "stars": 0
+        "stars": 0,
+        "emblem": "cannon",
+        "crown": false
       },
       "startingLineupIds": [
         "ars_raya",
@@ -175,7 +215,11 @@
         "ars_jesus",
         "ars_jorginho",
         "ars_calafiori",
-        "ars_partey"
+        "ars_partey",
+        "ars_sterling",
+        "ars_kiwior",
+        "ars_tomiyasu",
+        "ars_tierney"
       ],
       "squadIds": [
         "ars_saka",
@@ -193,8 +237,20 @@
         "ars_jesus",
         "ars_jorginho",
         "ars_calafiori",
-        "ars_partey"
-      ]
+        "ars_partey",
+        "ars_sterling",
+        "ars_kiwior",
+        "ars_tomiyasu",
+        "ars_tierney",
+        "ars_nwaneri",
+        "ars_skelly",
+        "ars_neto"
+      ],
+      "city": "London",
+      "nickname": "The Gunners",
+      "founded": 1886,
+      "reputation": 87,
+      "ticketPrice": 78
     },
     {
       "id": "barcelona",
@@ -206,7 +262,7 @@
       "stadiumName": "Spotify Camp Nou",
       "stadiumCapacity": 105000,
       "transferBudget": 90000000,
-      "wageBudget": 4100000,
+      "wageBudget": 4700000,
       "tactics": {
         "formation": "f433",
         "playstyle": "possession",
@@ -214,13 +270,15 @@
         "attackingIntensity": 5
       },
       "crest": {
-        "shape": "shield",
-        "pattern": "verticalStripes",
+        "shape": "pointed",
+        "pattern": "splitCross",
         "primaryColor": 4278209944,
         "secondaryColor": 4289003588,
-        "trimColor": 4293769984,
+        "trimColor": 4294099278,
         "monogram": "FCB",
-        "stars": 0
+        "stars": 0,
+        "emblem": "ball",
+        "crown": false
       },
       "startingLineupIds": [
         "fcb_terstegen",
@@ -240,7 +298,11 @@
         "fcb_ferran",
         "fcb_fermin",
         "fcb_christensen",
-        "fcb_penya"
+        "fcb_penya",
+        "fcb_szczesny",
+        "fcb_inigo",
+        "fcb_ericgarcia",
+        "fcb_casado"
       ],
       "squadIds": [
         "fcb_yamal",
@@ -258,8 +320,20 @@
         "fcb_ferran",
         "fcb_fermin",
         "fcb_christensen",
-        "fcb_penya"
-      ]
+        "fcb_penya",
+        "fcb_szczesny",
+        "fcb_inigo",
+        "fcb_ericgarcia",
+        "fcb_casado",
+        "fcb_ansu",
+        "fcb_gmartin",
+        "fcb_pauvictor"
+      ],
+      "city": "Barcelona",
+      "nickname": "Blaugrana",
+      "founded": 1899,
+      "reputation": 92,
+      "ticketPrice": 81
     },
     {
       "id": "bayern_munich",
@@ -271,7 +345,7 @@
       "stadiumName": "Allianz Arena",
       "stadiumCapacity": 75000,
       "transferBudget": 125000000,
-      "wageBudget": 4500000,
+      "wageBudget": 5700000,
       "tactics": {
         "formation": "f4231",
         "playstyle": "highPressing",
@@ -279,13 +353,17 @@
         "attackingIntensity": 4
       },
       "crest": {
-        "shape": "circle",
-        "pattern": "quarters",
-        "primaryColor": 4292609325,
+        "shape": "roundel",
+        "pattern": "lozenges",
+        "primaryColor": 4294967295,
         "secondaryColor": 4278216370,
         "trimColor": 4294967295,
         "monogram": "FCB",
-        "stars": 5
+        "stars": 0,
+        "emblem": "monogram",
+        "crown": false,
+        "ringText": "FC BAYERN MÜNCHEN",
+        "ringColor": 4292609325
       },
       "startingLineupIds": [
         "bay_neuer",
@@ -305,7 +383,11 @@
         "bay_muller",
         "bay_palhinha",
         "bay_tel",
-        "bay_guerreiro"
+        "bay_guerreiro",
+        "bay_goretzka",
+        "bay_laimer",
+        "bay_ito",
+        "bay_dier"
       ],
       "squadIds": [
         "bay_kane",
@@ -323,8 +405,20 @@
         "bay_muller",
         "bay_palhinha",
         "bay_tel",
-        "bay_guerreiro"
-      ]
+        "bay_guerreiro",
+        "bay_goretzka",
+        "bay_laimer",
+        "bay_ito",
+        "bay_dier",
+        "bay_zaragoza",
+        "bay_wanner",
+        "bay_ulreich"
+      ],
+      "city": "München",
+      "nickname": "Die Roten",
+      "founded": 1900,
+      "reputation": 92,
+      "ticketPrice": 81
     },
     {
       "id": "paris_sg",
@@ -336,7 +430,7 @@
       "stadiumName": "Parc des Princes",
       "stadiumCapacity": 48583,
       "transferBudget": 140000000,
-      "wageBudget": 4600000,
+      "wageBudget": 4900000,
       "tactics": {
         "formation": "f433",
         "playstyle": "possession",
@@ -344,13 +438,17 @@
         "attackingIntensity": 4
       },
       "crest": {
-        "shape": "circle",
-        "pattern": "halves",
-        "primaryColor": 4278206832,
-        "secondaryColor": 4292487452,
+        "shape": "roundel",
+        "pattern": "solid",
+        "primaryColor": 4292487452,
+        "secondaryColor": 4278206832,
         "trimColor": 4294967295,
         "monogram": "PSG",
-        "stars": 1
+        "stars": 0,
+        "emblem": "tower",
+        "crown": false,
+        "ringText": "PARIS SAINT-GERMAIN",
+        "ringColor": 4278206832
       },
       "startingLineupIds": [
         "psg_donnarumma",
@@ -370,7 +468,11 @@
         "psg_lee",
         "psg_neves",
         "psg_beraldo",
-        "psg_safonov"
+        "psg_safonov",
+        "psg_kvara",
+        "psg_doue",
+        "psg_ramos",
+        "psg_lhernandez"
       ],
       "squadIds": [
         "psg_dembele",
@@ -388,8 +490,20 @@
         "psg_lee",
         "psg_neves",
         "psg_beraldo",
-        "psg_safonov"
-      ]
+        "psg_safonov",
+        "psg_kvara",
+        "psg_doue",
+        "psg_ramos",
+        "psg_lhernandez",
+        "psg_kimpembe",
+        "psg_mayulu",
+        "psg_tenas"
+      ],
+      "city": "Paris",
+      "nickname": "Les Parisiens",
+      "founded": 1970,
+      "reputation": 89,
+      "ticketPrice": 79
     },
     {
       "id": "inter_milan",
@@ -409,13 +523,17 @@
         "attackingIntensity": 4
       },
       "crest": {
-        "shape": "circle",
-        "pattern": "halves",
-        "primaryColor": 4278197920,
-        "secondaryColor": 4278190080,
-        "trimColor": 4291339357,
+        "shape": "roundel",
+        "pattern": "rings",
+        "primaryColor": 4278216872,
+        "secondaryColor": 4279308561,
+        "trimColor": 4293378906,
         "monogram": "IM",
-        "stars": 2
+        "stars": 2,
+        "emblem": "monogram",
+        "crown": false,
+        "ringText": "INTERNAZIONALE MILANO",
+        "ringColor": 4279308561
       },
       "startingLineupIds": [
         "int_sommer",
@@ -435,7 +553,11 @@
         "int_frattesi",
         "int_zielinski",
         "int_augusto",
-        "int_martinez"
+        "int_martinez",
+        "int_devrij",
+        "int_bisseck",
+        "int_darmian",
+        "int_asllani"
       ],
       "squadIds": [
         "int_lautaro",
@@ -453,8 +575,20 @@
         "int_frattesi",
         "int_zielinski",
         "int_augusto",
-        "int_martinez"
-      ]
+        "int_martinez",
+        "int_devrij",
+        "int_bisseck",
+        "int_darmian",
+        "int_asllani",
+        "int_zalewski",
+        "int_arnautovic",
+        "int_correa"
+      ],
+      "city": "Milano",
+      "nickname": "Nerazzurri",
+      "founded": 1908,
+      "reputation": 85,
+      "ticketPrice": 77
     },
     {
       "id": "liverpool",
@@ -466,7 +600,7 @@
       "stadiumName": "Anfield",
       "stadiumCapacity": 61276,
       "transferBudget": 120000000,
-      "wageBudget": 4300000,
+      "wageBudget": 4500000,
       "tactics": {
         "formation": "f433",
         "playstyle": "highPressing",
@@ -474,13 +608,15 @@
         "attackingIntensity": 5
       },
       "crest": {
-        "shape": "shield",
-        "pattern": "halves",
+        "shape": "heater",
+        "pattern": "solid",
         "primaryColor": 4291301422,
         "secondaryColor": 4278235817,
         "trimColor": 4294372193,
         "monogram": "LFC",
-        "stars": 0
+        "stars": 0,
+        "emblem": "bird",
+        "crown": false
       },
       "startingLineupIds": [
         "liv_alisson",
@@ -500,7 +636,11 @@
         "liv_gakpo",
         "liv_jones",
         "liv_elliott",
-        "liv_kelleher"
+        "liv_kelleher",
+        "liv_chiesa",
+        "liv_endo",
+        "liv_gomez",
+        "liv_tsimikas"
       ],
       "squadIds": [
         "liv_salah",
@@ -518,8 +658,20 @@
         "liv_gakpo",
         "liv_jones",
         "liv_elliott",
-        "liv_kelleher"
-      ]
+        "liv_kelleher",
+        "liv_chiesa",
+        "liv_endo",
+        "liv_gomez",
+        "liv_tsimikas",
+        "liv_quansah",
+        "liv_bradley",
+        "liv_doak"
+      ],
+      "city": "Liverpool",
+      "nickname": "The Reds",
+      "founded": 1892,
+      "reputation": 90,
+      "ticketPrice": 80
     }
   ]
 }
