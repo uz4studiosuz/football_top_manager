@@ -628,9 +628,10 @@ class _LineupNode extends StatelessWidget {
                   Positioned(
                     left: -12,
                     bottom: -3,
+                    // One boot per assist, side by side (a count past four).
                     child: _mark([
-                      const BootIcon(size: 11),
-                      if (assists > 1) _count(assists),
+                      for (var i = 0; i < assists.clamp(1, 4); i++) const BootIcon(size: 11),
+                      if (assists > 4) _count(assists),
                     ]),
                   ),
                 if (goals > 0)
@@ -638,8 +639,9 @@ class _LineupNode extends StatelessWidget {
                     right: -12,
                     bottom: -3,
                     child: _mark([
-                      const Icon(Icons.sports_soccer, size: 11, color: AppColors.ink),
-                      if (goals > 1) _count(goals),
+                      for (var i = 0; i < goals.clamp(1, 4); i++)
+                        const Icon(Icons.sports_soccer, size: 11, color: AppColors.ink),
+                      if (goals > 4) _count(goals),
                     ]),
                   ),
                 if (booked)
@@ -891,7 +893,7 @@ Future<void> showPlayerMatchSheet(
                             padding: const EdgeInsets.symmetric(vertical: 7),
                             child: Row(
                               children: [
-                                Expanded(child: Text(r.$1, style: AppText.small.copyWith(color: AppColors.ink))),
+                                Expanded(child: Text(tr(r.$1), style: AppText.small.copyWith(color: AppColors.ink))),
                                 Text(r.$2, style: AppText.number.copyWith(fontSize: 13)),
                               ],
                             ),

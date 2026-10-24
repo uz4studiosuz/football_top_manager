@@ -20,6 +20,9 @@ class _TransferScreenState extends State<TransferScreen> {
   final game = GameState();
   String query = '';
   int category = 0;
+  PlayerPosition? position; // optional exact position inside the category
+  int page = 0;
+  static const pageSize = 25;
   int league = 0; // 0 = every league of the pyramid
   String sort = 'Reyting';
   RangeValues ageRange = const RangeValues(16, 40);
@@ -165,7 +168,8 @@ class _TransferScreenState extends State<TransferScreen> {
   }
 
   Widget _market(BuildContext context) {
-    final cats = [null, ...PositionCategory.values.reversed];
+    // Same order as the filter labels: all, attack, midfield, defence, keepers.
+    final cats = [null, ...PositionCategory.values];
     final entries = <({Player p, Club c})>[];
     final pyramid = InitialDatabase.pyramidOf(game.leagueId);
     final only = league == 0 || league > pyramid.length ? null : pyramid[league - 1].id;
@@ -173,7 +177,10 @@ class _TransferScreenState extends State<TransferScreen> {
       if (only != null && game.leagueOfClub(c.id) != only) continue;
       for (final p in c.squad) {
         final cat = cats[category];
-        if ((cat == null || p.mainPosition.category == cat) &&
+        final fits = position == null
+            ? (cat == null || p.mainPosition.category == cat)
+            : (p.mainPosition == position || p.altPositions.contains(position));
+        if (fits &&
             p.age >= ageRange.start &&
             p.age <= ageRange.end &&
             p.name.toLowerCase().contains(query.toLowerCase())) {
@@ -196,7 +203,10 @@ class _TransferScreenState extends State<TransferScreen> {
         _windowBanner(),
         const SizedBox(height: 12),
         TextField(
-          onChanged: (v) => setState(() => query = v),
+          onChanged: (v) => setState(() {
+            query = v;
+            page = 0;
+          }),
           decoration: InputDecoration(
             hintText: tr('Futbolchini qidirish'),
             prefixIcon: Icon(Icons.search_rounded),
@@ -209,15 +219,38 @@ class _TransferScreenState extends State<TransferScreen> {
           PillTabs(
             labels: [tr('Barcha ligalar'), for (final l in pyramid) l.name],
             index: league,
-            onChanged: (i) => setState(() => league = i),
+            onChanged: (i) => setState(() {
+              league = i;
+              page = 0;
+            }),
           ),
         ],
         const SizedBox(height: 10),
         PillTabs(
-          labels: [tr('Barchasi'), 'Hujum', 'Yarim himoya', 'Himoya', 'Darvoza'],
+          labels: [tr('Barchasi'), tr('Hujum'), tr('Yarim himoya'), tr('Himoya'), tr('Darvozabonlar')],
           index: category,
-          onChanged: (i) => setState(() => category = i),
+          onChanged: (i) => setState(() {
+            category = i;
+            position = null;
+            page = 0;
+          }),
         ),
+        if (cats[category] case final cat? when cat != PositionCategory.goalkeeper) ...[
+          const SizedBox(height: 8),
+          Builder(
+            builder: (context) {
+              final options = PlayerPosition.values.where((x) => x.category == cat).toList();
+              return PillTabs(
+                labels: [tr('Barcha pozitsiyalar'), for (final x in options) x.code],
+                index: position == null ? 0 : options.indexOf(position!) + 1,
+                onChanged: (i) => setState(() {
+                  position = i == 0 ? null : options[i - 1];
+                  page = 0;
+                }),
+              );
+            },
+          ),
+        ],
         const SizedBox(height: 6),
         Row(
           children: [
@@ -228,7 +261,10 @@ class _TransferScreenState extends State<TransferScreen> {
                 max: 40,
                 divisions: 24,
                 values: ageRange,
-                onChanged: (v) => setState(() => ageRange = v),
+                onChanged: (v) => setState(() {
+                  ageRange = v;
+                  page = 0;
+                }),
               ),
             ),
             DropdownButton<String>(
@@ -238,7 +274,10 @@ class _TransferScreenState extends State<TransferScreen> {
                 for (final label in ['Reyting', 'Forma', 'Salohiyat', 'Narx', 'Yosh'])
                   DropdownMenuItem(value: label, child: Text(tr(label), style: AppText.small)),
               ],
-              onChanged: (v) => setState(() => sort = v!),
+              onChanged: (v) => setState(() {
+                sort = v!;
+                page = 0;
+              }),
             ),
           ],
         ),
@@ -248,7 +287,7 @@ class _TransferScreenState extends State<TransferScreen> {
               ? EmptyState(icon: Icons.search_off_rounded, text: tr('Mos futbolchi topilmadi'))
               : Column(
                   children: [
-                    for (final e in entries.take(80))
+                    for (final e in entries.skip(page * pageSize).take(pageSize))
                       PlayerTile(
                         player: e.p,
                         club: e.c,
@@ -273,7 +312,33 @@ class _TransferScreenState extends State<TransferScreen> {
                   ],
                 ),
         ),
+        _pager(entries.length),
       ],
+    );
+  }
+
+  /// "‹ 26–50 of 412 ›" – only one page of players is built at a time.
+  Widget _pager(int total) {
+    final pages = (total / pageSize).ceil();
+    if (pages <= 1) return const SizedBox.shrink();
+    final current = page.clamp(0, pages - 1);
+    final from = current * pageSize + 1, to = ((current + 1) * pageSize).clamp(0, total);
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            onPressed: current > 0 ? () => setState(() => page = current - 1) : null,
+            icon: const Icon(Icons.chevron_left_rounded),
+          ),
+          Text(trf('{0}–{1} / {2}', [from, to, total]), style: AppText.small),
+          IconButton(
+            onPressed: current < pages - 1 ? () => setState(() => page = current + 1) : null,
+            icon: const Icon(Icons.chevron_right_rounded),
+          ),
+        ],
+      ),
     );
   }
 

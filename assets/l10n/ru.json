@@ -104,6 +104,7 @@
  "Barcha futbolchilar": "Все игроки",
  "Barcha ligalar": "Все лиги",
  "Barcha natijalar jadvalga yozildi.{0}": "Все результаты внесены в таблицу.{0}",
+ "Barcha pozitsiyalar": "Все позиции",
  "Barcha uchrashuvlarim": "Все мои матчи",
  "Barcha zaxiralar maydonga tushdi": "Все запасные уже вышли",
  "Barchasi": "Все",
@@ -1233,6 +1234,7 @@
  "{0}ga xush kelibsiz!": "Добро пожаловать в {0}!",
  "{0}{1}-tur": "{0}{1}-й тур",
  "{0}{1}: yangilanmasa, mavsum oxirida klubni tark etadi.": "{0}{1}: без продления покинут клуб в конце сезона.",
+ "{0}–{1} / {2}": "{0}–{1} из {2}",
  "{0}′ · chiqdi": "{0}′ · ушёл",
  "{0}′ · tushdi": "{0}′ · вышел",
  "€{0}K/hft": "€{0}K/нед."

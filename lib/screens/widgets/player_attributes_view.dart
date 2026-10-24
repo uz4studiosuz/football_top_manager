@@ -44,7 +44,7 @@ class PlayerAttributesView extends StatelessWidget {
                         children: [
                           ValueBadge(item.$2, size: 36),
                           const SizedBox(height: 4),
-                          Text(item.$1, style: AppText.overline.copyWith(fontSize: 10)),
+                          Text(tr(item.$1), style: AppText.overline.copyWith(fontSize: 10)),
                         ],
                       ),
                     ),

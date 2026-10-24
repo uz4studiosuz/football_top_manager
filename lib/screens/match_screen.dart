@@ -19,22 +19,26 @@ import '../l10n/l10n.dart';
 
 /// O'yin davomidagi taktik kayfiyat (In-Game Mentality)
 enum InGameMentality {
-  ultraAttack('Ultra hujum', Icons.keyboard_double_arrow_up_rounded, 1.35, 0.70),
-  attack('Hujumkor', Icons.arrow_upward_rounded, 1.18, 0.85),
-  balanced('Muvozanat', Icons.horizontal_rule_rounded, 1.00, 1.00),
-  defensive('Himoyaviy', Icons.arrow_downward_rounded, 0.82, 1.22),
-  parkBus('Avtobus', Icons.shield_rounded, 0.58, 1.45);
+  ultraAttack('Ultra hujum', Icons.keyboard_double_arrow_up_rounded, 1.35, 0.70, 2),
+  attack('Hujumkor', Icons.arrow_upward_rounded, 1.18, 0.85, 1),
+  balanced('Muvozanat', Icons.horizontal_rule_rounded, 1.00, 1.00, 0),
+  defensive('Himoyaviy', Icons.arrow_downward_rounded, 0.82, 1.22, -1),
+  parkBus('Avtobus', Icons.shield_rounded, 0.58, 1.45, -2);
 
   final String _label;
   String get label => tr(_label);
   final IconData icon;
   final double attackMultiplier;
   final double defenseMultiplier;
+
+  /// Team shape in the engine: -2 everyone behind the ball … +2 all forward.
+  final double shape;
   const InGameMentality(
     this._label,
     this.icon,
     this.attackMultiplier,
     this.defenseMultiplier,
+    this.shape,
   );
 }
 
@@ -101,12 +105,19 @@ class _MatchScreenState extends State<MatchScreen> {
 
   void _applyMentality() {
     final m = _mentality;
+    // Mentality changes the team's shape; the risks follow from it
+    // (space behind a high block, few bodies forward in a low one).
+    final attack = (1 + m.shape * 0.1).toDouble();
     if (_userHome) {
-      _field.homeAttack = m.attackMultiplier;
-      _field.awayAttack = 1 / m.defenseMultiplier;
+      _field
+        ..homeShape = m.shape
+        ..homeAttack = attack
+        ..awayAttack = 1;
     } else {
-      _field.awayAttack = m.attackMultiplier;
-      _field.homeAttack = 1 / m.defenseMultiplier;
+      _field
+        ..awayShape = m.shape
+        ..awayAttack = attack
+        ..homeAttack = 1;
     }
   }
 
