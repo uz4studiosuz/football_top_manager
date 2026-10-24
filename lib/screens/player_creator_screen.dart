@@ -160,7 +160,9 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
           ),
         ],
       ),
-      body: ListView(
+      body: PageWidth(
+      maxWidth: 900,
+      child: ListView(
         padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
         children: [
           // --------------------------------------------------- live preview
@@ -414,6 +416,7 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
           ),
         ],
       ),
+    ),
     );
   }
 

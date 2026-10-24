@@ -89,7 +89,9 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
             ),
           ),
         ),
-        body: TabBarView(
+        body: PageWidth(
+      maxWidth: 960,
+      child: TabBarView(
           children: [
             _overview(c),
             PlayerAttributesView(player: p),
@@ -97,6 +99,7 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
             _matches(),
           ],
         ),
+    ),
       ),
     );
   }
@@ -349,6 +352,44 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
                   label: Text(game.transferListed.contains(p.id) ? tr('Sotuv ro‘yxatidan olish') : tr('Sotuvga qo‘yish')),
                 ),
               ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        // Clubs the player has played for and the fees paid.
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SectionHeader(tr('Transferlar tarixi'), icon: Icons.swap_horiz_rounded),
+              ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                leading: c == null ? const Icon(Icons.person_off_outlined) : ClubCrestWidget(config: c.crestConfig, size: 30),
+                title: Text(c?.name ?? tr('Erkin agent'), style: AppText.bodyStrong),
+                subtitle: Text(tr('Hozirgi klub'), style: AppText.caption),
+              ),
+              if (p.transfers.isEmpty)
+                Text(tr('Karyera davomida hali transfer bo‘lmagan.'), style: AppText.caption)
+              else
+                for (final t in p.transfers)
+                  Builder(
+                    builder: (context) {
+                      final parts = t.split('|');
+                      final fee = int.tryParse(parts.length > 3 ? parts[3] : '') ?? 0;
+                      return ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        leading: const Icon(Icons.arrow_forward_rounded, color: AppColors.ink3),
+                        title: Text(
+                          '${parts[1] == '-' ? tr('Erkin agent') : parts[1]} → ${parts[2]}',
+                          style: AppText.small.copyWith(color: AppColors.ink),
+                        ),
+                        subtitle: Text(parts[0], style: AppText.caption),
+                        trailing: Text(fee == 0 ? tr('Bepul') : formatMoney(fee), style: AppText.bodyStrong),
+                      );
+                    },
+                  ),
             ],
           ),
         ),

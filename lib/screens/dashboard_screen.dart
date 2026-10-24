@@ -42,7 +42,8 @@ class DashboardScreen extends StatelessWidget {
       builder: (context, _) {
         if (!game.isInitialized) return const Scaffold();
         final club = game.userClub, manager = game.managerProfile;
-        final next = game.nextUserFixture;
+        // League match first, then this week's cup tie.
+        final next = game.nextUserFixture ?? game.pendingCupFixture;
         final standing = game.standingOf(club.id);
         final rank = game.positionOf(club.id);
         final upcoming = game
@@ -296,7 +297,7 @@ class DashboardScreen extends StatelessWidget {
               Expanded(
                 child: Text(tr('NAVBATDAGI UCHRASHUV'), style: AppText.overline),
               ),
-              Text(trf('{0}-tur', [f.round]), style: AppText.caption),
+              Text(game.isCupFixture(f) ? game.fixtureTitle(f) : trf('{0}-tur', [f.round]), style: AppText.caption),
             ],
           ),
           const SizedBox(height: 18),

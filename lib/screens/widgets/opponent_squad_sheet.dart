@@ -59,7 +59,9 @@ class OpponentSquadSheet extends StatelessWidget {
             ),
           ),
         ),
-        body: TabBarView(
+        body: PageWidth(
+      maxWidth: 960,
+      child: TabBarView(
           children: [
             ListView(
               padding: const EdgeInsets.all(12),
@@ -206,6 +208,7 @@ class OpponentSquadSheet extends StatelessWidget {
             ),
           ],
         ),
+    ),
       ),
     );
   }

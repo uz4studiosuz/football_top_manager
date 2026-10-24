@@ -516,7 +516,11 @@ class LineupPitch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final slots = club.tactics.formation.slots;
-    return AspectRatio(
+    return Center(
+      // Desktop: a phone-sized pitch, not one stretched across the screen.
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 560),
+        child: AspectRatio(
       aspectRatio: 0.92,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
@@ -549,6 +553,8 @@ class LineupPitch extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    ),
       ),
     );
   }

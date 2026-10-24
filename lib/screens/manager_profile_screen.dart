@@ -8,6 +8,7 @@ import '../ui/widgets.dart';
 import '../services/save_service.dart';
 import '../l10n/l10n.dart';
 import '../ui/language_picker.dart';
+import 'db_editor_screen.dart';
 
 class ManagerProfileScreen extends StatefulWidget {
   const ManagerProfileScreen({super.key});
@@ -74,7 +75,9 @@ class _ManagerProfileScreenState extends State<ManagerProfileScreen> {
     final club = game.isInitialized ? game.userClub : null;
     return Scaffold(
       appBar: AppBar(title: Text(tr('Menejer profili'))),
-      body: ListView(
+      body: PageWidth(
+      maxWidth: 860,
+      child: ListView(
         padding: const EdgeInsets.all(12),
         children: [
           AppCard(
@@ -218,6 +221,16 @@ class _ManagerProfileScreenState extends State<ManagerProfileScreen> {
                   label: Text(tr('Yangi karyera')),
                 ),
                 const SizedBox(height: 8),
+                // Creator tool (also at /editor in the browser).
+                OutlinedButton.icon(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(builder: (_) => const DbEditorScreen()),
+                  ),
+                  icon: const Icon(Icons.storage_rounded),
+                  label: Text(tr('Baza muharriri')),
+                ),
+                const SizedBox(height: 8),
                 OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(foregroundColor: AppColors.live),
                   onPressed: _logout,
@@ -230,6 +243,7 @@ class _ManagerProfileScreenState extends State<ManagerProfileScreen> {
           const SizedBox(height: 20),
         ],
       ),
+    ),
     );
   }
 }

@@ -59,4 +59,24 @@ void main() {
 
     expect(conceded(99), lessThan(conceded(50) * 0.7));
   });
+
+  test('Editor adds a league with clubs that the game can load, and exports a ZIP', () async {
+    final db = DbEditor();
+    await db.load();
+    final id = db.addLeague(name: 'Test Liga', country: 'O‘zbekiston');
+    expect(db.leagueWarning(id), isNotNull);
+    for (final n in ['Alfa', 'Beta', 'Gamma', 'Delta']) {
+      db.addClub(id, {'name': '$n FC', 'shortName': n.substring(0, 3).toUpperCase()}, strength: 66);
+    }
+    expect(db.leagueWarning(id), isNull);
+    final zip = await db.exportZip();
+    expect(String.fromCharCodes(zip.take(2)), 'PK');
+    await db.saveLocally();
+    final clubs = InitialDatabase.getClubs(id);
+    expect(clubs, hasLength(4));
+    expect(clubs.every((c) => c.squad.length == 23 && c.startingXI.length == 11), isTrue);
+    expect(clubs.first.teamOVR, inInclusiveRange(58, 74));
+    await InitialDatabase.clearOverrides();
+    expect(InitialDatabase.leagues.any((l) => l.id == id), isFalse);
+  });
 }

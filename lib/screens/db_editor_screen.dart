@@ -4,6 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/player.dart';
 import '../data/initial_database.dart';
+import '../data/countries.dart';
+import '../models/crest.dart';
+import 'club_form_screen.dart';
 import '../services/db_editor.dart';
 import '../ui/face_avatar.dart';
 import '../ui/face_from_photo.dart';
@@ -46,20 +49,67 @@ class _DbEditorScreenState extends State<DbEditorScreen> {
     _snack(tr('Saqlandi. Yangi karyeralar tahrirlangan bazadan foydalanadi.'));
   }
 
+  /// Every data file in one ZIP: unzip it over assets/data.
   Future<void> _export() async {
-    final files = db.editedFiles;
-    if (files.isEmpty) {
-      _snack(tr('Hali hech narsa tahrirlanmadi.'));
-      return;
+    final bytes = await db.exportZip();
+    await FilePicker.saveFile(fileName: 'ftm27_data.zip', bytes: bytes, mimeType: 'application/zip');
+    _snack(tr('ZIP yuklab olindi: uni assets/data papkasiga ochib, eski fayllarni almashtiring.'));
+  }
+
+  static String _leagueName(Map<String, dynamic> l) => InitialDatabase.leagues.any((x) => x.id == l['id'])
+      ? InitialDatabase.info(l['id'] as String).name
+      : '${l['name']}';
+
+  Future<void> _addLeague() async {
+    final name = TextEditingController(), country = TextEditingController();
+    var economy = 0.5;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => AlertDialog(
+          title: Text(tr('Yangi liga')),
+          content: SizedBox(
+            width: 400,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(controller: name, decoration: InputDecoration(labelText: tr('Liga nomi'), border: const OutlineInputBorder())),
+                const SizedBox(height: 8),
+                TextField(controller: country, decoration: InputDecoration(labelText: tr('Davlat'), border: const OutlineInputBorder())),
+                const SizedBox(height: 12),
+                Text(trf('Iqtisodiyot: {0}%', [(economy * 100).round()]), style: AppText.bodyStrong),
+                Slider(value: economy, min: 0.1, max: 1.2, divisions: 11, onChanged: (v) => setLocal(() => economy = v)),
+                Text(tr('Ligada kamida 4 ta va juft sondagi klub bo‘lgach, u o‘yinda paydo bo‘ladi.'), style: AppText.caption),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('Bekor'))),
+            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(tr('Qo‘shish'))),
+          ],
+        ),
+      ),
+    );
+    if (ok == true && name.text.trim().isNotEmpty) {
+      final id = db.addLeague(name: name.text.trim(), country: country.text.trim(), economy: economy);
+      setState(() {
+        _league = id;
+        _club = _player = null;
+      });
     }
-    for (final f in files) {
-      await FilePicker.saveFile(
-        fileName: f,
-        bytes: Uint8List.fromList(utf8.encode(db.fileJson(f))),
-        mimeType: 'application/json',
-      );
-    }
-    _snack(trf('{0} ta fayl eksport qilindi: ularni assets/data papkasiga qo‘ying.', [files.length]));
+    name.dispose();
+    country.dispose();
+  }
+
+  Future<void> _addClub() async {
+    final result = await ClubFormScreen.open(context, {}, isNew: true);
+    if (result == null || !mounted) return;
+    final strength = result.remove('_strength') as int? ?? 70;
+    final club = db.addClub(_league!, result, strength: strength);
+    setState(() {
+      _club = club['id'] as String;
+      _player = null;
+    });
   }
 
   Future<void> _discard() async {
@@ -174,7 +224,7 @@ class _DbEditorScreenState extends State<DbEditorScreen> {
           initialValue: _league,
           decoration: InputDecoration(labelText: tr('Liga'), border: const OutlineInputBorder(), isDense: true),
           items: [
-            for (final l in db.leagues) DropdownMenuItem(value: l['id'] as String, child: Text(InitialDatabase.info(l['id'] as String).name)),
+            for (final l in db.leagues) DropdownMenuItem(value: l['id'] as String, child: Text(_leagueName(l))),
           ],
           onChanged: (v) => setState(() {
             _league = v;
@@ -182,13 +232,35 @@ class _DbEditorScreenState extends State<DbEditorScreen> {
           }),
         ),
         const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton.icon(onPressed: _addLeague, icon: const Icon(Icons.add, size: 18), label: Text(tr('Liga'))),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: FilledButton.icon(onPressed: _addClub, icon: const Icon(Icons.add, size: 18), label: Text(tr('Klub'))),
+            ),
+          ],
+        ),
+        if (db.leagueWarning(_league!) != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              tr('Bu liga o‘yinda ko‘rinishi uchun kamida 4 ta va juft sondagi klub kerak.'),
+              style: AppText.caption.copyWith(color: AppColors.live),
+            ),
+          ),
+        const SizedBox(height: 8),
         for (final c in db.clubs(_league!))
           ListTile(
             dense: true,
             selected: c['id'] == _club,
             selectedTileColor: AppColors.primarySoft,
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            leading: CircleAvatar(radius: 14, backgroundColor: Color(c['primaryColor'] as int)),
+            leading: c['crest'] == null
+                ? CircleAvatar(radius: 14, backgroundColor: Color(c['primaryColor'] as int))
+                : ClubCrestWidget(config: ClubCrestConfig.fromMap(c['crest'] as Map), size: 32),
             title: Text('${c['name']}'),
             subtitle: Text(trf('{0} futbolchi', [(c['squadIds'] as List).length])),
             trailing: IconButton(
@@ -273,63 +345,8 @@ class _DbEditorScreenState extends State<DbEditorScreen> {
   }
 
   Future<void> _editClub(Map<String, dynamic> club) async {
-    final c = _copy(club);
-    final fields = <String, TextEditingController>{
-      for (final k in ['name', 'shortName', 'nickname', 'city', 'stadiumName', 'stadiumCapacity', 'founded', 'reputation', 'transferBudget', 'wageBudget', 'managerName'])
-        k: TextEditingController(text: '${c[k] ?? ''}'),
-    };
-    const numeric = {'stadiumCapacity', 'founded', 'reputation', 'transferBudget', 'wageBudget'};
-    final labels = {
-      'name': tr('Nomi'),
-      'shortName': tr('Qisqa nomi'),
-      'nickname': tr('Laqabi'),
-      'city': tr('Shahar'),
-      'stadiumName': tr('Stadion'),
-      'stadiumCapacity': tr('Sig‘imi'),
-      'founded': tr('Tashkil topgan'),
-      'reputation': tr('Obro‘ (1–100)'),
-      'transferBudget': tr('Transfer byudjeti'),
-      'wageBudget': tr('Maosh limiti'),
-      'managerName': tr('Bosh murabbiy'),
-    };
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(tr('Klubni tahrirlash')),
-        content: SizedBox(
-          width: 420,
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                for (final e in fields.entries)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: TextField(
-                      controller: e.value,
-                      keyboardType: numeric.contains(e.key) ? TextInputType.number : null,
-                      inputFormatters: numeric.contains(e.key) ? [FilteringTextInputFormatter.digitsOnly] : null,
-                      decoration: InputDecoration(labelText: labels[e.key], isDense: true, border: const OutlineInputBorder()),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('Bekor'))),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(tr('Qo‘llash'))),
-        ],
-      ),
-    );
-    if (ok == true) {
-      for (final e in fields.entries) {
-        c[e.key] = numeric.contains(e.key) ? int.tryParse(e.value.text) ?? c[e.key] : e.value.text.trim();
-      }
-      db.updateClub(c);
-    }
-    for (final t in fields.values) {
-      t.dispose();
-    }
+    final result = await ClubFormScreen.open(context, _copy(club));
+    if (result != null) db.updateClub(result);
   }
 
   Widget _playerPane() {
@@ -381,6 +398,7 @@ class _PlayerFormState extends State<_PlayerForm> {
   late final _flag = TextEditingController(text: '${m['countryFlag'] ?? ''}');
   late final _value = TextEditingController(text: '${m['marketValue']}');
   bool _changed = false;
+  late bool _customNation = !countryFlags.containsKey(m['nationality']);
 
   @override
   void dispose() {
@@ -460,7 +478,9 @@ class _PlayerFormState extends State<_PlayerForm> {
                         if (c['id'] != widget.clubId)
                           ListTile(
                             dense: true,
-                            leading: CircleAvatar(radius: 12, backgroundColor: Color(c['primaryColor'] as int)),
+                            leading: c['crest'] == null
+                                ? CircleAvatar(radius: 12, backgroundColor: Color(c['primaryColor'] as int))
+                                : ClubCrestWidget(config: ClubCrestConfig.fromMap(c['crest'] as Map), size: 28),
                             title: Text('${c['name']}'),
                             onTap: () => Navigator.pop(ctx, c['id'] as String),
                           ),
@@ -586,8 +606,25 @@ class _PlayerFormState extends State<_PlayerForm> {
         wrap([
           _field(_name, tr('To‘liq ism')),
           _field(_short, tr('Qisqa ism')),
-          _field(_nation, tr('Millati')),
-          _field(_flag, tr('Bayroq (emoji)')),
+          DropdownButtonFormField<String>(
+            initialValue: _customNation ? '' : _nation.text,
+            isExpanded: true,
+            decoration: InputDecoration(labelText: tr('Millati'), isDense: true, border: const OutlineInputBorder()),
+            items: [
+              for (final e in countryFlags.entries) DropdownMenuItem(value: e.key, child: Text('${e.value} ${tr(e.key)}')),
+              DropdownMenuItem(value: '', child: Text(tr('Boshqa (qo‘lda yozish)'))),
+            ],
+            onChanged: (v) => setState(() {
+              _changed = true;
+              _customNation = v == null || v.isEmpty;
+              if (!_customNation) {
+                _nation.text = v!;
+                _flag.text = countryFlags[v]!;
+              }
+            }),
+          ),
+          if (_customNation) _field(_nation, tr('Millati (o‘z nomi)')),
+          if (_customNation) _field(_flag, tr('Bayroq (emoji)')),
           _field(_value, tr('Bozor bahosi (EUR)'), number: true),
           _stepper(tr('Yosh'), (m['age'] as num).toInt(), 15, 45, (v) => _set('age', v)),
           _stepper(tr('Raqam'), (m['number'] as num).toInt(), 1, 99, (v) => _set('number', v)),

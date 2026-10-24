@@ -87,7 +87,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         ],
       ),
     ),
-    body: SafeArea(
+    body: PageWidth(
+      maxWidth: 900,
+      child: SafeArea(
       child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 760),
@@ -296,6 +298,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           ),
         ),
       ),
+    ),
     ),
   );
 

@@ -99,7 +99,9 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
         title: Text(tr('Klubni tanlang')),
         actions: [InkWell(borderRadius: BorderRadius.circular(20), onTap: () => showCoinInfo(context), child: const CoinBalance())],
       ),
-      body: ListView(
+      body: PageWidth(
+      maxWidth: 1100,
+      child: ListView(
         padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
         children: [
           SectionHeader(tr('Liga'), icon: Icons.emoji_events_outlined),
@@ -207,6 +209,7 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
           ),
         ],
       ),
+    ),
       // Always reachable, however long the club list is.
       bottomNavigationBar: SafeArea(
         child: Padding(

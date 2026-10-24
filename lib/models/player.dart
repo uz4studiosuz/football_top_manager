@@ -505,6 +505,9 @@ class Player {
   int seasonRated = 0;
   final List<double> recentRatings = [];
   final List<String> history = []; // mavsumlar bo'yicha qisqa yozuvlar
+
+  /// Career moves, newest first: "season|from|to|fee".
+  final List<String> transfers = [];
   Player({
     FaceConfig? face,
     this.instruction = PlayerInstruction.balanced,

@@ -13,6 +13,9 @@ import 'package:football_top_manager/screens/player_match_screen.dart';
 import 'package:football_top_manager/screens/db_editor_screen.dart';
 import 'package:football_top_manager/screens/tactics_screen.dart';
 import 'package:football_top_manager/screens/club_life_screen.dart';
+import 'package:football_top_manager/screens/shootout_screen.dart';
+import 'package:football_top_manager/services/cup.dart';
+import 'package:football_top_manager/screens/standings_screen.dart';
 import 'package:football_top_manager/ui/app_theme.dart';
 import 'package:football_top_manager/ui/heatmap.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -68,6 +71,24 @@ void main() {
     }
 
     const desktop = Size(1366, 820), phone = Size(390, 844);
+    final h = game.userClub, a = game.getClubById(fixture.homeClubId == h.id ? fixture.awayClubId : fixture.homeClubId)!;
+    await mount(
+      ShootoutScreen(
+        home: h,
+        away: a,
+        userHome: true,
+        homeTakers: PenaltyModel.takers(h.startingXI),
+        awayTakers: PenaltyModel.takers(a.startingXI),
+        homeKeeper: h.startingXI.first,
+        awayKeeper: a.startingXI.first,
+      ),
+      phone,
+    );
+    await shot('m-shootout');
+    await mount(const StandingsScreen(), desktop);
+    await tester.tap(find.text('Kubok'));
+    await tester.pumpAndSettle();
+    await shot('d-cup');
     for (var t = 0; t < 5; t++) {
       await mount(ClubLifeScreen(key: ValueKey('life$t'), initialTab: t), phone);
       await shot('m-club-$t');

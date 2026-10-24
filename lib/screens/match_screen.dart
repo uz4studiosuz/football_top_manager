@@ -15,6 +15,8 @@ import 'match_report_screen.dart';
 import 'widgets/opponent_squad_sheet.dart';
 import 'widgets/player_detail_view.dart';
 import 'player_match_screen.dart';
+import 'shootout_screen.dart';
+import '../services/cup.dart';
 import '../services/lineup_solver.dart';
 import 'tactics_screen.dart';
 import '../l10n/l10n.dart';
@@ -270,8 +272,14 @@ class _MatchScreenState extends State<MatchScreen> {
     }
   }
 
+  /// Shootout result for a drawn cup match.
+  (int, int)? _pens;
+
+  bool get _needsShootout =>
+      _game.isCupFixture(widget.fixture) && _field.homeStats.goals == _field.awayStats.goals && _pens == null;
+
   void _save() {
-    if (_saved) return;
+    if (_saved || _needsShootout) return;
     _saved = true;
     _game.finishMatch(
       fixture: widget.fixture,
@@ -279,7 +287,32 @@ class _MatchScreenState extends State<MatchScreen> {
       awayScore: _field.awayStats.goals,
       events: _field.events,
       engine: _field,
+      penalties: _pens,
     );
+  }
+
+  Future<void> _playShootout() async {
+    List<Player> onPitch(Club c) => c.startingXI.where((p) => !_field.dismissed.contains(p.id)).toList();
+    Player keeper(Club c) => onPitch(c).firstWhere((p) => p.mainPosition.isGoalkeeper, orElse: () => onPitch(c).first);
+    final result = await Navigator.push<(int, int)>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ShootoutScreen(
+          home: _home,
+          away: _away,
+          userHome: _userHome,
+          homeTakers: PenaltyModel.takers(onPitch(_home)),
+          awayTakers: PenaltyModel.takers(onPitch(_away)),
+          homeKeeper: keeper(_home),
+          awayKeeper: keeper(_away),
+        ),
+      ),
+    );
+    if (result == null || !mounted) return;
+    setState(() {
+      _pens = result;
+      _save();
+    });
   }
 
   Future<void> _instantFinish() async {
@@ -396,6 +429,13 @@ class _MatchScreenState extends State<MatchScreen> {
         builder: (_) => TacticsScreen(
           onSwap: _swapInMatch,
           onAutoPick: _autoInMatch,
+          subMarks: () => {
+            for (final e in _field.lines.entries)
+              if (e.value.subOnMinute != null)
+                e.key: (true, e.value.subOnMinute!)
+              else if (e.value.subOffMinute != null)
+                e.key: (false, e.value.subOffMinute!),
+          },
           unavailable: {..._field.dismissed, ..._field.subbedOff},
         ),
       ),
@@ -420,7 +460,7 @@ class _MatchScreenState extends State<MatchScreen> {
     final colors = teamColors(_home, _away);
     final finished = _field.isFinished;
     return PopScope(
-      canPop: finished,
+      canPop: finished && !_needsShootout,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) _confirmExit();
       },
@@ -428,7 +468,7 @@ class _MatchScreenState extends State<MatchScreen> {
       length: 4,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(trf('{0} · {1}-tur', [_game.leagueName, widget.fixture.round]), style: AppText.h3),
+          title: Text(_game.fixtureTitle(widget.fixture), style: AppText.h3),
           actions: [
             IconButton(
               tooltip: tr('Raqib tarkibi'),
@@ -600,10 +640,15 @@ class _MatchScreenState extends State<MatchScreen> {
   );
 
   Widget _pitch((Color, Color) colors, double width, double maxHeight) {
-    final h = (width * 68 / 105).clamp(150.0, maxHeight < 700 ? 190.0 : 320.0);
+    // Keep the real pitch shape (105×68): on wide screens the height limit
+    // narrows the pitch instead of stretching it.
+    final limit = maxHeight < 700 ? 190.0 : max(320.0, maxHeight * 0.5);
+    final h = ((width - 20) * 68 / 105).clamp(150.0, limit);
+    final w = min(width - 20, h * 105 / 68);
     return Container(
       height: h,
-      margin: const EdgeInsets.fromLTRB(10, 8, 10, 6),
+      width: w,
+      margin: EdgeInsets.fromLTRB(max(10, (width - w) / 2), 8, max(10, (width - w) / 2), 6),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(14),
         child: Stack(
@@ -781,7 +826,14 @@ class _MatchScreenState extends State<MatchScreen> {
           stat('xG', h.xg.toStringAsFixed(2), a.xg.toStringAsFixed(2)),
           stat(tr('Zarbalar'), '${h.shots}', '${a.shots}'),
           const SizedBox(height: 8),
-          if (ft)
+          if (ft && _needsShootout)
+            FilledButton.icon(
+              style: FilledButton.styleFrom(minimumSize: const Size(0, 40)),
+              onPressed: _playShootout,
+              icon: const Icon(Icons.sports_soccer),
+              label: Text(tr('Penaltilar seriyasi')),
+            )
+          else if (ft)
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

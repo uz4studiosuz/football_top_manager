@@ -15,6 +15,7 @@ import 'lineup_solver.dart';
 import 'season_calendar.dart';
 import 'coin_wallet.dart';
 import 'club_life.dart';
+import 'cup.dart';
 import '../l10n/l10n.dart';
 
 /// Yetakchi futbolchilar reytingi modeli
@@ -250,6 +251,137 @@ class GameState extends ChangeNotifier {
   /// Facilities, training, academy, fans, press and the club's history.
   final ClubLife life = ClubLife();
 
+  /// This season's domestic cup and the user's cup matches (for reports).
+  Cup? cup;
+  final List<Fixture> cupFixtures = [];
+  Fixture? _openCupFixture;
+
+  String get cupName => trf('{0} kubogi', [leagueName]);
+
+  bool isCupFixture(Fixture f) => f.id.startsWith('cup_');
+
+  /// "League · 5-tur" or "Cup · Semi-final".
+  String fixtureTitle(Fixture f) {
+    if (!isCupFixture(f)) return trf('{0} · {1}-tur', [leagueName, f.round]);
+    final r = int.tryParse(f.id.split('_')[2]) ?? 0;
+    return '$cupName · ${Cup.stageName(r, cup?.totalRounds ?? r + 1)}';
+  }
+
+  void _drawCup() {
+    cup = Cup.draw(_allClubs, totalRounds, Random(_salt(calendar.year * 131)));
+    cupFixtures.clear();
+    _openCupFixture = null;
+  }
+
+  /// The user's cup tie due this week (after the league match), if any.
+  Fixture? get pendingCupFixture {
+    final c = cup;
+    if (c == null || _userClubId == null || seasonFinished || nextUserFixture != null) return null;
+    final r = c.currentRound;
+    if (r == null || r >= c.rounds.length || c.schedule[r] != _currentRound) return null;
+    final i = c.rounds[r].indexWhere((t) => t.involves(_userClubId!) && !t.played);
+    if (i < 0) return null;
+    final id = 'cup_${calendar.year}_${r}_$i';
+    if (_openCupFixture?.id != id) {
+      final t = c.rounds[r][i];
+      _openCupFixture = Fixture(id: id, round: _currentRound, homeClubId: t.home, awayClubId: t.away!, date: currentDate);
+    }
+    return _openCupFixture;
+  }
+
+  (int, int) _autoShootout(Club home, Club away, Random rnd) => PenaltyModel.simulate(
+    PenaltyModel.takers(home.startingXI),
+    PenaltyModel.takers(away.startingXI),
+    home.startingXI.firstWhere((p) => p.mainPosition.isGoalkeeper, orElse: () => home.startingXI.first),
+    away.startingXI.firstWhere((p) => p.mainPosition.isGoalkeeper, orElse: () => away.startingXI.first),
+    rnd,
+  );
+
+  /// Finishes the user's cup match; a draw goes to [penalties] (or an
+  /// automatic shootout).
+  void _finishCupMatch(Fixture f, int homeScore, int awayScore, List<MatchEvent> events, MatchField? engine, (int, int)? penalties) {
+    final parts = f.id.split('_');
+    final r = int.parse(parts[2]), i = int.parse(parts[3]);
+    final tie = cup!.rounds[r][i];
+    if (engine != null) {
+      engine.writeTo(f);
+      _applyEngine(f, engine);
+    } else {
+      f.events = events;
+    }
+    f
+      ..homeScore = homeScore
+      ..awayScore = awayScore
+      ..isPlayed = true;
+    tie
+      ..homeGoals = homeScore
+      ..awayGoals = awayScore;
+    if (homeScore == awayScore) {
+      final pens = penalties ?? _autoShootout(getClubById(tie.home)!, getClubById(tie.away!)!, Random(_salt(f.id.hashCode)));
+      tie
+        ..homePens = pens.$1
+        ..awayPens = pens.$2;
+    }
+    cupFixtures.add(f);
+    _openCupFixture = null;
+    _recordManagerResult(f);
+    _restoreUserLineup();
+    _afterUserMatch(f);
+    final won = tie.winner == _userClubId;
+    _news(
+      NewsKind.match,
+      won ? trf('{0}: keyingi bosqichga chiqdik!', [cupName]) : trf('{0}: kubokdan chiqdik', [cupName]),
+      '${getClubById(tie.home)!.name} ${tie.score()} ${getClubById(tie.away!)!.name}',
+      alert: true,
+    );
+    _resolveCupRound(r);
+    notifyListeners();
+  }
+
+  /// Plays the rest of a cup round in the background and draws the next.
+  void _resolveCupRound(int r) {
+    final c = cup;
+    if (c == null || r >= c.rounds.length) return;
+    final rnd = Random(_salt(calendar.year * 977 + r));
+    for (final t in c.rounds[r]) {
+      if (t.played) continue;
+      final home = getClubById(t.home)!, away = getClubById(t.away!)!;
+      if (home.id == _userClubId || away.id == _userClubId) {
+        // Not played by the manager in time: played as a quick result.
+        final fx = pendingCupFixture ?? Fixture(id: 'cup_${calendar.year}_${r}_${c.rounds[r].indexOf(t)}', round: _currentRound, homeClubId: t.home, awayClubId: t.away!);
+        final engine = _userEngine(fx)..simulateToEnd();
+        _finishCupMatch(fx, engine.homeStats.goals, engine.awayStats.goals, engine.events, engine, null);
+        return;
+      }
+      final (hs, aw) = quickScore(home, away, rnd);
+      t
+        ..homeGoals = hs
+        ..awayGoals = aw;
+      if (hs == aw) {
+        final pens = _autoShootout(home, away, rnd);
+        t
+          ..homePens = pens.$1
+          ..awayPens = pens.$2;
+      }
+    }
+    c.advance(rnd);
+    if (c.winner != null) {
+      final champ = getClubById(c.winner!)!;
+      final mine = champ.id == _userClubId;
+      _news(NewsKind.award, mine ? trf('{0} BIZNIKI! 🏆', [cupName]) : trf('{0} g‘olibi: {1}', [cupName, champ.name]),
+          trf('{0} mavsumi kubok finali yakunlandi.', [seasonLabel]), alert: mine);
+      if (mine) {
+        life.trophies.insert(0, trf('{0} · {1} g‘olibi', [seasonLabel, cupName]));
+        CoinWallet().reward(CoinWallet.promotionReward);
+      }
+    } else if (c.rounds.length > r + 1 && c.rounds[r + 1].any((t) => t.involves(_userClubId!))) {
+      final t = c.rounds[r + 1].firstWhere((t) => t.involves(_userClubId!));
+      final rival = getClubById(t.home == _userClubId ? t.away! : t.home)!;
+      _news(NewsKind.match, trf('{0}: {1} qur’asi', [cupName, Cup.stageName(r + 1, c.totalRounds)]),
+          trf('Raqibimiz: {0} ({1}-turdan keyin).', [rival.name, c.schedule[r + 1]]));
+    }
+  }
+
   void _resetRecords() {
     life.reset();
     ledger.clear();
@@ -363,6 +495,7 @@ class GameState extends ChangeNotifier {
     }
     _setupDivisions();
     _generateSeasonSchedule();
+    _drawCup();
     _initializeStandings();
     _currentRound = 1;
     _isInitialized = true;
@@ -679,8 +812,13 @@ class GameState extends ChangeNotifier {
     required List<MatchEvent> events,
     Set<String>? participantIds,
     MatchField? engine,
+    (int, int)? penalties,
   }) {
     if (fixture.isPlayed) return;
+    if (isCupFixture(fixture)) {
+      _finishCupMatch(fixture, homeScore, awayScore, events, engine, penalties);
+      return;
+    }
     _tickAvailability();
     final homeClub = getClubById(fixture.homeClubId)!;
     final awayClub = getClubById(fixture.awayClubId)!;
@@ -1106,6 +1244,10 @@ class GameState extends ChangeNotifier {
         currentRoundFixtures.any((f) => !f.isPlayed)) {
       return;
     }
+    final dueCup = cup?.currentRound;
+    if (dueCup != null && dueCup < (cup?.rounds.length ?? 0) && cup!.schedule[dueCup] <= _currentRound) {
+      _resolveCupRound(dueCup);
+    }
     _playDivisions(calendar.dateOfRound(_currentRound));
     final playedOn = currentDate;
     if (calendar.dateOfRound(_currentRound + 1).month != playedOn.month) {
@@ -1304,6 +1446,7 @@ class GameState extends ChangeNotifier {
       0,
       TransferRecord(_currentRound, p.name, seller.name, buyer.name, fee, date: currentDate),
     );
+    p.transfers.insert(0, '$seasonLabel|${seller.name}|${buyer.name}|$fee');
     if (buyer.id != _userClubId && seller.id != _userClubId) {
       _news(
         NewsKind.transfer,
@@ -1655,6 +1798,7 @@ class GameState extends ChangeNotifier {
       0,
       TransferRecord(_currentRound, p.name, tr('Erkin agent'), userClub.name, 0, date: currentDate),
     );
+    p.transfers.insert(0, '$seasonLabel|-|${userClub.name}|0');
     _news(NewsKind.transfer, trf('{0} imzoladi', [p.name]), trf('Erkin agent sifatida {0} yillik shartnoma.', [p.contract.contractYears]));
     notifyListeners();
     return true;
@@ -2022,6 +2166,7 @@ class GameState extends ChangeNotifier {
     seasonFinished = false;
     deals.clear();
     _generateSeasonSchedule();
+    _drawCup();
     _initializeStandings();
     for (final d in divisions.values) {
       d.calendar = SeasonCalendar(calendar.year, d.rounds);
@@ -2616,12 +2761,19 @@ class GameState extends ChangeNotifier {
     ],
     'moves': pendingMoves,
     'life': life.toMap(),
+    if (cup != null) 'cup': cup!.toMap(),
+    'cupFx': [for (final f in cupFixtures) SaveCodec.fixture(f, shots: true, full: true, commentary: false)],
   };
 
   /// Restores a career written by [toSave]. Returns false for unknown data.
   bool restore(Map<String, dynamic> m) {
     if (m['v'] != saveVersion) return false;
     life.restore(m['life'] == null ? null : Map<String, dynamic>.from(m['life']));
+    cup = m['cup'] == null ? null : Cup.fromMap(Map<String, dynamic>.from(m['cup']));
+    cupFixtures
+      ..clear()
+      ..addAll([for (final f in (m['cupFx'] as List? ?? [])) SaveCodec.fixtureFrom(Map<String, dynamic>.from(f))]);
+    _openCupFixture = null;
     _allClubs = [for (final c in m['clubs'] as List) SaveCodec.clubFrom(Map<String, dynamic>.from(c))];
     _userClubId = m['user'];
     careerSeed = m['seed'] ?? careerSeed;

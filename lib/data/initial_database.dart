@@ -134,7 +134,10 @@ class InitialDatabase {
     for (final raw in entries) {
       final e = Map<String, dynamic>.from(raw);
       final files = await Future.wait([_read(e['clubsFile']), _read(e['playersFile'])]);
-      loaded[e['id']] = _join(files[0], files[1]);
+      final joined = _join(files[0], files[1]);
+      // A league needs an even number of clubs (at least 4) to be played.
+      if (joined.length < 4 || joined.length.isOdd) continue;
+      loaded[e['id']] = joined;
       leagues.add(LeagueInfo.fromMap(e));
     }
     _custom = (shared[0]['slots'] as List).map((r) => Map<String, dynamic>.from(r)).toList();

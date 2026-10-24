@@ -74,7 +74,8 @@ void main() {
     expect(find.text('Turnir jadvali'), findsOneWidget);
 
     // Player leaderboards live in the third tab.
-    await tester.tap(find.text('Futbolchilar'));
+    // A notification banner may cover the tab bar: switch tabs directly.
+    DefaultTabController.of(tester.element(find.text('Turnir jadvali'))).animateTo(2);
     await tester.pumpAndSettle();
 
     expect(find.text('To\'purarlar'), findsOneWidget);

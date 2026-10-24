@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
 import 'screens/main_navigation_screen.dart';
 import 'screens/onboarding_screen.dart';
@@ -39,13 +40,25 @@ class FootballTopManagerApp extends StatelessWidget {
         title: 'Football Top Manager 2027',
         debugShowCheckedModeBanner: false,
         theme: buildAppTheme(),
-        home: const StartupScreen(),
-        // Creator tool: open /#/editor in the browser.
+        // Mouse and trackpad can drag-scroll lists and chip rows on the web.
+        scrollBehavior: const MaterialScrollBehavior().copyWith(
+          dragDevices: {
+            PointerDeviceKind.touch,
+            PointerDeviceKind.mouse,
+            PointerDeviceKind.trackpad,
+            PointerDeviceKind.stylus,
+          },
+        ),
+        // Creator tool: /editor (or /#/editor) opens the database editor.
+        home: _openEditor ? const EditorStartup() : const StartupScreen(),
         routes: {'/editor': (_) => const EditorStartup()},
       );
     },
   );
   static AppLang? _shown;
+
+  static bool get _openEditor =>
+      Uri.base.path.endsWith('/editor') || Uri.base.fragment.startsWith('/editor');
 }
 
 /// Loads the league data and any saved career, then opens the right screen.

@@ -152,7 +152,9 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: Text(tr('Yangi Jamoa Yaratish'))),
-    body: SingleChildScrollView(
+    body: PageWidth(
+      maxWidth: 900,
+      child: SingleChildScrollView(
       padding: const EdgeInsets.all(12),
       child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -404,6 +406,7 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
         ),
         const SizedBox(height: 20),
       ],
+    ),
     ),
     ),
   );

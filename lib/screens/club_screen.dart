@@ -582,7 +582,10 @@ class NewsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: Text(tr('Yangiliklar'))),
-    body: const NewsView(),
+    body: PageWidth(
+      maxWidth: 900,
+      child: const NewsView(),
+    ),
   );
 }
 

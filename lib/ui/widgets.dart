@@ -727,3 +727,15 @@ class LoadingView extends StatelessWidget {
     ),
   );
 }
+
+/// Centres a page's content at a readable width on wide (desktop) screens.
+class PageWidth extends StatelessWidget {
+  final double maxWidth;
+  final Widget child;
+  const PageWidth({super.key, this.maxWidth = 960, required this.child});
+  @override
+  Widget build(BuildContext context) => Align(
+    alignment: Alignment.topCenter,
+    child: ConstrainedBox(constraints: BoxConstraints(maxWidth: maxWidth), child: child),
+  );
+}

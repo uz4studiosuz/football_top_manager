@@ -19,8 +19,11 @@ class TacticsScreen extends StatefulWidget {
   /// In a match: re-arranges the XI and replaces tired starters; returns
   /// the number of changes made.
   final int Function()? onAutoPick;
+
+  /// In a match: who came on (true) or went off (false), and the minute.
+  final Map<String, (bool, int)> Function()? subMarks;
   final Set<String> unavailable;
-  const TacticsScreen({super.key, this.onSwap, this.onAutoPick, this.unavailable = const {}});
+  const TacticsScreen({super.key, this.onSwap, this.onAutoPick, this.subMarks, this.unavailable = const {}});
   @override
   State<TacticsScreen> createState() => _TacticsScreenState();
 }
@@ -70,13 +73,24 @@ class _TacticsScreenState extends State<TacticsScreen> {
     super.dispose();
   }
 
+  /// Sent off, or already substituted in this match (live).
+  bool _isOut(String id) => widget.unavailable.contains(id) || widget.subMarks?.call()[id]?.$1 == false;
+
   bool _swap(String a, String b) {
     final club = game.userClub;
     final p = club.playerById(a), q = club.playerById(b);
     if (p == null || q == null || a == b) return false;
+    final starters = club.startingLineupIds.toSet();
+    final substitution = _inMatch && starters.contains(a) != starters.contains(b);
     final ok = widget.onSwap?.call(p, q) ?? game.swapPlayer(a, b);
     if (ok) {
       setState(() {});
+      if (substitution) {
+        final incoming = starters.contains(a) ? q : p, outgoing = starters.contains(a) ? p : q;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(trf('Almashtirish: ↑ {0}  ↓ {1}', [incoming.shortName, outgoing.shortName]))),
+        );
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -162,7 +176,7 @@ class _TacticsScreenState extends State<TacticsScreen> {
                   Expanded(
                     child: ListView(
                       children: [
-                        for (final q in club.squad.where((q) => q.id != p.id && !widget.unavailable.contains(q.id)))
+                        for (final q in club.squad.where((q) => q.id != p.id && !_isOut(q.id)))
                           InkWell(
                             onTap: () {
                               if (_swap(p.id, q.id)) Navigator.pop(ctx);
@@ -317,22 +331,29 @@ class _TacticsScreenState extends State<TacticsScreen> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: [
+                        // Wide screens show every formation; phones scroll one row
+                        // (touch or mouse drag).
+                        Builder(
+                          builder: (context) {
+                            final chips = [
                               for (final f in FormationType.values)
-                                Padding(
-                                  padding: const EdgeInsets.only(right: 8),
-                                  child: ChoiceChip(
-                                    label: Text(f.label),
-                                    selected: t.formation == f,
-                                    showCheckmark: false,
-                                    onSelected: (_) => game.updateTactics(t.copyWith(formation: f)),
-                                  ),
+                                ChoiceChip(
+                                  label: Text(f.label),
+                                  selected: t.formation == f,
+                                  showCheckmark: false,
+                                  onSelected: (_) => game.updateTactics(t.copyWith(formation: f)),
                                 ),
-                            ],
-                          ),
+                            ];
+                            if (box.maxWidth >= 700) return Wrap(spacing: 8, runSpacing: 8, children: chips);
+                            return SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: [
+                                  for (final c in chips) Padding(padding: const EdgeInsets.only(right: 8), child: c),
+                                ],
+                              ),
+                            );
+                          },
                         ),
                         const SizedBox(height: 10),
                         Row(
@@ -515,7 +536,7 @@ class _TacticsScreenState extends State<TacticsScreen> {
   }
 
   Widget _dragTarget(Player p, PlayerPosition? pos, {bool bench = false}) => DragTarget<String>(
-    onWillAcceptWithDetails: (d) => d.data != p.id && !widget.unavailable.contains(p.id),
+    onWillAcceptWithDetails: (d) => d.data != p.id && !_isOut(p.id),
     onAcceptWithDetails: (d) => _swap(d.data, p.id),
     builder: (context, candidates, rejected) {
       final base = _node(p, pos, bench: bench, selected: candidates.isNotEmpty);
@@ -553,8 +574,8 @@ class _TacticsScreenState extends State<TacticsScreen> {
         color: Colors.transparent,
         child: _node(p, pos, bench: bench, selected: true),
       );
-      final child = GestureDetector(onTap: () => _menu(p), child: node);
-      if (widget.unavailable.contains(p.id)) return Opacity(opacity: 0.35, child: base);
+      final child = GestureDetector(onTap: () => _menu(p), child: _marked(node, p.id));
+      if (_isOut(p.id)) return Opacity(opacity: 0.45, child: _marked(base, p.id));
       if (MediaQuery.sizeOf(context).width >= 700) {
         return Draggable<String>(
           onDragStarted: () => _beginDrag(p),
@@ -578,6 +599,35 @@ class _TacticsScreenState extends State<TacticsScreen> {
       );
     },
   );
+
+  /// Substitution badge: green ↑ (came on) or red ↓ (went off) with minute.
+  Widget _marked(Widget node, String id) {
+    final mark = widget.subMarks?.call()[id];
+    if (mark == null) return node;
+    final (on, minute) = mark;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        node,
+        Positioned(
+          left: -6,
+          top: -8,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+            decoration: BoxDecoration(
+              color: on ? AppColors.win : AppColors.live,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.white, width: 1.5),
+            ),
+            child: Text(
+              "${on ? '↑' : '↓'} $minute'",
+              style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 
   Widget _node(Player p, PlayerPosition? pos, {bool bench = false, bool selected = false}) {
     final ovr = p.getEffectiveOVR(pos);

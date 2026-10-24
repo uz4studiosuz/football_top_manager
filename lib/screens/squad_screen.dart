@@ -12,7 +12,10 @@ class SquadScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: Text(tr('Futbolchilar'))),
-    body: const SquadList(),
+    body: PageWidth(
+      maxWidth: 1000,
+      child: const SquadList(),
+    ),
   );
 }
 

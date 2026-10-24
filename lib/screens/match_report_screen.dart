@@ -33,7 +33,7 @@ class _MatchReportScreenState extends State<MatchReportScreen> {
       length: 4,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(trf('{0} · {1}-tur', [GameState().leagueName, f.round]), style: AppText.h3),
+          title: Text(GameState().fixtureTitle(f), style: AppText.h3),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(178),
             child: Column(

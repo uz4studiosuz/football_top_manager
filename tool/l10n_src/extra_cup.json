@@ -1,0 +1,214 @@
+{
+ "1/8 final": [
+  "Round of 16",
+  "1/8 финала"
+ ],
+ "23 kishilik tarkib avtomatik yaratiladi; keyin har bir futbolchini tahrirlash mumkin.": [
+  "A 23-man squad is generated automatically; you can then edit every player.",
+  "Состав из 23 игроков создаётся автоматически; затем каждого игрока можно отредактировать."
+ ],
+ "Avto": [
+  "Auto",
+  "Авто"
+ ],
+ "Belgi": [
+  "Emblem",
+  "Эмблема"
+ ],
+ "Bir o‘yinli pley-off; durangda penaltilar seriyasi.": [
+  "Single-match knockout; draws go to penalties.",
+  "Плей-офф в один матч; при ничьей — серия пенальти."
+ ],
+ "Bizning darvozabon: {0}": [
+  "Our keeper: {0}",
+  "Наш вратарь: {0}"
+ ],
+ "Boshqa (qo‘lda yozish)": [
+  "Other (type it)",
+  "Другое (ввести вручную)"
+ ],
+ "Bu liga o‘yinda ko‘rinishi uchun kamida 4 ta va juft sondagi klub kerak.": [
+  "This league needs at least 4 clubs, an even number, to appear in the game.",
+  "Чтобы лига появилась в игре, нужно не меньше 4 клубов и чётное число."
+ ],
+ "Chorak final": [
+  "Quarter-final",
+  "Четвертьфинал"
+ ],
+ "Darvozabon: {0}": [
+  "Keeper: {0}",
+  "Вратарь: {0}"
+ ],
+ "Davlat": [
+  "Country",
+  "Страна"
+ ],
+ "Final": [
+  "Final",
+  "Финал"
+ ],
+ "GOL! {0}": [
+  "GOAL! {0}",
+  "ГОЛ! {0}"
+ ],
+ "G‘olib: {0}": [
+  "Winner: {0}",
+  "Победитель: {0}"
+ ],
+ "Ikkinchi rang": [
+  "Secondary colour",
+  "Второй цвет"
+ ],
+ "Iqtisodiyot: {0}%": [
+  "Economy: {0}%",
+  "Экономика: {0}%"
+ ],
+ "Keyingi bosqichga to‘g‘ridan-to‘g‘ri: {0}": [
+  "Straight to the next round: {0}",
+  "Сразу в следующий раунд: {0}"
+ ],
+ "Kubok keyingi mavsumdan boshlanadi.": [
+  "The cup starts next season.",
+  "Кубок начнётся со следующего сезона."
+ ],
+ "Liga nomi": [
+  "League name",
+  "Название лиги"
+ ],
+ "Ligada kamida 4 ta va juft sondagi klub bo‘lgach, u o‘yinda paydo bo‘ladi.": [
+  "The league appears in the game once it has at least 4 clubs, an even number.",
+  "Лига появится в игре, когда в ней будет не меньше 4 клубов и их число будет чётным."
+ ],
+ "Logotip": [
+  "Crest",
+  "Эмблема клуба"
+ ],
+ "Logotip rasm emas: u shu sozlamalardan chiziladi va klub bilan birga clubs_*.json faylida saqlanadi.": [
+  "The crest is not an image: it is drawn from these settings and stored with the club in clubs_*.json.",
+  "Эмблема — не картинка: она рисуется по этим настройкам и хранится вместе с клубом в clubs_*.json."
+ ],
+ "Millati (o‘z nomi)": [
+  "Nationality (custom)",
+  "Гражданство (своё)"
+ ],
+ "Naqsh": [
+  "Pattern",
+  "Узор"
+ ],
+ "Nom va qisqa nomni kiriting.": [
+  "Enter a name and a short name.",
+  "Введите название и краткое название."
+ ],
+ "Penaltilar seriyasi": [
+  "Penalty shootout",
+  "Серия пенальти"
+ ],
+ "QAYTARDI!": [
+  "SAVED!",
+  "ОТРАЗИЛ!"
+ ],
+ "Raqib zarbasi: {0}. Darvozabon qayerga sakraydi?": [
+  "Opponent's kick: {0}. Where does the keeper dive?",
+  "Бьёт соперник: {0}. Куда прыгнет вратарь?"
+ ],
+ "Raqibimiz: {0} ({1}-turdan keyin).": [
+  "Our opponent: {0} (after round {1}).",
+  "Наш соперник: {0} (после {1}-го тура)."
+ ],
+ "Shakl": [
+  "Shape",
+  "Форма"
+ ],
+ "Tarkib kuchi: OVR ≈ {0}": [
+  "Squad strength: OVR ≈ {0}",
+  "Сила состава: OVR ≈ {0}"
+ ],
+ "Yangi liga": [
+  "New league",
+  "Новая лига"
+ ],
+ "Yarim final": [
+  "Semi-final",
+  "Полуфинал"
+ ],
+ "Yulduzlar: {0}": [
+  "Stars: {0}",
+  "Звёзды: {0}"
+ ],
+ "ZIP yuklab olindi: uni assets/data papkasiga ochib, eski fayllarni almashtiring.": [
+  "ZIP downloaded: extract it into assets/data, replacing the old files.",
+  "ZIP скачан: распакуйте его в assets/data с заменой старых файлов."
+ ],
+ "Zarba: {0}. Burchakni tanlang": [
+  "Kick: {0}. Pick a corner",
+  "Бьёт {0}. Выберите угол"
+ ],
+ "{0} BIZNIKI! 🏆": [
+  "{0} IS OURS! 🏆",
+  "{0} НАШ! 🏆"
+ ],
+ "{0} darvozadan tashqariga tepdi": [
+  "{0} missed the target",
+  "{0} не попал в створ"
+ ],
+ "{0} g‘olibi: {1}": [
+  "{0} winner: {1}",
+  "Победитель — {0}: {1}"
+ ],
+ "{0} kubogi": [
+  "{0} Cup",
+  "Кубок: {0}"
+ ],
+ "{0} mavsumi kubok finali yakunlandi.": [
+  "The {0} cup final has been played.",
+  "Финал кубка сезона {0} сыгран."
+ ],
+ "{0} penaltilarda g‘alaba qozondi!": [
+  "{0} win on penalties!",
+  "{0} побеждает по пенальти!"
+ ],
+ "{0} · {1} g‘olibi": [
+  "{0} · {1} winners",
+  "{0} · победитель: {1}"
+ ],
+ "{0} · {1}-turdan keyin": [
+  "{0} · after round {1}",
+  "{0} · после {1}-го тура"
+ ],
+ "{0}-bosqich": [
+  "Round {0}",
+  "Раунд {0}"
+ ],
+ "{0}: keyingi bosqichga chiqdik!": [
+  "{0}: we're through to the next round!",
+  "{0}: мы прошли дальше!"
+ ],
+ "{0}: kubokdan chiqdik": [
+  "{0}: we're out of the cup",
+  "{0}: мы выбыли из кубка"
+ ],
+ "{0}: {1} qur’asi": [
+  "{0}: {1} draw",
+  "{0}: жеребьёвка — {1}"
+ ],
+ "Almashtirish: ↑ {0}  ↓ {1}": [
+  "Substitution: ↑ {0}  ↓ {1}",
+  "Замена: ↑ {0}  ↓ {1}"
+ ],
+ "Bepul": [
+  "Free",
+  "Бесплатно"
+ ],
+ "Hozirgi klub": [
+  "Current club",
+  "Текущий клуб"
+ ],
+ "Karyera davomida hali transfer bo‘lmagan.": [
+  "No transfers in his career yet.",
+  "Трансферов в карьере пока не было."
+ ],
+ "Transferlar tarixi": [
+  "Transfer history",
+  "История трансферов"
+ ]
+}

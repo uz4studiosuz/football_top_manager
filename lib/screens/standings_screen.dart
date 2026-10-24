@@ -10,6 +10,7 @@ import 'match_report_screen.dart';
 import 'widgets/opponent_squad_sheet.dart';
 import 'widgets/player_detail_view.dart';
 import '../l10n/l10n.dart';
+import '../services/cup.dart';
 
 class StandingsScreen extends StatefulWidget {
   const StandingsScreen({super.key});
@@ -27,15 +28,18 @@ class _StandingsScreenState extends State<StandingsScreen> {
   Widget build(BuildContext context) {
     final game = GameState();
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         appBar: AppBar(
           title: Text(trf('{0} Markazi', [game.leagueName])),
           bottom: TabBar(
+            isScrollable: true,
+            tabAlignment: TabAlignment.center,
             tabs: [
               Tab(text: tr('Turnir jadvali')),
               Tab(text: tr('Turlar')),
               Tab(text: tr('Futbolchilar')),
+              Tab(text: tr('Kubok')),
             ],
           ),
         ),
@@ -53,11 +57,110 @@ class _StandingsScreenState extends State<StandingsScreen> {
                 _table(context, game),
                 _rounds(context, game),
                 _leaders(context, game),
+                _cup(context, game),
               ],
             );
           },
         ),
       ),
+    );
+  }
+
+  /// The cup bracket, round by round; the user's ties open their report.
+  Widget _cup(BuildContext context, GameState game) {
+    final cup = game.cup;
+    if (cup == null) return EmptyState(icon: Icons.emoji_events_outlined, text: tr('Kubok keyingi mavsumdan boshlanadi.'));
+    String name(String? id) => id == null ? '—' : (game.getClubById(id)?.name ?? id);
+    return ListView(
+      padding: const EdgeInsets.all(12),
+      children: [
+        AppCard(
+          child: Row(
+            children: [
+              const Icon(Icons.emoji_events, color: AppColors.gold, size: 30),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(game.cupName, style: AppText.h3),
+                    Text(
+                      cup.winner != null
+                          ? trf('G‘olib: {0}', [name(cup.winner)])
+                          : tr('Bir o‘yinli pley-off; durangda penaltilar seriyasi.'),
+                      style: AppText.caption,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+        for (var r = cup.rounds.length - 1; r >= 0; r--) ...[
+          const SizedBox(height: 12),
+          SectionHeader(
+            trf('{0} · {1}-turdan keyin', [Cup.stageName(r, cup.totalRounds), cup.schedule[r]]),
+            icon: Icons.account_tree_outlined,
+          ),
+          AppCard(
+            padding: EdgeInsets.zero,
+            child: Column(
+              children: [
+                for (final (i, t) in cup.rounds[r].indexed)
+                  if (!t.isBye)
+                    ListTile(
+                      dense: true,
+                      selected: t.involves(game.userClubId ?? ''),
+                      selectedTileColor: AppColors.primarySoft,
+                      title: Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              name(t.home),
+                              textAlign: TextAlign.right,
+                              style: AppText.small.copyWith(
+                                color: AppColors.ink,
+                                fontWeight: t.winner == t.home ? FontWeight.w800 : FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            child: Text(t.score(), style: AppText.bodyStrong),
+                          ),
+                          Expanded(
+                            child: Text(
+                              name(t.away),
+                              style: AppText.small.copyWith(
+                                color: AppColors.ink,
+                                fontWeight: t.winner == t.away ? FontWeight.w800 : FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      onTap: () {
+                        final f = game.cupFixtures.where((f) => f.id.endsWith('_${r}_$i')).firstOrNull;
+                        if (f != null) {
+                          Navigator.push(context, MaterialPageRoute<void>(builder: (_) => MatchReportScreen(fixture: f)));
+                        }
+                      },
+                    ),
+                if (cup.rounds[r].any((t) => t.isBye))
+                  Padding(
+                    padding: const EdgeInsets.all(10),
+                    child: Text(
+                      trf('Keyingi bosqichga to‘g‘ridan-to‘g‘ri: {0}', [
+                        cup.rounds[r].where((t) => t.isBye).map((t) => game.getClubById(t.home)?.shortName ?? t.home).join(', '),
+                      ]),
+                      style: AppText.caption,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 
