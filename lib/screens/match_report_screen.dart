@@ -6,6 +6,7 @@ import '../services/game_state.dart';
 import '../services/season_calendar.dart';
 import '../ui/face_avatar.dart';
 import '../ui/match_widgets.dart';
+import '../ui/shot_widgets.dart';
 import '../ui/widgets.dart';
 import 'widgets/player_detail_view.dart';
 
@@ -85,7 +86,23 @@ class _MatchReportScreenState extends State<MatchReportScreen> {
                   child: Column(
                     children: [
                       const SectionHeader('Muhim voqealar', icon: Icons.timeline_rounded),
-                      IncidentTimeline(events: f.events, newestFirst: false),
+                      IncidentTimeline(
+                        events: f.events,
+                        newestFirst: false,
+                        onGoalTap: f.shots.isEmpty
+                            ? null
+                            : (e) {
+                                final shot = shotForGoal(f.shots, e);
+                                if (shot == null) return;
+                                showShotDetailSheet(
+                                  context,
+                                  shot: shot,
+                                  home: h,
+                                  away: a,
+                                  color: shot.home ? colors.$1 : colors.$2,
+                                );
+                              },
+                      ),
                     ],
                   ),
                 ),
@@ -99,6 +116,23 @@ class _MatchReportScreenState extends State<MatchReportScreen> {
                   homeColor: colors.$1,
                   awayColor: colors.$2,
                 ),
+                if (f.shots.isNotEmpty)
+                  AppCard(
+                    margin: const EdgeInsets.only(top: 12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SectionHeader('Zarbalar xaritasi', icon: Icons.scatter_plot_outlined),
+                        ShotMapView(
+                          shots: f.shots,
+                          home: h,
+                          away: a,
+                          homeColor: colors.$1,
+                          awayColor: colors.$2,
+                        ),
+                      ],
+                    ),
+                  ),
               ],
             ),
             ListView(

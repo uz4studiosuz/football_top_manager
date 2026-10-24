@@ -167,7 +167,7 @@ abstract final class SaveCodec {
   }
 
   // --------------------------------------------------------------- fixture
-  static Map<String, dynamic> fixture(Fixture f) => {
+  static Map<String, dynamic> fixture(Fixture f, {bool shots = true}) => {
     'id': f.id,
     'r': f.round,
     'h': f.homeClubId,
@@ -194,6 +194,7 @@ abstract final class SaveCodec {
       'hb': f.homeBench,
       'ab': f.awayBench,
       'mo': f.momentum.map((v) => v.round()).toList(),
+      if (shots && f.shots.isNotEmpty) 'sh': f.shots.map((s) => s.toMap()).toList(),
       if (f.motmId != null) 'motm': f.motmId,
     },
   };
@@ -257,6 +258,7 @@ abstract final class SaveCodec {
     f.awayBench = List<String>.from(m['ab'] ?? []);
     f.momentum = [for (final v in (m['mo'] as List? ?? [])) (v as num).toDouble()];
     f.motmId = m['motm'];
+    f.shots = [for (final s in (m['sh'] as List? ?? [])) ShotRecord.fromMap(Map<String, dynamic>.from(s))];
     return f;
   }
 

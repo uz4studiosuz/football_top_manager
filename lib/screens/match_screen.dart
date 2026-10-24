@@ -9,6 +9,7 @@ import '../services/match_field.dart';
 import '../ui/face_avatar.dart';
 import '../ui/football_pitch.dart';
 import '../ui/match_widgets.dart';
+import '../ui/shot_widgets.dart';
 import '../ui/widgets.dart';
 import 'match_report_screen.dart';
 import 'widgets/opponent_squad_sheet.dart';
@@ -226,6 +227,18 @@ class _MatchScreenState extends State<MatchScreen> {
     if (mounted) setState(() => _playing = resume && !_field.isHalfTime);
   }
 
+  void _openGoal(MatchEvent e, (Color, Color) colors) {
+    final shot = shotForGoal(_field.shots, e);
+    if (shot == null) return;
+    showShotDetailSheet(
+      context,
+      shot: shot,
+      home: _home,
+      away: _away,
+      color: shot.home ? colors.$1 : colors.$2,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colors = teamColors(_home, _away);
@@ -305,9 +318,13 @@ class _MatchScreenState extends State<MatchScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 const SectionHeader('Zarbalar xaritasi', icon: Icons.scatter_plot_outlined),
-                                ShotMap(shots: _field.shots, homeColor: colors.$1, awayColor: colors.$2),
-                                const SizedBox(height: 6),
-                                const Text('Doira kattaligi – xG, to‘ldirilgan – gol.', style: AppText.caption),
+                                ShotMapView(
+                                  shots: _field.shots,
+                                  home: _home,
+                                  away: _away,
+                                  homeColor: colors.$1,
+                                  awayColor: colors.$2,
+                                ),
                               ],
                             ),
                           ),
@@ -642,7 +659,10 @@ class _MatchScreenState extends State<MatchScreen> {
           child: Column(
             children: [
               const SectionHeader('Muhim voqealar', icon: Icons.timeline_rounded),
-              IncidentTimeline(events: _field.events),
+              IncidentTimeline(
+                events: _field.events,
+                onGoalTap: (e) => _openGoal(e, colors),
+              ),
             ],
           ),
         ),

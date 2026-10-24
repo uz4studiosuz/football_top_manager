@@ -6,6 +6,7 @@ import '../models/player.dart';
 import '../services/match_field.dart';
 import 'face_avatar.dart';
 import 'football_pitch.dart';
+import 'shot_widgets.dart';
 import 'widgets.dart';
 
 /// One statistic row shared by the live screen and the match report.
@@ -247,7 +248,8 @@ class _MomentumPainter extends CustomPainter {
 class IncidentTimeline extends StatelessWidget {
   final List<MatchEvent> events;
   final bool newestFirst;
-  const IncidentTimeline({super.key, required this.events, this.newestFirst = true});
+  final void Function(MatchEvent goal)? onGoalTap;
+  const IncidentTimeline({super.key, required this.events, this.newestFirst = true, this.onGoalTap});
   @override
   Widget build(BuildContext context) {
     bool key(MatchEvent e) =>
@@ -284,7 +286,7 @@ class IncidentTimeline extends StatelessWidget {
       if (first.isEmpty)
         quiet(ht == null ? 'Hozircha muhim voqealar yo‘q' : 'Muhim voqealar bo‘lmadi')
       else
-        for (final e in (newestFirst ? first.reversed : first)) _IncidentRow(e),
+        for (final e in (newestFirst ? first.reversed : first)) _IncidentRow(e, onGoalTap),
     ];
     final secondSection = ht == null
         ? <Widget>[]
@@ -293,7 +295,7 @@ class IncidentTimeline extends StatelessWidget {
             if (second.isEmpty)
               quiet(ft == null ? 'Hozircha muhim voqealar yo‘q' : 'Muhim voqealar bo‘lmadi')
             else
-              for (final e in (newestFirst ? second.reversed : second)) _IncidentRow(e),
+              for (final e in (newestFirst ? second.reversed : second)) _IncidentRow(e, onGoalTap),
           ];
     return Column(
       children: newestFirst
@@ -305,7 +307,8 @@ class IncidentTimeline extends StatelessWidget {
 
 class _IncidentRow extends StatelessWidget {
   final MatchEvent e;
-  const _IncidentRow(this.e);
+  final void Function(MatchEvent goal)? onGoalTap;
+  const _IncidentRow(this.e, [this.onGoalTap]);
   Widget _icon() => switch (e.type) {
     MatchEventType.goal => const Icon(Icons.sports_soccer, size: 18, color: AppColors.ink),
     MatchEventType.yellowCard => Container(
@@ -324,6 +327,7 @@ class _IncidentRow extends StatelessWidget {
   };
   @override
   Widget build(BuildContext context) {
+    final tappable = e.type == MatchEventType.goal && onGoalTap != null;
     final name = e.playerName?.split(' ').last ?? '';
     final title = switch (e.type) {
       MatchEventType.substitution => e.playerName == null ? '' : e.playerName!,
@@ -378,12 +382,22 @@ class _IncidentRow extends StatelessWidget {
       score,
       content,
     ];
-    return Padding(
+    final body = Padding(
       padding: const EdgeInsets.symmetric(vertical: 7),
       child: Row(
         mainAxisAlignment: e.isHomeTeam ? MainAxisAlignment.start : MainAxisAlignment.end,
-        children: e.isHomeTeam ? row : row.reversed.toList(),
+        children: [
+          if (!e.isHomeTeam && tappable) const Icon(Icons.chevron_left_rounded, size: 16, color: AppColors.ink3),
+          ...(e.isHomeTeam ? row : row.reversed),
+          if (e.isHomeTeam && tappable) const Icon(Icons.chevron_right_rounded, size: 16, color: AppColors.ink3),
+        ],
       ),
+    );
+    if (!tappable) return body;
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: () => onGoalTap!(e),
+      child: body,
     );
   }
 }
@@ -523,6 +537,7 @@ class LineupPitch extends StatelessWidget {
                     shirt: shirt,
                     out: dismissed.contains(players[i].id),
                     goals: goals[players[i].id] ?? 0,
+                    assists: lines[players[i].id]?.assists ?? 0,
                     booked: booked.contains(players[i].id),
                     subOn: lines[players[i].id]?.subOnMinute,
                     subOff: lines[players[i].id]?.subOffMinute,
@@ -542,7 +557,7 @@ class _LineupNode extends StatelessWidget {
   final double? rating;
   final Color shirt;
   final bool out, booked;
-  final int goals;
+  final int goals, assists;
   final int? subOn, subOff;
   final VoidCallback? onTap;
   const _LineupNode({
@@ -551,6 +566,7 @@ class _LineupNode extends StatelessWidget {
     required this.shirt,
     required this.out,
     required this.goals,
+    this.assists = 0,
     required this.booked,
     this.subOn,
     this.subOff,
@@ -583,49 +599,52 @@ class _LineupNode extends StatelessWidget {
                 ),
                 if (rating != null)
                   Positioned(right: -14, top: -4, child: RatingBadge(rating, size: 9.5)),
-                if (goals > 0)
+                // SofaScore layout: substitution top-left, rating top-right,
+                // assists bottom-left, goals bottom-right, card on the right.
+                if (subOn != null || subOff != null)
                   Positioned(
-                    left: -8,
-                    bottom: -2,
-                    child: Container(
-                      padding: const EdgeInsets.all(1.5),
-                      decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                      child: const Icon(Icons.sports_soccer, size: 11, color: AppColors.ink),
+                    left: -14,
+                    top: -5,
+                    child: _mark(
+                      [
+                        Icon(
+                          subOn != null ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+                          size: 9,
+                          color: subOn != null ? AppColors.win : AppColors.live,
+                        ),
+                        Text(
+                          '${subOn ?? subOff}′',
+                          style: TextStyle(
+                            fontSize: 8,
+                            fontWeight: FontWeight.w800,
+                            color: subOn != null ? AppColors.win : AppColors.live,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                if (subOn != null)
-                  Positioned(
-                    left: -10,
-                    top: -4,
-                    child: Container(
-                      padding: const EdgeInsets.all(1.5),
-                      decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
-                      child: const Icon(Icons.arrow_upward_rounded, size: 10, color: AppColors.win),
-                    ),
-                  ),
-                if (subOff != null)
+                if (assists > 0)
                   Positioned(
                     left: -12,
-                    bottom: -4,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
-                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(6)),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.arrow_downward_rounded, size: 9, color: AppColors.live),
-                          Text(
-                            '$subOff′',
-                            style: const TextStyle(fontSize: 8, fontWeight: FontWeight.w800, color: AppColors.live),
-                          ),
-                        ],
-                      ),
-                    ),
+                    bottom: -3,
+                    child: _mark([
+                      const BootIcon(size: 11),
+                      if (assists > 1) _count(assists),
+                    ]),
+                  ),
+                if (goals > 0)
+                  Positioned(
+                    right: -12,
+                    bottom: -3,
+                    child: _mark([
+                      const Icon(Icons.sports_soccer, size: 11, color: AppColors.ink),
+                      if (goals > 1) _count(goals),
+                    ]),
                   ),
                 if (booked)
                   Positioned(
-                    right: -4,
-                    bottom: 0,
+                    right: -6,
+                    top: 13,
                     child: Container(
                       width: 7,
                       height: 10,
@@ -655,6 +674,17 @@ class _LineupNode extends StatelessWidget {
     ),
   );
 }
+
+Widget _mark(List<Widget> children) => Container(
+  padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1.5),
+  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+  child: Row(mainAxisSize: MainAxisSize.min, children: children),
+);
+
+Widget _count(int n) => Padding(
+  padding: const EdgeInsets.only(left: 1),
+  child: Text('$n', style: const TextStyle(fontSize: 8.5, fontWeight: FontWeight.w800, color: AppColors.ink)),
+);
 
 /// Player rating list for one team (SofaScore "Player statistics").
 class RatingsList extends StatelessWidget {
@@ -751,61 +781,6 @@ class RatingsList extends StatelessWidget {
     ];
     return parts.join(' · ');
   }
-}
-
-/// Shot map on a half pitch – circles sized by xG, filled when a goal.
-class ShotMap extends StatelessWidget {
-  final List<ShotRecord> shots;
-  final Color homeColor, awayColor;
-  const ShotMap({super.key, required this.shots, required this.homeColor, required this.awayColor});
-  @override
-  Widget build(BuildContext context) => AspectRatio(
-    aspectRatio: 105 / 68,
-    child: ClipRRect(
-      borderRadius: BorderRadius.circular(10),
-      child: CustomPaint(
-        painter: _ShotMapPainter(shots, homeColor, awayColor),
-      ),
-    ),
-  );
-}
-
-class _ShotMapPainter extends CustomPainter {
-  final List<ShotRecord> shots;
-  final Color home, away;
-  _ShotMapPainter(this.shots, this.home, this.away);
-  @override
-  void paint(Canvas canvas, Size size) {
-    const inset = EdgeInsets.all(4);
-    const FootballPitchPainter(
-      vertical: false,
-      inset: inset,
-      grass: Color(0xFF3C8D5C),
-      grassAlt: Color(0xFF368453),
-    ).paint(canvas, size);
-    final r = FootballPitchPainter.field(size, inset);
-    for (final s in shots) {
-      final o = Offset(r.left + s.origin.dx * r.width, r.top + s.origin.dy * r.height);
-      final c = s.home ? home : away;
-      final radius = 3 + s.xg * 12;
-      if (s.goal) {
-        canvas.drawCircle(o, radius, Paint()..color = c);
-        canvas.drawCircle(o, radius, Paint()
-          ..color = Colors.white
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.5);
-      } else {
-        canvas.drawCircle(o, radius, Paint()..color = c.withValues(alpha: 0.25));
-        canvas.drawCircle(o, radius, Paint()
-          ..color = c
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.4);
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _ShotMapPainter old) => true;
 }
 
 /// SofaScore-style player match card in a bottom sheet; the full profile
@@ -1105,6 +1080,14 @@ class LineupList extends StatelessWidget {
                           const SizedBox(width: 4),
                           for (var i = 0; i < l!.goals; i++)
                             const Icon(Icons.sports_soccer, size: 13, color: AppColors.ink),
+                        ],
+                        if ((l?.assists ?? 0) > 0) ...[
+                          const SizedBox(width: 4),
+                          for (var i = 0; i < l!.assists; i++)
+                            const Padding(
+                              padding: EdgeInsets.only(right: 1),
+                              child: BootIcon(size: 13),
+                            ),
                         ],
                         if ((l?.yellow ?? 0) > 0)
                           Container(width: 7, height: 10, margin: const EdgeInsets.only(left: 4), color: const Color(0xFFF5C518)),

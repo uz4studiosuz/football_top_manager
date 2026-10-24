@@ -1809,7 +1809,11 @@ class GameState extends ChangeNotifier {
     'board': boardConfidence,
     'manager': _managerProfile.toMap(),
     'standings': _standingsMap.values.map(SaveCodec.standing).toList(),
-    'fixtures': _fixtures.map(SaveCodec.fixture).toList(),
+    // Shot maps are kept for the user's own matches only (save size).
+    'fixtures': [
+      for (final f in _fixtures)
+        SaveCodec.fixture(f, shots: f.homeClubId == _userClubId || f.awayClubId == _userClubId),
+    ],
     'ledger': ledger.map(SaveCodec.entry).toList(),
     'transfers': transferHistory.map(SaveCodec.transfer).toList(),
     'news': news.map(SaveCodec.news).toList(),

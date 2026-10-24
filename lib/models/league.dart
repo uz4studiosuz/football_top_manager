@@ -163,6 +163,117 @@ class PlayerMatchStats {
 }
 
 /// Uchrashuv taqvimi (Fixture)
+/// One attempt on goal with SofaScore-style details.
+class ShotRecord {
+  final Offset origin, end;
+  final bool home, goal;
+  final double xg;
+  final String playerId;
+  final int minute;
+  final String outcome; // goal, save, miss, block, woodwork
+  final String body; // right, left, head
+  final String situation; // open, assisted, corner, setPiece, freeKick, penalty
+  final String? assistId;
+  final Offset? assistFrom;
+
+  /// Goal-frame point seen from the shooter: x 0..1 post to post,
+  /// y 0..1 ground to bar. Values outside the frame are misses;
+  /// blocked shots have no frame point (x < -5).
+  final double mouthX, mouthY;
+  final double xgot;
+  const ShotRecord(
+    this.origin,
+    this.end,
+    this.home,
+    this.goal,
+    this.xg,
+    this.playerId,
+    this.minute, [
+    this.outcome = 'miss',
+    this.body = 'right',
+    this.situation = 'open',
+    this.assistId,
+    this.assistFrom,
+    this.mouthX = -9,
+    this.mouthY = 0,
+    this.xgot = 0,
+  ]);
+
+  bool get onTarget => outcome == 'goal' || outcome == 'save';
+  bool get hasMouth => mouthX > -5;
+
+  String get bodyLabel => switch (body) {
+    'left' => 'Chap oyoq',
+    'head' => 'Bosh',
+    _ => 'O‘ng oyoq',
+  };
+
+  String get situationLabel => switch (situation) {
+    'assisted' => 'Uyushgan hujum',
+    'corner' => 'Burchak to‘pi',
+    'setPiece' => 'Standart holat',
+    'freeKick' => 'Jarima zarbasi',
+    'penalty' => 'Penalti',
+    _ => 'Ochiq o‘yin',
+  };
+
+  String get outcomeLabel => switch (outcome) {
+    'goal' => 'Gol',
+    'save' => 'Qaytarildi',
+    'block' => 'To‘sildi',
+    'woodwork' => 'Darvoza ramkasi',
+    _ => 'Nishondan tashqari',
+  };
+
+  /// Nine-zone name of where the ball crossed the line.
+  String get zoneLabel {
+    if (!hasMouth) return '–';
+    final col = mouthX < 0.34 ? 'chap' : (mouthX > 0.66 ? 'o‘ng' : 'markaz');
+    final row = mouthY < 0.34 ? 'Pastki' : (mouthY > 0.66 ? 'Yuqori' : 'O‘rta');
+    return '$row $col';
+  }
+
+  static double _r(double v) => (v * 1000).roundToDouble() / 1000;
+
+  Map<String, dynamic> toMap() => {
+    'o': [_r(origin.dx), _r(origin.dy)],
+    'e': [_r(end.dx), _r(end.dy)],
+    'h': home ? 1 : 0,
+    'x': _r(xg),
+    'p': playerId,
+    'm': minute,
+    'r': outcome,
+    'b': body,
+    's': situation,
+    if (assistId != null) 'a': assistId,
+    if (assistFrom != null) 'af': [_r(assistFrom!.dx), _r(assistFrom!.dy)],
+    'g': [_r(mouthX), _r(mouthY)],
+    'xo': _r(xgot),
+  };
+
+  factory ShotRecord.fromMap(Map<String, dynamic> m) {
+    Offset off(List v) => Offset((v[0] as num).toDouble(), (v[1] as num).toDouble());
+    final g = (m['g'] as List?) ?? [-9, 0];
+    return ShotRecord(
+      off(m['o']),
+      off(m['e']),
+      m['h'] == 1,
+      m['r'] == 'goal',
+      (m['x'] as num).toDouble(),
+      m['p'],
+      m['m'],
+      m['r'] ?? 'miss',
+      m['b'] ?? 'right',
+      m['s'] ?? 'open',
+      m['a'],
+      m['af'] == null ? null : off(m['af']),
+      (g[0] as num).toDouble(),
+      (g[1] as num).toDouble(),
+      ((m['xo'] ?? 0) as num).toDouble(),
+    );
+  }
+}
+
 class Fixture {
   final String id;
   final int round;
@@ -197,6 +308,7 @@ class Fixture {
   List<String> homeLineup = [], awayLineup = [];
   List<String> homeBench = [], awayBench = [];
   List<double> momentum = [];
+  List<ShotRecord> shots = [];
   String? motmId;
   Fixture({
     required this.id,

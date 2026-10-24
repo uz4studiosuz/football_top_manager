@@ -42,25 +42,6 @@ class SideMatchStats {
       passes == 0 ? 0 : (completedPasses * 100 / passes).round();
 }
 
-class ShotRecord {
-  final Offset origin, end;
-  final bool home, goal;
-  final double xg;
-  final String playerId;
-  final int minute;
-  final String outcome;
-  const ShotRecord(
-    this.origin,
-    this.end,
-    this.home,
-    this.goal,
-    this.xg,
-    this.playerId,
-    this.minute, [
-    this.outcome = 'miss',
-  ]);
-}
-
 enum _Kind { pass, cross, shot, header, penalty, freeKick, corner }
 
 enum _SetPiece { none, corner, freeKick, penalty, throwIn, goalKick }
@@ -76,6 +57,7 @@ class _Flight {
   final String? assist;
   final double duration, xg;
   final Player? blocker;
+  final ShotRecord? record;
   double elapsed = 0;
   final Set<String> checked = {};
   _Flight({
@@ -91,6 +73,7 @@ class _Flight {
     this.duration = 0.4,
     this.xg = 0,
     this.blocker,
+    this.record,
   });
   bool get shot =>
       kind == _Kind.shot ||
@@ -145,6 +128,10 @@ class MatchField {
   double _recycleAcc = 0, _momHome = 0, _momAway = 0;
   int _consumed = 0;
   String? _lastPasser;
+  Offset? _lastPassFrom;
+  // Set-piece origin of the current attack (corner / free-kick delivery).
+  String? _origin;
+  bool _originHome = true;
   bool _setPieceDelivery = false;
   int _pendingTaker = 1;
   double _regroup = 0; // fast jog back to shape after a set piece
@@ -1036,6 +1023,7 @@ class MatchField {
     _line(passer)
       ..passes += 1
       ..touches += 1;
+    if (!_setPieceDelivery) _origin = null; // the set piece has been worked away
     final forward = (point.dx - ball.dx) * (homePossession ? 1 : -1);
     final mistimed =
         !_setPieceDelivery &&
@@ -1234,7 +1222,7 @@ class MatchField {
     final dist = sqrt(dx * dx + dy * dy);
     var angle = atan((7.32 * dx) / max(0.01, dx * dx + dy * dy - 3.66 * 3.66));
     if (angle < 0) angle += pi;
-    return 1 / (1 + exp(0.12 * dist - 1.2 * angle - 0.12));
+    return 1 / (1 + exp(0.12 * dist - 1.2 * angle - 0.05));
   }
 
   void _startShot(
@@ -1360,6 +1348,75 @@ class MatchField {
     if (outcome == 'goal' || outcome == 'save') {
       line.shotsOnTarget += 1;
     }
+    // Goal-frame placement (shooter's view) and the derived xGOT.
+    double mx, my;
+    switch (outcome) {
+      case 'goal':
+        final side = random.nextBool() ? 1 : -1;
+        mx = 0.5 + side * (0.12 + 0.36 * sqrt(random.nextDouble()));
+        my = random.nextDouble() < 0.55 ? 0.05 + random.nextDouble() * 0.3 : 0.35 + random.nextDouble() * 0.58;
+      case 'save':
+        mx = 0.5 + (random.nextDouble() - 0.5) * 0.75;
+        my = 0.05 + random.nextDouble() * 0.7;
+      case 'woodwork':
+        final bar = random.nextDouble() < 0.35;
+        mx = bar ? 0.1 + random.nextDouble() * 0.8 : (random.nextBool() ? 0.0 : 1.0);
+        my = bar ? 1.0 : 0.15 + random.nextDouble() * 0.75;
+      case 'block':
+        mx = -9;
+        my = 0;
+      default:
+        final high = random.nextDouble() < 0.4;
+        mx = high
+            ? 0.05 + random.nextDouble() * 0.9
+            : (random.nextBool() ? -0.05 - random.nextDouble() * 0.45 : 1.05 + random.nextDouble() * 0.45);
+        my = high ? 1.06 + random.nextDouble() * 0.5 : random.nextDouble() * 0.8;
+    }
+    if (outcome == 'goal' || outcome == 'woodwork' || outcome == 'miss') {
+      // Keep the pitch drawing consistent with the frame point.
+      final y = isHome ? 0.446 + mx * 0.108 : 0.554 - mx * 0.108;
+      end = Offset(end.dx, outcome == 'miss' && my < 1 ? end.dy : y);
+    }
+    var xgot = 0.0;
+    if (outcome == 'goal' || outcome == 'save') {
+      final edge = max((mx - 0.5).abs() * 2, my).clamp(0.0, 1.0);
+      xgot = effectiveKind == _Kind.penalty
+          ? 0.6 + 0.35 * edge
+          : (xg * (0.55 + 1.6 * edge * edge) + 0.02).clamp(0.02, 0.97);
+    }
+    final weak = (0.92 - shooter.weakFoot * 0.05).clamp(0.6, 0.9);
+    final strong = shooter.preferredFoot == PreferredFoot.left ? 'left' : 'right';
+    final body = effectiveKind == _Kind.header
+        ? 'head'
+        : random.nextDouble() < weak
+        ? strong
+        : (strong == 'left' ? 'right' : 'left');
+    final assisted = effectiveKind != _Kind.penalty && _lastPasser != null;
+    final situation = switch (effectiveKind) {
+      _Kind.penalty => 'penalty',
+      _Kind.freeKick => 'freeKick',
+      _ when _origin != null && _originHome == isHome => _origin!,
+      _ when assisted => 'assisted',
+      _ => 'open',
+    };
+    final record = ShotRecord(
+      ball,
+      end,
+      isHome,
+      outcome == 'goal',
+      xg,
+      shooter.id,
+      displayMinute,
+      outcome,
+      body,
+      situation,
+      assisted ? _lastPasser : null,
+      assisted ? _lastPassFrom : null,
+      mx,
+      my,
+      xgot,
+    );
+    _origin = null;
     _flight = _Flight(
       from: ball,
       to: end,
@@ -1374,6 +1431,7 @@ class MatchField {
         (end - ball).distance / (0.95 + shooter.stats.kickingPower / 180),
       ),
       xg: xg,
+      record: record,
     );
     phase = FieldPhase.shot;
     _setPieceDelivery = false;
@@ -1460,6 +1518,7 @@ class MatchField {
       _line(flight.actor).passesCompleted += 1;
       _line(_xi(_club)[owner]).touches += 1;
       _lastPasser = flight.actor.id;
+      _lastPassFrom = flight.from;
       phase = FieldPhase.openPlay;
       return;
     }
@@ -1543,6 +1602,7 @@ class MatchField {
       (f.home ? homeStats : awayStats).completedPasses++;
       _line(f.actor).passesCompleted += 1;
       _lastPasser = f.actor.id;
+      _lastPassFrom = f.from;
       phase = FieldPhase.openPlay;
       _startShot(attacker, header: true, pressured: true, crowded: f.kind == _Kind.corner);
       return;
@@ -1583,16 +1643,8 @@ class MatchField {
     final stats = f.home ? homeStats : awayStats;
     final defendClub = f.home ? away : home;
     shots.add(
-      ShotRecord(
-        f.from,
-        f.to,
-        f.home,
-        f.outcome == 'goal',
-        f.xg,
-        f.actor.id,
-        displayMinute,
-        f.outcome,
-      ),
+      f.record ??
+          ShotRecord(f.from, f.to, f.home, f.outcome == 'goal', f.xg, f.actor.id, displayMinute, f.outcome),
     );
     final line = _line(f.actor);
     if (f.outcome == 'goal') {
@@ -1804,6 +1856,8 @@ class MatchField {
         owner = taker;
         _points[owner] = _pendingSpot;
         ball = _pendingSpot;
+        _origin = 'corner';
+        _originHome = homePossession;
         if (!_startCross(_xi(_club)[owner], corner: true)) {
           _lastPasser = null;
         }
@@ -1820,6 +1874,8 @@ class MatchField {
           _startShot(_xi(_club)[owner], kind: _Kind.freeKick);
         } else if (dist < 40) {
           _setPieceDelivery = true;
+          _origin = 'setPiece';
+          _originHome = homePossession;
           if (!_startCross(_xi(_club)[owner], corner: true)) {
             _setPieceDelivery = false;
           }
@@ -2167,6 +2223,7 @@ class MatchField {
       _emit(type, text, isHome, null);
 
   void _turnover(int index) {
+    _origin = null;
     homePossession = !homePossession;
     owner = index;
     _hold = 0;
@@ -2557,6 +2614,7 @@ class MatchField {
     f.ratings = allRatings();
     f.playerStats = Map.of(lines);
     f.momentum = List.of(momentum);
+    f.shots = List.of(shots);
     f.motmId = manOfTheMatch;
     f.homeLineup = List.of(homeStartIds);
     f.awayLineup = List.of(awayStartIds);
