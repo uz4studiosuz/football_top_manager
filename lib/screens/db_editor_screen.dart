@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:file_picker/file_picker.dart';
+import '../ui/browser_files_stub.dart' if (dart.library.js_interop) '../ui/browser_files_web.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/player.dart';
@@ -52,7 +52,7 @@ class _DbEditorScreenState extends State<DbEditorScreen> {
   /// Every data file in one ZIP: unzip it over assets/data.
   Future<void> _export() async {
     final bytes = await db.exportZip();
-    await FilePicker.saveFile(fileName: 'ftm27_data.zip', bytes: bytes, mimeType: 'application/zip');
+    await downloadBytes('ftm27_data.zip', bytes, 'application/zip');
     _snack(tr('ZIP yuklab olindi: uni assets/data papkasiga ochib, eski fayllarni almashtiring.'));
   }
 

@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'dart:typed_data';
 import 'dart:ui' as ui;
-import 'package:file_picker/file_picker.dart';
+import 'browser_files_stub.dart' if (dart.library.js_interop) 'browser_files_web.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -21,11 +21,10 @@ Future<FaceConfig?> faceFromPhoto(BuildContext context, FaceConfig base) async {
     // Browsers only open the file dialog during the click itself, so pick
     // straight away; phone browsers offer the camera in the same dialog.
     try {
-      final file = await FilePicker.pickFile(type: FileType.image);
-      bytes = await file?.readAsBytes();
+      bytes = await pickImageBytes();
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Rasmni o‘qib bo‘lmadi.'))));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(trf('Rasmni o‘qib bo‘lmadi: {0}', [e]))));
       }
       return null;
     }
@@ -61,8 +60,7 @@ Future<FaceConfig?> faceFromPhoto(BuildContext context, FaceConfig base) async {
     bytes = await shot?.readAsBytes();
   } catch (_) {
     // No camera on this device (e.g. desktop): fall back to a file.
-    final file = await FilePicker.pickFile(type: FileType.image);
-    bytes = await file?.readAsBytes();
+    bytes = await pickImageBytes();
   }
   if (bytes == null || !context.mounted) return null;
   return Navigator.push<FaceConfig>(
@@ -107,7 +105,7 @@ class _FitFaceScreenState extends State<_FitFaceScreen> {
     appBar: AppBar(
       backgroundColor: const Color(0xFF111418),
       foregroundColor: Colors.white,
-      title: Text(tr('Yuzni shaklga joylang')),
+      title: Text(tr('Yuzni shaklga joylang'), style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
     ),
     body: SafeArea(
       child: Column(

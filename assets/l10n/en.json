@@ -971,6 +971,7 @@
  "Raqibning eng xavfli o‘yinchisini shaxsan qo‘riqlaydi": "Man-marks the opponent's most dangerous player",
  "Rasmdan yuz": "Face from photo",
  "Rasmni o‘qib bo‘lmadi.": "Could not read the image.",
+ "Rasmni o‘qib bo‘lmadi: {0}": "Could not read the image: {0}",
  "Rasmni suring va kattalashtiring: ko‘zlar chiziqda, iyak pastki belgida, yuz shakl ichida bo‘lsin.": "Drag and zoom the photo: eyes on the line, chin on the bottom mark, face inside the outline.",
  "Reyting": "Rating",
  "Reyting tahlili": "Rating breakdown",

@@ -210,5 +210,9 @@
  "Transferlar tarixi": [
   "Transfer history",
   "История трансферов"
+ ],
+ "Rasmni o‘qib bo‘lmadi: {0}": [
+  "Could not read the image: {0}",
+  "Не удалось прочитать изображение: {0}"
  ]
 }
