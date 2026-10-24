@@ -7,6 +7,7 @@ import '../ui/face_avatar.dart';
 import '../ui/widgets.dart';
 import '../services/save_service.dart';
 import '../l10n/l10n.dart';
+import '../ui/language_picker.dart';
 
 class ManagerProfileScreen extends StatefulWidget {
   const ManagerProfileScreen({super.key});
@@ -27,7 +28,7 @@ class _ManagerProfileScreenState extends State<ManagerProfileScreen> {
             onPressed: () {
               Navigator.pop(ctx);
               Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute<void>(builder: (_) => const OnboardingScreen()),
+                MaterialPageRoute<void>(builder: (_) => OnboardingScreen()),
                 (route) => false,
               );
             },
@@ -56,7 +57,7 @@ class _ManagerProfileScreenState extends State<ManagerProfileScreen> {
               SaveService.enabled = true;
               if (!mounted) return;
               Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute<void>(builder: (_) => const OnboardingScreen()),
+                MaterialPageRoute<void>(builder: (_) => OnboardingScreen()),
                 (route) => false,
               );
             },
@@ -83,7 +84,7 @@ class _ManagerProfileScreenState extends State<ManagerProfileScreen> {
                 const SizedBox(height: 12),
                 Text(m.name, style: AppText.h1),
                 const SizedBox(height: 4),
-                Text(trf('{0} {1} · {2} yosh', [m.countryFlag, m.nationality, m.age]), style: AppText.small),
+                Text(trf('{0} {1} · {2} yosh', [m.countryFlag, tr(m.nationality), m.age]), style: AppText.small),
                 if (club != null) ...[
                   const SizedBox(height: 8),
                   Row(
@@ -116,16 +117,16 @@ class _ManagerProfileScreenState extends State<ManagerProfileScreen> {
                 const Divider(height: 20),
                 Row(
                   children: [
-                    Expanded(child: StatTile('${m.matchesManaged}', 'O‘yin')),
-                    Expanded(child: StatTile('${m.wins}', 'G‘alaba', color: AppColors.win)),
+                    Expanded(child: StatTile('${m.matchesManaged}', tr('O‘yin'))),
+                    Expanded(child: StatTile('${m.wins}', tr('G‘alaba'), color: AppColors.win)),
                     Expanded(child: StatTile('${m.draws}', 'Durang')),
-                    Expanded(child: StatTile('${m.losses}', 'Mag‘lubiyat', color: AppColors.loss)),
+                    Expanded(child: StatTile('${m.losses}', tr('Mag‘lubiyat'), color: AppColors.loss)),
                   ],
                 ),
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Expanded(child: StatTile('${m.winRate.toStringAsFixed(0)}%', 'G‘alaba foizi')),
+                    Expanded(child: StatTile('${m.winRate.toStringAsFixed(0)}%', tr('G‘alaba foizi'))),
                     Expanded(child: StatTile('${m.trophies}', 'Kubok', color: AppColors.gold)),
                     Expanded(child: StatTile(m.reputationRank, 'Maqom')),
                   ],
@@ -174,6 +175,16 @@ class _ManagerProfileScreenState extends State<ManagerProfileScreen> {
                       ],
                     ),
                   ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SectionHeader(tr('Til'), icon: Icons.language_rounded),
+                const SingleChildScrollView(scrollDirection: Axis.horizontal, child: LanguageSelector()),
               ],
             ),
           ),

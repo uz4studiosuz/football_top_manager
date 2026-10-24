@@ -8,7 +8,7 @@ void main() {
   setUpAll(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
     await InitialDatabase.load();
-    SharedPreferences.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues({'ftm27_lang': 'uz'});
   });
   testWidgets('App starts at Onboarding screen and allows selecting club', (
     WidgetTester tester,

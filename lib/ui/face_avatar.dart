@@ -994,7 +994,7 @@ class _FaceStudioState extends State<FaceStudio> {
   }) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(label, style: AppText.bodyStrong),
+      Text(tr(label), style: AppText.bodyStrong),
       const SizedBox(height: 10),
       SizedBox(
         height: labels == null ? 66 : 84,
@@ -1023,7 +1023,7 @@ class _FaceStudioState extends State<FaceStudio> {
                   if (labels != null) ...[
                     const SizedBox(height: 4),
                     Text(
-                      labels[i],
+                      tr(labels[i]),
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
@@ -1044,7 +1044,7 @@ class _FaceStudioState extends State<FaceStudio> {
   Widget _swatches(String key, String label, List<Color> colors) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(label, style: AppText.bodyStrong),
+      Text(tr(label), style: AppText.bodyStrong),
       const SizedBox(height: 10),
       Wrap(
         spacing: 10,
@@ -1075,7 +1075,7 @@ class _FaceStudioState extends State<FaceStudio> {
 
   Widget _toggle(String key, String label) => SwitchListTile(
     contentPadding: EdgeInsets.zero,
-    title: Text(label, style: AppText.bodyStrong),
+    title: Text(tr(label), style: AppText.bodyStrong),
     value: value.toMap()[key] as bool,
     onChanged: (v) => _set(value.change(key, v)),
   );
@@ -1090,13 +1090,13 @@ class _FaceStudioState extends State<FaceStudio> {
         _choices('mouth', 'Lab', FaceConfig.mouthCount, labels: FaceConfig.mouthLabels, zoom: _mouthZoom),
       ],
       [
-        _choices('eyes', 'Ko‘z shakli', FaceConfig.eyesCount, labels: FaceConfig.eyeLabels, zoom: _eyesZoom),
-        _swatches('eyeColor', 'Ko‘z rangi', FacePainter.eyeColors),
+        _choices('eyes', tr('Ko‘z shakli'), FaceConfig.eyesCount, labels: FaceConfig.eyeLabels, zoom: _eyesZoom),
+        _swatches('eyeColor', tr('Ko‘z rangi'), FacePainter.eyeColors),
         _choices('brow', 'Qosh', FaceConfig.browCount, labels: FaceConfig.browLabels, zoom: _browZoom),
       ],
       [
         _choices('cut', 'Soch turmagi', FaceConfig.cutCount, labels: FaceConfig.cutLabels),
-        _swatches('hair', 'Soch va soqol rangi', FacePainter.hairs),
+        _swatches('hair', tr('Soch va soqol rangi'), FacePainter.hairs),
       ],
       [
         _choices('beardStyle', 'Soqol', FaceConfig.beardCount, labels: FaceConfig.beardLabels, zoom: _beardZoom),
@@ -1107,7 +1107,7 @@ class _FaceStudioState extends State<FaceStudio> {
       ],
       [
         _choices('age', 'Yosh chiziqlari', FaceConfig.ageCount, labels: FaceConfig.ageLabels, zoom: _browZoom),
-        _toggle('glasses', 'Ko‘zoynak'),
+        _toggle('glasses', tr('Ko‘zoynak')),
         _toggle('freckles', 'Sepkil'),
       ],
     ];
@@ -1157,14 +1157,14 @@ class _FaceStudioState extends State<FaceStudio> {
             TextButton.icon(
               onPressed: _random,
               icon: const Icon(Icons.casino_outlined, size: 18),
-              label: Text(widget.nationality == null ? 'Tasodifiy' : 'Tasodifiy (${widget.nationality})'),
+              label: Text(widget.nationality == null ? tr('Tasodifiy') : trf('Tasodifiy ({0})', [tr(widget.nationality!)])),
             ),
           ],
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: PillTabsInline(
-            labels: [tr('Yuz'), 'Ko‘z', 'Soch', 'Soqol', 'Boshqa'],
+            labels: [tr('Yuz'), tr('Ko‘z'), 'Soch', 'Soqol', 'Boshqa'],
             index: tab,
             onChanged: (i) => setState(() => tab = i),
           ),
@@ -1221,7 +1221,7 @@ class PillTabsInline extends StatelessWidget {
                 ),
                 alignment: Alignment.center,
                 child: Text(
-                  labels[i],
+                  tr(labels[i]),
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,

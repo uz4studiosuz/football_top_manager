@@ -5,6 +5,7 @@ import '../ui/widgets.dart';
 import 'club_selection_screen.dart';
 import 'custom_club_creator_screen.dart';
 import '../l10n/l10n.dart';
+import '../ui/language_picker.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -33,17 +34,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     'Argentina': '🇦🇷',
     'Turkiya': '🇹🇷',
   };
-  static const titles = [
-    'Menejer Karyerasi',
-    'O‘z portretingiz',
-    'O‘yin falsafasi',
-    'Klubingizni tanlang',
+  static List<String> get titles => [
+    tr('Menejer Karyerasi'),
+    tr('O‘z portretingiz'),
+    tr('O‘yin falsafasi'),
+    tr('Klubingizni tanlang'),
   ];
-  static const subtitles = [
-    'Ism, millat va yosh – karyerangiz shu yerdan boshlanadi.',
-    'Yuz shakli, soch, soqol va detallarni sozlang.',
-    'Har bir uslub 70 dan boshlanadi va o‘yinlar bilan o‘sadi.',
-    'Mavjud klubni boshqaring yoki o‘zingiznikini yarating.',
+  static List<String> get subtitles => [
+    tr('Ism, millat va yosh – karyerangiz shu yerdan boshlanadi.'),
+    tr('Yuz shakli, soch, soqol va detallarni sozlang.'),
+    tr('Har bir uslub 70 dan boshlanadi va o‘yinlar bilan o‘sadi.'),
+    tr('Mavjud klubni boshqaring yoki o‘zingiznikini yarating.'),
   ];
   @override
   void dispose() {
@@ -68,6 +69,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
+      actions: const [LanguageButton()],
       title: Row(
         children: [
           Icon(Icons.sports_soccer, color: AppColors.primary),
@@ -150,7 +152,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 ),
                                 items: [
                                   for (final country in countries.keys)
-                                    DropdownMenuItem(value: country, child: Text('${countries[country]}  $country')),
+                                    DropdownMenuItem(value: country, child: Text('${countries[country]}  ${tr(country)}')),
                                 ],
                                 onChanged: (v) => setState(() => nationality = v!),
                               ),
@@ -227,7 +229,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 children: [
                                   Text(_name.text, style: AppText.h2),
                                   const SizedBox(height: 4),
-                                  Text(trf('{0} {1} · {2} yosh', [countries[nationality], nationality, age]), style: AppText.small),
+                                  Text(trf('{0} {1} · {2} yosh', [countries[nationality], tr(nationality), age]), style: AppText.small),
                                   const SizedBox(height: 4),
                                   Text('${philosophy.title} · 70', style: AppText.small.copyWith(color: AppColors.primary)),
                                 ],
@@ -238,8 +240,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                       const SizedBox(height: 14),
                       _clubChoice(
-                        'MAVJUD TOP KLUBNI TANLASH',
-                        'Super League (8 gigant) yoki Premier League (20 klub): real tarkiblar, taqvim va kengash maqsadlari.',
+                        tr('MAVJUD TOP KLUBNI TANLASH'),
+                        tr('Super League (8 gigant) yoki Premier League (20 klub): real tarkiblar, taqvim va kengash maqsadlari.'),
                         Icons.shield_outlined,
                         () => Navigator.push(
                           context,
@@ -248,8 +250,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ),
                       const SizedBox(height: 12),
                       _clubChoice(
-                        'YANGI KLUB YARATISH',
-                        'Nom, stadion va emblema. Tarkib yangi ismlar bilan yaratiladi.',
+                        tr('YANGI KLUB YARATISH'),
+                        tr('Nom, stadion va emblema. Tarkib yangi ismlar bilan yaratiladi.'),
                         Icons.add_moderator_outlined,
                         () => Navigator.push(
                           context,
@@ -312,9 +314,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: AppText.h3),
+              Text(tr(title), style: AppText.h3),
               const SizedBox(height: 4),
-              Text(text, style: AppText.small.copyWith(height: 1.4)),
+              Text(tr(text), style: AppText.small.copyWith(height: 1.4)),
             ],
           ),
         ),

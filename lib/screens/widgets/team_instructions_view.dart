@@ -79,13 +79,13 @@ class TeamTacticsView extends StatelessWidget {
                         (v) => v.label,
                         (v) => set(t.copyWith(attackingArea: v)),
                       ),
-                      _slider('Hujum intensivligi', 'Ehtiyotkor', 'Ko‘p yugurish', t.attackingIntensity,
+                      _slider(tr('Hujum intensivligi'), 'Ehtiyotkor', tr('Ko‘p yugurish'), t.attackingIntensity,
                           (v) => set(t.copyWith(attackingIntensity: v))),
-                      _slider('Temp', 'Sekin', 'Tezkor', t.tempo, (v) => set(t.copyWith(tempo: v))),
-                      _slider('Qanot kengligi', 'Tor', 'Keng', t.width, (v) => set(t.copyWith(width: v))),
-                      _switch('Erkin pozitsiyalash', 'O‘yinchilar sxemadan chiqib bo‘shliq qidiradi',
+                      _slider(tr('Temp'), 'Sekin', 'Tezkor', t.tempo, (v) => set(t.copyWith(tempo: v))),
+                      _slider(tr('Qanot kengligi'), 'Tor', 'Keng', t.width, (v) => set(t.copyWith(width: v))),
+                      _switch(tr('Erkin pozitsiyalash'), tr('O‘yinchilar sxemadan chiqib bo‘shliq qidiradi'),
                           t.flexiblePositioning, (v) => set(t.copyWith(flexiblePositioning: v))),
-                      _switch('Himoyadan qisqa pas', 'Darvozabon uzun to‘p o‘rniga himoyachiga beradi',
+                      _switch(tr('Himoyadan qisqa pas'), tr('Darvozabon uzun to‘p o‘rniga himoyachiga beradi'),
                           t.playOutFromBack, (v) => set(t.copyWith(playOutFromBack: v))),
                     ],
                   ),
@@ -110,13 +110,13 @@ class TeamTacticsView extends StatelessWidget {
                         (v) => v.label,
                         (v) => set(t.copyWith(containment: v)),
                       ),
-                      _slider('Himoya chizig‘i', 'Past blok', 'Baland chiziq', t.defensiveLine,
+                      _slider(tr('Himoya chizig‘i'), 'Past blok', 'Baland chiziq', t.defensiveLine,
                           (v) => set(t.copyWith(defensiveLine: v))),
-                      _slider('Ixchamlik', 'Keng', 'Zich', t.compactness, (v) => set(t.copyWith(compactness: v))),
-                      _slider('Pressing', 'Kutish', 'Agressiv', t.pressing, (v) => set(t.copyWith(pressing: v))),
-                      _switch('Yo‘qotishdan keyin pressing', 'Ko‘proq bosim, ko‘proq charchoq', t.counterPress,
+                      _slider(tr('Ixchamlik'), 'Keng', 'Zich', t.compactness, (v) => set(t.copyWith(compactness: v))),
+                      _slider(tr('Pressing'), tr('Kutish'), 'Agressiv', t.pressing, (v) => set(t.copyWith(pressing: v))),
+                      _switch(tr('Yo‘qotishdan keyin pressing'), tr('Ko‘proq bosim, ko‘proq charchoq'), t.counterPress,
                           (v) => set(t.copyWith(counterPress: v))),
-                      _switch('Ofsayd tuzog‘i', 'Ko‘proq ofsayd, lekin orqaga uzatmaga zaif', t.offsideTrap,
+                      _switch(tr('Ofsayd tuzog‘i'), tr('Ko‘proq ofsayd, lekin orqaga uzatmaga zaif'), t.offsideTrap,
                           (v) => set(t.copyWith(offsideTrap: v))),
                     ],
                   ),
@@ -127,7 +127,7 @@ class TeamTacticsView extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       SectionHeader(tr('O‘yin boshqaruvi'), icon: Icons.timer_outlined),
-                      _switch('Vaqtni cho‘zish', 'Oldinda bo‘lsa 75-daqiqadan keyin o‘yinni sekinlashtiradi',
+                      _switch(tr('Vaqtni cho‘zish'), tr('Oldinda bo‘lsa 75-daqiqadan keyin o‘yinni sekinlashtiradi'),
                           t.timeWasting, (v) => set(t.copyWith(timeWasting: v))),
                     ],
                   ),
@@ -146,7 +146,7 @@ class TeamTacticsView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(label, style: AppText.bodyStrong),
+            Text(tr(label), style: AppText.bodyStrong),
             const SizedBox(height: 8),
             SizedBox(
               width: double.infinity,
@@ -174,7 +174,7 @@ class TeamTacticsView extends StatelessWidget {
       children: [
         Row(
           children: [
-            Expanded(child: Text(label, style: AppText.bodyStrong)),
+            Expanded(child: Text(tr(label), style: AppText.bodyStrong)),
             Text('$value / 5', style: AppText.number.copyWith(fontSize: 13, color: AppColors.primary)),
           ],
         ),
@@ -198,7 +198,7 @@ class TeamTacticsView extends StatelessWidget {
 
   Widget _switch(String title, String subtitle, bool value, ValueChanged<bool> onChanged) => SwitchListTile(
     contentPadding: EdgeInsets.zero,
-    title: Text(title, style: AppText.bodyStrong),
+    title: Text(tr(title), style: AppText.bodyStrong),
     subtitle: Text(subtitle, style: AppText.caption),
     value: value,
     onChanged: onChanged,
@@ -246,10 +246,10 @@ class IndividualInstructionsView extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       SectionHeader(tr('Kapitan va standart vaziyatlar'), icon: Icons.flag_outlined),
-                      picker('Kapitan', Icons.copyright_rounded, c.captainId, (v) => c.captainId = v),
-                      picker('Burchak ijrochisi', Icons.flag_circle_outlined, c.cornerTakerId, (v) => c.cornerTakerId = v),
-                      picker('Jarima zarbasi ijrochisi', Icons.adjust_rounded, c.freeKickTakerId, (v) => c.freeKickTakerId = v),
-                      picker('Penalti ijrochisi', Icons.radio_button_checked, c.penaltyTakerId, (v) => c.penaltyTakerId = v),
+                      picker(tr('Kapitan'), Icons.copyright_rounded, c.captainId, (v) => c.captainId = v),
+                      picker(tr('Burchak ijrochisi'), Icons.flag_circle_outlined, c.cornerTakerId, (v) => c.cornerTakerId = v),
+                      picker(tr('Jarima zarbasi ijrochisi'), Icons.adjust_rounded, c.freeKickTakerId, (v) => c.freeKickTakerId = v),
+                      picker(tr('Penalti ijrochisi'), Icons.radio_button_checked, c.penaltyTakerId, (v) => c.penaltyTakerId = v),
                     ],
                   ),
                 ),

@@ -18,7 +18,7 @@ class MainNavigationScreen extends StatefulWidget {
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _index = 0;
-  static const labels = ['Boshqaruv', 'Jamoa', 'Jadval', 'Transfer', 'Moliya'];
+  static List<String> get labels => [tr('Boshqaruv'), tr('Jamoa'), tr('Jadval'), tr('Transfer'), tr('Moliya')];
   static const icons = [
     Icons.home_outlined,
     Icons.groups_outlined,

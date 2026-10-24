@@ -117,7 +117,7 @@ class _StandingsScreenState extends State<StandingsScreen> {
     children: [
       Container(width: 10, height: 10, decoration: BoxDecoration(color: c, shape: BoxShape.circle)),
       const SizedBox(width: 6),
-      Text(t, style: AppText.caption),
+      Text(tr(t), style: AppText.caption),
     ],
   );
 
@@ -185,7 +185,7 @@ class _StandingsScreenState extends State<StandingsScreen> {
       padding: const EdgeInsets.all(12),
       children: [
         PillTabs(
-          labels: [tr('To\'purarlar'), 'Assistentlar', 'Reyting', 'Quruq o‘yinlar'],
+          labels: [tr('To\'purarlar'), tr('Assistentlar'), 'Reyting', tr('Quruq o‘yinlar')],
           index: leaders,
           onChanged: (i) => setState(() => leaders = i),
         ),

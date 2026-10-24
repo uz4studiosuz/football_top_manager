@@ -313,9 +313,9 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SectionHeader(tr('5. Klub ranglari')),
-              _colorRow('Asosiy rang', _primary, (c) => setState(() => _primary = c)),
-              _colorRow('Ikkilamchi rang', _secondary, (c) => setState(() => _secondary = c)),
-              _colorRow('Hoshiya rangi', _trim, (c) => setState(() => _trim = c)),
+              _colorRow(tr('Asosiy rang'), _primary, (c) => setState(() => _primary = c)),
+              _colorRow(tr('Ikkilamchi rang'), _secondary, (c) => setState(() => _secondary = c)),
+              _colorRow(tr('Hoshiya rangi'), _trim, (c) => setState(() => _trim = c)),
             ],
           ),
         ),
@@ -466,7 +466,7 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: AppText.small),
+        Text(tr(title), style: AppText.small),
         const SizedBox(height: 8),
         SizedBox(
           height: 36,

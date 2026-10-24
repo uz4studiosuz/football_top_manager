@@ -51,6 +51,22 @@ responsive navigation and touch/mouse interactions share the same Flutter code.
 - Careers auto-save with shared_preferences (localStorage on the web);
   Profile → "Chiqish va saqlanganni tozalash" wipes the save.
 
+## Languages
+
+Uzbek, English and Russian. The language is chosen on first launch and can
+be changed any time in the manager profile (or with the globe button during
+onboarding). UI strings are written in Uzbek and wrapped in `tr()` /
+`trf('{0}-tur', [round])`; translations live in `assets/l10n/en.json` and
+`ru.json` (built from `tool/l10n_src` with `python -I tool/l10n_src/build.py`).
+Match commentary has its own English/Russian banks. `test/l10n_test.dart`
+fails when a key has no translation; `python -I tool/i18n_keys.py missing en`
+lists them.
+
+## Database
+
+See [docs/DATABASE.md](docs/DATABASE.md): DB Studio (`tool/db_studio`) edits
+leagues, clubs and players visually; `tool/validate_data.py` checks the data.
+
 ## Simulation
 
 `lib/services/match_field.dart` drives a 2D pitch where action time runs at
@@ -104,6 +120,6 @@ Generators: `tool/expand_squads.py`, `tool/star_faces.py`, `tool/epl_faces.py`,
 
 ## Verification
 
-`flutter test` (38 tests: rules, engine, ratings, save/restore, corners,
+`flutter test` (42 tests: rules, engine, ratings, save/restore, corners,
 free kicks, widgets). `flutter test tool/capture_ui_test.dart` writes
 screenshots to `artifacts/qa`.

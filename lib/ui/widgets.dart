@@ -60,7 +60,7 @@ class SectionHeader extends StatelessWidget {
           Icon(icon, size: 18, color: AppColors.primary),
           const SizedBox(width: 8),
         ],
-        Expanded(child: Text(title, style: AppText.h3)),
+        Expanded(child: Text(tr(title), style: AppText.h3)),
         if (action != null)
           InkWell(
             onTap: onAction,
@@ -192,7 +192,7 @@ class FormChip extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     width: size,
     height: size,
-    margin: const EdgeInsets.only(right: 3),
+    margin: EdgeInsets.only(right: 3),
     alignment: Alignment.center,
     decoration: BoxDecoration(
       color: AppColors.result(result),
@@ -228,11 +228,11 @@ class InfoRow extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 8),
+    padding: EdgeInsets.symmetric(vertical: 8),
     child: Row(
       children: [
-        Expanded(child: Text(label, style: AppText.small)),
-        const SizedBox(width: 8),
+        Expanded(child: Text(tr(label), style: AppText.small)),
+        SizedBox(width: 8),
         Flexible(
           child: Text(
             value,
@@ -245,7 +245,7 @@ class InfoRow extends StatelessWidget {
             ),
           ),
         ),
-        if (trailing != null) ...[const SizedBox(width: 6), trailing!],
+        if (trailing != null) ...[SizedBox(width: 6), trailing!],
       ],
     ),
   );
@@ -278,7 +278,7 @@ class StatCompareRow extends StatelessWidget {
     final homeLeads = higherIsBetter ? home > away : home < away;
     final awayLeads = higherIsBetter ? away > home : away < home;
     Widget value(String t, bool lead, Color c) => Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: lead ? c : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
@@ -311,7 +311,7 @@ class StatCompareRow extends StatelessWidget {
       ),
     );
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: EdgeInsets.symmetric(vertical: 8),
       child: Column(
         children: [
           Row(
@@ -321,7 +321,7 @@ class StatCompareRow extends StatelessWidget {
                 child: Text(
                   label,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
                     color: AppColors.ink,
                     fontWeight: FontWeight.w500,
@@ -331,11 +331,11 @@ class StatCompareRow extends StatelessWidget {
               value(awayText, awayLeads, awayColor),
             ],
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: 6),
           Row(
             children: [
               bar(hs, homeLeads, homeColor, true),
-              const SizedBox(width: 6),
+              SizedBox(width: 6),
               bar(as, awayLeads, awayColor, false),
             ],
           ),
@@ -363,7 +363,7 @@ class PillTabs extends StatelessWidget {
       children: [
         for (var i = 0; i < labels.length; i++)
           Padding(
-            padding: const EdgeInsets.only(right: 8),
+            padding: EdgeInsets.only(right: 8),
             child: Material(
               color: i == index ? AppColors.primary : AppColors.surface,
               shape: StadiumBorder(
@@ -372,15 +372,15 @@ class PillTabs extends StatelessWidget {
                 ),
               ),
               child: InkWell(
-                customBorder: const StadiumBorder(),
+                customBorder: StadiumBorder(),
                 onTap: () => onChanged(i),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(
+                  padding: EdgeInsets.symmetric(
                     horizontal: 14,
                     vertical: 7,
                   ),
                   child: Text(
-                    labels[i],
+                    tr(labels[i]),
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -406,7 +406,7 @@ class LiveDot extends StatefulWidget {
 class _LiveDotState extends State<LiveDot> with SingleTickerProviderStateMixin {
   late final _c = AnimationController(
     vsync: this,
-    duration: const Duration(milliseconds: 900),
+    duration: Duration(milliseconds: 900),
   )..repeat(reverse: true);
   @override
   void dispose() {
@@ -431,12 +431,12 @@ class EmptyState extends StatelessWidget {
   const EmptyState({super.key, required this.icon, required this.text});
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 16),
+    padding: EdgeInsets.symmetric(vertical: 28, horizontal: 16),
     child: Column(
       children: [
         Icon(icon, size: 34, color: AppColors.ink3),
-        const SizedBox(height: 10),
-        Text(text, textAlign: TextAlign.center, style: AppText.small),
+        SizedBox(height: 10),
+        Text(tr(text), textAlign: TextAlign.center, style: AppText.small),
       ],
     ),
   );
@@ -457,16 +457,16 @@ class MeterRow extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 7),
+    padding: EdgeInsets.symmetric(vertical: 7),
     child: Column(
       children: [
         Row(
           children: [
-            Expanded(child: Text(label, style: AppText.small)),
+            Expanded(child: Text(tr(label), style: AppText.small)),
             Text(trailing, style: AppText.number.copyWith(fontSize: 13)),
           ],
         ),
-        const SizedBox(height: 6),
+        SizedBox(height: 6),
         ClipRRect(
           borderRadius: BorderRadius.circular(3),
           child: LinearProgressIndicator(
@@ -501,8 +501,8 @@ class StatTile extends StatelessWidget {
           ),
         ),
       ),
-      const SizedBox(height: 2),
-      Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.caption),
+      SizedBox(height: 2),
+      Text(tr(label), maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.caption),
     ],
   );
 }
@@ -621,7 +621,7 @@ Future<T> runWithLoading<T>(
       canPop: false,
       child: Center(
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 22),
+          padding: EdgeInsets.symmetric(horizontal: 28, vertical: 22),
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(16),
@@ -629,8 +629,8 @@ Future<T> runWithLoading<T>(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const CircularProgressIndicator(),
-              const SizedBox(height: 14),
+              CircularProgressIndicator(),
+              SizedBox(height: 14),
               Material(
                 color: Colors.transparent,
                 child: Text(message, style: AppText.bodyStrong),
@@ -641,7 +641,7 @@ Future<T> runWithLoading<T>(
       ),
     ),
   );
-  await Future<void>.delayed(const Duration(milliseconds: 60));
+  await Future<void>.delayed(Duration(milliseconds: 60));
   try {
     return await action();
   } finally {
@@ -670,7 +670,7 @@ class LoadingView extends StatelessWidget {
           const SizedBox(height: 20),
           const SizedBox(width: 28, height: 28, child: CircularProgressIndicator(strokeWidth: 3)),
           const SizedBox(height: 12),
-          Text(message, style: AppText.small),
+          Text(tr(message), style: AppText.small),
         ],
       ),
     ),

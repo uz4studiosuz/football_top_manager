@@ -47,7 +47,7 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
   bool get owned =>
       GameState().isInitialized && GameState().userClub.squad.any((q) => identical(p, q));
   void message(String text) =>
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr(text))));
 
   @override
   Widget build(BuildContext context) {
@@ -274,10 +274,10 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
               SectionHeader(trf('Mavsum {0}', [game.isInitialized ? game.seasonLabel : '']), icon: Icons.query_stats_rounded),
               Row(
                 children: [
-                  Expanded(child: StatTile('${p.seasonMatches}', 'O‘yin')),
-                  Expanded(child: StatTile('${p.seasonGoals}', 'Gol')),
+                  Expanded(child: StatTile('${p.seasonMatches}', tr('O‘yin'))),
+                  Expanded(child: StatTile('${p.seasonGoals}', tr('Gol'))),
                   Expanded(child: StatTile('${p.seasonAssists}', 'Assist')),
-                  Expanded(child: StatTile('${p.seasonMinutes}′', 'Daqiqa')),
+                  Expanded(child: StatTile('${p.seasonMinutes}′', tr('Daqiqa'))),
                 ],
               ),
               const SizedBox(height: 12),
@@ -285,10 +285,10 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
                 children: [
                   Expanded(
                     child: p.mainPosition.isGoalkeeper
-                        ? StatTile('${p.seasonCleanSheets}', 'Quruq o‘yin')
-                        : StatTile(p.goalsPerMatch.toStringAsFixed(2), 'Gol/o‘yin'),
+                        ? StatTile('${p.seasonCleanSheets}', tr('Quruq o‘yin'))
+                        : StatTile(p.goalsPerMatch.toStringAsFixed(2), tr('Gol/o‘yin')),
                   ),
-                  Expanded(child: StatTile('${p.seasonMotm}', 'O‘yin qahramoni')),
+                  Expanded(child: StatTile('${p.seasonMotm}', tr('O‘yin qahramoni'))),
                   Expanded(child: StatTile('${p.seasonYellowCards}', 'Sariq')),
                   Expanded(child: StatTile('${p.seasonRedCards}', 'Qizil')),
                 ],
@@ -395,10 +395,10 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
         AppCard(
           child: Row(
             children: [
-              Expanded(child: StatTile('${games.length}', 'O‘yin')),
-              Expanded(child: StatTile('$goals', 'Gol')),
+              Expanded(child: StatTile('${games.length}', tr('O‘yin'))),
+              Expanded(child: StatTile('$goals', tr('Gol'))),
               Expanded(child: StatTile('$assists', 'Assist')),
-              Expanded(child: StatTile('$minutes′', 'Daqiqa')),
+              Expanded(child: StatTile('$minutes′', tr('Daqiqa'))),
               RatingBadge(p.averageRating, size: 14),
             ],
           ),
@@ -435,7 +435,7 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
               width: 44,
               child: Column(
                 children: [
-                  Text(f.date == null ? '${f.round}-tur' : SeasonCalendar.short(f.date!), style: AppText.caption),
+                  Text(f.date == null ? trf('{0}-tur', [f.round]) : SeasonCalendar.short(f.date!), style: AppText.caption),
                   Text(home ? tr('Uyda') : tr('Safarda'), style: AppText.caption.copyWith(fontSize: 10)),
                 ],
               ),

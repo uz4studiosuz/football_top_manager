@@ -46,7 +46,7 @@ List<(String, List<StatLine>)> statGroupsFromEngine(MatchField e) {
       ],
     ),
     (
-      'Zarbalar',
+      tr('Zarbalar'),
       [
         StatLine(tr('Nishonga'), h.onTarget, a.onTarget),
         StatLine(tr('Nishondan tashqari'), h.shots - h.onTarget - h.blocked, a.shots - a.onTarget - a.blocked),
@@ -54,7 +54,7 @@ List<(String, List<StatLine>)> statGroupsFromEngine(MatchField e) {
       ],
     ),
     (
-      'Hujum va paslar',
+      tr('Hujum va paslar'),
       [
         StatLine(tr('Paslar'), h.passes, a.passes),
         StatLine(tr('Aniq paslar'), h.completedPasses, a.completedPasses),
@@ -65,7 +65,7 @@ List<(String, List<StatLine>)> statGroupsFromEngine(MatchField e) {
       ],
     ),
     (
-      'Himoya va intizom',
+      tr('Himoya va intizom'),
       [
         StatLine(tr('Olib qo‘yishlar'), h.tackles, a.tackles),
         StatLine(tr('Pas kesishlar'), h.interceptions, a.interceptions),
@@ -93,7 +93,7 @@ List<(String, List<StatLine>)> statGroupsFromFixture(Fixture f) {
       ],
     ),
     (
-      'Paslar va himoya',
+      tr('Paslar va himoya'),
       [
         StatLine(tr('Paslar'), f.homePasses, f.awayPasses),
         StatLine(tr('Pas aniqligi'), hAcc, aAcc, format: _pct),
@@ -269,7 +269,7 @@ class IncidentTimeline extends StatelessWidget {
           const Expanded(child: Divider()),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Text(text, style: AppText.overline),
+            child: Text(tr(text), style: AppText.overline),
           ),
           const Expanded(child: Divider()),
         ],
@@ -277,13 +277,13 @@ class IncidentTimeline extends StatelessWidget {
     );
     Widget quiet(String text) => Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Center(child: Text(text, style: AppText.caption)),
+      child: Center(child: Text(tr(text), style: AppText.caption)),
     );
     final ht = htIndex < 0 ? null : events[htIndex];
     final ft = ftIndex < 0 ? null : events[ftIndex];
     // SofaScore layout: one section per half, each with its own score.
     final firstSection = <Widget>[
-      divider(ht == null ? '1-BO‘LIM' : '1-BO‘LIM  ${ht.homeScore} – ${ht.awayScore}'),
+      divider(ht == null ? tr('1-BO‘LIM') : '${tr('1-BO‘LIM')}  ${ht.homeScore} – ${ht.awayScore}'),
       if (first.isEmpty)
         quiet(ht == null ? 'Hozircha muhim voqealar yo‘q' : 'Muhim voqealar bo‘lmadi')
       else
@@ -292,7 +292,7 @@ class IncidentTimeline extends StatelessWidget {
     final secondSection = ht == null
         ? <Widget>[]
         : <Widget>[
-            divider(ft == null ? '2-BO‘LIM' : '2-BO‘LIM  ${ft.homeScore} – ${ft.awayScore}'),
+            divider(ft == null ? tr('2-BO‘LIM') : '${tr('2-BO‘LIM')}  ${ft.homeScore} – ${ft.awayScore}'),
             if (second.isEmpty)
               quiet(ft == null ? 'Hozircha muhim voqealar yo‘q' : 'Muhim voqealar bo‘lmadi')
             else
@@ -773,11 +773,11 @@ class RatingsList extends StatelessWidget {
     if (l == null) return '';
     final parts = <String>[
       '${min(90, l.minutes.round())}′',
-      if (l.goals > 0) '${l.goals} gol',
+      if (l.goals > 0) trf('{0} gol', [l.goals]),
       if (l.assists > 0) '${l.assists} assist',
       if (l.saves > 0) '${l.saves} seyv',
       '${l.passesCompleted}/${l.passes} pas',
-      if (l.tackles + l.interceptions > 0) '${l.tackles + l.interceptions} Olib qo‘yish',
+      if (l.tackles + l.interceptions > 0) trf('{0} Olib qo‘yish', [l.tackles + l.interceptions]),
       if (l.keyPasses > 0) '${l.keyPasses} key pas',
     ];
     return parts.join(' · ');
@@ -802,36 +802,36 @@ Future<void> showPlayerMatchSheet(
     String pct(int a, int b) => b == 0 ? '0%' : '${(a * 100 / b).round()}%';
     final rows = <(String, String)>[
       if (l != null) ...[
-        ('Daqiqalar', '${min(90, l.minutes.round())}′'),
-        if (gk) ('Seyvlar', '${l.saves}'),
-        if (gk) ('O‘tkazilgan gollar', '${l.goalsConceded}'),
+        (tr('Daqiqalar'), '${min(90, l.minutes.round())}′'),
+        if (gk) (tr('Seyvlar'), '${l.saves}'),
+        if (gk) (tr('O‘tkazilgan gollar'), '${l.goalsConceded}'),
         if (gk && l.penaltiesSaved > 0) ('Qaytarilgan penalti', '${l.penaltiesSaved}'),
-        ('Gollar', '${l.goals}'),
-        ('Assistlar', '${l.assists}'),
+        (tr('Gollar'), '${l.goals}'),
+        (tr('Assistlar'), '${l.assists}'),
         ('xG / xA', '${l.xg.toStringAsFixed(2)} / ${l.xa.toStringAsFixed(2)}'),
-        ('Zarbalar (nishonga)', '${l.shots} (${l.shotsOnTarget})'),
+        (tr('Zarbalar (nishonga)'), '${l.shots} (${l.shotsOnTarget})'),
         if (l.bigChancesMissed > 0) ('Boy berilgan katta imkoniyat', '${l.bigChancesMissed}'),
-        ('Kalit paslar', '${l.keyPasses}'),
+        (tr('Kalit paslar'), '${l.keyPasses}'),
         if (l.bigChancesCreated > 0) ('Yaratilgan katta imkoniyat', '${l.bigChancesCreated}'),
-        ('Aniq paslar', '${l.passesCompleted}/${l.passes} (${pct(l.passesCompleted, l.passes)})'),
-        ('Krosslar', '${l.crosses}'),
-        ('Driblinglar', '${l.dribblesWon}/${l.dribbles}'),
-        ('To‘pga tegishlar', '${l.touches}'),
-        ('Olib qo‘yishlar', '${l.tackles}'),
-        ('Pas kesishlar', '${l.interceptions}'),
-        ('Tozalashlar', '${l.clearances}'),
-        ('Bloklangan zarbalar', '${l.blocks}'),
-        if (l.dribbledPast > 0) ('Aldab o‘tilgan', '${l.dribbledPast}'),
+        (tr('Aniq paslar'), '${l.passesCompleted}/${l.passes} (${pct(l.passesCompleted, l.passes)})'),
+        (tr('Krosslar'), '${l.crosses}'),
+        (tr('Driblinglar'), '${l.dribblesWon}/${l.dribbles}'),
+        (tr('To‘pga tegishlar'), '${l.touches}'),
+        (tr('Olib qo‘yishlar'), '${l.tackles}'),
+        (tr('Pas kesishlar'), '${l.interceptions}'),
+        (tr('Tozalashlar'), '${l.clearances}'),
+        (tr('Bloklangan zarbalar'), '${l.blocks}'),
+        if (l.dribbledPast > 0) (tr('Aldab o‘tilgan'), '${l.dribbledPast}'),
         ('Yakkakurash (yutgan/yutqazgan)', '${l.duelsWon}/${l.duelsLost}'),
-        ('To‘p yo‘qotish', '${l.possessionLost}'),
+        (tr('To‘p yo‘qotish'), '${l.possessionLost}'),
         ('Qoidabuzarlik', '${l.fouls}'),
         ('Qoidabuzarlikka uchragan', '${l.fouled}'),
-        if (l.offsides > 0) ('Ofsaydlar', '${l.offsides}'),
+        if (l.offsides > 0) (tr('Ofsaydlar'), '${l.offsides}'),
         if (l.penaltiesWon > 0) ('Ishlab olingan penalti', '${l.penaltiesWon}'),
-        if (l.penaltiesConceded > 0) ('Penaltiga sababchi', '${l.penaltiesConceded}'),
-        if (l.errorsLeadingToShot > 0) ('Zarbaga olib kelgan xato', '${l.errorsLeadingToShot}'),
-        if (l.errorsLeadingToGoal > 0) ('Golga olib kelgan xato', '${l.errorsLeadingToGoal}'),
-        if (l.yellow + l.red > 0) ('Kartochkalar', '${l.yellow} sariq · ${l.red} qizil'),
+        if (l.penaltiesConceded > 0) (tr('Penaltiga sababchi'), '${l.penaltiesConceded}'),
+        if (l.errorsLeadingToShot > 0) (tr('Zarbaga olib kelgan xato'), '${l.errorsLeadingToShot}'),
+        if (l.errorsLeadingToGoal > 0) (tr('Golga olib kelgan xato'), '${l.errorsLeadingToGoal}'),
+        if (l.yellow + l.red > 0) (tr('Kartochkalar'), '${l.yellow} sariq · ${l.red} qizil'),
       ],
     ];
     return SafeArea(
@@ -1049,7 +1049,7 @@ class LineupList extends StatelessWidget {
 
     Widget header(String text) => Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-      child: Text(text, style: AppText.overline),
+      child: Text(tr(text), style: AppText.overline),
     );
 
     Widget row(Player p, {String? change, bool on = false, bool off = false}) {

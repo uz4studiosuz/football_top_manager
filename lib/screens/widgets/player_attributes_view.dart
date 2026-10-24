@@ -91,7 +91,7 @@ class _AttributeRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Expanded(flex: 5, child: Text(label, style: AppText.small.copyWith(color: AppColors.ink))),
+          Expanded(flex: 5, child: Text(tr(label), style: AppText.small.copyWith(color: AppColors.ink))),
           Expanded(
             flex: 4,
             child: ClipRRect(
@@ -154,11 +154,11 @@ class _Radar extends CustomPainter {
           children: [
             TextSpan(
               text: '${labels[i]}\n',
-              style: TextStyle(fontFamily: tr('Roboto'), fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.ink3),
+              style: TextStyle(fontFamily: 'Roboto', fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.ink3),
             ),
             TextSpan(
               text: '${values[i]}',
-              style: TextStyle(fontFamily: tr('Roboto'), fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.attribute(values[i])),
+              style: TextStyle(fontFamily: 'Roboto', fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.attribute(values[i])),
             ),
           ],
         ),

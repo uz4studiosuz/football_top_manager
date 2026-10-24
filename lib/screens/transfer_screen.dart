@@ -106,7 +106,7 @@ class _TransferScreenState extends State<TransferScreen> {
                               message = '${seller.shortName} qarshi taklif qildi: ${formatMoney(value)}';
                             });
                           case NegotiationResult.rejected:
-                            update(() => message = 'Taklif rad etildi. Klub kamida ${formatMoney(value)} kutmoqda.');
+                            update(() => message = trf('Taklif rad etildi. Klub kamida {0} kutmoqda.', [formatMoney(value)]));
                           case NegotiationResult.blocked:
                             update(() => message = game.lastTransferError);
                         }
@@ -244,7 +244,7 @@ class _TransferScreenState extends State<TransferScreen> {
               underline: const SizedBox(),
               items: [
                 for (final label in ['Reyting', 'Forma', 'Salohiyat', 'Narx', 'Yosh'])
-                  DropdownMenuItem(value: label, child: Text(label, style: AppText.small)),
+                  DropdownMenuItem(value: label, child: Text(tr(label), style: AppText.small)),
               ],
               onChanged: (v) => setState(() => sort = v!),
             ),
@@ -396,14 +396,14 @@ class _TransferScreenState extends State<TransferScreen> {
           children: [
             SectionHeader(tr('Liga transfer reglamenti'), icon: Icons.gavel_rounded),
             for (final rule in [
-              'Yozgi oyna: 16 iyun – 1 sentabr. Qishki oyna: 1 yanvar – 2 fevral.',
-              'Ro‘yxat: ${GameState.minSquad}–${GameState.maxSquad} futbolchi. Klub kamida ikki darvozabonni saqlaydi.',
-              'O‘yin kuni zaxirasi: ${Club.matchdayBench} kishi. Har o‘yinda 5 ta almashtirish.',
-              'Maoshlar klubning haftalik limitidan oshmasligi kerak.',
-              'Narx qolgan shartnoma muddatiga bog‘liq; asosiy tarkib futbolchisi uchun klub 15% ko‘proq so‘raydi.',
-              'Taklif narxdan past bo‘lsa klub qarshi taklif qiladi yoki rad etadi.',
-              'Agent haqi: transferning 3%. Imzo bonusi: to‘rt haftalik maosh.',
-              'Mavsum oxirida shartnomasi tugagan futbolchilar klubni tark etadi.',
+              tr('Yozgi oyna: 16 iyun – 1 sentabr. Qishki oyna: 1 yanvar – 2 fevral.'),
+              trf('Ro‘yxat: {0}–{1} futbolchi. Klub kamida ikki darvozabonni saqlaydi.', [GameState.minSquad, GameState.maxSquad]),
+              trf('O‘yin kuni zaxirasi: {0} kishi. Har o‘yinda 5 ta almashtirish.', [Club.matchdayBench]),
+              tr('Maoshlar klubning haftalik limitidan oshmasligi kerak.'),
+              tr('Narx qolgan shartnoma muddatiga bog‘liq; asosiy tarkib futbolchisi uchun klub 15% ko‘proq so‘raydi.'),
+              tr('Taklif narxdan past bo‘lsa klub qarshi taklif qiladi yoki rad etadi.'),
+              tr('Agent haqi: transferning 3%. Imzo bonusi: to‘rt haftalik maosh.'),
+              tr('Mavsum oxirida shartnomasi tugagan futbolchilar klubni tark etadi.'),
             ])
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),

@@ -84,7 +84,7 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
           PillTabs(
             labels: [
               for (final l in InitialDatabase.leagues)
-                '${l.name} · ${InitialDatabase.getClubs(l.id).length} klub',
+                trf('{0} · {1} klub', [l.name, InitialDatabase.getClubs(l.id).length]),
             ],
             index: InitialDatabase.leagues.indexWhere((l) => l.id == _league),
             onChanged: (i) => _switchLeague(InitialDatabase.leagues[i].id),
@@ -149,7 +149,7 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
                 const SizedBox(height: 16),
                 Row(
                   children: [
-                    _metric('OVR', ValueBadge(club.teamOVR, size: 40)),
+                    _metric(tr('OVR'), ValueBadge(club.teamOVR, size: 40)),
                     _metric(tr('HUJUM'), ValueBadge(club.attackRating, size: 40, filled: false)),
                     _metric(tr('MARKAZ'), ValueBadge(club.midfieldRating, size: 40, filled: false)),
                     _metric(tr('HIMOYA'), ValueBadge(club.defenseRating, size: 40, filled: false)),
@@ -158,7 +158,7 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
                 const Divider(height: 28),
                 InfoRow(tr('Transfer byudjeti'), club.formattedTransferBudget),
                 InfoRow(tr('Maosh limiti'), club.formattedWageBudget),
-                InfoRow(tr('Tarkib'), '${club.squad.length} futbolchi · qiymati ${formatMoney(club.squadValue)}'),
+                InfoRow(tr('Tarkib'), trf('{0} futbolchi · qiymati {1}', [club.squad.length, formatMoney(club.squadValue)])),
                 InfoRow(tr('Kengash kutmoqda'), _expectation(club)),
                 InfoRow(tr('O‘yin uslubi'), club.tactics.playstyle.displayName),
               ],
@@ -212,7 +212,7 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
       children: [
         value,
         const SizedBox(height: 6),
-        Text(label, style: AppText.overline.copyWith(fontSize: 10)),
+        Text(tr(label), style: AppText.overline.copyWith(fontSize: 10)),
       ],
     ),
   );

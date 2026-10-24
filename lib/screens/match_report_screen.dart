@@ -45,7 +45,7 @@ class _MatchReportScreenState extends State<MatchReportScreen> {
                   events: f.events,
                   caption: f.date == null
                       ? null
-                      : '${SeasonCalendar.format(f.date!, year: true)}${f.attendance > 0 ? ' · ${f.attendance} muxlis' : ''}',
+                      : '${SeasonCalendar.format(f.date!, year: true)}${f.attendance > 0 ? trf(' · {0} muxlis', [f.attendance]) : ''}',
                 ),
                 TabBar(
                   isScrollable: true,
@@ -314,7 +314,7 @@ class MatchHeader extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    if (live) ...[const LiveDot(), const SizedBox(width: 5)],
+                    if (live) ...[LiveDot(), const SizedBox(width: 5)],
                     Text(
                       status,
                       style: TextStyle(

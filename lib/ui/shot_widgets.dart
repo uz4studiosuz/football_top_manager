@@ -85,7 +85,7 @@ class _ShotMapViewState extends State<ShotMapView> {
     Widget chip(int i, String label) => Padding(
       padding: const EdgeInsets.only(right: 6),
       child: ChoiceChip(
-        label: Text(label),
+        label: Text(tr(label)),
         selected: _filter == i,
         visualDensity: VisualDensity.compact,
         onSelected: (_) => setState(() => _filter = i),
@@ -248,7 +248,7 @@ class ShotDetails extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
         children: [
-          Expanded(child: Text(label, style: AppText.small)),
+          Expanded(child: Text(tr(label), style: AppText.small)),
           Text(value, style: AppText.bodyStrong.copyWith(fontSize: 13)),
         ],
       ),
@@ -343,7 +343,7 @@ class _BigNumber extends StatelessWidget {
   Widget build(BuildContext context) => Column(
     children: [
       Text(value, style: AppText.h2),
-      Text(label, style: AppText.caption),
+      Text(tr(label), style: AppText.caption),
     ],
   );
 }

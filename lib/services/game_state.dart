@@ -114,9 +114,9 @@ class GameState extends ChangeNotifier {
   String? lastTransferError;
 
   ManagerProfile _managerProfile = ManagerProfile(
-    name: tr('Azizbek Rahimov'),
+    name: 'Azizbek Rahimov',
     avatarId: 'suit_dark',
-    nationality: tr('O‘zbekiston'),
+    nationality: 'O‘zbekiston',
     countryFlag: '🇺🇿',
     age: 42,
     philosophy: ManagerPhilosophy.possession,
@@ -143,7 +143,7 @@ class GameState extends ChangeNotifier {
     final next = currentDate.isBefore(calendar.winterOpen)
         ? calendar.winterOpen
         : DateTime(calendar.year + 1, 6, 16);
-    return 'Transfer oynasi yopiq · ${SeasonCalendar.format(next)} da ochiladi';
+    return trf('Transfer oynasi yopiq · {0} da ochiladi', [SeasonCalendar.format(next)]);
   }
 
   int get unreadNews => news.where((n) => !n.read).length;
@@ -287,7 +287,7 @@ class GameState extends ChangeNotifier {
       final slot = i >= 0 ? i : 10;
       squad[slot] = Player.fromMap({
         ...star.toMap(),
-        'id': trf('{0}_star', [customClubId]),
+        'id': '${customClubId}_star',
         'number': squad[slot].number,
       });
     }
@@ -399,7 +399,7 @@ class GameState extends ChangeNotifier {
     final info = leagueInfo;
     if (info.tier > 1) {
       return switch (rank) {
-        <= 2 => const BoardObjective('Avtomatik ko‘tarilish (top-2)', 2),
+        <= 2 => BoardObjective(tr('Avtomatik ko‘tarilish (top-2)'), 2),
         <= 6 => BoardObjective(trf('Pley-off (top-{0})', [info.playoffTo]), info.playoffTo),
         <= 12 => const BoardObjective('Top-12', 12),
         _ => info.relegate > 0
@@ -410,7 +410,7 @@ class GameState extends ChangeNotifier {
     if (n > 10) {
       return switch (rank) {
         1 => const BoardObjective('Chempionlik', 1),
-        <= 4 => const BoardObjective('Top-4 (Chempionlar ligasi)', 4),
+        <= 4 => BoardObjective(tr('Top-4 (Chempionlar ligasi)'), 4),
         <= 7 => const BoardObjective('Top-6 (Yevrokubok)', 6),
         <= 12 => const BoardObjective('Top-10', 10),
         _ => BoardObjective(tr('Ligada qolish'), n - 3),
@@ -419,8 +419,8 @@ class GameState extends ChangeNotifier {
     return switch (rank) {
       1 => const BoardObjective('Chempionlik', 1),
       2 || 3 => const BoardObjective('Top-3', 3),
-      4 || 5 => const BoardObjective('Top-4', 4),
-      _ => const BoardObjective('Top-6', 6),
+      4 || 5 => BoardObjective('Top-4', 4),
+      _ => BoardObjective('Top-6', 6),
     };
   }
 
@@ -790,13 +790,13 @@ class GameState extends ChangeNotifier {
         p.seasonCleanSheets++;
       }
     }
-    const names = [
-      'Son mushagi cho‘zilishi',
-      'To‘piq lat yeyishi',
+    final names = [
+      tr('Son mushagi cho‘zilishi'),
+      tr('To‘piq lat yeyishi'),
       'Tizza zarbasi',
       'Boldir mushagi',
       'Yelka chiqishi',
-      'Bel og‘rig‘i',
+      tr('Bel og‘rig‘i'),
     ];
     final rnd = Random(_salt(f.id.hashCode));
     for (final entry in e.injuries.entries) {
@@ -998,7 +998,7 @@ class GameState extends ChangeNotifier {
       final n = _allClubs.length;
       final tv = n <= 8 ? 1800000 + (8 - pos) * 150000 : ((1800000 + (n - pos) * 60000) * econ).round();
       _post(club, tr('Teletranslyatsiya ulushi'), tv, category: FinanceCategory.broadcast);
-      final span = days % 7 == 0 ? '$weeks hafta' : '$days kun';
+      final span = days % 7 == 0 ? trf('{0} hafta', [weeks]) : trf('{0} kun', [days]);
       _post(club, trf('Homiylik va savdo · {0}', [span]), perDays(weeklyCommercial(club)),
           category: FinanceCategory.commercial);
       _post(club, trf('Futbolchi maoshlari · {0}', [span]), -perDays(club.totalWeeklyWages),
@@ -1064,7 +1064,7 @@ class GameState extends ChangeNotifier {
         _news(
           NewsKind.contract,
           tr('Shartnomasi tugayotgan futbolchilar'),
-          trf('{0}{1}: yangilanmasa, mavsum oxirida klubni tark etadi.', [expiring.take(4).map((p) => p.shortName).join(', '), expiring.length > 4 ? ' va boshqalar' : '']),
+          trf('{0}{1}: yangilanmasa, mavsum oxirida klubni tark etadi.', [expiring.take(4).map((p) => p.shortName).join(', '), expiring.length > 4 ? tr(' va boshqalar') : '']),
         );
       }
     }
@@ -1158,20 +1158,20 @@ class GameState extends ChangeNotifier {
     if (seller.id == buyer.id ||
         !seller.squad.any((p) => p.id == player.id) ||
         buyer.squad.any((p) => p.id == player.id)) {
-      return 'Futbolchi bu transfer uchun mavjud emas.';
+      return tr('Futbolchi bu transfer uchun mavjud emas.');
     }
     if (seller.squad.length <= minSquad) {
-      return 'Sotuvchi klub kamida $minSquad futbolchini saqlashi kerak.';
+      return trf('Sotuvchi klub kamida {0} futbolchini saqlashi kerak.', [minSquad]);
     }
     if (player.mainPosition.isGoalkeeper &&
         seller.squad.where((p) => p.mainPosition.isGoalkeeper).length <= 2) {
-      return 'Klub darvozabonlar sonini kamaytirmaydi.';
+      return tr('Klub darvozabonlar sonini kamaytirmaydi.');
     }
     if (buyer.squad.length >= maxSquad) {
-      return 'Ro‘yxat to‘la: ko‘pi bilan $maxSquad futbolchi.';
+      return trf('Ro‘yxat to‘la: ko‘pi bilan {0} futbolchi.', [maxSquad]);
     }
     if (buyer.transferBudget < price + signingCost(player, price)) {
-      return 'Transfer, agent va imzo xarajatlari uchun mablag‘ yetarli emas.';
+      return tr('Transfer, agent va imzo xarajatlari uchun mablag‘ yetarli emas.');
     }
     if (buyer.remainingWageBudget < offeredWage(player)) {
       return 'Haftalik maosh limiti yetarli emas.';
@@ -1368,10 +1368,10 @@ class GameState extends ChangeNotifier {
   /// football); the club only pays a signing bonus of eight weeks' wages.
   String? freeAgentIssue(Player p) {
     final c = userClub;
-    if (c.squad.length >= maxSquad) return 'Ro‘yxat to‘la: ko‘pi bilan $maxSquad futbolchi.';
+    if (c.squad.length >= maxSquad) return trf('Ro‘yxat to‘la: ko‘pi bilan {0} futbolchi.', [maxSquad]);
     final wage = max(p.contract.weeklyWage, p.calculatedRenewalWageDemand);
     if (c.remainingWageBudget < wage) return 'Haftalik maosh limiti yetarli emas.';
-    if (c.transferBudget < wage * 8) return 'Imzo bonusi uchun mablag‘ yetarli emas.';
+    if (c.transferBudget < wage * 8) return tr('Imzo bonusi uchun mablag‘ yetarli emas.');
     return null;
   }
 
@@ -1474,7 +1474,7 @@ class GameState extends ChangeNotifier {
       preferredFoot: foot,
       weakFoot: weakFoot,
       stats: stats,
-      contract: const PlayerContract(contractYears: 3, weeklyWage: 10000),
+      contract: PlayerContract(contractYears: 3, weeklyWage: 10000),
       marketValue: 0,
       potential: potential,
       playingStyle: style,
@@ -1688,8 +1688,7 @@ class GameState extends ChangeNotifier {
       for (final p in List<Player>.of(club.squad)) {
         p.history.insert(
           0,
-          '${calendar.year - 1}/${calendar.year % 100}: ${p.seasonMatches} o‘yin, ${p.seasonGoals} gol, ${p.seasonAssists} assist'
-          '${p.averageRating != null ? ', ${p.averageRating!.toStringAsFixed(2)}' : ''}',
+          trf('{0}/{1}: {2} o‘yin, {3} gol, {4} assist{5}', [calendar.year - 1, calendar.year % 100, p.seasonMatches, p.seasonGoals, p.seasonAssists, p.averageRating != null ? ', ${p.averageRating!.toStringAsFixed(2)}' : '']),
         );
         _develop(p, rnd);
         p.resetSeasonStats();
@@ -1700,7 +1699,7 @@ class GameState extends ChangeNotifier {
         final years = p.contract.contractYears - 1;
         if (p.age >= 37 && rnd.nextDouble() < 0.7) {
           _remove(club, p);
-          if (user) released.add('${p.shortName} (faoliyatini yakunladi)');
+          if (user) released.add(trf('{0} (faoliyatini yakunladi)', [p.shortName]));
           continue;
         }
         if (years <= 0) {
@@ -1755,7 +1754,7 @@ class GameState extends ChangeNotifier {
     _news(
       NewsKind.board,
       trf('Yangi mavsum: {0}{1}', [seasonLabel, wasLeague != leagueId ? ' · ${leagueInfo.name}' : '']),
-      trf('Kengash maqsadi: {0}. Akademiyadan 2 ta yosh futbolchi asosiy jamoaga ko‘tarildi.{1}', [objective.title, released.isNotEmpty ? ' Klubni tark etganlar: ${released.join(', ')}.' : '']),
+      trf('Kengash maqsadi: {0}. Akademiyadan 2 ta yosh futbolchi asosiy jamoaga ko‘tarildi.{1}', [objective.title, released.isNotEmpty ? trf(' Klubni tark etganlar: {0}.', [released.join(', ')]) : '']),
     );
     _news(
       NewsKind.window,
@@ -1845,7 +1844,7 @@ class GameState extends ChangeNotifier {
       preferredFoot: rnd.nextInt(4) == 0 ? PreferredFoot.left : PreferredFoot.right,
       weakFoot: 2 + rnd.nextInt(3),
       stats: stats,
-      contract: const PlayerContract(contractYears: 3, weeklyWage: 8000),
+      contract: PlayerContract(contractYears: 3, weeklyWage: 8000),
       marketValue: Player.valuation(target, 17, target + 18),
       potential: (target + 12 + rnd.nextInt(16)).clamp(70, 92),
     );
@@ -1949,7 +1948,7 @@ class GameState extends ChangeNotifier {
             preferredFoot: random.nextBool() ? PreferredFoot.right : PreferredFoot.left,
             weakFoot: 3 + random.nextInt(2),
             stats: _statsFor(pos, ovr, random),
-            contract: const PlayerContract(contractYears: 4, weeklyWage: 160000),
+            contract: PlayerContract(contractYears: 4, weeklyWage: 160000),
             marketValue: Player.valuation(ovr, age, ovr + 2),
           );
         }(),
@@ -1995,7 +1994,7 @@ class GameState extends ChangeNotifier {
     _news(
       NewsKind.match,
       '$verdict ${home.shortName} ${f.homeScore}–${f.awayScore} ${away.shortName}',
-      trf('{0}-tur. xG {1} – {2}, to‘p nazorati {3}% – {4}%.{5}', [f.round, f.homeXG.toStringAsFixed(2), f.awayXG.toStringAsFixed(2), f.homePossession, f.awayPossession, motm != null ? ' O‘yin qahramoni: ${motm.name} (${f.ratings[motm.id]?.toStringAsFixed(1)}).' : '']),
+      trf('{0}-tur. xG {1} – {2}, to‘p nazorati {3}% – {4}%.{5}', [f.round, f.homeXG.toStringAsFixed(2), f.awayXG.toStringAsFixed(2), f.homePossession, f.awayPossession, motm != null ? trf(' O‘yin qahramoni: {0} ({1}).', [motm.name, f.ratings[motm.id]?.toStringAsFixed(1)]) : '']),
     );
   }
 

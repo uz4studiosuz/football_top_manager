@@ -252,7 +252,7 @@ class DashboardScreen extends StatelessWidget {
             ],
           ),
         ),
-        Expanded(child: StatTile(club.formattedTransferBudget, 'Mablag‘')),
+        Expanded(child: StatTile(club.formattedTransferBudget, tr('Mablag‘'))),
       ],
     ),
   );
@@ -361,7 +361,7 @@ class DashboardScreen extends StatelessWidget {
           TextButton.icon(
             onPressed: () async {
               if (game.unavailableStarters.isNotEmpty) game.fixUnavailableStarters();
-              await runWithLoading(context, 'Uchrashuv simulyatsiya qilinmoqda…', () => game.simulateUserFixture(f));
+              await runWithLoading(context, tr('Uchrashuv simulyatsiya qilinmoqda…'), () => game.simulateUserFixture(f));
               if (!context.mounted) return;
               Navigator.push(
                 context,
@@ -386,7 +386,7 @@ class DashboardScreen extends StatelessWidget {
         children: [
           SectionHeader(tr('Tur yakunlandi'), icon: Icons.check_circle_outline),
           Text(
-            trf('Barcha natijalar jadvalga yozildi.{0}', [nextDate != null ? ' Keyingi o‘yin kuni: ${SeasonCalendar.format(nextDate)}.' : '']),
+            trf('Barcha natijalar jadvalga yozildi.{0}', [nextDate != null ? trf(' Keyingi o‘yin kuni: {0}.', [SeasonCalendar.format(nextDate)]) : '']),
             style: AppText.small,
           ),
           const SizedBox(height: 14),
@@ -418,7 +418,7 @@ class DashboardScreen extends StatelessWidget {
           const SizedBox(height: 14),
           ClubHeading(club: champion, size: 64, caption: trf('Chempion · {0} ochko', [table.first.points])),
           const SizedBox(height: 14),
-          InfoRow(tr('Sizning o‘rningiz'), '$pos-o‘rin'),
+          InfoRow(tr('Sizning o‘rningiz'), trf('{0}-o‘rin', [pos])),
           InfoRow(
             trf('Kengash maqsadi ({0})', [game.objective.title]),
             met ? tr('Bajarildi') : tr('Bajarilmadi'),
@@ -576,7 +576,7 @@ class DashboardScreen extends StatelessWidget {
           InfoRow(tr('Mavsum maqsadi'), game.objective.title),
           InfoRow(
             tr('Joriy holat'),
-            '$pos-o‘rin',
+            trf('{0}-o‘rin', [pos]),
             valueColor: pos <= game.objective.targetPosition ? AppColors.win : AppColors.loss,
           ),
           MeterRow(label: tr('Kengash ishonchi'), value: conf / 100, trailing: '$conf%', color: color),
@@ -629,7 +629,7 @@ class DashboardScreen extends StatelessWidget {
     int count(NewsKind k) => unread.where((n) => n.kind == k).length;
     final tiles = <Widget>[
       if (game.offers.isNotEmpty)
-        _inboxTile(NewsKind.transfer, '${game.offers.length} ta taklif', 'Sotish takliflari kutmoqda', onNavigateToTransfers),
+        _inboxTile(NewsKind.transfer, '${game.offers.length} ta taklif', tr('Sotish takliflari kutmoqda'), onNavigateToTransfers),
       if (count(NewsKind.injury) > 0)
         _inboxTile(
           NewsKind.injury,
@@ -645,7 +645,7 @@ class DashboardScreen extends StatelessWidget {
           () => _openNews(context, game),
         ),
       if (count(NewsKind.contract) > 0)
-        _inboxTile(NewsKind.contract, 'Shartnomalar', 'Muddati tugayotganlar bor', onNavigateToSquad),
+        _inboxTile(NewsKind.contract, tr('Shartnomalar'), tr('Muddati tugayotganlar bor'), onNavigateToSquad),
     ];
     if (tiles.isEmpty) return const [];
     return [
@@ -686,7 +686,7 @@ class DashboardScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: kind.color)),
+                    Text(tr(title), style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: kind.color)),
                     Text(body, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.small),
                   ],
                 ),

@@ -89,7 +89,7 @@ void main() {
       img.dispose();
     }
 
-    await mount(const OnboardingScreen(), const Size(390, 844));
+    await mount(OnboardingScreen(), const Size(390, 844));
     await shot('onboarding-identity-mobile');
     await tester.tap(find.text('Davom etish'));
     await tester.pumpAndSettle();

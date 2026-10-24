@@ -292,10 +292,10 @@ class _TacticsScreenState extends State<TacticsScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
                           child: Row(
                             children: [
-                              _rating('JAMOA', club.teamOVR),
-                              _rating('HUJUM', club.attackRating),
-                              _rating('MARKAZ', club.midfieldRating),
-                              _rating('HIMOYA', club.defenseRating),
+                              _rating(tr('JAMOA'), club.teamOVR),
+                              _rating(tr('HUJUM'), club.attackRating),
+                              _rating(tr('MARKAZ'), club.midfieldRating),
+                              _rating(tr('HIMOYA'), club.defenseRating),
                             ],
                           ),
                         ),
@@ -333,9 +333,9 @@ class _TacticsScreenState extends State<TacticsScreen> {
                         const SizedBox(height: 10),
                         _pitch(club),
                         const SizedBox(height: 16),
-                        _group(tr('Zaxira'), club.bench, 'O‘yin kuni zaxirasi · ${club.bench.length}/${Club.matchdayBench}'),
+                        _group(tr('Zaxira'), club.bench, trf('O‘yin kuni zaxirasi · {0}/{1}', [club.bench.length, Club.matchdayBench])),
                         const SizedBox(height: 12),
-                        _group(tr('Rezerv'), club.reserves, 'Tarkibdan tashqari · ${club.reserves.length}'),
+                        _group(tr('Rezerv'), club.reserves, trf('Tarkibdan tashqari · {0}', [club.reserves.length])),
                         const SizedBox(height: 24),
                       ],
                     ),
@@ -358,7 +358,7 @@ class _TacticsScreenState extends State<TacticsScreen> {
       children: [
         Row(
           children: [
-            Text(title, style: AppText.h3),
+            Text(tr(title), style: AppText.h3),
             const SizedBox(width: 8),
             Expanded(child: Text(caption, style: AppText.caption)),
           ],
@@ -379,7 +379,7 @@ class _TacticsScreenState extends State<TacticsScreen> {
       children: [
         ValueBadge(value, size: 40),
         const SizedBox(height: 6),
-        Text(text, style: AppText.overline.copyWith(fontSize: 10)),
+        Text(tr(text), style: AppText.overline.copyWith(fontSize: 10)),
       ],
     ),
   );

@@ -25,12 +25,13 @@ enum InGameMentality {
   defensive('Himoyaviy', Icons.arrow_downward_rounded, 0.82, 1.22),
   parkBus('Avtobus', Icons.shield_rounded, 0.58, 1.45);
 
-  final String label;
+  final String _label;
+  String get label => tr(_label);
   final IconData icon;
   final double attackMultiplier;
   final double defenseMultiplier;
   const InGameMentality(
-    this.label,
+    this._label,
     this.icon,
     this.attackMultiplier,
     this.defenseMultiplier,
@@ -170,7 +171,7 @@ class _MatchScreenState extends State<MatchScreen> {
       _applyMentality();
       _field.announce(
         MatchEventType.info,
-        '${_user.shortName} murabbiyi jamoani "${m.label}" rejimiga o‘tkazdi.',
+        trf('{0} murabbiyi jamoani "{1}" rejimiga o‘tkazdi.', [_user.shortName, m.label]),
         _userHome,
       );
       _drain();
@@ -772,7 +773,7 @@ class _SubstitutionSheetState extends State<_SubstitutionSheet> {
                 children: [
                   Expanded(
                     child: Text(
-                      out == null ? 'Kim maydonni tark etadi?' : '${out!.shortName} o‘rniga kim?',
+                      out == null ? tr('Kim maydonni tark etadi?') : trf('{0} o‘rniga kim?', [out!.shortName]),
                       style: AppText.h3,
                     ),
                   ),
@@ -906,7 +907,7 @@ class MatchPitchPainter extends CustomPainter {
         final tp = TextPainter(
           text: TextSpan(
             text: '${p.number}',
-            style: TextStyle(color: text, fontSize: radius * 0.95, fontWeight: FontWeight.w800, fontFamily: tr('Roboto')),
+            style: TextStyle(color: text, fontSize: radius * 0.95, fontWeight: FontWeight.w800, fontFamily: 'Roboto'),
           ),
           textDirection: TextDirection.ltr,
         )..layout();

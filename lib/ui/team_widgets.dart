@@ -70,7 +70,7 @@ class FixtureTile extends StatelessWidget {
               child: Column(
                 children: [
                   Text(
-                    d == null ? '${fixture.round}-tur' : SeasonCalendar.short(d),
+                    d == null ? trf('{0}-tur', [fixture.round]) : SeasonCalendar.short(d),
                     style: AppText.caption,
                   ),
                   const SizedBox(height: 3),
@@ -165,15 +165,15 @@ class StandingsTable extends StatelessWidget {
     final info = InitialDatabase.info(league ?? game.leagueId);
     if (info.tier > 1) {
       return [
-        (_green, 'Avtomatik ko‘tarilish'),
+        (_green, tr('Avtomatik ko‘tarilish')),
         if (info.hasPlayoff) (_orange, 'Pley-off (${info.playoffFrom}–${info.playoffTo})'),
-        if (info.relegate > 0) (_red, 'Quyi ligaga tushish'),
+        if (info.relegate > 0) (_red, tr('Quyi ligaga tushish')),
       ];
     }
     final big = (league == null || league == game.leagueId ? game.clubCount : 20) > 10;
     return [
       (_blue, 'Chempion'),
-      (_green, 'Chempionlar ligasi'),
+      (_green, tr('Chempionlar ligasi')),
       (_orange, 'Yevropa ligasi'),
       if (big) (_teal, 'Konferensiya ligasi'),
       (_red, big ? tr('Quyi ligaga tushish') : tr('Quyi liga xavfi')),
