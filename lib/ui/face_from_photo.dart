@@ -280,40 +280,75 @@ Future<FaceConfig?> analyseAligned(ui.Image image, FaceConfig base) async {
     return sqrt(values.map((v) => (v - mean) * (v - mean)).reduce((a, b) => a + b) / values.length);
   }
 
-  final skin = mix([box(0.2, 0.52, 0.32, 0.62), box(0.68, 0.52, 0.8, 0.62), box(0.38, 0.18, 0.62, 0.26)]);
-  final background = mix([box(-0.42, -0.05, -0.32, 0.05), box(1.32, -0.05, 1.42, 0.05)]);
-  final hairTop = box(0.38, -0.02, 0.62, 0.06);
-  bool isSkin(Color c) => dist(c, skin) < 900;
-  bool isBackground(Color c) => dist(c, background) < 700;
-  bool isHair(Color c) => !isSkin(c) && !isBackground(c);
-
-  // Hair volume: how far hair rises above the head and spreads at the temples.
-  var height = 0.0;
-  for (var f = -0.02; f > -0.4; f -= 0.01) {
-    if (!isHair(box(0.45, f - 0.01, 0.55, f))) break;
-    height = -f;
+  /// Colour of a box ignoring shadows and highlights (middle half by brightness).
+  Color median(double x0, double y0, double x1, double y1) {
+    final colors = <Color>[];
+    for (var y = (oy + y0 * oh).round(); y <= (oy + y1 * oh).round(); y += 1) {
+      for (var x = (ox + x0 * ow).round(); x <= (ox + x1 * ow).round(); x += 1) {
+        colors.add(px(x, y));
+      }
+    }
+    if (colors.isEmpty) return const Color(0xFF808080);
+    colors.sort((a, b) => luma(a).compareTo(luma(b)));
+    final mid = colors.sublist(colors.length ~/ 4, max(colors.length ~/ 4 + 1, colors.length * 3 ~/ 4));
+    return mix(mid);
   }
+
+  final background = mix([box(-0.42, -0.08, -0.32, 0.02), box(1.32, -0.08, 1.42, 0.02)]);
+  // First guess of the skin: centre of the face (nose and inner cheeks).
+  var skin = mix([median(0.38, 0.5, 0.62, 0.62), median(0.3, 0.56, 0.42, 0.66), median(0.58, 0.56, 0.7, 0.66)]);
+  bool isSkin(Color c) => dist(c, skin) < 1300;
+  // Flat areas matching the background colour are background; hair has texture
+  // even when it is as dark as the backdrop.
+  bool isBackground(Color c, double y) =>
+      dist(c, background) < 600 && texture(0.4, y, 0.6, y + 0.02) < 0.035;
+
+  // Walk down the middle of the head: background, then hair, then forehead.
+  double? hairStart, hairline;
+  for (var f = -0.2; f < 0.6; f += 0.01) {
+    final c = median(0.44, f, 0.56, f + 0.012);
+    if (hairStart == null) {
+      if (isBackground(c, f)) continue;
+      if (isSkin(c)) {
+        hairline = f;
+        break;
+      }
+      hairStart = f;
+    } else if (isSkin(c)) {
+      hairline = f;
+      break;
+    }
+  }
+  final thickness = hairStart == null || hairline == null ? 0.0 : hairline - hairStart;
+  final bald = thickness < 0.025;
+  if (hairline != null) {
+    // Refine the skin with the forehead just below the hairline.
+    skin = mix([skin, median(0.38, hairline + 0.04, 0.62, hairline + 0.12)]);
+  }
+  final hairColor = bald ? null : median(0.36, hairStart!, 0.64, hairline ?? hairStart + 0.1);
+  bool isHair(Color c, double y) => !isSkin(c) && !isBackground(c, y);
+  final templeY = (hairline ?? 0.2) + 0.06;
+  final sidesShort = isSkin(median(0.08, templeY, 0.16, templeY + 0.05)) || isSkin(median(0.84, templeY, 0.92, templeY + 0.05));
+  final longSides = !bald && isHair(median(-0.06, 0.7, 0.02, 0.9), 0.7) && isHair(median(0.98, 0.7, 1.06, 0.9), 0.7);
   var spread = 0.0;
-  for (var f = 0.02; f < 0.4; f += 0.01) {
-    if (!isHair(box(-f - 0.01, 0.2, -f, 0.28)) || !isHair(box(1 + f, 0.2, 1 + f + 0.01, 0.28))) break;
+  for (var f = 0.02; f < 0.4 && !bald; f += 0.01) {
+    if (!isHair(median(-f - 0.01, 0.2, -f, 0.28), 0.2) || !isHair(median(1 + f, 0.2, 1 + f + 0.01, 0.28), 0.2)) break;
     spread = f;
   }
-  final longSides = isHair(box(-0.06, 0.7, 0.02, 0.9)) && isHair(box(0.98, 0.7, 1.06, 0.9));
-  final bald = isSkin(hairTop) || (!isHair(hairTop) && height < 0.02);
-  final curly = texture(0.3, -0.06, 0.7, 0.04) > 0.11;
+  final curly = !bald && texture(0.3, hairStart!, 0.7, hairStart + max(0.03, thickness * 0.6)) > 0.13;
   final cut = bald
       ? 5 // bald
       : longSides
       ? (curly ? 10 : 8) // dreads / long
-      : spread > 0.1 && height > 0.12
+      : spread > 0.1 && thickness > 0.18
       ? 7 // afro
       : curly
       ? 3 // curly
-      : height > 0.11
-      ? 2 // quiff
-      : height < 0.035
+      : thickness < 0.07
       ? 4 // buzz cut
-      : spread < 0.02
+      : thickness > 0.22
+      ? 2 // quiff
+      : sidesShort
       ? 15 // fade
       : 0; // short
 
@@ -382,7 +417,7 @@ Future<FaceConfig?> analyseAligned(ui.Image image, FaceConfig base) async {
 
   return base
       .change('skin', nearest(skin, FacePainter.skins))
-      .change('hair', bald ? base.hair : nearest(hairTop, FacePainter.hairs))
+      .change('hair', hairColor == null ? base.hair : nearest(hairColor, FacePainter.hairs))
       .change('cut', cut)
       .change('beardStyle', beard)
       .change('brow', browIndex)
