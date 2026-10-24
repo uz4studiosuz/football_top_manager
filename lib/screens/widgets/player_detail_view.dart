@@ -356,62 +356,141 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
           ),
         ),
         const SizedBox(height: 12),
-        // Clubs the player has played for and the fees paid.
-        AppCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SectionHeader(tr('Transferlar tarixi'), icon: Icons.swap_horiz_rounded),
-              ListTile(
-                dense: true,
-                contentPadding: EdgeInsets.zero,
-                leading: c == null ? const Icon(Icons.person_off_outlined) : ClubCrestWidget(config: c.crestConfig, size: 30),
-                title: Text(c?.name ?? tr('Erkin agent'), style: AppText.bodyStrong),
-                subtitle: Text(tr('Hozirgi klub'), style: AppText.caption),
-              ),
-              if (p.transfers.isEmpty)
-                Text(tr('Karyera davomida hali transfer bo‘lmagan.'), style: AppText.caption)
-              else
-                for (final t in p.transfers)
-                  Builder(
-                    builder: (context) {
-                      final parts = t.split('|');
-                      final fee = int.tryParse(parts.length > 3 ? parts[3] : '') ?? 0;
-                      return ListTile(
-                        dense: true,
-                        contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.arrow_forward_rounded, color: AppColors.ink3),
-                        title: Text(
-                          '${parts[1] == '-' ? tr('Erkin agent') : parts[1]} → ${parts[2]}',
-                          style: AppText.small.copyWith(color: AppColors.ink),
-                        ),
-                        subtitle: Text(parts[0], style: AppText.caption),
-                        trailing: Text(fee == 0 ? tr('Bepul') : formatMoney(fee), style: AppText.bodyStrong),
-                      );
-                    },
-                  ),
-            ],
-          ),
-        ),
-        if (p.history.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          AppCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SectionHeader(tr('Karyera'), icon: Icons.history_rounded),
-                for (final h in p.history)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 5),
-                    child: Text(h, style: AppText.small),
-                  ),
-              ],
-            ),
-          ),
-        ],
+        _careerTable(c),
+        const SizedBox(height: 12),
+        _transferTimeline(c),
       ],
     );
   }
+
+  Widget _crest(String? clubId, String name, {double size = 26}) {
+    final club = clubId == null || clubId.isEmpty ? null : GameState().getClubById(clubId);
+    if (club != null) return ClubCrestWidget(config: club.crestConfig, size: size);
+    return CircleAvatar(
+      radius: size / 2,
+      backgroundColor: AppColors.surfaceAlt,
+      child: Text(name.isEmpty || name == '-' ? '?' : name.characters.first, style: AppText.caption),
+    );
+  }
+
+  /// SofaScore-style season table: club, apps, goals, assists, rating.
+  Widget _careerTable(Club? c) {
+    final rows = <List<String>>[
+      if (c != null)
+        [
+          GameState().seasonLabel,
+          c.id,
+          c.name,
+          '${p.seasonMatches}',
+          '${p.seasonGoals}',
+          '${p.seasonAssists}',
+          p.averageRating?.toStringAsFixed(2) ?? '',
+        ],
+      for (final line in p.careerSeasons) line.split('|'),
+    ];
+    Widget head(String t) => SizedBox(width: 40, child: Text(t, textAlign: TextAlign.center, style: AppText.overline.copyWith(fontSize: 10)));
+    Widget cell(String t) => SizedBox(width: 40, child: Text(t, textAlign: TextAlign.center, style: AppText.small.copyWith(color: AppColors.ink)));
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SectionHeader(tr('Karyera'), icon: Icons.history_rounded),
+          Row(
+            children: [
+              const SizedBox(width: 64),
+              const Expanded(child: SizedBox()),
+              head(tr('O')),
+              head(tr('Gol')),
+              head(tr('As')),
+              head(tr('Reyt.')),
+            ],
+          ),
+          const Divider(height: 12),
+          for (final r in rows)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 5),
+              child: Row(
+                children: [
+                  SizedBox(width: 64, child: Text(r[0], style: AppText.caption)),
+                  _crest(r[1], r[2]),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text(r[2], maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.small.copyWith(color: AppColors.ink))),
+                  cell(r[3]),
+                  cell(r[4]),
+                  cell(r[5]),
+                  SizedBox(
+                    width: 40,
+                    child: r[6].isEmpty ? cell('–') : Center(child: RatingBadge(double.tryParse(r[6]), size: 11)),
+                  ),
+                ],
+              ),
+            ),
+          if (p.careerSeasons.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Text(tr('Oldingi mavsumlar karyera davomida shu yerga yoziladi.'), style: AppText.caption),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Transfers like SofaScore: from-club → to-club with crests, season and fee.
+  Widget _transferTimeline(Club? c) => AppCard(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(tr('Transferlar tarixi'), icon: Icons.swap_horiz_rounded),
+        if (p.transfers.isEmpty)
+          Row(
+            children: [
+              if (c != null) _crest(c.id, c.name, size: 30),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  trf('{0} · karyera davomida hali transfer bo‘lmagan.', [c?.name ?? tr('Erkin agent')]),
+                  style: AppText.small,
+                ),
+              ),
+            ],
+          )
+        else
+          for (final t in p.transfers)
+            Builder(
+              builder: (context) {
+                final f = t.split('|');
+                final fee = int.tryParse(f.length > 3 ? f[3] : '') ?? 0;
+                final fromId = f.length > 4 ? f[4] : null, toId = f.length > 5 ? f[5] : null;
+                final from = f[1] == '-' ? tr('Erkin agent') : f[1];
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(
+                    children: [
+                      SizedBox(width: 64, child: Text(f[0], style: AppText.caption)),
+                      _crest(fromId, from),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 6),
+                        child: Icon(Icons.arrow_forward_rounded, size: 16, color: AppColors.ink3),
+                      ),
+                      _crest(toId, f[2]),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '$from → ${f[2]}',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppText.small.copyWith(color: AppColors.ink),
+                        ),
+                      ),
+                      Text(fee == 0 ? tr('Bepul') : formatMoney(fee), style: AppText.bodyStrong),
+                    ],
+                  ),
+                );
+              },
+            ),
+      ],
+    ),
+  );
 
   /// Every fixture this season in which the player took the field.
   Widget _matches() {

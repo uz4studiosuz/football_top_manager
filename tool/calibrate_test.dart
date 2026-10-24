@@ -1,3 +1,4 @@
+import 'dart:math';
 // Prints league-wide averages from many simulated matches so the engine can
 // be tuned toward real football numbers. Run: flutter test tool/calibrate_test.dart
 import 'package:flutter_test/flutter_test.dart';
@@ -12,7 +13,8 @@ void main() {
     var goals = 0, shots = 0, onTarget = 0, passes = 0, completed = 0;
     var corners = 0, fouls = 0, yellows = 0, reds = 0, offsides = 0;
     var homeWins = 0, draws = 0, saves = 0, pens = 0, injuries = 0, subs = 0, errShot = 0, errGoal = 0;
-    var breaks = 0;
+    final buckets = List<int>.filled(6, 0);
+    var breaks = 0, inBox = 0, longShots = 0, longGoals = 0, recorded = 0;
     var xg = 0.0, ratingSum = 0.0, ratingN = 0, ratingMin = 10.0, ratingMax = 0.0;
     final sw = Stopwatch()..start();
     for (var i = 0; i < n; i++) {
@@ -21,6 +23,17 @@ void main() {
       final f = MatchField(h, a, seed: i * 977);
       f.simulateToEnd();
       breaks += f.breakaways;
+      for (final sh in f.shots) {
+        final dx = ((sh.home ? 1.0 : 0.0) - sh.origin.dx) * 105, dy = (0.5 - sh.origin.dy) * 68;
+        final m = sqrt(dx * dx + dy * dy);
+        recorded++;
+        buckets[min(5, m ~/ 6)]++;
+        if (m < 18) inBox++;
+        if (m >= 22) {
+          longShots++;
+          if (sh.goal) longGoals++;
+        }
+      }
       final hs = f.homeStats, as = f.awayStats;
       goals += hs.goals + as.goals;
       shots += hs.shots + as.shots;
@@ -54,7 +67,8 @@ void main() {
     // ignore: avoid_print
     print('''
 matches $n  (${sw.elapsedMilliseconds ~/ n} ms/match)
-breakaway shots ${avg(breaks)}
+breakaway shots ${avg(breaks)}   shots in box ${(inBox * 100 / max(1, recorded)).round()}%   from 22m+ ${avg(longShots)} (goals ${avg(longGoals)})
+by 6m: ${buckets.map((b) => (b * 100 / max(1, recorded)).round()).join('/')}%
 goals/match ${avg(goals)}  xG ${avg(xg)}  shots ${avg(shots)}  onTarget ${avg(onTarget)}
 passes ${avg(passes)}  accuracy ${(completed * 100 / passes).toStringAsFixed(1)}%
 corners ${avg(corners)}  fouls ${avg(fouls)}  yellows ${avg(yellows)}  reds ${avg(reds)}

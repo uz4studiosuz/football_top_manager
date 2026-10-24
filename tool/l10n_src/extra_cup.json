@@ -214,5 +214,25 @@
  "Rasmni o‘qib bo‘lmadi: {0}": [
   "Could not read the image: {0}",
   "Не удалось прочитать изображение: {0}"
+ ],
+ "As": [
+  "Ast",
+  "Пас"
+ ],
+ "O": [
+  "Apps",
+  "И"
+ ],
+ "Oldingi mavsumlar karyera davomida shu yerga yoziladi.": [
+  "Past seasons are added here as the career goes on.",
+  "Прошедшие сезоны будут появляться здесь по ходу карьеры."
+ ],
+ "Reyt.": [
+  "Rtg",
+  "Рейт."
+ ],
+ "{0} · karyera davomida hali transfer bo‘lmagan.": [
+  "{0} · no transfers in his career yet.",
+  "{0} · трансферов в карьере пока не было."
  ]
 }

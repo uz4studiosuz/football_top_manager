@@ -36,6 +36,8 @@ void main() {
     expect(game.life.awards.first.teamOfSeason, hasLength(11));
 
     game.startNextSeason();
+    expect(trainee.careerSeasons, hasLength(1));
+    expect(trainee.careerSeasons.first.split('|')[1], club.id);
     expect(game.life.lastIntake.length, greaterThanOrEqualTo(2));
     expect(game.life.lastIntake.every((id) => club.playerById(id) != null), isTrue);
 
@@ -46,5 +48,6 @@ void main() {
     expect(copy.life.focus, TrainingFocus.attacking);
     expect(copy.life.awards, hasLength(1));
     expect(copy.userClub.stadiumCapacity, club.stadiumCapacity);
+    expect(copy.userClub.playerById(trainee.id)!.careerSeasons, hasLength(1));
   });
 }

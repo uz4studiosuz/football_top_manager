@@ -198,6 +198,7 @@ class _MatchScreenState extends State<MatchScreen> {
     );
     _applyMentality();
     _game.applyClubBoosts(_field, _userHome);
+    _field.slowSetPieces = true;
     _feed.addAll(_field.takeEvents().reversed);
     _clock.start();
     _timer = Timer.periodic(const Duration(milliseconds: 33), (_) => _tick());

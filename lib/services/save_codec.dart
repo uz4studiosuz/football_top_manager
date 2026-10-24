@@ -42,6 +42,7 @@ abstract final class SaveCodec {
       'rr': p.recentRatings,
       'h': p.history,
       'tf': p.transfers,
+      'car': p.careerSeasons,
       'gr': double.parse(p.growth.toStringAsFixed(3)),
     }..removeWhere((k, v) => v == null || v == 0 || (v is List && v.isEmpty) || (k == 'st' && v == 100));
     return {
@@ -124,6 +125,7 @@ abstract final class SaveCodec {
     p.recentRatings.addAll([for (final v in (rt['rr'] as List? ?? [])) (v as num).toDouble()]);
     p.history.addAll([for (final v in (rt['h'] as List? ?? [])) v as String]);
     p.transfers.addAll([for (final v in (rt['tf'] as List? ?? [])) v as String]);
+    p.careerSeasons.addAll([for (final v in (rt['car'] as List? ?? [])) v as String]);
     p.growth = (rt['gr'] as num? ?? 0).toDouble();
     return p;
   }

@@ -400,10 +400,15 @@ class MatchField {
       p.dx >= 0.0 && p.dx <= 1.0 && p.dy >= 0.03 && p.dy <= 0.97;
 
   // ----------------------------------------------------------------- tick
+  /// Live view only: the clock runs slower while players walk to a set
+  /// piece, so corners, free kicks and penalties are set up visibly.
+  bool slowSetPieces = false;
+
   void update(double dt, [Set<String> excluded = const {}]) {
     if (isFinished || isHalfTime) return;
     _refreshLineups();
     dismissed.addAll(excluded);
+    if (slowSetPieces && phase == FieldPhase.stoppage && _pending != _SetPiece.none) dt *= 0.35;
     var left = dt;
     while (left > 0.000001 && !isFinished && !isHalfTime) {
       final step = min(left, 1 / 60);
@@ -490,7 +495,8 @@ class MatchField {
         _walkToSetPiece(home, homePositions, _homeVelocity, true, adt);
         _walkToSetPiece(away, awayPositions, _awayVelocity, false, adt);
       }
-      if (_stoppage <= 0) _resume();
+      // The kick waits (a little) until the taker has reached the ball.
+      if (_stoppage <= 0 && (_stoppage < -0.8 || !_takerWalking)) _resume();
       return;
     }
     _att.possessionSeconds += dt;
@@ -791,7 +797,7 @@ class MatchField {
           0.17 +
           (defender.playingStyle == PlayingStyle.destroyer ? 0.01 : 0) +
           (defender.instruction == PlayerInstruction.tightMarking ? 0.012 : 0) +
-          (progress > 0.84 && (ball.dy - 0.5).abs() < 0.29 ? -0.09 : 0) +
+          (progress > 0.84 && (ball.dy - 0.5).abs() < 0.29 ? -0.15 : 0) +
           (defender.stats.aggression - 40) / 800 -
           (defender.stats.tackling - 70) / 700 +
           (_opponent.tactics.pressing - 3) * 0.006 +
@@ -873,13 +879,14 @@ class MatchField {
     if (owner != 0 && progress > 0.6 && _breakaway()) {
       // The chasing defender may pull him down: a penalty in the box,
       // otherwise a free kick (and often a card) for denying a chance.
-      final boxRisk = progress > 0.843 && (ball.dy - 0.5).abs() < 0.296 ? 0.3 : 1.0;
+      final boxRisk = progress > 0.843 && (ball.dy - 0.5).abs() < 0.296 ? 0.1 : 1.0;
       if (distance < 0.07 && random.nextDouble() < (0.05 + (defender.stats.aggression - 70) / 600) * boxRisk) {
         _foul(defender, carrier);
         return;
       }
       final keeper = _rivals[0];
-      final shootFrom = 9 + carrier.stats.finishing / 11 + carrier.stats.attackingAwareness / 40;
+      // Through on goal a player runs in close; better finishers can shoot a bit earlier.
+      final shootFrom = 6 + carrier.stats.finishing / 16 + carrier.stats.attackingAwareness / 50;
       if (meters < shootFrom || (keeper - ball).distance < 0.07) {
         breakaways++;
         _startShot(carrier, pressured: false);
@@ -893,15 +900,17 @@ class MatchField {
     if (owner != 0 &&
         longOk &&
         progress > (_onCounter(homePossession) ? 0.58 : 0.64) &&
-        meters < 32 &&
+        meters < 30 &&
         (central || meters < 18) &&
-        (_hold > 1.1 ||
-            (_onCounter(homePossession) && meters < 24) ||
-            meters < 15 ||
+        // Holding the ball near the box leads to a shot; from range the
+        // player keeps looking for a way in instead.
+        ((_hold > 1.1 && meters < 20) ||
+            (_onCounter(homePossession) && meters < 18) ||
+            meters < 17 ||
             random.nextDouble() <
                 (0.22 + carrier.stats.attackingAwareness / 380) *
                     mentality *
-                    (meters < 19 ? 2.6 : 0.85))) {
+                    (meters < 20 ? 3.4 : 0.18))) {
       _startShot(carrier, pressured: distance < 0.06);
       return;
     }
@@ -915,7 +924,7 @@ class MatchField {
           carrier.aiStyles.contains(AiStyle.incisiveRun);
       final styleShot = ((_is(carrier, _finishers) || carrier.playingStyle == PlayingStyle.holePlayer) && meters < 20)
           ? 0.06
-          : (cutter && meters < 22)
+          : (cutter && meters < 18)
           ? 0.05
           : (carrier.aiStyles.contains(AiStyle.longRanger) &&
                 meters < 33 &&
@@ -965,8 +974,10 @@ class MatchField {
     }
     final next = _choosePass();
     final style = _club.tactics.playstyle;
+    // In the final third a player with room carries the ball into the box.
+    final drive = progress > 0.62 && progress < 0.86 && distance > 0.08;
     if (next != null &&
-        (distance < 0.13 ||
+        ((distance < 0.13 && !drive) ||
             _hold > 1.15 ||
             owner == 0 ||
             style == TeamPlaystyle.possession ||
@@ -1043,6 +1054,8 @@ class MatchField {
     final depth = homePossession ? 1 - ball.dx : ball.dx;
     final ownThird = depth > 0.67;
     final pressed = _nearestDistance(_rivals, ball, _opponent).$2 < 0.1;
+    // Open space in front (nobody within reach ahead): no square or back passes.
+    final freeAhead = depth < 0.6 && !pressed && _spaceAhead(direction) > 0.14;
     for (var i = 0; i < 11; i++) {
       final mate = _xi(club)[i];
       if (i == owner || dismissed.contains(mate.id)) continue;
@@ -1063,6 +1076,7 @@ class MatchField {
           (_rivals[_nearest(_rivals, points[i], _opponent)] - points[i])
               .distance;
       final progress = (points[i].dx - ball.dx) * direction * (_onCounter(homePossession) ? 1.6 : 1);
+      if (freeAhead && progress < 0.02) continue;
       final wide = (points[i].dy - 0.5).abs();
       var score = progress * 0.95 + min(space, 0.25) * 1.8 - distance * 0.22;
       if (style == TeamPlaystyle.possession) score += 0.2 - distance * 0.55;
@@ -1110,6 +1124,9 @@ class MatchField {
         score += 0.12;
       }
       if (_is(mate, _finishers) && progress > 0.1) score += 0.05;
+      // A free team-mate inside the box is the pass everyone looks for.
+      final mateDepth = homePossession ? points[i].dx : 1 - points[i].dx;
+      if (mateDepth > 0.84 && (points[i].dy - 0.5).abs() < 0.28 && space > 0.05) score += 0.35;
       if (i == 0) score -= ownThird ? 0.6 : 0.25;
       // Passing lanes: a rival close to the line can cut the ball out.
       // Near our own goal that is fatal, so keepers and defenders avoid it.
@@ -1179,7 +1196,21 @@ class MatchField {
   double _longShotWill(Player p) {
     final s = p.stats;
     final quality = s.kickingPower * 0.45 + s.curl * 0.3 + s.finishing * 0.25;
-    return ((quality - 64) / 26).clamp(0.04, 1.0) * (p.aiStyles.contains(AiStyle.longRanger) ? 1.5 : 1);
+    return ((quality - 70) / 24).clamp(0.02, 0.7) * (p.aiStyles.contains(AiStyle.longRanger) ? 1.5 : 1);
+  }
+
+  /// Distance to the nearest rival ahead of the ball, within a forward cone.
+  double _spaceAhead(double direction) {
+    var best = 1.0;
+    final xi = _xi(_opponent);
+    for (var i = 0; i < 11; i++) {
+      if (dismissed.contains(xi[i].id)) continue;
+      final r = _rivals[i];
+      final ahead = (r.dx - ball.dx) * direction;
+      if (ahead < -0.01 || (r.dy - ball.dy).abs() > 0.1 + ahead * 0.7) continue;
+      best = min(best, (r - ball).distance);
+    }
+    return best;
   }
 
   /// Closest rival to the passing line from [a] to [b].
@@ -1422,7 +1453,7 @@ class MatchField {
     final dist = sqrt(dx * dx + dy * dy);
     var angle = atan((7.32 * dx) / max(0.01, dx * dx + dy * dy - 3.66 * 3.66));
     if (angle < 0) angle += pi;
-    return 1 / (1 + exp(0.12 * dist - 1.2 * angle + 0.1));
+    return 1 / (1 + exp(0.12 * dist - 1.2 * angle + 0.27));
   }
 
   void _startShot(
@@ -2062,16 +2093,35 @@ class MatchField {
     _pendingSpot = spot;
     homePossession = forHome;
     _pendingTaker = _takerFor(forHome ? home : away, piece);
+    if (piece == _SetPiece.throwIn) {
+      _pendingTaker = _nearest(forHome ? homePositions : awayPositions, spot, forHome ? home : away, ignoreKeeper: true);
+    }
     _setStoppage(
       piece,
       switch (piece) {
-        _SetPiece.corner => 1.15,
-        _SetPiece.penalty => 1.0,
-        _SetPiece.freeKick => 0.7,
-        _SetPiece.goalKick => 0.45,
-        _ => 0.3,
+        _SetPiece.corner => 1.35,
+        _SetPiece.penalty => 1.3,
+        _SetPiece.freeKick => 0.95,
+        _SetPiece.goalKick => 0.65,
+        _ => 0.4,
       },
     );
+  }
+
+  /// Where the taker of the pending restart has to stand.
+  Offset get _takerSpot => switch (_pending) {
+    _SetPiece.penalty => Offset(_pendingHome ? 1 - 11 / 105 : 11 / 105, 0.5),
+    _SetPiece.goalKick => Offset(_pendingHome ? 0.055 : 0.945, 0.5),
+    _SetPiece.throwIn => Offset(_pendingSpot.dx, _pendingSpot.dy < 0.5 ? 0.046 : 0.954),
+    _ => _pendingSpot,
+  };
+
+  /// True while the taker is still on his way to the ball.
+  bool get _takerWalking {
+    if (_pending == _SetPiece.none) return false;
+    final points = _pendingHome ? homePositions : awayPositions;
+    final taker = _pending == _SetPiece.goalKick ? 0 : _pendingTaker;
+    return (points[taker] - _takerSpot).distance > 0.02;
   }
 
   void _resume() {
@@ -2100,7 +2150,7 @@ class MatchField {
         _lastPasser = null;
       case _SetPiece.throwIn:
         homePossession = _pendingHome;
-        owner = _nearest(_points, _pendingSpot, _club, ignoreKeeper: true);
+        owner = _pendingTaker;
         _points[owner] = Offset(_pendingSpot.dx, _pendingSpot.dy < 0.5 ? 0.046 : 0.954);
         ball = _points[owner];
         _att.throwIns++;
@@ -2252,6 +2302,10 @@ class MatchField {
           targets[i] = Offset(gx(0.19 + (k % 3) * 0.02), 0.32 + (k % 6) * 0.07);
           k++;
         }
+      case _SetPiece.goalKick:
+        if (attacking) targets[0] = _takerSpot;
+      case _SetPiece.throwIn:
+        if (attacking) targets[_pendingTaker] = _takerSpot;
       default:
         return targets;
     }

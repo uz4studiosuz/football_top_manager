@@ -1446,7 +1446,7 @@ class GameState extends ChangeNotifier {
       0,
       TransferRecord(_currentRound, p.name, seller.name, buyer.name, fee, date: currentDate),
     );
-    p.transfers.insert(0, '$seasonLabel|${seller.name}|${buyer.name}|$fee');
+    p.transfers.insert(0, '$seasonLabel|${seller.name}|${buyer.name}|$fee|${seller.id}|${buyer.id}');
     if (buyer.id != _userClubId && seller.id != _userClubId) {
       _news(
         NewsKind.transfer,
@@ -1798,7 +1798,7 @@ class GameState extends ChangeNotifier {
       0,
       TransferRecord(_currentRound, p.name, tr('Erkin agent'), userClub.name, 0, date: currentDate),
     );
-    p.transfers.insert(0, '$seasonLabel|-|${userClub.name}|0');
+    p.transfers.insert(0, '$seasonLabel|-|${userClub.name}|0||${userClub.id}');
     _news(NewsKind.transfer, trf('{0} imzoladi', [p.name]), trf('Erkin agent sifatida {0} yillik shartnoma.', [p.contract.contractYears]));
     notifyListeners();
     return true;
@@ -2108,6 +2108,15 @@ class GameState extends ChangeNotifier {
           0,
           trf('{0}/{1}: {2} o‘yin, {3} gol, {4} assist{5}', [calendar.year - 1, calendar.year % 100, p.seasonMatches, p.seasonGoals, p.seasonAssists, p.averageRating != null ? ', ${p.averageRating!.toStringAsFixed(2)}' : '']),
         );
+        p.careerSeasons.insert(0, [
+          '${calendar.year - 1}/${calendar.year % 100}',
+          club.id,
+          club.name,
+          p.seasonMatches,
+          p.seasonGoals,
+          p.seasonAssists,
+          p.averageRating?.toStringAsFixed(2) ?? '',
+        ].join('|'));
         _develop(p, rnd);
         p.resetSeasonStats();
         p.currentStamina = 100;

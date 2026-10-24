@@ -12,6 +12,7 @@ import 'package:football_top_manager/screens/match_report_screen.dart';
 import 'package:football_top_manager/screens/player_match_screen.dart';
 import 'package:football_top_manager/screens/db_editor_screen.dart';
 import 'package:football_top_manager/screens/tactics_screen.dart';
+import 'package:football_top_manager/screens/widgets/player_detail_view.dart';
 import 'package:football_top_manager/screens/club_life_screen.dart';
 import 'package:football_top_manager/screens/shootout_screen.dart';
 import 'package:football_top_manager/services/cup.dart';
@@ -70,7 +71,14 @@ void main() {
       img.dispose();
     }
 
-    const desktop = Size(1366, 820), phone = Size(390, 844);
+    const desktop = Size(1366, 820), phone = Size(390, 1400);
+    final star = game.userClub.squad.first;
+    star.careerSeasons.add('2025/26|epl_mci|Manchester City|34|21|5|7.41');
+    star.transfers.add('2025/26|Borussia Dortmund|Manchester City|60000000||epl_mci');
+    await mount(PlayerDetailView(player: star, club: game.userClub), phone);
+    await tester.drag(find.byType(Scrollable).last, const Offset(0, -900));
+    await tester.pump(const Duration(milliseconds: 300));
+    await shot('m-profile-career');
     final h = game.userClub, a = game.getClubById(fixture.homeClubId == h.id ? fixture.awayClubId : fixture.homeClubId)!;
     await mount(
       ShootoutScreen(

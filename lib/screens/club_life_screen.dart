@@ -42,8 +42,20 @@ class ClubLifeScreen extends StatelessWidget {
           alignment: Alignment.topCenter,
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 900),
-            child: const TabBarView(
-              children: [_Facilities(), _Training(), _Academy(), _Fans(), _HallOfFame()],
+            // Fresh tab widgets on every change so each tab redraws.
+            child: TabBarView(
+              children: [
+                // ignore: prefer_const_constructors
+                _Facilities(),
+                // ignore: prefer_const_constructors
+                _Training(),
+                // ignore: prefer_const_constructors
+                _Academy(),
+                // ignore: prefer_const_constructors
+                _Fans(),
+                // ignore: prefer_const_constructors
+                _HallOfFame(),
+              ],
             ),
           ),
         ),

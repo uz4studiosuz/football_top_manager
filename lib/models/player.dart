@@ -506,8 +506,11 @@ class Player {
   final List<double> recentRatings = [];
   final List<String> history = []; // mavsumlar bo'yicha qisqa yozuvlar
 
-  /// Career moves, newest first: "season|from|to|fee".
+  /// Career moves, newest first: "season|from|to|fee|fromId|toId".
   final List<String> transfers = [];
+
+  /// Finished seasons, newest first: "season|clubId|club|apps|goals|assists|rating".
+  final List<String> careerSeasons = [];
   Player({
     FaceConfig? face,
     this.instruction = PlayerInstruction.balanced,
