@@ -65,6 +65,23 @@ enum PreferredFoot {
 }
 
 /// Canonical eFootball-style attributes, each bounded to 40–100.
+/// A player's character: how he reacts to playing time, contracts,
+/// training and the dressing room.
+enum Personality {
+  balanced('Muvozanatli', 'Oddiy talablar, barqaror kayfiyat.'),
+  professional('Professional', 'Mashg‘ulotda tez o‘sadi, kayfiyati kam tushadi.'),
+  ambitious('Shuhratparast', 'Ko‘p o‘ynashni va katta maoshni xohlaydi; o‘ynamasa ketishni so‘raydi.'),
+  loyal('Sadoqatli', 'Klubga sodiq, shartnomaga tez rozi bo‘ladi.'),
+  leader('Yetakchi', 'Maydonda bo‘lsa butun jamoa kayfiyati ko‘tariladi.'),
+  temperamental('Jahldor', 'Ko‘proq kartochka oladi, kayfiyati tez o‘zgaradi.'),
+  lazy('Dangasa', 'Mashg‘ulotda sekin o‘sadi.');
+
+  const Personality(this._label, this._hint);
+  final String _label, _hint;
+  String get label => tr(_label);
+  String get hint => tr(_hint);
+}
+
 @immutable
 class PlayerStats {
   final int attackingAwareness;
@@ -624,6 +641,31 @@ class Player {
     final step = v >= 10000000 ? 500000 : v >= 1000000 ? 100000 : 10000;
     return max(25000, (v / step).round() * step);
   }
+
+  /// Character, derived from the player's id (stable for a career).
+  Personality get personality {
+    final h = id.codeUnits.fold<int>(7, (a, b) => (a * 31 + b) & 0x3fffffff) % 100;
+    if (age >= 29 && h % 5 == 0) return Personality.leader;
+    return h < 34
+        ? Personality.balanced
+        : h < 50
+        ? Personality.professional
+        : h < 62
+        ? Personality.ambitious
+        : h < 74
+        ? Personality.loyal
+        : h < 82
+        ? Personality.leader
+        : h < 92
+        ? Personality.temperamental
+        : Personality.lazy;
+  }
+
+  /// [fairValue] in a league with this economy (1 = top league): smaller
+  /// leagues pay far less for the same ability, and keepers cost less.
+  int fairValueIn(double economy) => roundValue(
+    fairValue * pow(economy.clamp(0.05, 1.0), 0.55) * (mainPosition.isGoalkeeper ? 0.6 : 1),
+  );
 
   /// Market value today: ability, age and potential set the level, and the
   /// season's ratings and goals move it up or down.

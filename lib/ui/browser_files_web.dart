@@ -5,11 +5,14 @@ import 'package:web/web.dart' as web;
 
 /// Opens the browser's file dialog for an image (phones offer the camera
 /// too) and returns its bytes, or null when cancelled.
-Future<Uint8List?> pickImageBytes() {
+Future<Uint8List?> pickImageBytes() => pickFileBytes('image/*');
+
+/// Opens the browser's file dialog filtered by [accept] and returns the bytes.
+Future<Uint8List?> pickFileBytes(String accept) {
   final done = Completer<Uint8List?>();
   final input = web.HTMLInputElement()
     ..type = 'file'
-    ..accept = 'image/*';
+    ..accept = accept;
   input.addEventListener('change', ((web.Event _) {
     final file = input.files?.item(0);
     if (file == null) {

@@ -16,6 +16,7 @@ import 'widgets/opponent_squad_sheet.dart';
 import 'widgets/player_detail_view.dart';
 import 'player_match_screen.dart';
 import 'shootout_screen.dart';
+import '../ui/goal_replay.dart';
 import '../services/cup.dart';
 import '../services/lineup_solver.dart';
 import 'tactics_screen.dart';
@@ -70,6 +71,53 @@ class _MatchScreenState extends State<MatchScreen> {
   InGameMentality _mentality = InGameMentality.balanced;
   final List<MatchEvent> _feed = [];
   final Set<String> _handledInjuries = {};
+
+  /// Live orders shouted from the touchline; they change the tactics for
+  /// this match only (restored at the final whistle).
+  late TeamTactics _baseTactics;
+  final Set<String> _orders = {};
+
+  void _toggleOrder(String order) {
+    setState(() {
+      if (!_orders.remove(order)) {
+        _orders.add(order);
+        if (order == 'wings') _orders.remove('centre');
+        if (order == 'centre') _orders.remove('wings');
+        if (order == 'slow') _orders.remove('fast');
+        if (order == 'fast') _orders.remove('slow');
+      }
+      var t = _baseTactics;
+      if (_orders.contains('wings')) t = t.copyWith(attackingArea: AttackingArea.wide, width: 5);
+      if (_orders.contains('centre')) t = t.copyWith(attackingArea: AttackingArea.centre, width: 2);
+      if (_orders.contains('long')) t = t.copyWith(buildUp: BuildUpStyle.long);
+      if (_orders.contains('press')) t = t.copyWith(pressing: 5, counterPress: true);
+      if (_orders.contains('slow')) t = t.copyWith(tempo: 1, timeWasting: true);
+      if (_orders.contains('fast')) t = t.copyWith(tempo: 5, timeWasting: false);
+      _user.tactics = t;
+      _field.announce(
+        MatchEventType.info,
+        _orders.isEmpty ? tr('Murabbiy jamoani asl taktikaga qaytardi.') : trf('Murabbiy ko‘rsatmasi: {0}.', [_orders.map(_orderLabel).join(', ')]),
+        _userHome,
+      );
+      _drain();
+    });
+  }
+
+  static String _orderLabel(String o) => switch (o) {
+    'wings' => tr('Qanotdan hujum'),
+    'centre' => tr('Markazdan hujum'),
+    'long' => tr('Uzun to‘plar'),
+    'press' => tr('Yuqori pressing'),
+    'slow' => tr('Vaqtni cho‘zish'),
+    _ => tr('Tezkor o‘yin'),
+  };
+
+  @override
+  void deactivate() {
+    // Live orders never outlive the match.
+    _user.tactics = _baseTactics;
+    super.deactivate();
+  }
 
   /// VAR review on screen (text) and whether the half-time talk was given.
   String? _varText;
@@ -199,6 +247,9 @@ class _MatchScreenState extends State<MatchScreen> {
     _applyMentality();
     _game.applyClubBoosts(_field, _userHome);
     _field.slowSetPieces = true;
+    _field.recordReplays = true;
+    _field.derby = _game.isDerby(_home, _away);
+    _baseTactics = _user.tactics;
     _feed.addAll(_field.takeEvents().reversed);
     _clock.start();
     _timer = Timer.periodic(const Duration(milliseconds: 33), (_) => _tick());
@@ -277,11 +328,12 @@ class _MatchScreenState extends State<MatchScreen> {
   (int, int)? _pens;
 
   bool get _needsShootout =>
-      _game.isCupFixture(widget.fixture) && _field.homeStats.goals == _field.awayStats.goals && _pens == null;
+      _game.isKnockout(widget.fixture) && _field.homeStats.goals == _field.awayStats.goals && _pens == null;
 
   void _save() {
     if (_saved || _needsShootout) return;
     _saved = true;
+    _user.tactics = _baseTactics;
     _game.finishMatch(
       fixture: widget.fixture,
       homeScore: _field.homeStats.goals,
@@ -441,10 +493,18 @@ class _MatchScreenState extends State<MatchScreen> {
         ),
       ),
     );
+    // Changes made in the Tactics screen become the new base for live orders.
+    if (_orders.isEmpty) _baseTactics = _user.tactics;
     if (mounted) setState(() => _playing = resume && !_field.isHalfTime);
   }
 
   void _openGoal(MatchEvent e, (Color, Color) colors) {
+    // A recorded replay of this goal plays first.
+    final replay = _field.replays.where((r) => r.minute == e.minute + e.extraMinute || r.minute == e.minute).lastOrNull;
+    if (replay != null) {
+      showGoalReplay(context, replay, colors.$1, colors.$2);
+      return;
+    }
     final shot = shotForGoal(_field.shots, e);
     if (shot == null) return;
     showShotDetailSheet(
@@ -787,6 +847,34 @@ class _MatchScreenState extends State<MatchScreen> {
                   visualDensity: VisualDensity.compact,
                   onPressed: done ? null : _openTactics,
                 ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 6),
+          SizedBox(
+            height: 34,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                for (final (o, icon) in [
+                  ('wings', Icons.swap_horiz_rounded),
+                  ('centre', Icons.vertical_align_center_rounded),
+                  ('long', Icons.call_made_rounded),
+                  ('press', Icons.compress_rounded),
+                  ('slow', Icons.hourglass_bottom_rounded),
+                  ('fast', Icons.fast_forward_rounded),
+                ])
+                  Padding(
+                    padding: const EdgeInsets.only(right: 6),
+                    child: FilterChip(
+                      avatar: Icon(icon, size: 15),
+                      label: Text(_orderLabel(o)),
+                      selected: _orders.contains(o),
+                      showCheckmark: false,
+                      visualDensity: VisualDensity.compact,
+                      onSelected: done ? null : (_) => _toggleOrder(o),
+                    ),
+                  ),
               ],
             ),
           ),

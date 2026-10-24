@@ -9,6 +9,7 @@ import '../ui/team_widgets.dart';
 import '../ui/widgets.dart';
 import 'widgets/player_detail_view.dart';
 import '../l10n/l10n.dart';
+import '../ui/scout_badge.dart';
 
 class TransferScreen extends StatefulWidget {
   const TransferScreen({super.key});
@@ -58,7 +59,7 @@ class _TransferScreenState extends State<TransferScreen> {
                           ],
                         ),
                       ),
-                      ValueBadge(p.ovr, size: 34),
+                      ScoutedOvr(p, size: 34),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -291,12 +292,12 @@ class _TransferScreenState extends State<TransferScreen> {
                       PlayerTile(
                         player: e.p,
                         club: e.c,
-                        subtitle: trf('{0} · {1} yosh · salohiyat {2}', [e.c.shortName, e.p.age, e.p.potential]),
+                        subtitle: trf('{0} · {1} yosh · salohiyat {2}', [e.c.shortName, e.p.age, game.isScouted(e.p) ? '${e.p.potential}' : '?']),
                         onTap: () => PlayerDetailView.show(context, player: e.p, club: e.c),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            ValueBadge(e.p.ovr, size: 30),
+                            ScoutedOvr(e.p, size: 30),
                             const SizedBox(width: 8),
                             FilledButton.tonal(
                               style: FilledButton.styleFrom(
@@ -369,7 +370,7 @@ class _TransferScreenState extends State<TransferScreen> {
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          ValueBadge(p.ovr, size: 30),
+                          ScoutedOvr(p, size: 30),
                           const SizedBox(width: 8),
                           FilledButton.tonal(
                             style: FilledButton.styleFrom(minimumSize: const Size(64, 34)),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/player.dart';
+import '../data/initial_database.dart';
 import '../services/club_life.dart';
 import '../services/game_state.dart';
 import '../ui/face_avatar.dart';
@@ -19,7 +20,7 @@ class ClubLifeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => DefaultTabController(
-    length: 5,
+    length: 8,
     initialIndex: initialTab,
     child: Scaffold(
       appBar: AppBar(
@@ -33,6 +34,9 @@ class ClubLifeScreen extends StatelessWidget {
             Tab(text: tr('Akademiya')),
             Tab(text: tr('Muxlislar')),
             Tab(text: tr('Shon-sharaf')),
+            Tab(text: tr('Kiyinish xonasi')),
+            Tab(text: tr('Shtab')),
+            Tab(text: tr('Skautlar')),
           ],
         ),
       ),
@@ -55,6 +59,12 @@ class ClubLifeScreen extends StatelessWidget {
                 _Fans(),
                 // ignore: prefer_const_constructors
                 _HallOfFame(),
+                // ignore: prefer_const_constructors
+                _DressingRoom(),
+                // ignore: prefer_const_constructors
+                _Staff(),
+                // ignore: prefer_const_constructors
+                _Scouts(),
               ],
             ),
           ),
@@ -82,6 +92,8 @@ class _Facilities extends StatelessWidget {
             ],
           ),
         ),
+        const SizedBox(height: 10),
+        _sponsorCard(context, game),
         const SizedBox(height: 10),
         for (final f in Facility.values) ...[
           AppCard(
@@ -145,6 +157,41 @@ class _Facilities extends StatelessWidget {
       ],
     );
   }
+}
+
+/// Sponsor deal: three offers each season, one signed until the summer.
+Widget _sponsorCard(BuildContext context, GameState game) {
+  final life = game.life, deal = life.sponsor;
+  String terms(Map<String, dynamic> o) => switch (o['type']) {
+    'fixed' => trf('Har turda {0}', [formatMoney(o['perRound'] as int)]),
+    'wins' => trf('Har turda {0} + har g‘alabaga {1}', [formatMoney(o['perRound'] as int), formatMoney(o['bonus'] as int)]),
+    _ => trf('Har turda {0} + kengash maqsadi bajarilsa {1} (chempionlikda ×2)', [formatMoney(o['perRound'] as int), formatMoney(o['bonus'] as int)]),
+  };
+  return AppCard(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(tr('Homiylar'), icon: Icons.handshake_outlined),
+        if (deal != null)
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.verified_outlined, color: AppColors.win),
+            title: Text('${deal['name']}', style: AppText.bodyStrong),
+            subtitle: Text(terms(deal), style: AppText.caption),
+          )
+        else if (life.sponsorOffers.isEmpty)
+          Text(tr('Yangi takliflar keyingi mavsum boshida keladi.'), style: AppText.small)
+        else
+          for (final o in life.sponsorOffers)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              title: Text('${o['name']}', style: AppText.bodyStrong),
+              subtitle: Text(terms(o), style: AppText.caption),
+              trailing: FilledButton.tonal(onPressed: () => game.signSponsor(o), child: Text(tr('Imzolash'))),
+            ),
+      ],
+    ),
+  );
 }
 
 class _Training extends StatelessWidget {
@@ -294,6 +341,24 @@ class _Academy extends StatelessWidget {
             ],
           ),
         ),
+        if (life.loans.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SectionHeader(tr('Ijaradagi futbolchilar'), icon: Icons.flight_takeoff_rounded),
+                for (final e in life.loans.entries)
+                  ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(game.findPlayerById(e.key)?.name ?? e.key),
+                    subtitle: Text(game.marketClubs.where((c) => c.id == e.value).firstOrNull?.name ?? e.value, style: AppText.caption),
+                  ),
+              ],
+            ),
+          ),
+        ],
         const SizedBox(height: 10),
         if (youngsters.isEmpty)
           EmptyState(icon: Icons.child_care_outlined, text: tr('Hozircha yosh futbolchilar yo‘q. Yangi avlod yozda chiqadi.'))
@@ -437,6 +502,23 @@ class _HallOfFame extends StatelessWidget {
                 ),
         ),
         const SizedBox(height: 12),
+        SectionHeader(tr('Menejer rekordlari'), icon: Icons.insights_outlined),
+        AppCard(
+          child: Column(
+            children: [
+              row(tr('G‘alaba / durang / mag‘lubiyat'), '${life.wins} / ${life.draws} / ${life.losses}'),
+              row(
+                tr('G‘alabalar foizi'),
+                life.wins + life.draws + life.losses == 0 ? '' : '${(life.wins * 100 / (life.wins + life.draws + life.losses)).round()}%',
+              ),
+              row(tr('Eng uzun g‘alaba seriyasi'), life.bestWinStreak == 0 ? '' : '${life.bestWinStreak}'),
+              row(tr('Eng uzun mag‘lubiyatsiz seriya'), life.bestUnbeaten == 0 ? '' : '${life.bestUnbeaten}'),
+              row(tr('Eng ko‘p ochko (mavsum)'), life.bestPoints == 0 ? '' : '${life.bestPoints} · ${life.bestPointsSeason}'),
+              row(tr('Eng yaxshi o‘rin'), life.bestFinish == 0 ? '' : trf('{0}-o‘rin · {1}', [life.bestFinish, life.bestFinishSeason])),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
         SectionHeader(tr('Klub rekordlari'), icon: Icons.military_tech_outlined),
         AppCard(
           child: Column(
@@ -481,6 +563,192 @@ class _HallOfFame extends StatelessWidget {
                 ),
               ),
             ),
+      ],
+    );
+  }
+}
+
+/// Mood of every player: character, playing time, transfer requests.
+class _DressingRoom extends StatelessWidget {
+  const _DressingRoom();
+  @override
+  Widget build(BuildContext context) {
+    final game = GameState(), life = game.life, club = game.userClub;
+    final squad = List.of(club.squad)..sort((a, b) => a.morale.compareTo(b.morale));
+    final avg = squad.isEmpty ? 0 : squad.map((p) => p.morale).reduce((a, b) => a + b) ~/ squad.length;
+    return ListView(
+      padding: const EdgeInsets.all(12),
+      children: [
+        AppCard(
+          child: Row(
+            children: [
+              Icon(avg >= 70 ? Icons.sentiment_satisfied_alt : Icons.sentiment_neutral, color: avg >= 70 ? AppColors.win : AppColors.warning),
+              const SizedBox(width: 10),
+              Expanded(child: Text(tr('Jamoa kayfiyati'), style: AppText.bodyStrong)),
+              Text('$avg%', style: AppText.h3),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        AppCard(
+          padding: EdgeInsets.zero,
+          child: Column(
+            children: [
+              for (final p in squad)
+                ListTile(
+                  leading: FaceAvatar(config: p.face, size: 38, shirt: club.primaryColor, circle: true),
+                  title: Row(
+                    children: [
+                      if (life.wantsOut.contains(p.id)) const Icon(Icons.logout_rounded, size: 16, color: AppColors.live),
+                      Flexible(child: Text(p.name, style: AppText.bodyStrong.copyWith(fontSize: 13))),
+                    ],
+                  ),
+                  subtitle: Text(
+                    [
+                      p.personality.label,
+                      if ((life.benchRounds[p.id] ?? 0) >= 2) trf('{0} o‘yin o‘ynamadi', [life.benchRounds[p.id]]),
+                      if (life.promises.containsKey(p.id)) trf('va’da: {0}-turgacha', [life.promises[p.id]]),
+                      if (life.wantsOut.contains(p.id)) tr('ketishni so‘ramoqda'),
+                    ].join(' · '),
+                    style: AppText.caption,
+                  ),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('${p.morale}%', style: AppText.bodyStrong.copyWith(color: p.morale >= 70 ? AppColors.win : p.morale >= 45 ? AppColors.warning : AppColors.live)),
+                      IconButton(
+                        tooltip: tr('O‘yin vaqti va’da qilish'),
+                        icon: const Icon(Icons.record_voice_over_outlined),
+                        onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(game.promisePlayingTime(p))),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Backroom staff: hire or upgrade each role.
+class _Staff extends StatelessWidget {
+  const _Staff();
+  @override
+  Widget build(BuildContext context) {
+    final game = GameState(), life = game.life;
+    return ListView(
+      padding: const EdgeInsets.all(12),
+      children: [
+        for (final r in StaffRole.values) ...[
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(r.icon, color: AppColors.primary),
+                    const SizedBox(width: 10),
+                    Expanded(child: Text(r.label, style: AppText.h3)),
+                    for (var i = 0; i < 5; i++)
+                      Icon(i < life.staffLevel(r) ? Icons.star_rounded : Icons.star_outline_rounded, size: 18, color: AppColors.gold),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(r.effect, style: AppText.small),
+                const SizedBox(height: 8),
+                Text(
+                  life.staffLevel(r) == 0
+                      ? tr('Yollanmagan')
+                      : trf('Maosh: {0}/hafta', [formatMoney(game.staffWage(r, life.staffLevel(r)))]),
+                  style: AppText.caption.copyWith(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    if (life.staffLevel(r) > 0)
+                      TextButton(onPressed: () => game.setStaff(r, 0), child: Text(tr('Bo‘shatish'))),
+                    const Spacer(),
+                    if (life.staffLevel(r) < 5)
+                      FilledButton.tonal(
+                        onPressed: () {
+                          final error = game.setStaff(r, life.staffLevel(r) + 1);
+                          if (error != null) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+                        },
+                        child: Text(trf('{0}-daraja · {1}/hafta', [life.staffLevel(r) + 1, formatMoney(game.staffWage(r, life.staffLevel(r) + 1))])),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+        ],
+      ],
+    );
+  }
+}
+
+/// Scouting: player reports in progress and youth searches abroad.
+class _Scouts extends StatelessWidget {
+  const _Scouts();
+  @override
+  Widget build(BuildContext context) {
+    final game = GameState(), life = game.life;
+    final nations = {for (final p in InitialDatabase.namePools) p['nationality'] as String}.toList()..sort();
+    return ListView(
+      padding: const EdgeInsets.all(12),
+      children: [
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SectionHeader(tr('Yosh iste’dodlarni qidirish'), icon: Icons.travel_explore_outlined),
+              Text(tr('Davlatni tanlang: 3 turdan keyin skautlar 2–3 yosh futbolchini topadi (ba’zan ⭐ wonderkid).'), style: AppText.small),
+              const SizedBox(height: 10),
+              if (life.youthMission != null)
+                Text(trf('Qidiruv: {0} · {1}-turda tugaydi', [tr(life.youthMission!), life.youthMissionDue]), style: AppText.bodyStrong)
+              else
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    for (final n in nations)
+                      ActionChip(
+                        label: Text(tr(n)),
+                        onPressed: () {
+                          final error = game.startYouthMission(n);
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error ?? tr('Skautlar yo‘lga chiqdi.'))));
+                        },
+                      ),
+                  ],
+                ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SectionHeader(trf('Kuzatuvlar ({0}/{1})', [life.scoutQueue.length, game.scoutCapacity]), icon: Icons.visibility_outlined),
+              if (life.scoutQueue.isEmpty)
+                Text(tr('Boshqa ligalardagi futbolchilarni profilidan “Skaut yuborish” orqali o‘rganing.'), style: AppText.small)
+              else
+                for (final e in life.scoutQueue.entries)
+                  ListTile(
+                    dense: true,
+                    contentPadding: EdgeInsets.zero,
+                    leading: const Icon(Icons.hourglass_top_rounded),
+                    title: Text(game.findPlayerById(e.key)?.name ?? e.key),
+                    trailing: Text(trf('{0}-tur', [e.value]), style: AppText.caption),
+                  ),
+            ],
+          ),
+        ),
       ],
     );
   }

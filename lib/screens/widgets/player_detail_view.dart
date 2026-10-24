@@ -6,6 +6,8 @@ import '../../services/game_state.dart';
 import '../../ui/face_avatar.dart';
 import '../../ui/widgets.dart';
 import 'player_attributes_view.dart';
+import '../../ui/scout_badge.dart';
+import '../compare_screen.dart';
 import '../../models/league.dart';
 import '../../services/season_calendar.dart';
 import '../match_report_screen.dart';
@@ -59,6 +61,11 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
         appBar: AppBar(
           title: Text(tr('Futbolchi profili')),
           actions: [
+            IconButton(
+              tooltip: tr('Solishtirish'),
+              icon: const Icon(Icons.compare_arrows_rounded),
+              onPressed: () => CompareScreen.show(context, p),
+            ),
             if (owned)
               IconButton(
                 tooltip: tr('Portretni tahrirlash'),
@@ -94,7 +101,7 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
       child: TabBarView(
           children: [
             _overview(c),
-            PlayerAttributesView(player: p),
+            if (GameState().isScouted(p)) PlayerAttributesView(player: p) else _scoutPrompt(),
             PositionRatingsView(player: p),
             _matches(),
           ],
@@ -151,7 +158,7 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
         ),
         Column(
           children: [
-            ValueBadge(p.ovr, size: 46),
+            ScoutedOvr(p, size: 46),
             const SizedBox(height: 6),
             RatingBadge(p.averageRating, size: 12),
           ],
@@ -266,6 +273,7 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
               if (p.altPositions.isNotEmpty)
                 InfoRow(tr('Muqobil pozitsiyalar'), p.altPositions.map((e) => e.code).join(', ')),
               InfoRow(tr('Ko‘rsatma'), p.instruction.label),
+              Tooltip(message: p.personality.hint, child: InfoRow(tr('Xarakter'), p.personality.label)),
             ],
           ),
         ),
@@ -342,6 +350,38 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
                 const SizedBox(height: 8),
                 OutlinedButton.icon(
                   onPressed: () {
+                    final dest = game.loanDestination(p);
+                    showDialog<void>(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        title: Text(tr('Ijaraga berish')),
+                        content: Text(
+                          dest == null
+                              ? tr('Mos klub topilmadi.')
+                              : trf('{0} mavsum oxirigacha {1} safida o‘ynaydi va yozda rivojlanib qaytadi.', [p.shortName, dest.name]),
+                        ),
+                        actions: [
+                          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Bekor qilish'))),
+                          if (dest != null)
+                            FilledButton(
+                              onPressed: () {
+                                Navigator.pop(ctx);
+                                final error = game.loanOut(p);
+                                message(error ?? tr('Ijara kelishildi.'));
+                                if (error == null) Navigator.of(context).maybePop();
+                              },
+                              child: Text(tr('Kelishish')),
+                            ),
+                        ],
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.flight_takeoff_rounded),
+                  label: Text(tr('Ijaraga berish')),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: () {
                     game.toggleTransferList(p);
                     setState(() {});
                     message(game.transferListed.contains(p.id)
@@ -359,6 +399,45 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
         _careerTable(c),
         const SizedBox(height: 12),
         _transferTimeline(c),
+      ],
+    );
+  }
+
+  /// Unscouted players: attributes stay hidden until a scout reports.
+  Widget _scoutPrompt() {
+    final game = GameState();
+    final due = game.life.scoutQueue[p.id];
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        AppCard(
+          child: Column(
+            children: [
+              const Icon(Icons.travel_explore_outlined, size: 40, color: AppColors.primary),
+              const SizedBox(height: 10),
+              Text(tr('Atributlar noma’lum'), style: AppText.h3),
+              const SizedBox(height: 6),
+              Text(
+                due == null
+                    ? tr('Futbolchining aniq ko‘rsatkichlarini bilish uchun skaut yuboring.')
+                    : trf('Skaut kuzatmoqda: hisobot {0}-turda tayyor bo‘ladi.', [due]),
+                textAlign: TextAlign.center,
+                style: AppText.small,
+              ),
+              const SizedBox(height: 12),
+              if (due == null)
+                FilledButton.icon(
+                  onPressed: () {
+                    final error = game.scoutPlayer(p);
+                    setState(() {});
+                    message(error ?? tr('Skaut yuborildi.'));
+                  },
+                  icon: const Icon(Icons.send_rounded),
+                  label: Text(tr('Skaut yuborish')),
+                ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -620,55 +699,105 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
     ],
   );
 
+  /// Contract talks: the manager offers a wage and length; the player
+  /// accepts, counters or refuses according to his demand and character.
   void _renew() {
     final game = GameState();
-    final wage = p.calculatedRenewalWageDemand;
+    final demand = game.renewalDemand(p);
     var years = 3;
+    var wage = demand.toDouble();
     showDialog<void>(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, update) => AlertDialog(
           title: Text(tr('Shartnoma taklifi')),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(trf('Talab: €{0}K / hafta', [(wage / 1000).toStringAsFixed(0)]), style: AppText.bodyStrong),
-              const SizedBox(height: 12),
-              Text(tr('Yangi umumiy muddat'), style: AppText.small),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                children: [
-                  for (final y in [1, 2, 3, 4, 5])
-                    ChoiceChip(
-                      label: Text(trf('{0} yil', [y])),
-                      selected: years == y,
-                      onSelected: (_) => update(() => years = y),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Text(
-                trf('Bo‘sh maosh limiti: {0}/hafta', [formatMoney(game.userClub.remainingWageBudget + p.contract.weeklyWage)]),
-                style: AppText.caption,
-              ),
-            ],
+          content: SizedBox(
+            width: 380,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(trf('Agent mo‘ljali: taxminan €{0}K / hafta', [(demand / 1000).toStringAsFixed(0)]), style: AppText.small),
+                Text(trf('Xarakter: {0}', [p.personality.label]), style: AppText.caption),
+                const SizedBox(height: 12),
+                Text(trf('Taklif: {0} / hafta', [formatMoney(wage.round())]), style: AppText.bodyStrong),
+                Slider(
+                  value: wage,
+                  min: demand * 0.6,
+                  max: demand * 1.5,
+                  divisions: 36,
+                  onChanged: (v) => update(() => wage = (v / 1000).round() * 1000.0),
+                ),
+                Text(tr('Yangi umumiy muddat'), style: AppText.small),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  children: [
+                    for (final y in [1, 2, 3, 4, 5])
+                      ChoiceChip(
+                        label: Text(trf('{0} yil', [y])),
+                        selected: years == y,
+                        onSelected: (_) => update(() => years = y),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  trf('Bo‘sh maosh limiti: {0}/hafta', [formatMoney(game.userClub.remainingWageBudget + p.contract.weeklyWage)]),
+                  style: AppText.caption,
+                ),
+              ],
+            ),
           ),
           actions: [
             TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Bekor qilish'))),
             FilledButton(
               onPressed: () {
-                final ok = game.renewContract(p, years, wage);
                 Navigator.pop(ctx);
-                setState(() {});
-                widget.onContractRenewed?.call();
-                message(ok ? tr('Shartnoma imzolandi') : tr('Maosh limiti yetarli emas'));
+                _answer(game.proposeRenewal(p, years, wage.round()));
               },
-              child: Text(tr('Imzolash')),
+              child: Text(tr('Taklif qilish')),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _answer(({String status, int wage, int years, String message}) reply) {
+    final game = GameState();
+    setState(() {});
+    widget.onContractRenewed?.call();
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        icon: Icon(
+          switch (reply.status) {
+            'accepted' => Icons.handshake_outlined,
+            'counter' => Icons.forum_outlined,
+            _ => Icons.block,
+          },
+          color: switch (reply.status) {
+            'accepted' => AppColors.win,
+            'counter' => AppColors.warning,
+            _ => AppColors.live,
+          },
+        ),
+        title: Text(p.name),
+        content: Text('“${reply.message}”'),
+        actions: [
+          if (reply.status == 'counter') ...[
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Rad etish'))),
+            FilledButton(
+              onPressed: () {
+                Navigator.pop(ctx);
+                _answer(game.proposeRenewal(p, reply.years, reply.wage));
+              },
+              child: Text(tr('Qabul qilish')),
+            ),
+          ] else
+            FilledButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Yopish'))),
+        ],
       ),
     );
   }

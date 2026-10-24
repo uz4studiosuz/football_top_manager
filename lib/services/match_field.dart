@@ -86,6 +86,23 @@ class _Flight {
       kind == _Kind.freeKick;
 }
 
+/// One recorded moment of play (for goal replays).
+class ReplayFrame {
+  final List<Offset> home, away;
+  final Offset ball;
+  final double ballHeight;
+  const ReplayFrame(this.home, this.away, this.ball, this.ballHeight);
+}
+
+/// The build-up to a goal and the moments after it.
+class GoalReplay {
+  final int minute;
+  final String scorer;
+  final bool home;
+  final List<ReplayFrame> frames;
+  GoalReplay(this.minute, this.scorer, this.home, this.frames);
+}
+
 /// The pitch is authoritative: decisions create ball flights; completed
 /// flights create goals, saves, turnovers and every statistic the UI shows.
 /// Each player also accumulates a SofaScore-style match line and rating.
@@ -159,6 +176,34 @@ class MatchField {
 
   /// VAR reviews so far (shown by the match screen as they happen).
   int varReviews = 0;
+
+  /// Derby: more duels, fouls and cards.
+  bool derby = false;
+
+  /// Live view only: keeps the last moments of play so goals can be replayed.
+  bool recordReplays = false;
+  final List<ReplayFrame> _frames = [];
+  final List<GoalReplay> replays = [];
+  double _frameClock = 0;
+  GoalReplay? _pendingReplay;
+  int _framesAfterGoal = 0;
+
+  void _recordFrame(double dt) {
+    _frameClock += dt;
+    if (_frameClock < 0.015) return;
+    _frameClock = 0;
+    final frame = ReplayFrame(List.of(homePositions), List.of(awayPositions), ball, ballHeight);
+    _frames.add(frame);
+    if (_frames.length > 70) _frames.removeAt(0);
+    final pending = _pendingReplay;
+    if (pending != null) {
+      pending.frames.add(frame);
+      if (--_framesAfterGoal <= 0) {
+        replays.add(pending);
+        _pendingReplay = null;
+      }
+    }
+  }
 
   /// Team mentality as a shape: -2 park the bus … 0 balanced … +2 all-out attack.
   double homeShape = 0, awayShape = 0;
@@ -456,6 +501,7 @@ class MatchField {
 
   void _step(double dt) {
     time += dt;
+    if (recordReplays) _recordFrame(dt);
     _minuteAcc += dt;
     for (final club in [home, away]) {
       for (final p in _xi(club)) {
@@ -798,6 +844,8 @@ class MatchField {
           (defender.playingStyle == PlayingStyle.destroyer ? 0.01 : 0) +
           (defender.instruction == PlayerInstruction.tightMarking ? 0.012 : 0) +
           (progress > 0.84 && (ball.dy - 0.5).abs() < 0.29 ? -0.15 : 0) +
+          (derby ? 0.03 : 0) +
+          (defender.personality == Personality.temperamental ? 0.02 : 0) +
           (defender.stats.aggression - 40) / 800 -
           (defender.stats.tackling - 70) / 700 +
           (_opponent.tactics.pressing - 3) * 0.006 +
@@ -1912,6 +1960,10 @@ class MatchField {
     );
     final line = _line(f.actor);
     if (f.outcome == 'goal') {
+      if (recordReplays) {
+        _pendingReplay = GoalReplay(displayMinute, f.actor.shortName, f.home, List.of(_frames));
+        _framesAfterGoal = 12;
+      }
       stats.onTarget++;
       stats.goals++;
       line.goals += 1;
@@ -2385,7 +2437,9 @@ class MatchField {
         0.11 +
         (defender.stats.aggression - 60) / 420 +
         (dangerous ? 0.08 : 0) +
-        (inBox ? 0.1 : 0);
+        (inBox ? 0.1 : 0) +
+        (derby ? 0.05 : 0) +
+        (defender.personality == Personality.temperamental ? 0.04 : 0);
     var straightRed = random.nextDouble() < 0.0012 + (inBox ? 0.004 : 0);
     var downgraded = false;
     if (straightRed && random.nextDouble() < 0.5) {

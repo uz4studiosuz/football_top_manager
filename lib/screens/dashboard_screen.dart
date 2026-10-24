@@ -18,6 +18,7 @@ import '../l10n/l10n.dart';
 import '../ui/coin.dart';
 import '../services/club_life.dart';
 import 'club_life_screen.dart';
+import 'season_review_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   final VoidCallback onNavigateToTactics;
@@ -43,7 +44,7 @@ class DashboardScreen extends StatelessWidget {
         if (!game.isInitialized) return const Scaffold();
         final club = game.userClub, manager = game.managerProfile;
         // League match first, then this week's cup tie.
-        final next = game.nextUserFixture ?? game.pendingCupFixture;
+        final next = game.pendingSuperCup ?? game.nextUserFixture ?? game.pendingCupFixture;
         final standing = game.standingOf(club.id);
         final rank = game.positionOf(club.id);
         final upcoming = game
@@ -153,6 +154,10 @@ class DashboardScreen extends StatelessWidget {
                 builder: (context, box) {
                   final main = Column(
                     children: [
+                      if (game.life.jobOffers.isNotEmpty) ...[
+                        _jobOffers(context, game),
+                        const SizedBox(height: 12),
+                      ],
                       if (game.seasonFinished)
                         _seasonEnd(context, game)
                       else if (next != null) ...[
@@ -297,7 +302,14 @@ class DashboardScreen extends StatelessWidget {
               Expanded(
                 child: Text(tr('NAVBATDAGI UCHRASHUV'), style: AppText.overline),
               ),
-              Text(game.isCupFixture(f) ? game.fixtureTitle(f) : trf('{0}-tur', [f.round]), style: AppText.caption),
+              if (game.isDerby(game.getClubById(f.homeClubId)!, game.getClubById(f.awayClubId)!))
+                Container(
+                  margin: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(color: AppColors.live, borderRadius: BorderRadius.circular(8)),
+                  child: Text(tr('DERBI'), style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900)),
+                ),
+              Text(game.isKnockout(f) ? game.fixtureTitle(f) : trf('{0}-tur', [f.round]), style: AppText.caption),
             ],
           ),
           const SizedBox(height: 18),
@@ -394,6 +406,39 @@ class DashboardScreen extends StatelessWidget {
       ),
     );
   }
+
+  /// Job offers (after success) or the list of clubs after a sack.
+  Widget _jobOffers(BuildContext context, GameState game) => AppCard(
+    color: game.life.sacked ? const Color(0xFFFFF4F2) : AppColors.surface,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(game.life.sacked ? Icons.gavel_rounded : Icons.work_outline_rounded, color: game.life.sacked ? AppColors.live : AppColors.primary),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(game.life.sacked ? tr('Siz ishdan bo‘shatildingiz') : tr('Ish takliflari'), style: AppText.h3),
+            ),
+            if (!game.life.sacked) TextButton(onPressed: game.declineJobOffers, child: Text(tr('Rad etish'))),
+          ],
+        ),
+        const SizedBox(height: 6),
+        for (final id in game.life.jobOffers)
+          if (game.getClubById(id) case final c?)
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: ClubCrestWidget(config: c.crestConfig, size: 36),
+              title: Text(c.name, style: AppText.bodyStrong),
+              subtitle: Text(trf('Obro‘ {0} · OVR {1}', [c.reputation, c.teamOVR]), style: AppText.caption),
+              trailing: FilledButton(
+                onPressed: () => game.switchClub(c),
+                child: Text(tr('Qabul qilish')),
+              ),
+            ),
+      ],
+    ),
+  );
 
   /// Press conference before a big match: two questions, answers move
   /// the squad's morale and the fans' mood.
@@ -494,6 +539,21 @@ class DashboardScreen extends StatelessWidget {
               ),
             ),
           ],
+          if (game.life.sponsorOffers.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            InkWell(
+              onTap: () => ClubLifeScreen.show(context, 0),
+              child: Row(
+                children: [
+                  const Icon(Icons.handshake_outlined, size: 16, color: AppColors.warning),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(tr('Homiylik takliflari kutmoqda'), style: AppText.caption.copyWith(color: AppColors.warning, fontWeight: FontWeight.w700)),
+                  ),
+                ],
+              ),
+            ),
+          ],
           if (game.life.focus != TrainingFocus.balanced) ...[
             const SizedBox(height: 8),
             Text(trf('Mashg‘ulot: {0}', [game.life.focus.label]), style: AppText.caption),
@@ -567,6 +627,15 @@ class DashboardScreen extends StatelessWidget {
                 ),
           ],
           const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => SeasonReviewScreen.show(context),
+              icon: const Icon(Icons.summarize_outlined),
+              label: Text(tr('Mavsum sharhi')),
+            ),
+          ),
+          const SizedBox(height: 8),
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(

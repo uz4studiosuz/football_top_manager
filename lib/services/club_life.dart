@@ -20,6 +20,20 @@ enum Facility {
   static const maxLevel = 5;
 }
 
+/// Backroom staff (levels 0–5); each costs a weekly wage.
+enum StaffRole {
+  assistant('Taktik yordamchi', 'Har darajada jamoaning taktik uyg‘unligi oshadi.', Icons.psychology_outlined),
+  fitness('Fitnes murabbiyi', 'Chidamlilik tezroq tiklanadi, jarohatlar kamayadi.', Icons.monitor_heart_outlined),
+  goalkeeping('Darvozabonlar murabbiyi', 'Darvozabonlar tezroq rivojlanadi.', Icons.sports_handball_outlined),
+  scouting('Bosh skaut', 'Skautlar tezroq va aniqroq ishlaydi, ko‘proq topshiriq oladi.', Icons.travel_explore_outlined);
+
+  const StaffRole(this._label, this._effect, this.icon);
+  final String _label, _effect;
+  final IconData icon;
+  String get label => tr(_label);
+  String get effect => tr(_effect);
+}
+
 /// Weekly team training emphasis.
 enum TrainingFocus {
   balanced('Muvozanatli', 'Hamma yo‘nalish teng.', Icons.balance_outlined),
@@ -82,12 +96,49 @@ class ClubLife {
   /// The latest academy intake (player ids), shown in the academy tab.
   final List<String> lastIntake = [];
 
+  /// Dressing room: user matches each player has missed in a row, players
+  /// who asked to leave, and promises of playing time (id → deadline round).
+  final Map<String, int> benchRounds = {};
+
+  /// Staff levels, scouted players, scouting assignments (id → due round)
+  /// and the current youth search (nationality, due round).
+  final Map<StaffRole, int> staff = {};
+
+  /// Players out on loan (id → club id), job offers (club ids) and whether
+  /// the board has sacked the manager.
+  final Map<String, String> loans = {};
+
+  /// Sponsor offers on the table and the signed deal: name, type
+  /// ('fixed', 'wins', 'target'), money per round and the bonus.
+  final List<Map<String, dynamic>> sponsorOffers = [];
+  Map<String, dynamic>? sponsor;
+  final List<String> jobOffers = [];
+  bool sacked = false;
+  final Set<String> scouted = {};
+  final Map<String, int> scoutQueue = {};
+  String? youthMission;
+  int youthMissionDue = 0;
+
+  int staffLevel(StaffRole r) => staff[r] ?? 0;
+
+  /// Weekly wage of a staff member at [level].
+  static int staffWage(int level, double economy) =>
+      level == 0 ? 0 : ((3000 * pow(level, 1.6) * max(0.15, economy)) / 500).round() * 500;
+  final Set<String> wantsOut = {};
+  final Map<String, int> promises = {};
+
   // Club records.
   String biggestWin = '';
   int biggestMargin = 0;
   String bestSeasonScorer = '';
   int bestSeasonGoals = 0;
   final Map<String, (String, int)> allTimeScorers = {};
+
+  /// Manager records: results, streaks, best season.
+  int wins = 0, draws = 0, losses = 0;
+  int winStreak = 0, bestWinStreak = 0, unbeaten = 0, bestUnbeaten = 0;
+  int bestPoints = 0, bestFinish = 0;
+  String bestPointsSeason = '', bestFinishSeason = '';
   final List<String> trophies = [];
 
   int level(Facility f) => levels[f] ?? 0;
@@ -123,11 +174,26 @@ class ClubLife {
     awards.clear();
     pressDone.clear();
     lastIntake.clear();
+    benchRounds.clear();
+    staff.clear();
+    loans.clear();
+    sponsorOffers.clear();
+    sponsor = null;
+    jobOffers.clear();
+    sacked = false;
+    scouted.clear();
+    scoutQueue.clear();
+    youthMission = null;
+    youthMissionDue = 0;
+    wantsOut.clear();
+    promises.clear();
     biggestWin = '';
     biggestMargin = 0;
     bestSeasonScorer = '';
     bestSeasonGoals = 0;
     allTimeScorers.clear();
+    wins = draws = losses = winStreak = bestWinStreak = unbeaten = bestUnbeaten = bestPoints = bestFinish = 0;
+    bestPointsSeason = bestFinishSeason = '';
     trophies.clear();
   }
 
@@ -234,6 +300,21 @@ class ClubLife {
   // ------------------------------------------------------------ records
   void recordMatch(Club user, Club rival, int scored, int conceded, String season, List<MatchEvent> events) {
     final margin = scored - conceded;
+    if (margin > 0) {
+      wins++;
+      winStreak++;
+      unbeaten++;
+    } else if (margin == 0) {
+      draws++;
+      winStreak = 0;
+      unbeaten++;
+    } else {
+      losses++;
+      winStreak = 0;
+      unbeaten = 0;
+    }
+    bestWinStreak = max(bestWinStreak, winStreak);
+    bestUnbeaten = max(bestUnbeaten, unbeaten);
     if (margin > biggestMargin) {
       biggestMargin = margin;
       biggestWin = '$scored:$conceded · ${rival.name} · $season';
@@ -258,10 +339,23 @@ class ClubLife {
     'aw': awards.map((a) => a.toMap()).toList(),
     'pd': pressDone.toList(),
     'in': lastIntake,
+    'br': benchRounds,
+    'sf': {for (final e in staff.entries) e.key.name: e.value},
+    'ln': loans,
+    'so': sponsorOffers,
+    if (sponsor != null) 'sp': sponsor,
+    'jo': jobOffers,
+    'sk': sacked,
+    'sc2': scouted.toList(),
+    'sq': scoutQueue,
+    if (youthMission != null) 'ym': [youthMission, youthMissionDue],
+    'wo': wantsOut.toList(),
+    'pm': promises,
     'bw': [biggestWin, biggestMargin],
     'bs': [bestSeasonScorer, bestSeasonGoals],
     'sc': {for (final e in allTimeScorers.entries) e.key: [e.value.$1, e.value.$2]},
     'tr': trophies,
+    'rec': [wins, draws, losses, winStreak, bestWinStreak, unbeaten, bestUnbeaten, bestPoints, bestFinish, bestPointsSeason, bestFinishSeason],
   };
 
   void restore(Map<String, dynamic>? m) {
@@ -281,6 +375,25 @@ class ClubLife {
     awards.addAll([for (final a in (m['aw'] as List? ?? [])) SeasonAwards.fromMap(Map<String, dynamic>.from(a))]);
     pressDone.addAll(List<String>.from(m['pd'] ?? const []));
     lastIntake.addAll(List<String>.from(m['in'] ?? const []));
+    benchRounds.addAll(Map<String, int>.from(m['br'] ?? {}));
+    loans.addAll(Map<String, String>.from(m['ln'] ?? {}));
+    sponsorOffers.addAll([for (final o in (m['so'] as List? ?? [])) Map<String, dynamic>.from(o)]);
+    sponsor = m['sp'] == null ? null : Map<String, dynamic>.from(m['sp']);
+    jobOffers.addAll(List<String>.from(m['jo'] ?? const []));
+    sacked = m['sk'] == true;
+    final roles = StaffRole.values.asNameMap();
+    (m['sf'] as Map? ?? {}).forEach((k, v) {
+      if (roles[k] != null) staff[roles[k]!] = v as int;
+    });
+    scouted.addAll(List<String>.from(m['sc2'] ?? const []));
+    scoutQueue.addAll(Map<String, int>.from(m['sq'] ?? {}));
+    final ym = m['ym'] as List?;
+    if (ym != null) {
+      youthMission = ym[0] as String;
+      youthMissionDue = ym[1] as int;
+    }
+    wantsOut.addAll(List<String>.from(m['wo'] ?? const []));
+    promises.addAll(Map<String, int>.from(m['pm'] ?? {}));
     final bw = m['bw'] as List? ?? const ['', 0];
     biggestWin = bw[0];
     biggestMargin = bw[1];
@@ -289,5 +402,19 @@ class ClubLife {
     bestSeasonGoals = bs[1];
     (m['sc'] as Map? ?? {}).forEach((k, v) => allTimeScorers[k as String] = ((v as List)[0] as String, v[1] as int));
     trophies.addAll(List<String>.from(m['tr'] ?? const []));
+    final rec = m['rec'] as List?;
+    if (rec != null && rec.length == 11) {
+      wins = rec[0];
+      draws = rec[1];
+      losses = rec[2];
+      winStreak = rec[3];
+      bestWinStreak = rec[4];
+      unbeaten = rec[5];
+      bestUnbeaten = rec[6];
+      bestPoints = rec[7];
+      bestFinish = rec[8];
+      bestPointsSeason = rec[9];
+      bestFinishSeason = rec[10];
+    }
   }
 }

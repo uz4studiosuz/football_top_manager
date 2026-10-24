@@ -81,6 +81,8 @@ class _MatchReportScreenState extends State<MatchReportScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         SectionHeader(tr('Hujum momenti'), icon: Icons.insights_outlined),
+                        Text(tr('Ustunlar xavfli hujum bosimini ko‘rsatadi (to‘p nazorati emas): yuqorida uy egasi, pastda mehmon.'), style: AppText.caption),
+                        const SizedBox(height: 6),
                         MomentumChart(
                           values: f.momentum,
                           events: f.events,

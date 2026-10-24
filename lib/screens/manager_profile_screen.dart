@@ -9,6 +9,7 @@ import '../services/save_service.dart';
 import '../l10n/l10n.dart';
 import '../ui/language_picker.dart';
 import 'db_editor_screen.dart';
+import 'save_slots_screen.dart';
 
 class ManagerProfileScreen extends StatefulWidget {
   const ManagerProfileScreen({super.key});
@@ -219,6 +220,15 @@ class _ManagerProfileScreenState extends State<ManagerProfileScreen> {
                   onPressed: _newCareer,
                   icon: const Icon(Icons.add_circle_outline),
                   label: Text(tr('Yangi karyera')),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: () => Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(builder: (_) => const SaveSlotsScreen()),
+                  ),
+                  icon: const Icon(Icons.save_outlined),
+                  label: Text(tr('Saqlash slotlari')),
                 ),
                 const SizedBox(height: 8),
                 // Creator tool (also at /editor in the browser).
