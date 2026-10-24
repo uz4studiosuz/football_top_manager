@@ -1,0 +1,61 @@
+{
+  "schemaVersion": 2,
+  "name": "Super League",
+  "rounds": 14,
+  "clubsFile": "clubs.json",
+  "playersFile": "players.json",
+  "templatesFile": "squad_templates.json",
+  "namesFile": "names.json",
+  "leagues": [
+    {
+      "id": "super",
+      "name": "Super League",
+      "country": "Yevropa",
+      "clubsFile": "clubs.json",
+      "playersFile": "players.json"
+    },
+    {
+      "id": "epl",
+      "name": "Premier League",
+      "country": "Angliya",
+      "clubsFile": "clubs_epl.json",
+      "playersFile": "players_epl.json",
+      "pyramid": "eng",
+      "tier": 1,
+      "relegate": 3,
+      "economy": 1.0
+    },
+    {
+      "id": "ch",
+      "name": "Championship",
+      "country": "Angliya",
+      "clubsFile": "clubs_ch.json",
+      "playersFile": "players_ch.json",
+      "pyramid": "eng",
+      "tier": 2,
+      "promote": 2,
+      "playoff": [
+        3,
+        6
+      ],
+      "relegate": 3,
+      "economy": 0.2
+    },
+    {
+      "id": "l1",
+      "name": "League One",
+      "country": "Angliya",
+      "clubsFile": "clubs_l1.json",
+      "playersFile": "players_l1.json",
+      "pyramid": "eng",
+      "tier": 3,
+      "promote": 2,
+      "playoff": [
+        3,
+        6
+      ],
+      "relegate": 0,
+      "economy": 0.08
+    }
+  ]
+}

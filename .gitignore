@@ -30,7 +30,11 @@ migrate_working_dir/
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
-/build/
+# build papkasi ichidagi barcha narsalarni e'tiborsiz qoldirish
+/build/*
+
+# Lekin build/web papkasini va uning ichidagilarni saqlab qolish
+!/build/web/
 /coverage/
 
 # Symbolication related
