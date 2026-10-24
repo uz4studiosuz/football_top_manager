@@ -351,6 +351,10 @@ class GameState extends ChangeNotifier {
       _ensureMatchdaySquad(c);
       // Seed files for big leagues list squads, not a tactical XI.
       if (c.id != _userClubId || leagueId != 'super') autoPickLineup(c);
+      // Seed values have a floor; weak players start at their real worth.
+      for (final p in c.squad) {
+        if (p.ovr < 68) p.marketValue = min(p.marketValue, p.fairValue);
+      }
     }
     _setupDivisions();
     _generateSeasonSchedule();
@@ -586,6 +590,18 @@ class GameState extends ChangeNotifier {
       }
     }
     c.benchIds = bench;
+  }
+
+  /// How well [p] suits a slot played as [pos] right now (in-match use).
+  static double slotFit(Player p, PlayerPosition pos) {
+    if (pos.isGoalkeeper != p.mainPosition.isGoalkeeper) return -1000;
+    return p.getEffectiveOVR(pos) * (0.86 + p.currentStamina / 100 * 0.14) +
+        switch (p.fitFor(pos)) {
+          PositionFit.natural => 10,
+          PositionFit.alternative => 6,
+          PositionFit.similar => 1,
+          PositionFit.poor => -12,
+        };
   }
 
   void autoPickUserLineup({bool byForm = false}) {
@@ -934,6 +950,21 @@ class GameState extends ChangeNotifier {
 
   /// A full instant simulation of the user's own fixture (no live view).
   MatchField simulateUserFixture(Fixture f) {
+    final engine = _userEngine(f)..simulateToEnd();
+    _finishUserEngine(f, engine);
+    return engine;
+  }
+
+  /// Quick result without freezing the UI; [onProgress] gets 0..1.
+  Future<MatchField> simulateUserFixtureAsync(Fixture f, {void Function(double)? onProgress}) async {
+    final engine = _userEngine(f);
+    await engine.simulateToEndAsync(onProgress: onProgress);
+    await Future<void>.delayed(const Duration(milliseconds: 16));
+    _finishUserEngine(f, engine);
+    return engine;
+  }
+
+  MatchField _userEngine(Fixture f) {
     beginUserMatch();
     final home = getClubById(f.homeClubId)!, away = getClubById(f.awayClubId)!;
     final userHome = home.id == _userClubId;
@@ -948,16 +979,16 @@ class GameState extends ChangeNotifier {
           ? _managerProfile.ratingFor(away.tactics.playstyle)
           : 66 + away.reputation ~/ 10,
     );
-    engine.simulateToEnd();
-    finishMatch(
-      fixture: f,
-      homeScore: engine.homeStats.goals,
-      awayScore: engine.awayStats.goals,
-      events: engine.events,
-      engine: engine,
-    );
     return engine;
   }
+
+  void _finishUserEngine(Fixture f, MatchField engine) => finishMatch(
+    fixture: f,
+    homeScore: engine.homeStats.goals,
+    awayScore: engine.awayStats.goals,
+    events: engine.events,
+    engine: engine,
+  );
 
   // ------------------------------------------------------------ economy
   int baseTicketPrice(Club c) => _economyOf(c) < 1 ? 18 + c.reputation ~/ 3 : 35 + c.reputation ~/ 2;
@@ -1051,6 +1082,15 @@ class GameState extends ChangeNotifier {
   }
 
   // ----------------------------------------------------------- rounds
+  /// Every round values drift toward each player's current worth (ability,
+  /// age, potential and form), so good runs raise prices step by step.
+  void _revalueMarket() {
+    for (final p in [for (final c in _allClubs) ...c.squad, ...freeAgents]) {
+      final target = p.fairValue;
+      p.marketValue = Player.roundValue(p.marketValue + (target - p.marketValue) * 0.12);
+    }
+  }
+
   void nextRound() {
     if (seasonFinished ||
         _currentRound >= totalRounds ||
@@ -1074,6 +1114,7 @@ class GameState extends ChangeNotifier {
       }
     }
     _processDeals();
+    _revalueMarket();
     final open = isTransferWindowOpen;
     if (!wasOpen && open) {
       _news(

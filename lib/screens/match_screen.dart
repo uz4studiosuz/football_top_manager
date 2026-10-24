@@ -14,6 +14,8 @@ import '../ui/widgets.dart';
 import 'match_report_screen.dart';
 import 'widgets/opponent_squad_sheet.dart';
 import 'widgets/player_detail_view.dart';
+import 'player_match_screen.dart';
+import '../services/lineup_solver.dart';
 import 'tactics_screen.dart';
 import '../l10n/l10n.dart';
 
@@ -169,9 +171,15 @@ class _MatchScreenState extends State<MatchScreen> {
     );
   }
 
-  void _instantFinish() {
+  Future<void> _instantFinish() async {
+    setState(() => _playing = false);
+    await runWithProgress(
+      context,
+      tr('Uchrashuv simulyatsiya qilinmoqda…'),
+      (report) => _field.simulateToEndAsync(onProgress: report),
+    );
+    if (!mounted) return;
     setState(() {
-      _field.simulateToEnd();
       _drain();
       _save();
     });
@@ -226,6 +234,48 @@ class _MatchScreenState extends State<MatchScreen> {
     if (mounted && !_field.isHalfTime && !_field.isFinished) setState(() => _playing = resume || preselect != null);
   }
 
+  /// In-match auto pick: injured or exhausted starters make way for the best
+  /// bench fit (while substitutions remain), then everyone on the pitch is
+  /// moved to the slot that suits him best. Reserves are never used.
+  int _autoInMatch() {
+    final c = _user;
+    var changes = 0;
+    for (var i = 0; i < 11; i++) {
+      final id = c.startingLineupIds[i];
+      final p = c.playerById(id);
+      if (p == null || _field.dismissed.contains(id)) continue;
+      if (!_field.isInjuredOnPitch(id) && p.currentStamina >= 45) continue;
+      final pos = c.slotPosition(i);
+      final options = [
+        for (final b in c.bench)
+          if (!_field.subbedOff.contains(b.id) && !_field.dismissed.contains(b.id)) b,
+      ]..sort((a, b) => GameState.slotFit(b, pos).compareTo(GameState.slotFit(a, pos)));
+      if (options.isNotEmpty && _field.substitute(_userHome, id, options.first.id)) changes++;
+    }
+    final free = [
+      for (var i = 0; i < 11; i++)
+        if (!_field.dismissed.contains(c.startingLineupIds[i])) i,
+    ];
+    final players = [for (final i in free) c.playerById(c.startingLineupIds[i])!];
+    final pick = LineupSolver.assign([
+      for (final i in free) [for (final p in players) GameState.slotFit(p, c.slotPosition(i))],
+    ]);
+    final next = List.of(c.startingLineupIds);
+    for (var k = 0; k < free.length; k++) {
+      if (pick[k] >= 0) next[free[k]] = players[pick[k]].id;
+    }
+    if (next.toSet().length == 11) {
+      for (var i = 0; i < 11; i++) {
+        if (next[i] != c.startingLineupIds[i]) changes++;
+      }
+      c.startingLineupIds
+        ..clear()
+        ..addAll(next);
+    }
+    setState(_drain);
+    return changes;
+  }
+
   Future<void> _openTactics() async {
     final resume = _playing;
     setState(() => _playing = false);
@@ -234,6 +284,7 @@ class _MatchScreenState extends State<MatchScreen> {
       MaterialPageRoute<void>(
         builder: (_) => TacticsScreen(
           onSwap: _swapInMatch,
+          onAutoPick: _autoInMatch,
           unavailable: {..._field.dismissed, ..._field.subbedOff},
         ),
       ),
@@ -273,6 +324,12 @@ class _MatchScreenState extends State<MatchScreen> {
               icon: const Icon(Icons.groups_outlined),
               onPressed: () => OpponentSquadSheet.show(context, opponentClub: _rival),
             ),
+            if (!finished)
+              IconButton(
+                tooltip: tr('Taktika'),
+                icon: const Icon(Icons.tune_rounded),
+                onPressed: _openTactics,
+              ),
             if (!finished)
               TextButton.icon(
                 onPressed: _instantFinish,
@@ -409,7 +466,26 @@ class _MatchScreenState extends State<MatchScreen> {
     line: _field.lines[p.id],
     rating: _field.ratingFor(p.id),
     heat: _field.heat[p.id],
-    onOpenProfile: () => PlayerDetailView.show(context, player: p, club: club),
+    onOpenProfile: () => PlayerDetailView.show(context, player: p, club: club).then((_) {
+      if (mounted) setState(() {}); // a portrait may have been edited
+    }),
+    onOpenDetails: () => PlayerMatchScreen.show(
+      context,
+      PlayerMatchData(
+        home: _home,
+        away: _away,
+        homeScore: _field.homeStats.goals,
+        awayScore: _field.awayStats.goals,
+        events: List.of(_field.events),
+        shots: List.of(_field.shots),
+        momentum: List.of(_field.momentum),
+        lines: Map.of(_field.lines),
+        ratings: {for (final id in _field.lines.keys) id: ?_field.ratingFor(id)},
+        heatFor: (id) => _field.heat[id],
+      ),
+      p,
+      club,
+    ),
   );
 
   Widget _pitch((Color, Color) colors, double width, double maxHeight) {

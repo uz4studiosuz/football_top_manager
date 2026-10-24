@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/club.dart';
 import '../l10n/l10n.dart';
 
@@ -60,12 +61,57 @@ class InitialDatabase {
       _custom.map((m) => Map<String, dynamic>.from(m)).toList();
   static List<Map<String, dynamic>> get namePools =>
       _names.map((m) => Map<String, dynamic>.from(m)).toList();
+  /// Data files edited in the /editor page (file name → JSON), stored on
+  /// this device and used instead of the bundled assets.
+  static const overridesKey = 'ftm27_db_overrides_v1';
+  static Map<String, String> overrides = {};
+
   static Future<Map<String, dynamic>> _read(String file) async =>
-      jsonDecode(await rootBundle.loadString('assets/data/$file'))
+      jsonDecode(overrides[file] ?? await rootBundle.loadString('assets/data/$file'))
           as Map<String, dynamic>;
 
-  static Future<void> load() async {
+  /// A data file as the game sees it (editor input).
+  static Future<Map<String, dynamic>> readFile(String file) => _read(file);
+
+  /// The bundled version of a data file, ignoring local edits.
+  static Future<Map<String, dynamic>> readBundled(String file) async =>
+      jsonDecode(await rootBundle.loadString('assets/data/$file')) as Map<String, dynamic>;
+
+  static Future<void> _loadOverrides() async {
+    try {
+      final raw = (await SharedPreferences.getInstance()).getString(overridesKey);
+      overrides = raw == null ? {} : Map<String, String>.from(jsonDecode(raw));
+    } catch (_) {
+      overrides = {};
+    }
+  }
+
+  /// Saves edited files and reloads the database for the next career.
+  static Future<void> saveOverrides(Map<String, String> files) async {
+    overrides = {...overrides, ...files};
+    try {
+      await (await SharedPreferences.getInstance()).setString(overridesKey, jsonEncode(overrides));
+    } catch (_) {}
+    await reload();
+  }
+
+  static Future<void> clearOverrides() async {
+    overrides = {};
+    try {
+      await (await SharedPreferences.getInstance()).remove(overridesKey);
+    } catch (_) {}
+    await reload();
+  }
+
+  static Future<void> reload() async {
+    _leagues = null;
+    faceHints.clear();
+    await load(keepOverrides: true);
+  }
+
+  static Future<void> load({bool keepOverrides = false}) async {
     if (_leagues != null) return;
+    if (!keepOverrides) await _loadOverrides();
     final manifest = await _read('league.json');
     if (manifest['schemaVersion'] != 2) {
       throw const FormatException('Unsupported league schema');

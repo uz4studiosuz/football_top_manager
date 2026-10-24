@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/face.dart';
 import 'app_theme.dart';
 import '../l10n/l10n.dart';
+import 'face_from_photo.dart';
 export '../models/face.dart';
 
 /// Vector portrait: shaded head, almond eyes, tapered brows, layered hair,
@@ -1269,6 +1270,14 @@ class _FaceEditorState extends State<_FaceEditor> {
     appBar: AppBar(
       title: Text(tr('Portret yaratish')),
       actions: [
+        IconButton(
+          tooltip: tr('Rasmdan yuz'),
+          icon: const Icon(Icons.photo_camera_outlined),
+          onPressed: () async {
+            final face = await faceFromPhoto(context, current);
+            if (face != null && mounted) setState(() => current = face);
+          },
+        ),
         TextButton(
           onPressed: () => Navigator.pop(context, current),
           child: Text(tr('Saqlash')),

@@ -367,7 +367,11 @@ class DashboardScreen extends StatelessWidget {
           TextButton.icon(
             onPressed: () async {
               if (!_lineupReady(context, game)) return;
-              await runWithLoading(context, tr('Uchrashuv simulyatsiya qilinmoqda…'), () => game.simulateUserFixture(f));
+              await runWithProgress(
+                context,
+                tr('Uchrashuv simulyatsiya qilinmoqda…'),
+                (report) => game.simulateUserFixtureAsync(f, onProgress: report),
+              );
               if (!context.mounted) return;
               Navigator.push(
                 context,

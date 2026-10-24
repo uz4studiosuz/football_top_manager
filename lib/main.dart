@@ -9,6 +9,7 @@ import 'ui/widgets.dart';
 import 'ui/language_picker.dart';
 import 'services/game_state.dart';
 import 'l10n/l10n.dart';
+import 'screens/db_editor_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -39,6 +40,8 @@ class FootballTopManagerApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: buildAppTheme(),
         home: const StartupScreen(),
+        // Creator tool: open /#/editor in the browser.
+        routes: {'/editor': (_) => const EditorStartup()},
       );
     },
   );
@@ -85,5 +88,18 @@ class _StartupScreenState extends State<StartupScreen> {
           ? const MainNavigationScreen()
           : OnboardingScreen();
     },
+  );
+}
+
+/// Loads languages before opening the database editor directly.
+class EditorStartup extends StatelessWidget {
+  const EditorStartup({super.key});
+  static final Future<void> _boot = L10n.load();
+  @override
+  Widget build(BuildContext context) => FutureBuilder<void>(
+    future: _boot,
+    builder: (context, snap) => snap.connectionState == ConnectionState.done
+        ? const DbEditorScreen()
+        : LoadingView(message: tr('Baza yuklanmoqda…')),
   );
 }

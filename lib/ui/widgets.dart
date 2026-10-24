@@ -649,6 +649,57 @@ Future<T> runWithLoading<T>(
   }
 }
 
+/// Like [runWithLoading] but with a progress bar the action can drive.
+Future<T> runWithProgress<T>(
+  BuildContext context,
+  String message,
+  Future<T> Function(void Function(double) report) action,
+) async {
+  final progress = ValueNotifier<double>(0);
+  showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => PopScope(
+      canPop: false,
+      child: Center(
+        child: Container(
+          width: 280,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 22),
+          decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(16)),
+          child: Material(
+            color: Colors.transparent,
+            child: ValueListenableBuilder<double>(
+              valueListenable: progress,
+              builder: (context, v, _) => Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const SizedBox.square(dimension: 36, child: CircularProgressIndicator(strokeWidth: 3.5)),
+                  const SizedBox(height: 14),
+                  Text(message, textAlign: TextAlign.center, style: AppText.bodyStrong),
+                  const SizedBox(height: 12),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(value: v, minHeight: 6),
+                  ),
+                  const SizedBox(height: 6),
+                  Text("${(v * 90).round()}'", style: AppText.caption),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+  await Future<void>.delayed(const Duration(milliseconds: 60));
+  try {
+    return await action((v) => progress.value = v);
+  } finally {
+    if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
+    progress.dispose();
+  }
+}
+
 /// Full-screen branded loader.
 class LoadingView extends StatelessWidget {
   final String message;

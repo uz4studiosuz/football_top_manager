@@ -610,9 +610,28 @@ class Player {
         ? 0.42
         : 0.22;
     final growth = 1 + max(0, potential - ovr) * 0.035;
-    final v = (base * ageFactor * growth).round();
-    final step = v >= 10000000 ? 500000 : 100000;
-    return max(250000, (v / step).round() * step);
+    return roundValue(base * ageFactor * growth);
+  }
+
+  /// Rounds a fee to market-style steps; weak players can be very cheap.
+  static int roundValue(num v) {
+    final step = v >= 10000000 ? 500000 : v >= 1000000 ? 100000 : 10000;
+    return max(25000, (v / step).round() * step);
+  }
+
+  /// Market value today: ability, age and potential set the level, and the
+  /// season's ratings and goals move it up or down.
+  int get fairValue {
+    final apps = seasonRated;
+    var form = 1.0;
+    final avg = averageRating;
+    if (avg != null && apps > 0) {
+      form += ((avg - 6.7) * 0.32).clamp(-0.3, 0.4) * min(1.0, apps / 8);
+    }
+    if (mainPosition.isAttacker || mainPosition == PlayerPosition.amf) {
+      form += min(0.25, seasonGoals * 0.012 + seasonAssists * 0.006);
+    }
+    return roundValue(valuation(ovr, age, potential) * form);
   }
   Map<String, dynamic> toMap() => {
     'face': face.toMap(),

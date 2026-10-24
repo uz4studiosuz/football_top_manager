@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/club.dart';
@@ -14,8 +15,12 @@ import '../l10n/l10n.dart';
 
 class TacticsScreen extends StatefulWidget {
   final bool Function(Player, Player)? onSwap;
+
+  /// In a match: re-arranges the XI and replaces tired starters; returns
+  /// the number of changes made.
+  final int Function()? onAutoPick;
   final Set<String> unavailable;
-  const TacticsScreen({super.key, this.onSwap, this.unavailable = const {}});
+  const TacticsScreen({super.key, this.onSwap, this.onAutoPick, this.unavailable = const {}});
   @override
   State<TacticsScreen> createState() => _TacticsScreenState();
 }
@@ -220,6 +225,22 @@ class _TacticsScreenState extends State<TacticsScreen> {
                       MaterialPageRoute<void>(builder: (_) => PlayerCreatorScreen()),
                     ),
                   ),
+                if (_inMatch && widget.onAutoPick != null)
+                  TextButton.icon(
+                    onPressed: () {
+                      final n = widget.onAutoPick!();
+                      setState(() {});
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            n == 0 ? tr('Tarkib allaqachon eng yaxshi holatda') : trf('Avto tarkib: {0} ta o‘zgarish', [n]),
+                          ),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.auto_fix_high_rounded, size: 18),
+                    label: Text(tr('Avto tarkib')),
+                  ),
                 if (!_inMatch)
                   PopupMenuButton<bool>(
                     tooltip: tr('Avto tarkib'),
@@ -281,13 +302,9 @@ class _TacticsScreenState extends State<TacticsScreen> {
             ),
             body: TabBarView(
               children: [
-                Center(
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(maxWidth: 760),
-                    child: ListView(
-                      controller: _squadScroll,
-                      padding: const EdgeInsets.all(12),
-                      children: [
+                LayoutBuilder(
+                  builder: (context, box) {
+                    final top = <Widget>[
                         AppCard(
                           padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
                           child: Row(
@@ -331,15 +348,48 @@ class _TacticsScreenState extends State<TacticsScreen> {
                           ],
                         ),
                         const SizedBox(height: 10),
-                        _pitch(club),
-                        const SizedBox(height: 16),
+                    ];
+                    final groups = <Widget>[
                         _group(tr('Zaxira'), club.bench, trf('O‘yin kuni zaxirasi · {0}/{1}', [club.bench.length, Club.matchdayBench])),
                         const SizedBox(height: 12),
-                        _group(tr('Rezerv'), club.reserves, trf('Tarkibdan tashqari · {0}', [club.reserves.length])),
-                        const SizedBox(height: 24),
-                      ],
-                    ),
-                  ),
+                        if (_inMatch)
+                          Text(
+                            tr('O‘yin davomida faqat zaxiradagi futbolchilar maydonga tushishi mumkin. Rezervdagilarni o‘yindan oldin zaxira yoki asosiy tarkibga qo‘ying.'),
+                            style: AppText.caption,
+                          )
+                        else
+                          _group(tr('Rezerv'), club.reserves, trf('Tarkibdan tashqari · {0}', [club.reserves.length])),
+                    ];
+                    // Desktop: pitch on the left, bench and reserves beside it.
+                    if (box.maxWidth >= 1000) {
+                      return Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(
+                              width: min(620, box.maxWidth * 0.52),
+                              child: ListView(children: [...top, _pitch(club)]),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: ListView(controller: _squadScroll, children: [...groups, const SizedBox(height: 24)]),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                    return Center(
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 760),
+                        child: ListView(
+                          controller: _squadScroll,
+                          padding: const EdgeInsets.all(12),
+                          children: [...top, _pitch(club), const SizedBox(height: 16), ...groups, const SizedBox(height: 24)],
+                        ),
+                      ),
+                    );
+                  },
                 ),
                 SquadList(),
                 const TeamTacticsView(),

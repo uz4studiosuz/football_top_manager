@@ -10,6 +10,7 @@ import '../ui/shot_widgets.dart';
 import '../ui/heatmap.dart';
 import '../ui/widgets.dart';
 import 'widgets/player_detail_view.dart';
+import 'player_match_screen.dart';
 import '../l10n/l10n.dart';
 
 /// Post-match page for any played fixture (SofaScore event page layout).
@@ -62,7 +63,12 @@ class _MatchReportScreenState extends State<MatchReportScreen> {
             ),
           ),
         ),
-        body: TabBarView(
+        // Desktop: keep the report at a readable width.
+        body: Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1100),
+            child: TabBarView(
           children: [
             ListView(
               padding: const EdgeInsets.all(12),
@@ -160,6 +166,8 @@ class _MatchReportScreenState extends State<MatchReportScreen> {
             ),
           ],
         ),
+          ),
+        ),
       ),
     );
   }
@@ -241,7 +249,29 @@ class _MatchReportScreenState extends State<MatchReportScreen> {
     line: f.playerStats[p.id],
     rating: f.ratings[p.id],
     heat: decodeHeat(f.heat[p.id]),
-    onOpenProfile: () => PlayerDetailView.show(context, player: p, club: club),
+    onOpenProfile: () => PlayerDetailView.show(context, player: p, club: club).then((_) {
+      if (mounted) setState(() {}); // a portrait may have been edited
+    }),
+    onOpenDetails: () {
+      final game = GameState();
+      PlayerMatchScreen.show(
+        context,
+        PlayerMatchData(
+          home: game.getClubById(f.homeClubId)!,
+          away: game.getClubById(f.awayClubId)!,
+          homeScore: f.homeScore ?? 0,
+          awayScore: f.awayScore ?? 0,
+          events: f.events,
+          shots: f.shots,
+          momentum: f.momentum,
+          lines: f.playerStats,
+          ratings: f.ratings,
+          heatFor: (id) => decodeHeat(f.heat[id]),
+        ),
+        p,
+        club,
+      );
+    },
   );
 }
 

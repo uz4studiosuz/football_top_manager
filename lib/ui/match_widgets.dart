@@ -789,18 +789,8 @@ class RatingsList extends StatelessWidget {
 
 /// SofaScore-style player match card in a bottom sheet; the full profile
 /// stays one tap away.
-Future<void> showPlayerMatchSheet(
-  BuildContext context, {
-  required Player player,
-  required Club club,
-  PlayerMatchStats? line,
-  double? rating,
-  List<int>? heat,
-  required VoidCallback onOpenProfile,
-}) => showModalBottomSheet<void>(
-  context: context,
-  isScrollControlled: true,
-  builder: (ctx) {
+/// Every stat line of [player]'s match, labelled for display.
+List<(String, String)> playerStatRows(Player player, PlayerMatchStats? line) {
     final l = line;
     final gk = player.mainPosition.isGoalkeeper;
     String pct(int a, int b) => b == 0 ? '0%' : '${(a * 100 / b).round()}%';
@@ -838,6 +828,24 @@ Future<void> showPlayerMatchSheet(
         if (l.yellow + l.red > 0) (tr('Kartochkalar'), '${l.yellow} sariq · ${l.red} qizil'),
       ],
     ];
+    return rows;
+}
+
+Future<void> showPlayerMatchSheet(
+  BuildContext context, {
+  required Player player,
+  required Club club,
+  PlayerMatchStats? line,
+  double? rating,
+  List<int>? heat,
+  required VoidCallback onOpenProfile,
+  VoidCallback? onOpenDetails,
+}) => showModalBottomSheet<void>(
+  context: context,
+  isScrollControlled: true,
+  builder: (ctx) {
+    final l = line;
+    final rows = playerStatRows(player, line);
     return SafeArea(
       child: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(ctx).height * 0.82),
@@ -910,16 +918,32 @@ Future<void> showPlayerMatchSheet(
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-              child: SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    onOpenProfile();
-                  },
-                  icon: const Icon(Icons.person_outline),
-                  label: Text(tr('Profilni ko‘rish')),
-                ),
+              child: Row(
+                children: [
+                  if (onOpenDetails != null && l != null) ...[
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          onOpenDetails();
+                        },
+                        icon: const Icon(Icons.insights_rounded),
+                        label: Text(tr('Batafsil')),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        onOpenProfile();
+                      },
+                      icon: const Icon(Icons.person_outline),
+                      label: Text(tr('Profilni ko‘rish')),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
