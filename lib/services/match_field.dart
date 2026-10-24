@@ -689,7 +689,9 @@ class MatchField {
     final distance = (_rivals[pressure] - ball).distance;
     final progress = homePossession ? ball.dx : 1 - ball.dx;
     final pressRadius = 0.042 + (_opponent.tactics.pressing - 3) * 0.002;
-    if (distance < pressRadius &&
+    // A keeper with the ball in hand cannot be tackled.
+    if (owner != 0 &&
+        distance < pressRadius &&
         _tackleClock > 0.3 &&
         !_beaten.containsKey(defender.id)) {
       _tackleClock = 0;
@@ -697,7 +699,7 @@ class MatchField {
           0.057 +
           (defender.playingStyle == PlayingStyle.destroyer ? 0.01 : 0) +
           (defender.instruction == PlayerInstruction.tightMarking ? 0.012 : 0) +
-          (progress > 0.84 && (ball.dy - 0.5).abs() < 0.29 ? -0.035 : 0) +
+          (progress > 0.84 && (ball.dy - 0.5).abs() < 0.29 ? -0.012 : 0) +
           (defender.stats.aggression - 40) / 800 +
           (_opponent.tactics.pressing - 3) * 0.006 +
           (_injuredOnPitch.contains(defender.id) ? 0.02 : 0);
@@ -722,7 +724,9 @@ class MatchField {
                           defender.stats.defensiveEngagement -
                           carrier.stats.tightPossession -
                           carrier.stats.balance) /
-                      240)
+                      240 -
+                  // Attackers in the final third are harder to dispossess.
+                  (progress > 0.62 ? 0.07 : 0))
               .clamp(0.08, 0.6);
       if (random.nextDouble() < chance) {
         _line(defender)
@@ -768,11 +772,11 @@ class MatchField {
         meters < 32 &&
         (central || meters < 18) &&
         (_hold > 1.1 ||
-            meters < 13 ||
+            meters < 15 ||
             random.nextDouble() <
                 (0.22 + carrier.stats.attackingAwareness / 380) *
                     mentality *
-                    (meters < 19 ? 1.9 : 0.55))) {
+                    (meters < 19 ? 2.6 : 0.85))) {
       _startShot(carrier, pressured: distance < 0.06);
       return;
     }
@@ -909,6 +913,10 @@ class MatchField {
     final candidates = <({int index, double score})>[];
     final style = club.tactics.playstyle;
     final carrier = _xi(club)[owner];
+    // How deep the ball is in our own half (1 = own goal line).
+    final depth = homePossession ? 1 - ball.dx : ball.dx;
+    final ownThird = depth > 0.67;
+    final pressed = _nearestDistance(_rivals, ball, _opponent).$2 < 0.1;
     for (var i = 0; i < 11; i++) {
       final mate = _xi(club)[i];
       if (i == owner || dismissed.contains(mate.id)) continue;
@@ -973,20 +981,44 @@ class MatchField {
         score += 0.12;
       }
       if (_is(mate, _finishers) && progress > 0.1) score += 0.05;
-      if (i == 0) score -= 0.25;
+      if (i == 0) score -= ownThird ? 0.6 : 0.25;
+      // Passing lanes: a rival close to the line can cut the ball out.
+      // Near our own goal that is fatal, so keepers and defenders avoid it.
+      final lane = _laneGap(ball, points[i]);
+      if (ownThird && lane < 0.035) score -= 1.1;
+      if (ownThird && space < 0.06) score -= 0.5;
       if (owner == 0 && !club.tactics.playOutFromBack) score += progress * 0.9;
-      if (owner == 0 && club.tactics.playOutFromBack && distance < 0.3) {
+      if (owner == 0 && club.tactics.playOutFromBack && distance < 0.3 && !pressed) {
         score += 0.15;
       }
+      // Under pressure in the box the keeper goes long instead of risking it.
+      if ((owner == 0 || ownThird) && pressed && distance > 0.3) score += 0.45;
       score += random.nextDouble() * 0.12;
       candidates.add((index: i, score: score));
     }
     if (candidates.isEmpty) return null;
     candidates.sort((a, b) => b.score.compareTo(a.score));
+    if (ownThird) return candidates.first.index; // no gambles at the back
     return candidates[random.nextDouble() < 0.8
             ? 0
             : min(1, candidates.length - 1)]
         .index;
+  }
+
+  /// Closest rival to the passing line from [a] to [b].
+  double _laneGap(Offset a, Offset b) {
+    final ab = b - a;
+    final len2 = ab.dx * ab.dx + ab.dy * ab.dy;
+    var best = double.infinity;
+    final xi = _xi(_opponent);
+    for (var i = 0; i < 11; i++) {
+      if (dismissed.contains(xi[i].id)) continue;
+      final ap = _rivals[i] - a;
+      final t = len2 == 0 ? 0.0 : ((ap.dx * ab.dx + ap.dy * ab.dy) / len2).clamp(0.0, 1.0);
+      final d = (_rivals[i] - (a + ab * t)).distance;
+      if (d < best) best = d;
+    }
+    return best;
   }
 
   void _startPass(int target, Player passer) {
@@ -1054,12 +1086,15 @@ class MatchField {
                     ? 0.05
                     : 0))
             .clamp(0.6, 0.98);
-    final accurate = random.nextDouble() < accuracy;
+    final deep = (homePossession ? 1 - ball.dx : ball.dx) > 0.67;
+    final accurate = random.nextDouble() < accuracy + (deep && !lofted ? 0.06 : 0);
     final end = accurate
         ? point
         : point +
               Offset(
-                (random.nextDouble() - 0.5) * 0.16,
+                deep
+                    ? random.nextDouble() * 0.12 * (homePossession ? 1 : -1)
+                    : (random.nextDouble() - 0.5) * 0.16,
                 (random.nextDouble() - 0.5) * 0.2,
               );
     _flight = _Flight(
@@ -1199,7 +1234,7 @@ class MatchField {
     final dist = sqrt(dx * dx + dy * dy);
     var angle = atan((7.32 * dx) / max(0.01, dx * dx + dy * dy - 3.66 * 3.66));
     if (angle < 0) angle += pi;
-    return 1 / (1 + exp(0.12 * dist - 1.2 * angle + 0.62));
+    return 1 / (1 + exp(0.12 * dist - 1.2 * angle - 0.12));
   }
 
   void _startShot(
@@ -1234,8 +1269,8 @@ class MatchField {
       _Kind.freeKick => (0.075 * (24 / max(16, distance))).clamp(0.03, 0.12),
       _ => _xgFor(ball, isHome) *
           (header ? 0.62 : 1) *
-          (pressured ? 0.78 : 1) *
-          (crowded ? 0.5 : 1),
+          (pressured ? 0.86 : 1) *
+          (crowded ? 0.66 : 1),
     };
     xg = xg.clamp(0.01, 0.96).toDouble();
     final big = xg >= 0.3;
@@ -1261,7 +1296,7 @@ class MatchField {
               (keeper.playingStyle == PlayingStyle.defensiveGoalkeeper
                   ? 0.96
                   : 1);
-    final skill = (1.1 + (strike - 75) / 52).clamp(0.55, 1.6);
+    final skill = (1.24 + (strike - 75) / 52).clamp(0.6, 1.75);
     final pGoal = effectiveKind == _Kind.penalty
         ? (0.77 +
                   (shooter.stats.setPieceTaking + shooter.stats.finishing - 160) /
@@ -1379,7 +1414,8 @@ class MatchField {
                           : 0) +
                       (p.stats.defensiveEngagement - flight.actor.stats.lowPass) /
                           160)
-                  .clamp(0.08, 0.68)) {
+                  .clamp(0.08, 0.68) *
+                  ((flight.home ? 1 - flight.from.dx : flight.from.dx) > 0.67 ? 0.6 : 1)) {
             homePossession = !flight.home;
             owner = i;
             _flight = null;

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/finance.dart';
 import '../models/club.dart';
 import '../models/league.dart';
 import '../services/game_state.dart';
@@ -136,6 +137,7 @@ class DashboardScreen extends StatelessWidget {
               const SizedBox(height: 14),
               _summaryStrip(game, club, standing, rank),
               const SizedBox(height: 12),
+              ..._inbox(context, game),
               LayoutBuilder(
                 builder: (context, box) {
                   final main = Column(
@@ -584,6 +586,82 @@ class DashboardScreen extends StatelessWidget {
       ),
     );
   }
+
+  /// Unread offers, injuries and growth as tappable tiles, so they are not
+  /// buried in the news feed.
+  List<Widget> _inbox(BuildContext context, GameState game) {
+    final unread = game.news.where((n) => !n.read).toList();
+    int count(NewsKind k) => unread.where((n) => n.kind == k).length;
+    final tiles = <Widget>[
+      if (game.offers.isNotEmpty)
+        _inboxTile(NewsKind.transfer, '${game.offers.length} ta taklif', 'Sotish takliflari kutmoqda', onNavigateToTransfers),
+      if (count(NewsKind.injury) > 0)
+        _inboxTile(
+          NewsKind.injury,
+          '${count(NewsKind.injury)} jarohat',
+          unread.firstWhere((n) => n.kind == NewsKind.injury).title,
+          () => _openNews(context, game),
+        ),
+      if (count(NewsKind.award) > 0)
+        _inboxTile(
+          NewsKind.award,
+          '${count(NewsKind.award)} yangilik',
+          unread.firstWhere((n) => n.kind == NewsKind.award).title,
+          () => _openNews(context, game),
+        ),
+      if (count(NewsKind.contract) > 0)
+        _inboxTile(NewsKind.contract, 'Shartnomalar', 'Muddati tugayotganlar bor', onNavigateToSquad),
+    ];
+    if (tiles.isEmpty) return const [];
+    return [
+      SizedBox(
+        height: 64,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          itemCount: tiles.length,
+          separatorBuilder: (_, _) => const SizedBox(width: 8),
+          itemBuilder: (_, i) => tiles[i],
+        ),
+      ),
+      const SizedBox(height: 12),
+    ];
+  }
+
+  void _openNews(BuildContext context, GameState game) => Navigator.push(
+    context,
+    MaterialPageRoute<void>(builder: (_) => const NewsPage()),
+  );
+
+  Widget _inboxTile(NewsKind kind, String title, String body, VoidCallback? onTap) => SizedBox(
+    width: 220,
+    child: Material(
+      color: kind.color.withValues(alpha: 0.08),
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              Icon(kind.icon, color: kind.color, size: 24),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: kind.color)),
+                    Text(body, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.small),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
 
   Widget _newsCard(BuildContext context, GameState game) => AppCard(
     padding: const EdgeInsets.fromLTRB(0, 14, 0, 6),

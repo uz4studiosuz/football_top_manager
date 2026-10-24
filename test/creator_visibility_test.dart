@@ -13,6 +13,7 @@ void main() {
     addTearDown(t.view.reset);
     final game = GameState();
     game.startCareerWithExistingClub(InitialDatabase.getSuperLeagueClubs().first);
+    game.alerts.clear(); // the welcome banner would cover the app bar
     await t.pumpWidget(const MaterialApp(home: MainNavigationScreen()));
     await t.pumpAndSettle();
     await t.tap(find.byIcon(Icons.groups_outlined).last);

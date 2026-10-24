@@ -225,6 +225,7 @@ class GameState extends ChangeNotifier {
     ledger.clear();
     transferHistory.clear();
     news.clear();
+    alerts.clear();
     offers.clear();
     freeAgents.clear();
     seasonHistory.clear();
@@ -1225,6 +1226,7 @@ class GameState extends ChangeNotifier {
         NewsKind.transfer,
         '${buyer.name} ${p.shortName} uchun taklif yubordi',
         '${_m(fee)} miqdoridagi taklif Transfer → Takliflar bo‘limida kutmoqda.',
+        alert: true,
       );
     }
   }
@@ -1745,10 +1747,21 @@ class GameState extends ChangeNotifier {
   }
 
   // --------------------------------------------------------------- news
-  void _news(NewsKind kind, String title, String body) {
-    news.insert(0, NewsItem(date: currentDate, title: title, body: body, kind: kind));
+  void _news(NewsKind kind, String title, String body, {bool? alert}) {
+    final item = NewsItem(date: currentDate, title: title, body: body, kind: kind);
+    news.insert(0, item);
     if (news.length > 80) news.removeLast();
+    // Things the manager must not miss also pop up as a banner.
+    if (alert ?? const {NewsKind.injury, NewsKind.award, NewsKind.contract, NewsKind.window}.contains(kind)) {
+      alerts.add(item);
+      if (alerts.length > 6) alerts.removeAt(0);
+    }
   }
+
+  /// Banners waiting to be shown by the main screen (not saved).
+  final List<NewsItem> alerts = [];
+
+  NewsItem? takeAlert() => alerts.isEmpty ? null : alerts.removeAt(0);
 
   void markNewsRead() {
     for (final n in news) {
