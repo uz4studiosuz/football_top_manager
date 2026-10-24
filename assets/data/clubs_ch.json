@@ -187,11 +187,11 @@
    "founded": 1889,
    "reputation": 69,
    "transferBudget": 50000000,
-   "wageBudget": 560000,
+   "wageBudget": 570000,
    "ticketPrice": 41,
    "tactics": {
-    "formation": "f433",
-    "playstyle": "possession",
+    "formation": "f4231",
+    "playstyle": "quickCounter",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -256,7 +256,8 @@
     "ch_shu_mpolendakov",
     "ch_shu_lhjelde",
     "ch_shu_amatos",
-    "ch_shu_tdavies"
+    "ch_shu_tdavies",
+    "ch_shu_ocarter"
    ]
   },
   {
@@ -276,8 +277,8 @@
    "wageBudget": 700000,
    "ticketPrice": 40,
    "tactics": {
-    "formation": "f433",
-    "playstyle": "possession",
+    "formation": "f4231",
+    "playstyle": "quickCounter",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -362,8 +363,8 @@
    "wageBudget": 680000,
    "ticketPrice": 40,
    "tactics": {
-    "formation": "f433",
-    "playstyle": "possession",
+    "formation": "f4231",
+    "playstyle": "outWide",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -449,7 +450,7 @@
    "ticketPrice": 40,
    "tactics": {
     "formation": "f4231",
-    "playstyle": "quickCounter",
+    "playstyle": "outWide",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -534,8 +535,8 @@
    "wageBudget": 610000,
    "ticketPrice": 40,
    "tactics": {
-    "formation": "f442",
-    "playstyle": "longBall",
+    "formation": "f433",
+    "playstyle": "highPressing",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -620,7 +621,7 @@
    "wageBudget": 560000,
    "ticketPrice": 40,
    "tactics": {
-    "formation": "f4141",
+    "formation": "f433",
     "playstyle": "possession",
     "defensiveLine": 3,
     "attackingIntensity": 3
@@ -706,8 +707,8 @@
    "wageBudget": 670000,
    "ticketPrice": 39,
    "tactics": {
-    "formation": "f433",
-    "playstyle": "possession",
+    "formation": "f442",
+    "playstyle": "quickCounter",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -793,7 +794,7 @@
    "ticketPrice": 39,
    "tactics": {
     "formation": "f4231",
-    "playstyle": "quickCounter",
+    "playstyle": "outWide",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -878,8 +879,8 @@
    "wageBudget": 640000,
    "ticketPrice": 39,
    "tactics": {
-    "formation": "f433",
-    "playstyle": "possession",
+    "formation": "f4231",
+    "playstyle": "outWide",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -964,8 +965,8 @@
    "wageBudget": 640000,
    "ticketPrice": 39,
    "tactics": {
-    "formation": "f352",
-    "playstyle": "longBallCounter",
+    "formation": "f4231",
+    "playstyle": "outWide",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -1050,8 +1051,8 @@
    "wageBudget": 570000,
    "ticketPrice": 39,
    "tactics": {
-    "formation": "f4231",
-    "playstyle": "quickCounter",
+    "formation": "f4141",
+    "playstyle": "possession",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -1136,8 +1137,8 @@
    "wageBudget": 660000,
    "ticketPrice": 39,
    "tactics": {
-    "formation": "f4231",
-    "playstyle": "outWide",
+    "formation": "f352",
+    "playstyle": "longBallCounter",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -1222,8 +1223,8 @@
    "wageBudget": 360000,
    "ticketPrice": 39,
    "tactics": {
-    "formation": "f4231",
-    "playstyle": "outWide",
+    "formation": "f433",
+    "playstyle": "possession",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -1309,7 +1310,7 @@
    "ticketPrice": 38,
    "tactics": {
     "formation": "f4231",
-    "playstyle": "quickCounter",
+    "playstyle": "outWide",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -1394,8 +1395,8 @@
    "wageBudget": 540000,
    "ticketPrice": 38,
    "tactics": {
-    "formation": "f442",
-    "playstyle": "quickCounter",
+    "formation": "f433",
+    "playstyle": "highPressing",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -1479,8 +1480,8 @@
    "wageBudget": 490000,
    "ticketPrice": 38,
    "tactics": {
-    "formation": "f4231",
-    "playstyle": "outWide",
+    "formation": "f442",
+    "playstyle": "longBall",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -1565,7 +1566,7 @@
    "wageBudget": 490000,
    "ticketPrice": 38,
    "tactics": {
-    "formation": "f433",
+    "formation": "f4141",
     "playstyle": "possession",
     "defensiveLine": 3,
     "attackingIntensity": 3
@@ -1651,8 +1652,8 @@
    "wageBudget": 550000,
    "ticketPrice": 38,
    "tactics": {
-    "formation": "f4231",
-    "playstyle": "quickCounter",
+    "formation": "f433",
+    "playstyle": "possession",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -1820,11 +1821,11 @@
    "founded": 1905,
    "reputation": 62,
    "transferBudget": 36000000,
-   "wageBudget": 540000,
+   "wageBudget": 550000,
    "ticketPrice": 38,
    "tactics": {
-    "formation": "f352",
-    "playstyle": "longBallCounter",
+    "formation": "f442",
+    "playstyle": "longBall",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -1889,7 +1890,8 @@
     "ch_cha_mleaburn",
     "ch_cha_jfevrier",
     "ch_cha_zmitchell",
-    "ch_cha_ifullah"
+    "ch_cha_ifullah",
+    "ch_cha_ocole"
    ]
   },
   {
@@ -1909,8 +1911,8 @@
    "wageBudget": 600000,
    "ticketPrice": 38,
    "tactics": {
-    "formation": "f433",
-    "playstyle": "highPressing",
+    "formation": "f4231",
+    "playstyle": "quickCounter",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -1996,7 +1998,7 @@
    "ticketPrice": 38,
    "tactics": {
     "formation": "f433",
-    "playstyle": "possession",
+    "playstyle": "highPressing",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },

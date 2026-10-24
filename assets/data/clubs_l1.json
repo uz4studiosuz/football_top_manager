@@ -18,7 +18,7 @@
    "wageBudget": 430000,
    "ticketPrice": 37,
    "tactics": {
-    "formation": "f442",
+    "formation": "f4231",
     "playstyle": "quickCounter",
     "defensiveLine": 3,
     "attackingIntensity": 3
@@ -105,7 +105,7 @@
    "ticketPrice": 37,
    "tactics": {
     "formation": "f4231",
-    "playstyle": "outWide",
+    "playstyle": "quickCounter",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -190,8 +190,8 @@
    "wageBudget": 390000,
    "ticketPrice": 37,
    "tactics": {
-    "formation": "f4231",
-    "playstyle": "outWide",
+    "formation": "f442",
+    "playstyle": "longBall",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -276,8 +276,8 @@
    "wageBudget": 410000,
    "ticketPrice": 36,
    "tactics": {
-    "formation": "f4141",
-    "playstyle": "possession",
+    "formation": "f433",
+    "playstyle": "highPressing",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -362,8 +362,8 @@
    "wageBudget": 430000,
    "ticketPrice": 36,
    "tactics": {
-    "formation": "f4141",
-    "playstyle": "possession",
+    "formation": "f352",
+    "playstyle": "longBallCounter",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -447,8 +447,8 @@
    "wageBudget": 440000,
    "ticketPrice": 36,
    "tactics": {
-    "formation": "f4141",
-    "playstyle": "possession",
+    "formation": "f4231",
+    "playstyle": "quickCounter",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -533,8 +533,8 @@
    "wageBudget": 410000,
    "ticketPrice": 36,
    "tactics": {
-    "formation": "f4231",
-    "playstyle": "outWide",
+    "formation": "f352",
+    "playstyle": "longBallCounter",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -619,8 +619,8 @@
    "wageBudget": 390000,
    "ticketPrice": 36,
    "tactics": {
-    "formation": "f433",
-    "playstyle": "highPressing",
+    "formation": "f442",
+    "playstyle": "longBall",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -705,8 +705,8 @@
    "wageBudget": 400000,
    "ticketPrice": 36,
    "tactics": {
-    "formation": "f4231",
-    "playstyle": "outWide",
+    "formation": "f433",
+    "playstyle": "highPressing",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -791,8 +791,8 @@
    "wageBudget": 480000,
    "ticketPrice": 36,
    "tactics": {
-    "formation": "f442",
-    "playstyle": "longBall",
+    "formation": "f4231",
+    "playstyle": "quickCounter",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -877,8 +877,8 @@
    "wageBudget": 380000,
    "ticketPrice": 35,
    "tactics": {
-    "formation": "f442",
-    "playstyle": "quickCounter",
+    "formation": "f352",
+    "playstyle": "longBallCounter",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -963,8 +963,8 @@
    "wageBudget": 420000,
    "ticketPrice": 35,
    "tactics": {
-    "formation": "f4141",
-    "playstyle": "possession",
+    "formation": "f4231",
+    "playstyle": "quickCounter",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -1046,11 +1046,11 @@
    "founded": 1934,
    "reputation": 53,
    "transferBudget": 9000000,
-   "wageBudget": 320000,
+   "wageBudget": 330000,
    "ticketPrice": 35,
    "tactics": {
-    "formation": "f4231",
-    "playstyle": "quickCounter",
+    "formation": "f352",
+    "playstyle": "longBallCounter",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -1115,7 +1115,8 @@
     "l1_pet_hmills",
     "l1_pet_dobrienbrady",
     "l1_pet_paderoju",
-    "l1_pet_lmendonca"
+    "l1_pet_lmendonca",
+    "l1_pet_cbennett"
    ]
   },
   {
@@ -1136,7 +1137,7 @@
    "ticketPrice": 35,
    "tactics": {
     "formation": "f442",
-    "playstyle": "quickCounter",
+    "playstyle": "longBall",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -1221,8 +1222,8 @@
    "wageBudget": 350000,
    "ticketPrice": 35,
    "tactics": {
-    "formation": "f433",
-    "playstyle": "possession",
+    "formation": "f442",
+    "playstyle": "longBall",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -1307,7 +1308,7 @@
    "wageBudget": 320000,
    "ticketPrice": 35,
    "tactics": {
-    "formation": "f433",
+    "formation": "f4141",
     "playstyle": "possession",
     "defensiveLine": 3,
     "attackingIntensity": 3
@@ -1393,8 +1394,8 @@
    "wageBudget": 370000,
    "ticketPrice": 35,
    "tactics": {
-    "formation": "f433",
-    "playstyle": "possession",
+    "formation": "f442",
+    "playstyle": "longBall",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -1479,8 +1480,8 @@
    "wageBudget": 390000,
    "ticketPrice": 35,
    "tactics": {
-    "formation": "f352",
-    "playstyle": "longBallCounter",
+    "formation": "f4231",
+    "playstyle": "outWide",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -1565,8 +1566,8 @@
    "wageBudget": 370000,
    "ticketPrice": 35,
    "tactics": {
-    "formation": "f433",
-    "playstyle": "highPressing",
+    "formation": "f4231",
+    "playstyle": "quickCounter",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -1651,7 +1652,7 @@
    "wageBudget": 320000,
    "ticketPrice": 34,
    "tactics": {
-    "formation": "f433",
+    "formation": "f4141",
     "playstyle": "possession",
     "defensiveLine": 3,
     "attackingIntensity": 3
@@ -1823,8 +1824,8 @@
    "wageBudget": 330000,
    "ticketPrice": 34,
    "tactics": {
-    "formation": "f442",
-    "playstyle": "longBall",
+    "formation": "f433",
+    "playstyle": "highPressing",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -1909,8 +1910,8 @@
    "wageBudget": 300000,
    "ticketPrice": 33,
    "tactics": {
-    "formation": "f442",
-    "playstyle": "longBall",
+    "formation": "f4141",
+    "playstyle": "possession",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },
@@ -1995,8 +1996,8 @@
    "wageBudget": 320000,
    "ticketPrice": 33,
    "tactics": {
-    "formation": "f442",
-    "playstyle": "quickCounter",
+    "formation": "f433",
+    "playstyle": "highPressing",
     "defensiveLine": 3,
     "attackingIntensity": 3
    },

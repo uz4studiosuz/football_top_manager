@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import '../models/club.dart';
 import '../models/finance.dart';
@@ -119,7 +120,7 @@ class FinanceView extends StatelessWidget {
                       _CategoryRow(
                         category: cat,
                         amount: byCategory[cat]!,
-                        share: byCategory[cat]!.abs() / (cat.income ? income : -spend).clamp(1, 1 << 62),
+                        share: byCategory[cat]!.abs() / max(1, cat.income ? income : -spend),
                       ),
                 ],
               ),

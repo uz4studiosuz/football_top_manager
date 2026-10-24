@@ -169,6 +169,13 @@ def main():
             picked.append((r, pos, nat))
             if len(picked) >= 25:
                 break
+        # Every squad needs at least two keepers; the database sometimes
+        # lists one, so a youth-team keeper is added.
+        while keepers < 2:
+            keepers += 1
+            youth = f"{rnd.choice(['Harry', 'Jack', 'Oliver', 'Charlie', 'Alfie', 'Sam', 'Ben', 'Lewis'])} "                     f"{rnd.choice(['Walker', 'Hughes', 'Bennett', 'Carter', 'Price', 'Turner', 'Morris', 'Cole'])}"
+            picked.append(((youth, 19, 188, 50, 'Portero', 30 + keepers, 'D',
+                            'Inglaterra', None, None, 60), 'GK', 'Angliya'))
         ids, used = [], set()
         for r, pos, nat in picked:
             name = clean(r[0])
