@@ -216,11 +216,11 @@ class StandingsTable extends StatelessWidget {
             children: [
               cell('#', 28, style: head),
               Expanded(child: Text(tr('Jamoa'), style: head)),
-              cell('O', 26, style: head),
+              cell(tr('O'), 26, style: head),
               if (full) ...[
-                cell('G', 24, style: head),
-                cell('D', 24, style: head),
-                cell('M', 24, style: head),
+                cell(tr('G'), 24, style: head),
+                cell(tr('D'), 24, style: head),
+                cell(tr('M'), 24, style: head),
                 cell(tr('To‘plar'), 50, style: head),
               ],
               cell('±', 32, style: head),

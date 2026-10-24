@@ -19,6 +19,7 @@ import '../ui/coin.dart';
 import '../services/club_life.dart';
 import 'club_life_screen.dart';
 import 'season_review_screen.dart';
+import 'tactics_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   final VoidCallback onNavigateToTactics;
@@ -371,13 +372,7 @@ class DashboardScreen extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: FilledButton.icon(
-                  onPressed: () {
-                    if (!_lineupReady(context, game)) return;
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute<void>(builder: (_) => MatchScreen(fixture: f)),
-                    );
-                  },
+                  onPressed: () => _kickOff(context, game, f),
                   icon: const Icon(Icons.play_arrow_rounded, size: 20),
                   label: FittedBox(child: Text(tr('Boshlash'))),
                 ),
@@ -651,6 +646,46 @@ class DashboardScreen extends StatelessWidget {
 
   /// The match starts only with the manager's own XI: injured or
   /// suspended starters must be replaced first.
+  /// Start now, or first set a line-up and tactics for this match only.
+  Future<void> _kickOff(BuildContext context, GameState game, Fixture f) async {
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.play_circle_fill_rounded, color: AppColors.primary),
+              title: Text(tr('Boshlash'), style: AppText.bodyStrong),
+              subtitle: Text(tr('Asosiy tarkib va taktika bilan')),
+              onTap: () => Navigator.pop(ctx, 'start'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.edit_note_rounded, color: AppColors.primary),
+              title: Text(tr('Jamoani shu o‘yin uchun shakllantirish'), style: AppText.bodyStrong),
+              subtitle: Text(tr('Maxsus tarkib, taktika va ko‘rsatmalar – o‘yindan keyin asosiysi qaytadi')),
+              onTap: () => Navigator.pop(ctx, 'plan'),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (choice == null || !context.mounted) return;
+    if (choice == 'plan') {
+      game.beginUserMatch();
+      final start = await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => _MatchPlanScreen(fixture: f)));
+      if (start != true) {
+        game.cancelMatchPlan();
+        return;
+      }
+      if (!context.mounted) return;
+    }
+    if (!_lineupReady(context, game)) return;
+    Navigator.push(context, MaterialPageRoute<void>(builder: (_) => MatchScreen(fixture: f)));
+  }
+
   bool _lineupReady(BuildContext context, GameState game) {
     final out = game.unavailableStarters;
     if (out.isEmpty) return true;
@@ -954,4 +989,43 @@ class DashboardScreen extends StatelessWidget {
       ],
     ),
   );
+}
+
+/// The squad screen for one match: changes here are undone after it.
+class _MatchPlanScreen extends StatelessWidget {
+  final Fixture fixture;
+  const _MatchPlanScreen({required this.fixture});
+
+  @override
+  Widget build(BuildContext context) {
+    final game = GameState();
+    final rival = game.getClubById(fixture.homeClubId == game.userClubId ? fixture.awayClubId : fixture.homeClubId);
+    return Scaffold(
+      body: TacticsScreen(
+        matchPlan: true,
+        planTitle: rival == null ? tr('O‘yin rejasi') : trf('{0} bilan o‘yin rejasi', [rival.name]),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(onPressed: () => Navigator.pop(context, false), child: Text(tr('Bekor qilish'))),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 2,
+                child: FilledButton.icon(
+                  onPressed: () => Navigator.pop(context, true),
+                  icon: const Icon(Icons.play_arrow_rounded),
+                  label: Text(tr('Boshlash')),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

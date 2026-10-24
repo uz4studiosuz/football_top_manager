@@ -49,7 +49,9 @@ class _ReplayViewState extends State<_ReplayView> with SingleTickerProviderState
             const Icon(Icons.replay_rounded, color: AppColors.primary),
             const SizedBox(width: 8),
             Expanded(
-              child: Text(trf('{0}′ · {1} – gol takrori', [widget.replay.minute, widget.replay.scorer]), style: AppText.h3),
+              child: Text(widget.replay.penalty
+                    ? trf('{0}′ · {1} – penalti takrori', [widget.replay.minute, widget.replay.scorer])
+                    : trf('{0}′ · {1} – gol takrori', [widget.replay.minute, widget.replay.scorer]), style: AppText.h3),
             ),
             IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
           ],
@@ -62,7 +64,7 @@ class _ReplayViewState extends State<_ReplayView> with SingleTickerProviderState
             child: AnimatedBuilder(
               animation: _c,
               builder: (context, _) => CustomPaint(
-                painter: _ReplayPainter(widget.replay.frames, _c.value, widget.homeColor, widget.awayColor),
+                painter: _ReplayPainter(widget.replay, _c.value, widget.homeColor, widget.awayColor),
               ),
             ),
           ),
@@ -95,15 +97,16 @@ class _ReplayViewState extends State<_ReplayView> with SingleTickerProviderState
 }
 
 class _ReplayPainter extends CustomPainter {
-  final List<ReplayFrame> frames;
+  final GoalReplay replay;
   final double t;
   final Color home, away;
-  _ReplayPainter(this.frames, this.t, this.home, this.away);
+  _ReplayPainter(this.replay, this.t, this.home, this.away);
 
   @override
   void paint(Canvas canvas, Size size) {
     const inset = EdgeInsets.all(6);
     const FootballPitchPainter(vertical: false, inset: inset).paint(canvas, size);
+    final frames = replay.frames;
     if (frames.isEmpty) return;
     final r = FootballPitchPainter.field(size, inset);
     Offset at(Offset p) => Offset(r.left + p.dx * r.width, r.top + p.dy * r.height);
@@ -112,20 +115,33 @@ class _ReplayPainter extends CustomPainter {
     final k = pos - i;
     final a = frames[i], b = frames[j];
     Offset mix(Offset x, Offset y) => Offset.lerp(x, y, k)!;
-    final radius = max(4.5, size.height * 0.024);
-    void team(List<Offset> pa, List<Offset> pb, Color color) {
+    // Replays always show shirt numbers, so markers stay big enough to read.
+    final radius = max(7.0, size.height * 0.028);
+    void team(List<Offset> pa, List<Offset> pb, Color color, List<int> numbers, bool isHome) {
+      final ink = color.computeLuminance() > 0.55 ? const Color(0xFF14181F) : Colors.white;
       for (var n = 0; n < min(pa.length, pb.length); n++) {
         final c = at(mix(pa[n], pb[n]));
+        final scorer = isHome == replay.home && n == replay.scorerIndex;
         canvas.drawCircle(c, radius, Paint()..color = n == 0 ? Color.lerp(color, Colors.black, 0.25)! : color);
         canvas.drawCircle(c, radius, Paint()
-          ..color = Colors.white
+          ..color = scorer ? const Color(0xFFFFE066) : Colors.white
           ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.2);
+          ..strokeWidth = scorer ? 2.6 : 1.2);
+        if (n < numbers.length) {
+          final tp = TextPainter(
+            text: TextSpan(
+              text: '${numbers[n]}',
+              style: TextStyle(color: ink, fontSize: radius * 0.95, fontWeight: FontWeight.w800, fontFamily: 'Roboto'),
+            ),
+            textDirection: TextDirection.ltr,
+          )..layout();
+          tp.paint(canvas, c - Offset(tp.width / 2, tp.height / 2));
+        }
       }
     }
 
-    team(a.home, b.home, home);
-    team(a.away, b.away, away);
+    team(a.home, b.home, home, replay.homeNumbers, true);
+    team(a.away, b.away, away, replay.awayNumbers, false);
     // Ball trail of the last frames.
     final trail = Path();
     for (var n = max(0, i - 8); n <= i; n++) {

@@ -61,6 +61,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/data/
+    - assets/data/world/
     - assets/l10n/
   fonts:
     - family: Roboto

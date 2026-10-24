@@ -183,7 +183,7 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
                 Expanded(
                   child: Text(
                     p.isInjured
-                        ? trf('{0} · {1} tur o‘tkazib yuboradi', [p.injury ?? 'Jarohat', p.injuryRounds])
+                        ? trf('{0} · {1} tur o‘tkazib yuboradi', [tr(p.injury ?? 'Jarohat'), p.injuryRounds])
                         : trf('Diskvalifikatsiya · {0} tur', [p.suspensionRounds]),
                     style: AppText.bodyStrong,
                   ),
@@ -257,7 +257,7 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
               Row(
                 children: [
                   Expanded(child: StatTile('${p.age}', 'Yosh')),
-                  Expanded(child: StatTile(p.preferredFoot == PreferredFoot.left ? 'Chap' : 'O‘ng', 'Oyoq')),
+                  Expanded(child: StatTile(p.preferredFoot == PreferredFoot.left ? tr('Chap') : tr('O‘ng'), 'Oyoq')),
                   Expanded(child: StatTile('${p.weakFoot}/5', 'Kuchsiz oyoq')),
                   Expanded(child: StatTile('${p.potential}', 'Salohiyat', color: AppColors.attribute(p.potential))),
                 ],

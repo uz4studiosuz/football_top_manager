@@ -10,6 +10,7 @@ import 'club_form_screen.dart';
 import '../services/db_editor.dart';
 import '../ui/face_avatar.dart';
 import '../ui/face_from_photo.dart';
+import '../ui/league_picker.dart';
 import '../ui/widgets.dart';
 import '../l10n/l10n.dart';
 
@@ -99,6 +100,18 @@ class _DbEditorScreenState extends State<DbEditorScreen> {
     }
     name.dispose();
     country.dispose();
+  }
+
+  Future<void> _openWorldLeague() async {
+    final closed = {for (final l in db.closedLeagues) l['id'] as String};
+    final id = await pickLeague(context, only: InitialDatabase.leagues.where((l) => closed.contains(l.id)));
+    if (id == null) return;
+    await db.openLeague(id);
+    if (!mounted) return;
+    setState(() {
+      _league = id;
+      _club = _player = null;
+    });
   }
 
   Future<void> _addClub() async {
@@ -243,6 +256,12 @@ class _DbEditorScreenState extends State<DbEditorScreen> {
             ),
           ],
         ),
+        if (db.closedLeagues.isNotEmpty)
+          TextButton.icon(
+            onPressed: _openWorldLeague,
+            icon: const Icon(Icons.public_rounded, size: 18),
+            label: Text(trf('Dunyo ligasini ochish ({0})', [db.closedLeagues.length])),
+          ),
         if (db.leagueWarning(_league!) != null)
           Padding(
             padding: const EdgeInsets.only(top: 8),

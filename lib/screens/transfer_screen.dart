@@ -28,6 +28,43 @@ class _TransferScreenState extends State<TransferScreen> {
   String sort = 'Reyting';
   RangeValues ageRange = const RangeValues(16, 40);
 
+  /// What the club and the player think of the move, before any bid.
+  Widget _opinions(Player p, Club seller) {
+    final club = game.sellerStance(p, seller, game.userClub);
+    final mind = game.moveInterest(p, game.userClub, seller);
+    final color = mind.interest >= 60
+        ? AppColors.win
+        : mind.interest >= GameState.refuseInterest
+        ? AppColors.warning
+        : AppColors.live;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 10),
+        Text(tr('Klub fikri'), style: AppText.bodyStrong),
+        if (club.reasons.isEmpty) Text(tr('Oddiy savdo: so‘ralgan narxga rozi bo‘ladi.'), style: AppText.caption),
+        for (final r in club.reasons)
+          Text('• $r', style: AppText.caption.copyWith(color: club.notForSale && r == club.reasons.last ? AppColors.live : null)),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(child: Text(tr('Futbolchining qiziqishi'), style: AppText.bodyStrong)),
+            Text('${mind.interest}%', style: AppText.bodyStrong.copyWith(color: color)),
+          ],
+        ),
+        const SizedBox(height: 4),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(value: mind.interest / 100, color: color, backgroundColor: AppColors.line, minHeight: 6),
+        ),
+        for (final r in mind.reasons) Text('• $r', style: AppText.caption),
+        if (mind.interest < GameState.refuseInterest)
+          Text(tr('Futbolchi bu klubga o‘tishni xohlamaydi: narx kelishilsa ham shartnomani rad etadi.'),
+              style: AppText.caption.copyWith(color: AppColors.live)),
+      ],
+    );
+  }
+
   Future<void> _offer(Player p, Club seller) async {
     final ask = game.askingPrice(p, seller);
     var fee = ask.toDouble();
@@ -42,7 +79,8 @@ class _TransferScreenState extends State<TransferScreen> {
             title: Text(tr('Transfer taklifi')),
             content: SizedBox(
               width: 380,
-              child: Column(
+              child: SingleChildScrollView(
+                child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -81,6 +119,7 @@ class _TransferScreenState extends State<TransferScreen> {
                   const Divider(),
                   InfoRow(tr('Jami xarajat'), formatMoney(f + game.signingCost(p, f))),
                   InfoRow(tr('Byudjetingiz'), game.userClub.formattedTransferBudget),
+                  _opinions(p, seller),
                   if (issue != null || message != null)
                     Padding(
                       padding: const EdgeInsets.only(top: 10),
@@ -90,6 +129,7 @@ class _TransferScreenState extends State<TransferScreen> {
                       ),
                     ),
                 ],
+                ),
               ),
             ),
             actions: [

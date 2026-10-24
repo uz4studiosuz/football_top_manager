@@ -127,8 +127,10 @@ class _MatchScreenState extends State<MatchScreen> {
 
   @override
   void deactivate() {
-    // Nothing changed during the match outlives it (and the save knows).
+    // Nothing changed during the match outlives it (and the save knows);
+    // an abandoned match also gives the regular XI back.
     _restorePreMatch();
+    if (!_saved) _game.cancelMatchPlan();
     Future.microtask(GameState().touch);
     super.deactivate();
   }
@@ -248,6 +250,8 @@ class _MatchScreenState extends State<MatchScreen> {
     if (_away.id != _game.userClubId) _game.autoPickLineup(_away);
     final coaching = _game.managerProfile.ratingFor(_user.tactics.playstyle);
     _game.beginUserMatch();
+    _preMatchTactics = _game.preMatchTactics ?? _user.tactics;
+    _preMatchInstructions = _game.preMatchInstructions ?? {for (final p in _user.squad) p.id: p.instruction};
     _field = MatchField(
       _home,
       _away,
@@ -262,13 +266,18 @@ class _MatchScreenState extends State<MatchScreen> {
     _game.applyClubBoosts(_field, _userHome);
     _field.slowSetPieces = true;
     _field.recordReplays = true;
+    _field.marks = _game.manMarks;
     _field.derby = _game.isDerby(_home, _away);
     _baseTactics = _user.tactics;
-    _preMatchTactics = _user.tactics;
-    _preMatchInstructions = {for (final p in _user.squad) p.id: p.instruction};
     _feed.addAll(_field.takeEvents().reversed);
     _clock.start();
     _timer = Timer.periodic(const Duration(milliseconds: 33), (_) => _tick());
+    // The round's other matches are played in the background meanwhile.
+    if (!_game.isKnockout(widget.fixture)) {
+      Future<void>.delayed(const Duration(seconds: 2), () {
+        if (mounted && !_saved) _game.presimulateRound(widget.fixture.id);
+      });
+    }
   }
 
   @override

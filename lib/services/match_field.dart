@@ -100,7 +100,21 @@ class GoalReplay {
   final String scorer;
   final bool home;
   final List<ReplayFrame> frames;
-  GoalReplay(this.minute, this.scorer, this.home, this.frames);
+  /// Shirt numbers of both XIs, by marker index.
+  final List<int> homeNumbers, awayNumbers;
+  final bool penalty;
+  /// Marker index of the scorer in his team's XI (-1 if unknown).
+  final int scorerIndex;
+  GoalReplay(
+    this.minute,
+    this.scorer,
+    this.home,
+    this.frames, {
+    this.homeNumbers = const [],
+    this.awayNumbers = const [],
+    this.penalty = false,
+    this.scorerIndex = -1,
+  });
 }
 
 /// The pitch is authoritative: decisions create ball flights; completed
@@ -217,11 +231,12 @@ class MatchField {
 
   void _recordFrame(double dt) {
     _frameClock += dt;
-    if (_frameClock < 0.015) return;
+    // Shots in flight are recorded densely so the strike itself shows up.
+    if (_frameClock < (_flight?.shot == true ? 0.004 : 0.015)) return;
     _frameClock = 0;
     final frame = ReplayFrame(List.of(homePositions), List.of(awayPositions), ball, ballHeight);
     _frames.add(frame);
-    if (_frames.length > 70) _frames.removeAt(0);
+    if (_frames.length > 90) _frames.removeAt(0);
     final pending = _pendingReplay;
     if (pending != null) {
       pending.frames.add(frame);
@@ -476,6 +491,17 @@ class MatchField {
   /// piece, so corners, free kicks and penalties are set up visibly.
   bool slowSetPieces = false;
 
+  /// Man marking: our player id → the rival he follows (either side).
+  Map<String, String> marks = const {};
+
+  /// Index of the rival [p] man-marks, if that rival is still on the pitch.
+  int? _markIndex(Player p, Club opponent) {
+    final id = marks[p.id];
+    if (id == null || dismissed.contains(id)) return null;
+    final i = _xi(opponent).indexWhere((q) => q.id == id);
+    return i > 0 ? i : null;
+  }
+
   void update(double dt, [Set<String> excluded = const {}]) {
     if (isFinished || isHalfTime) return;
     _refreshLineups();
@@ -502,14 +528,14 @@ class MatchField {
 
   /// Same as [simulateToEnd] but in ~12 ms slices, so loaders keep animating.
   /// [onProgress] receives 0..1.
-  Future<void> simulateToEndAsync({void Function(double progress)? onProgress}) async {
+  Future<void> simulateToEndAsync({void Function(double progress)? onProgress, int sliceMs = 12, int pauseMs = 4}) async {
     final watch = Stopwatch()..start();
     while (!isFinished) {
       if (isHalfTime) startSecondHalf();
       update(1 / 30);
-      if (watch.elapsedMilliseconds >= 12) {
+      if (watch.elapsedMilliseconds >= sliceMs) {
         onProgress?.call((time / 90).clamp(0.0, 1.0));
-        await Future<void>.delayed(const Duration(milliseconds: 4));
+        await Future<void>.delayed(Duration(milliseconds: pauseMs));
         watch.reset();
       }
     }
@@ -903,6 +929,8 @@ class MatchField {
                           defender.instruction == PlayerInstruction.pressing
                       ? 0.03
                       : 0) +
+                  // His own marker knows the carrier's moves.
+                  (marks[defender.id] == carrier.id ? 0.05 : 0) +
                   (defender.stats.tackling +
                           defender.stats.defensiveEngagement -
                           carrier.stats.tightPossession -
@@ -1997,7 +2025,16 @@ class MatchField {
     final line = _line(f.actor);
     if (f.outcome == 'goal') {
       if (recordReplays) {
-        _pendingReplay = GoalReplay(displayMinute, f.actor.shortName, f.home, List.of(_frames));
+        _pendingReplay = GoalReplay(
+          displayMinute,
+          f.actor.shortName,
+          f.home,
+          List.of(_frames),
+          homeNumbers: [for (final p in _homeXI) p.number],
+          awayNumbers: [for (final p in _awayXI) p.number],
+          penalty: f.kind == _Kind.penalty,
+          scorerIndex: (f.home ? _homeXI : _awayXI).indexOf(f.actor),
+        );
         _framesAfterGoal = 12;
       }
       stats.onTarget++;
@@ -2281,6 +2318,8 @@ class MatchField {
         _points[owner] = spot;
         ball = spot;
         _lastPasser = null;
+        // A penalty replay starts from the set-up, not from the foul a minute earlier.
+        if (_frames.length > 6) _frames.removeRange(0, _frames.length - 6);
         _startShot(_xi(_club)[owner], kind: _Kind.penalty);
     }
   }
@@ -2892,23 +2931,29 @@ class MatchField {
           final spread = t.containment == ContainmentArea.wide ? 1.12 : 0.92;
           target = Offset(target.dx, 0.5 + (target.dy - 0.5) * squeeze * spread);
           if (i != press && i != secondPress) target = _coverTarget(p, i, slotPos, target, bases, isHome);
-          switch (p.instruction) {
-            case PlayerInstruction.counterTarget:
-              target = Offset(bases[i].dx + direction * 0.1, bases[i].dy);
-            case PlayerInstruction.deepLine:
-              target -= Offset(direction * 0.04, 0);
-            case PlayerInstruction.anchoring:
-              target = Offset.lerp(target, bases[i], 0.5)!;
-            case PlayerInstruction.pressing:
-              // Closes down the ball when it is near.
-              if ((ball - points[i]).distance < 0.2) target = Offset.lerp(target, ball, 0.55)!;
-            case PlayerInstruction.trackBack:
-              target = Offset.lerp(target, bases[i] - Offset(direction * 0.12, 0), 0.6)!;
-            case PlayerInstruction.tightMarking:
-              final m = rivals[_nearest(rivals, points[i], opponent, ignoreKeeper: true)];
-              target = Offset.lerp(target, m - Offset(direction * 0.012, 0), 0.6)!;
-            default:
-              break;
+          final marked = _markIndex(p, opponent);
+          // Man marking: goal side of his man, wherever he goes.
+          if (marked != null) {
+            target = Offset.lerp(target, rivals[marked] - Offset(direction * 0.014, 0), 0.8)!;
+          } else {
+            switch (p.instruction) {
+              case PlayerInstruction.counterTarget:
+                target = Offset(bases[i].dx + direction * 0.1, bases[i].dy);
+              case PlayerInstruction.deepLine:
+                target -= Offset(direction * 0.04, 0);
+              case PlayerInstruction.anchoring:
+                target = Offset.lerp(target, bases[i], 0.5)!;
+              case PlayerInstruction.pressing:
+                // Closes down the ball when it is near.
+                if ((ball - points[i]).distance < 0.2) target = Offset.lerp(target, ball, 0.55)!;
+              case PlayerInstruction.trackBack:
+                target = Offset.lerp(target, bases[i] - Offset(direction * 0.12, 0), 0.6)!;
+              case PlayerInstruction.tightMarking:
+                final m = rivals[_nearest(rivals, points[i], opponent, ignoreKeeper: true)];
+                target = Offset.lerp(target, m - Offset(direction * 0.012, 0), 0.6)!;
+              default:
+                break;
+            }
           }
         } else {
           if (t.flexiblePositioning) {

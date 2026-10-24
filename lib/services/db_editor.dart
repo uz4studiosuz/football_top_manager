@@ -8,8 +8,12 @@ import 'zip_writer.dart';
 /// Editable copy of the data files behind the /editor page. Works on the
 /// raw JSON so exported files can be dropped straight into assets/data.
 class DbEditor extends ChangeNotifier {
-  /// League manifest entries (id, name, clubsFile, playersFile…).
+  /// League manifest entries open in the editor (id, name, clubsFile…).
   List<Map<String, dynamic>> leagues = [];
+
+  /// Every manifest entry; world leagues join [leagues] once opened.
+  List<Map<String, dynamic>> _manifestLeagues = [];
+  List<Map<String, dynamic>> get closedLeagues => [for (final l in _manifestLeagues) if (!leagues.contains(l)) l];
   final Map<String, Map<String, dynamic>> _docs = {}; // file → document
   final Set<String> dirty = {};
   bool loaded = false;
@@ -20,15 +24,31 @@ class DbEditor extends ChangeNotifier {
     _docs.clear();
     _docs['league.json'] = manifest;
     // The manifest's own league maps, so league edits land in league.json.
-    leagues = (manifest['leagues'] as List).cast<Map<String, dynamic>>();
+    _manifestLeagues = (manifest['leagues'] as List).cast<Map<String, dynamic>>();
     _shared = [manifest['templatesFile'] as String, manifest['namesFile'] as String];
-    for (final l in leagues) {
-      for (final f in [l['clubsFile'] as String, l['playersFile'] as String]) {
-        _docs[f] = await InitialDatabase.readFile(f);
-      }
+    leagues = [];
+    for (final l in _manifestLeagues) {
+      // World leagues are big: they open on request (or when already edited).
+      if (l['lazy'] == true && !InitialDatabase.overrides.containsKey(l['clubsFile'])) continue;
+      await _open(l);
     }
     dirty.clear();
     loaded = true;
+    notifyListeners();
+  }
+
+  Future<void> _open(Map<String, dynamic> l) async {
+    for (final f in [l['clubsFile'] as String, l['playersFile'] as String]) {
+      _docs[f] = await InitialDatabase.readFile(f);
+    }
+    leagues.add(l);
+  }
+
+  /// Opens a world league for editing.
+  Future<void> openLeague(String id) async {
+    final l = _manifestLeagues.firstWhere((l) => l['id'] == id);
+    if (leagues.contains(l)) return;
+    await _open(l);
     notifyListeners();
   }
 
@@ -187,11 +207,11 @@ class DbEditor extends ChangeNotifier {
     var id = _slug(name).isEmpty ? 'league' : _slug(name);
     if (id.length > 8) id = id.substring(0, 8);
     final base = id;
-    for (var n = 2; leagues.any((l) => l['id'] == id); n++) {
+    for (var n = 2; _manifestLeagues.any((l) => l['id'] == id); n++) {
       id = '$base$n';
     }
     final clubsFile = 'clubs_$id.json', playersFile = 'players_$id.json';
-    leagues.add({
+    final entry = <String, dynamic>{
       'id': id,
       'name': name,
       'country': country,
@@ -199,7 +219,9 @@ class DbEditor extends ChangeNotifier {
       'playersFile': playersFile,
       'tier': tier,
       'economy': economy,
-    });
+    };
+    _manifestLeagues.add(entry);
+    leagues.add(entry);
     _docs[clubsFile] = {'schemaVersion': 2, 'clubs': <Map<String, dynamic>>[]};
     _docs[playersFile] = {'schemaVersion': 2, 'players': <Map<String, dynamic>>[]};
     dirty.addAll(['league.json', clubsFile, playersFile]);

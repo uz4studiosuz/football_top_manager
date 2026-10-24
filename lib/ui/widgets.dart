@@ -200,9 +200,9 @@ class FormChip extends StatelessWidget {
     ),
     child: Text(
       switch (result) {
-        'W' => 'G',
-        'L' => 'M',
-        _ => 'D',
+        'W' => tr('G'),
+        'L' => tr('M'),
+        _ => tr('D'),
       },
       style: TextStyle(
         color: Colors.white,

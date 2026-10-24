@@ -23,7 +23,21 @@ class TacticsScreen extends StatefulWidget {
   /// In a match: who came on (true) or went off (false), and the minute.
   final Map<String, (bool, int)> Function()? subMarks;
   final Set<String> unavailable;
-  const TacticsScreen({super.key, this.onSwap, this.onAutoPick, this.subMarks, this.unavailable = const {}});
+
+  /// Before kick-off: a line-up and tactics for the coming match only.
+  final bool matchPlan;
+
+  /// App bar title of the match-day plan ("Match plan vs …").
+  final String? planTitle;
+  const TacticsScreen({
+    super.key,
+    this.onSwap,
+    this.onAutoPick,
+    this.subMarks,
+    this.unavailable = const {},
+    this.matchPlan = false,
+    this.planTitle,
+  });
   @override
   State<TacticsScreen> createState() => _TacticsScreenState();
 }
@@ -170,6 +184,29 @@ class _TacticsScreenState extends State<TacticsScreen> {
                   ),
                   const SizedBox(height: 6),
                   Text(p.instruction.description, style: AppText.caption),
+                  if (!p.mainPosition.isGoalkeeper && game.upcomingRival != null) ...[
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      initialValue: game.manMarks[p.id] ?? '',
+                      isExpanded: true,
+                      decoration: InputDecoration(
+                        labelText: trf('Shaxsiy qo‘riqlash (man marking) · {0}', [game.upcomingRival!.shortName]),
+                      ),
+                      items: [
+                        DropdownMenuItem(value: '', child: Text(tr('Yo‘q – zonali himoya'))),
+                        for (final r in game.upcomingRival!.startingXI.where((r) => !r.mainPosition.isGoalkeeper))
+                          DropdownMenuItem(value: r.id, child: Text('${r.mainPosition.code} · ${r.shortName} (${r.ovr})')),
+                      ],
+                      onChanged: (v) {
+                        final rival = game.upcomingRival!;
+                        game.setManMark(p, v == null || v.isEmpty ? null : rival.playerById(v));
+                        update(() {});
+                        setState(() {});
+                      },
+                    ),
+                    const SizedBox(height: 4),
+                    Text(tr('Faqat shu o‘yin uchun: tanlangan raqib qayerga borsa, unga yopishib yuradi.'), style: AppText.caption),
+                  ],
                   const SizedBox(height: 16),
                   Text(tr('Almashtirish uchun futbolchi tanlang'), style: AppText.bodyStrong),
                   const SizedBox(height: 6),
@@ -193,8 +230,8 @@ class _TacticsScreenState extends State<TacticsScreen> {
                                       children: [
                                         Text(q.name, style: AppText.bodyStrong.copyWith(fontSize: 13)),
                                         Text(
-                                          '${q.mainPosition.code} · ${club.startingLineupIds.contains(q.id) ? 'Asosiy' : club.benchIds.contains(q.id) ? 'Zaxira' : 'Rezerv'}'
-                                          '${q.isAvailable ? '' : ' · o‘ynay olmaydi'}',
+                                          '${q.mainPosition.code} · ${club.startingLineupIds.contains(q.id) ? tr('Asosiy') : club.benchIds.contains(q.id) ? tr('Zaxira') : tr('Rezerv')}'
+                                          '${q.isAvailable ? '' : ' · ${tr('o‘ynay olmaydi')}'}',
                                           style: AppText.caption,
                                         ),
                                       ],
@@ -228,7 +265,7 @@ class _TacticsScreenState extends State<TacticsScreen> {
           length: 4,
           child: Scaffold(
             appBar: AppBar(
-              title: Text(tr('Jamoa')),
+              title: Text(widget.planTitle ?? tr('Jamoa')),
               actions: [
                 if (!_inMatch)
                   IconButton(
@@ -356,7 +393,7 @@ class _TacticsScreenState extends State<TacticsScreen> {
                           },
                         ),
                         const SizedBox(height: 10),
-                        if (_inMatch)
+                        if (_inMatch || widget.matchPlan)
                           Padding(
                             padding: const EdgeInsets.only(bottom: 8),
                             child: Row(
@@ -365,7 +402,9 @@ class _TacticsScreenState extends State<TacticsScreen> {
                                 const SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
-                                    tr('O‘yin davomidagi o‘zgarishlar faqat shu o‘yin uchun: o‘yindan keyin asosiy taktika qaytadi.'),
+                                    widget.matchPlan
+                                        ? tr('Bu tarkib va taktika faqat shu o‘yin uchun: o‘yindan keyin asosiy tarkib qaytadi.')
+                                        : tr('O‘yin davomidagi o‘zgarishlar faqat shu o‘yin uchun: o‘yindan keyin asosiy taktika qaytadi.'),
                                     style: AppText.caption.copyWith(color: AppColors.warning),
                                   ),
                                 ),

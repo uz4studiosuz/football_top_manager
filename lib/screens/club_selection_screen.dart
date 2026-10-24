@@ -68,7 +68,7 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
     if (info.tier > 1) {
       return switch (rank) {
         <= 2 => tr('Avtomatik ko‘tarilish'),
-        <= 6 => trf('Pley-off (top-{0})', [info.playoffTo]),
+        <= 6 when info.hasPlayoff => trf('Pley-off (top-{0})', [info.playoffTo]),
         <= 12 => tr('Top-12'),
         _ => info.relegate > 0 ? tr('Ligada qolish') : tr('Top-16'),
       };
