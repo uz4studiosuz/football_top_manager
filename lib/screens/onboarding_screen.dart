@@ -252,7 +252,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         Icons.add_moderator_outlined,
                         () => Navigator.push(
                           context,
-                          MaterialPageRoute<void>(builder: (_) => CustomClubCreatorScreen(managerProfile: profile())),
+                          MaterialPageRoute<void>(builder: (_) => CustomClubCreatorScreen(managerProfile: profile(), league: 'epl')),
                         ),
                       ),
                     ],

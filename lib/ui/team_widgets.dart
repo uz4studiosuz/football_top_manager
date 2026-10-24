@@ -1,3 +1,4 @@
+import '../data/initial_database.dart';
 import 'package:flutter/material.dart';
 import '../models/club.dart';
 import '../models/league.dart';
@@ -113,23 +114,69 @@ class StandingsTable extends StatelessWidget {
   final bool compact;
   final String? highlightClubId;
   final ValueChanged<Club>? onTapClub;
+
+  /// Another league of the pyramid (its background table); null = own.
+  final String? leagueId;
   const StandingsTable({
     super.key,
     this.compact = false,
     this.highlightClubId,
     this.onTapClub,
+    this.leagueId,
   });
 
-  /// Table zones: champion, Champions League, Europa League, Conference
-  /// League (big leagues) and relegation (bottom three in a 20-club league).
-  static Color zoneColor(int pos, [int? clubs]) {
-    final n = clubs ?? GameState().clubCount;
-    if (pos == 1) return const Color(0xFF374DF5);
-    if (pos <= 4) return const Color(0xFF12A150);
-    if (pos == 5) return const Color(0xFFF5A524);
-    if (n > 10 && pos == 6) return const Color(0xFF14B8A6);
-    if (n > 10 ? pos > n - 3 : pos == n) return const Color(0xFFE5352B);
+  static const _blue = Color(0xFF374DF5),
+      _green = Color(0xFF12A150),
+      _orange = Color(0xFFF5A524),
+      _teal = Color(0xFF14B8A6),
+      _red = Color(0xFFE5352B);
+
+  /// Table zones. Top flights: champion, Champions/Europa/Conference
+  /// League and relegation; lower tiers: automatic promotion, play-offs
+  /// and relegation.
+  static Color zoneColor(int pos, [int? clubs, String? league]) {
+    final game = GameState();
+    final info = InitialDatabase.info(league ?? game.leagueId);
+    final n = clubs ?? (league == null || league == game.leagueId ? game.clubCount : game.divisions[league]?.clubs.length ?? 20);
+    if (info.tier > 1) {
+      if (pos <= info.promote) return _green;
+      if (info.hasPlayoff && pos >= info.playoffFrom && pos <= info.playoffTo) return _orange;
+      if (info.relegate > 0 && pos > n - info.relegate) return _red;
+      return Colors.transparent;
+    }
+    if (pos == 1) return _blue;
+    if (pos <= 4) return _green;
+    if (pos == 5) return _orange;
+    if (n > 10 && pos == 6) return _teal;
+    if (n > 10 ? pos > n - 3 : pos == n) return _red;
     return Colors.transparent;
+  }
+
+  /// Legend label of the zone [pos] falls in (null in mid-table).
+  static String? zoneLabel(int pos) {
+    final c = zoneColor(pos);
+    return legend().where((e) => e.$1 == c).firstOrNull?.$2;
+  }
+
+  /// Legend entries matching [zoneColor] for a league.
+  static List<(Color, String)> legend([String? league]) {
+    final game = GameState();
+    final info = InitialDatabase.info(league ?? game.leagueId);
+    if (info.tier > 1) {
+      return [
+        (_green, 'Avtomatik ko‘tarilish'),
+        if (info.hasPlayoff) (_orange, 'Pley-off (${info.playoffFrom}–${info.playoffTo})'),
+        if (info.relegate > 0) (_red, 'Quyi ligaga tushish'),
+      ];
+    }
+    final big = (league == null || league == game.leagueId ? game.clubCount : 20) > 10;
+    return [
+      (_blue, 'Chempion'),
+      (_green, 'Chempionlar ligasi'),
+      (_orange, 'Yevropa ligasi'),
+      if (big) (_teal, 'Konferensiya ligasi'),
+      (_red, big ? 'Quyi ligaga tushish' : 'Quyi liga xavfi'),
+    ];
   }
 
   @override
@@ -140,7 +187,8 @@ class StandingsTable extends StatelessWidget {
 
   Widget _table(BuildContext context) {
     final game = GameState();
-    final rows = game.sortedStandings;
+    final other = leagueId == null || leagueId == game.leagueId ? null : game.divisions[leagueId];
+    final rows = other?.sorted ?? game.sortedStandings;
     TextStyle head = AppText.caption.copyWith(fontWeight: FontWeight.w600);
     Widget cell(String t, double w, {TextStyle? style, bool bold = false}) => SizedBox(
       width: w,
@@ -208,7 +256,7 @@ class StandingsTable extends StatelessWidget {
                               height: 22,
                               alignment: Alignment.center,
                               decoration: BoxDecoration(
-                                color: zoneColor(i + 1),
+                                color: zoneColor(i + 1, rows.length, leagueId),
                                 shape: BoxShape.circle,
                               ),
                               child: Text(
@@ -216,7 +264,7 @@ class StandingsTable extends StatelessWidget {
                                 style: TextStyle(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
-                                  color: zoneColor(i + 1) == Colors.transparent
+                                  color: zoneColor(i + 1, rows.length, leagueId) == Colors.transparent
                                       ? AppColors.ink
                                       : Colors.white,
                                 ),

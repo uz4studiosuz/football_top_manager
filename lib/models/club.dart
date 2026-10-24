@@ -493,7 +493,7 @@ class Club {
   final String city;
   final String nickname;
   final int founded;
-  final int reputation; // 1–100: tijorat daromadi, kutilmalar
+  int reputation; // 1–100: tijorat daromadi, kutilmalar
   int transferBudget; // EUR
   int wageBudget; // Haftalik limit (EUR)
   int ticketPrice; // o‘rtacha chipta narxi (EUR)

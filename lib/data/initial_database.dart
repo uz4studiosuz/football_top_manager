@@ -2,10 +2,45 @@ import 'dart:convert';
 import 'package:flutter/services.dart';
 import '../models/club.dart';
 
-/// One playable competition from the asset manifest.
+/// One playable competition from the asset manifest. Leagues sharing a
+/// [pyramid] exchange clubs every summer: the bottom [relegate] go down,
+/// the top [promote] plus the play-off winner ([playoffFrom]–[playoffTo])
+/// go up. [economy] scales TV money, sponsorship, prizes and running costs.
 class LeagueInfo {
   final String id, name, country;
-  const LeagueInfo(this.id, this.name, this.country);
+  final String? pyramid;
+  final int tier, promote, relegate, playoffFrom, playoffTo;
+  final double economy;
+  const LeagueInfo(
+    this.id,
+    this.name,
+    this.country, {
+    this.pyramid,
+    this.tier = 1,
+    this.promote = 0,
+    this.relegate = 0,
+    this.playoffFrom = 0,
+    this.playoffTo = 0,
+    this.economy = 1,
+  });
+
+  bool get hasPlayoff => playoffTo > playoffFrom;
+
+  factory LeagueInfo.fromMap(Map<String, dynamic> e) {
+    final playoff = (e['playoff'] as List?)?.cast<int>() ?? const [0, 0];
+    return LeagueInfo(
+      e['id'],
+      e['name'],
+      e['country'] ?? '',
+      pyramid: e['pyramid'],
+      tier: e['tier'] ?? 1,
+      promote: e['promote'] ?? 0,
+      relegate: e['relegate'] ?? 0,
+      playoffFrom: playoff[0],
+      playoffTo: playoff[1],
+      economy: (e['economy'] as num? ?? 1).toDouble(),
+    );
+  }
 }
 
 /// Separate versioned assets are joined by IDs once, then copied per career.
@@ -47,7 +82,7 @@ class InitialDatabase {
       final e = Map<String, dynamic>.from(raw);
       final files = await Future.wait([_read(e['clubsFile']), _read(e['playersFile'])]);
       loaded[e['id']] = _join(files[0], files[1]);
-      leagues.add(LeagueInfo(e['id'], e['name'], e['country'] ?? ''));
+      leagues.add(LeagueInfo.fromMap(e));
     }
     _custom = (shared[0]['slots'] as List).map((r) => Map<String, dynamic>.from(r)).toList();
     _names = (shared[1]['pools'] as List).map((r) => Map<String, dynamic>.from(r)).toList();
@@ -99,8 +134,18 @@ class InitialDatabase {
 
   static List<Club> getSuperLeagueClubs() => getClubs('super');
 
-  static String leagueName(String id) =>
-      leagues.where((l) => l.id == id).firstOrNull?.name ?? 'Super League';
+  static String leagueName(String id) => info(id).name;
+
+  static LeagueInfo info(String id) =>
+      leagues.where((l) => l.id == id).firstOrNull ?? const LeagueInfo('super', 'Super League', '');
+
+  /// Every league of [id]'s pyramid, top tier first (just [id] if none).
+  static List<LeagueInfo> pyramidOf(String id) {
+    final me = info(id);
+    if (me.pyramid == null) return [me];
+    return leagues.where((l) => l.pyramid == me.pyramid).toList()
+      ..sort((a, b) => a.tier.compareTo(b.tier));
+  }
 
   /// League a seeded club belongs to (custom clubs report null).
   static String? leagueOf(String clubId) {

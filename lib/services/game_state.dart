@@ -9,6 +9,7 @@ import '../models/finance.dart';
 import '../models/face.dart';
 import 'match_field.dart';
 import 'save_codec.dart';
+import 'division.dart';
 import 'lineup_solver.dart';
 import 'season_calendar.dart';
 
@@ -60,6 +61,31 @@ class GameState extends ChangeNotifier {
   String leagueId = 'super';
   String get leagueName => InitialDatabase.leagueName(leagueId);
   int get clubCount => _allClubs.length;
+  LeagueInfo get leagueInfo => InitialDatabase.info(leagueId);
+
+  /// Other leagues of the pyramid (e.g. Championship and League One while
+  /// managing in the Premier League), simulated in the background.
+  final Map<String, Division> divisions = {};
+
+  /// Promotions and relegations decided when the season ends (club id →
+  /// new league id); applied when the next season starts.
+  final Map<String, String> pendingMoves = {};
+
+  /// Every club the user can trade with: own league plus the pyramid.
+  List<Club> get marketClubs => [
+    ..._allClubs,
+    for (final d in divisions.values) ...d.clubs,
+  ];
+
+  String leagueOfClub(String clubId) {
+    if (_allClubs.any((c) => c.id == clubId)) return leagueId;
+    for (final d in divisions.values) {
+      if (d.clubs.any((c) => c.id == clubId)) return d.id;
+    }
+    return leagueId;
+  }
+
+  double _economyOf(Club c) => InitialDatabase.info(leagueOfClub(c.id)).economy;
   static const maxSquad = 28;
   static const minSquad = 18;
   static const firstSeason = 2026;
@@ -134,22 +160,13 @@ class GameState extends ChangeNotifier {
   );
 
   Club? getClubById(String id) =>
-      _allClubs.where((c) => c.id == id).firstOrNull;
+      _allClubs.where((c) => c.id == id).firstOrNull ??
+      divisions.values.map((d) => d.club(id)).nonNulls.firstOrNull;
 
   Club? clubOfPlayer(Player p) =>
-      _allClubs.where((c) => c.squad.contains(p)).firstOrNull;
+      marketClubs.where((c) => c.squad.contains(p)).firstOrNull;
 
-  List<LeagueStanding> get sortedStandings {
-    final list = _standingsMap.values.toList();
-    list.sort((a, b) {
-      if (b.points != a.points) return b.points.compareTo(a.points);
-      if (b.goalDifference != a.goalDifference) {
-        return b.goalDifference.compareTo(a.goalDifference);
-      }
-      return b.goalsFor.compareTo(a.goalsFor);
-    });
-    return list;
-  }
+  List<LeagueStanding> get sortedStandings => sortStandings(_standingsMap.values);
 
   int positionOf(String clubId) =>
       sortedStandings.indexWhere((s) => s.clubId == clubId) + 1;
@@ -296,6 +313,19 @@ class GameState extends ChangeNotifier {
       startingLineupIds: squad.take(11).map((p) => p.id).toList(),
       benchIds: squad.skip(11).take(Club.matchdayBench).map((p) => p.id).toList(),
     );
+    // Lower divisions pay less: wages, budget and reputation follow suit.
+    final econ = InitialDatabase.info(league).economy;
+    if (econ < 1) {
+      final scale = max(0.2, econ * 2);
+      for (final p in customClub.squad) {
+        p.contract = p.contract.copyWith(weeklyWage: max(2000, (p.contract.weeklyWage * scale).round()));
+      }
+      customClub
+        ..transferBudget = (80000000 * max(0.1, econ * 1.5)).round()
+        ..wageBudget = (2600000 * scale).round()
+        ..reputation = InitialDatabase.info(league).tier == 2 ? 64 : 55
+        ..ticketPrice = 30;
+    }
     _resetRecords();
     leagueId = league;
     // The new club takes the place of the league's weakest side.
@@ -313,6 +343,7 @@ class GameState extends ChangeNotifier {
       // Seed files for big leagues list squads, not a tactical XI.
       if (c.id != _userClubId || leagueId != 'super') autoPickLineup(c);
     }
+    _setupDivisions();
     _generateSeasonSchedule();
     _initializeStandings();
     _currentRound = 1;
@@ -335,11 +366,48 @@ class GameState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Fresh background leagues for the rest of the pyramid.
+  void _setupDivisions() {
+    divisions.clear();
+    pendingMoves.clear();
+    for (final l in InitialDatabase.pyramidOf(leagueId)) {
+      if (l.id == leagueId) continue;
+      final clubs = InitialDatabase.getClubs(l.id);
+      for (final c in clubs) {
+        _ensureMatchdaySquad(c);
+        autoPickLineup(c);
+      }
+      final d = Division(l.id, clubs, SeasonCalendar(calendar.year, (clubs.length - 1) * 2));
+      d.newSeason(_salt(calendar.year * 3 + l.tier));
+      divisions[l.id] = d;
+    }
+  }
+
+  /// Background leagues catch up with the calendar.
+  void _playDivisions(DateTime until) {
+    if (divisions.isEmpty) return;
+    final rnd = Random(_salt(until.millisecondsSinceEpoch ~/ 86400000));
+    for (final d in divisions.values) {
+      d.playUntil(until, rnd);
+    }
+  }
+
   BoardObjective _objectiveFor(Club c) {
     final ranked = List<Club>.of(_allClubs)
       ..sort((a, b) => b.squadDepthRating.compareTo(a.squadDepthRating));
     final rank = ranked.indexOf(c) + 1;
     final n = _allClubs.length;
+    final info = leagueInfo;
+    if (info.tier > 1) {
+      return switch (rank) {
+        <= 2 => const BoardObjective('Avtomatik ko‘tarilish (top-2)', 2),
+        <= 6 => BoardObjective('Pley-off (top-${info.playoffTo})', info.playoffTo),
+        <= 12 => const BoardObjective('Top-12', 12),
+        _ => info.relegate > 0
+            ? BoardObjective('Ligada qolish', n - info.relegate)
+            : const BoardObjective('Top-16', 16),
+      };
+    }
     if (n > 10) {
       return switch (rank) {
         1 => const BoardObjective('Chempionlik', 1),
@@ -363,39 +431,9 @@ class GameState extends ChangeNotifier {
     };
   }
 
-  /// Berger round-robin: 7 rounds, then mirrored with venues swapped.
+  /// Berger round-robin; the draw is shuffled per career and per season.
   void _generateSeasonSchedule() {
-    _fixtures = [];
-    final n = _allClubs.length;
-    // The draw: club order is shuffled per career and per season.
-    final ids = _allClubs.map((c) => c.id).toList()
-      ..shuffle(Random(_salt(calendar.year)));
-    for (var r = 0; r < n - 1; r++) {
-      for (var i = 0; i < n ~/ 2; i++) {
-        final home = ids[i], away = ids[n - 1 - i];
-        _fixtures.add(
-          Fixture(
-            id: 'fix_${calendar.year}_r${r + 1}_$i',
-            round: r + 1,
-            homeClubId: r % 2 == 0 ? home : away,
-            awayClubId: r % 2 == 0 ? away : home,
-            date: calendar.dateOfRound(r + 1),
-          ),
-        );
-      }
-      ids.insert(1, ids.removeLast());
-    }
-    for (final f in List<Fixture>.of(_fixtures)) {
-      _fixtures.add(
-        Fixture(
-          id: 'fix_${calendar.year}_r${f.round + n - 1}_${f.id}',
-          round: f.round + n - 1,
-          homeClubId: f.awayClubId,
-          awayClubId: f.homeClubId,
-          date: calendar.dateOfRound(f.round + n - 1),
-        ),
-      );
-    }
+    _fixtures = roundRobin([for (final c in _allClubs) c.id], calendar, 'fix', _salt(calendar.year));
   }
 
   // ------------------------------------------------------ squad management
@@ -887,7 +925,7 @@ class GameState extends ChangeNotifier {
   }
 
   // ------------------------------------------------------------ economy
-  int baseTicketPrice(Club c) => 35 + c.reputation ~/ 2;
+  int baseTicketPrice(Club c) => _economyOf(c) < 1 ? 18 + c.reputation ~/ 3 : 35 + c.reputation ~/ 2;
 
   int _attendance(Club c) {
     final pos = _standingsMap.isEmpty ? 4 : positionOf(c.id);
@@ -909,7 +947,7 @@ class GameState extends ChangeNotifier {
     notifyListeners();
   }
 
-  int weeklyCommercial(Club c) => c.reputation * c.reputation * 520;
+  int weeklyCommercial(Club c) => (c.reputation * c.reputation * 520 * _economyOf(c)).round();
 
   void _post(
     Club club,
@@ -934,6 +972,7 @@ class GameState extends ChangeNotifier {
     final days = calendar.daysAfterRound(_currentRound);
     final weeks = calendar.weeksAfterRound(_currentRound);
     int perDays(int weekly) => (weekly * days / 7).round();
+    final econ = leagueInfo.economy;
     for (final club in _allClubs) {
       final f = _fixtures
           .where((f) => f.round == _currentRound && f.involves(club.id))
@@ -952,21 +991,22 @@ class GameState extends ChangeNotifier {
         f.attendance = attendance;
         _post(club, 'Chipta tushumi · $attendance muxlis', attendance * club.ticketPrice,
             category: FinanceCategory.tickets);
-        _post(club, 'Stadion va xavfsizlik', -(attendance * 6 + 180000),
+        _post(club, 'Stadion va xavfsizlik', -(attendance * 6 + (180000 * econ).round()),
             category: FinanceCategory.stadium);
         final ratio = club.ticketPrice / baseTicketPrice(club);
         club.fanMood = (club.fanMood - ((ratio - 1) * 6).round()).clamp(10, 100);
       }
       final pos = positionOf(club.id);
-      _post(club, 'Teletranslyatsiya ulushi', 1800000 + (8 - pos) * 150000,
-          category: FinanceCategory.broadcast);
+      final n = _allClubs.length;
+      final tv = n <= 8 ? 1800000 + (8 - pos) * 150000 : ((1800000 + (n - pos) * 60000) * econ).round();
+      _post(club, 'Teletranslyatsiya ulushi', tv, category: FinanceCategory.broadcast);
       final span = days % 7 == 0 ? '$weeks hafta' : '$days kun';
       _post(club, 'Homiylik va savdo · $span', perDays(weeklyCommercial(club)),
           category: FinanceCategory.commercial);
       _post(club, 'Futbolchi maoshlari · $span', -perDays(club.totalWeeklyWages),
           category: FinanceCategory.wages);
       _post(club, 'Klub, akademiya va xodimlar · $span',
-          -perDays(250000 + club.reputation * 2000),
+          -perDays(((250000 + club.reputation * 2000) * econ).round()),
           category: FinanceCategory.operations);
       for (final p in club.squad) {
         final starter = club.startingLineupIds.contains(p.id);
@@ -981,6 +1021,11 @@ class GameState extends ChangeNotifier {
         _currentRound >= totalRounds ||
         currentRoundFixtures.any((f) => !f.isPlayed)) {
       return;
+    }
+    _playDivisions(calendar.dateOfRound(_currentRound));
+    final playedOn = currentDate;
+    if (calendar.dateOfRound(_currentRound + 1).month != playedOn.month) {
+      _monthAwards(playedOn.year, playedOn.month);
     }
     final wasOpen = isTransferWindowOpen;
     final days = calendar
@@ -1027,6 +1072,62 @@ class GameState extends ChangeNotifier {
       }
     }
     notifyListeners();
+  }
+
+  /// Player and Manager of the Month for the user's league.
+  void _monthAwards(int year, int month) {
+    final played = _fixtures
+        .where((f) => f.isPlayed && f.date != null && f.date!.year == year && f.date!.month == month)
+        .toList();
+    if (played.length < _allClubs.length ~/ 2) return;
+    final sums = <String, (double, int)>{};
+    final points = <String, int>{};
+    for (final f in played) {
+      for (final e in f.ratings.entries) {
+        final s = sums[e.key] ?? (0.0, 0);
+        sums[e.key] = (s.$1 + e.value, s.$2 + 1);
+      }
+      final h = f.homeScore!, a = f.awayScore!;
+      points[f.homeClubId] = (points[f.homeClubId] ?? 0) + (h > a ? 3 : h == a ? 1 : 0);
+      points[f.awayClubId] = (points[f.awayClubId] ?? 0) + (a > h ? 3 : h == a ? 1 : 0);
+    }
+    final games = played.where((f) => f.involves(_userClubId!)).length;
+    final eligible = sums.entries.where((e) => e.value.$2 >= max(2, games - 1)).toList()
+      ..sort((a, b) => (b.value.$1 / b.value.$2).compareTo(a.value.$1 / a.value.$2));
+    final monthName = SeasonCalendar.months[month - 1];
+    if (eligible.isNotEmpty) {
+      final best = eligible.first;
+      Player? player;
+      Club? club;
+      for (final c in _allClubs) {
+        player = c.playerById(best.key);
+        if (player != null) {
+          club = c;
+          break;
+        }
+      }
+      if (player != null && club != null) {
+        final mine = club.id == _userClubId;
+        if (mine) player.morale = min(100, player.morale + 8);
+        _news(
+          NewsKind.award,
+          '$monthName oyi futbolchisi: ${player.name}',
+          '${club.name} · ${best.value.$2} o‘yinda o‘rtacha reyting ${(best.value.$1 / best.value.$2).toStringAsFixed(2)}.',
+          alert: mine,
+        );
+      }
+    }
+    final top = points.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    if (top.isNotEmpty && top.first.key == _userClubId) {
+      _managerProfile.gainExperience(ManagerPhilosophy.forStyle(userClub.tactics.playstyle), 6);
+      boardConfidence = min(100, boardConfidence + 3);
+      _news(
+        NewsKind.award,
+        '$monthName oyi murabbiyi: ${_managerProfile.name}',
+        '${userClub.name} oy davomida ${top.first.value} ochko to‘pladi – ligada eng yaxshi natija.',
+        alert: true,
+      );
+    }
   }
 
   // --------------------------------------------------------- transfers
@@ -1437,7 +1538,7 @@ class GameState extends ChangeNotifier {
       // Merit payments: the 20-club league pays about £2.4M per place.
       final prize = table.length <= 8
           ? prizes[i.clamp(0, 7)] * 1000000
-          : (20 + (table.length - 1 - i) * 2.4).round() * 1000000;
+          : ((20 + (table.length - 1 - i) * 2.4) * leagueInfo.economy).round() * 1000000;
       _post(club, 'Liga mukofot puli · ${i + 1}-o‘rin', prize,
           category: FinanceCategory.prize);
     }
@@ -1472,6 +1573,110 @@ class GameState extends ChangeNotifier {
             '${best != null ? 'Eng yuqori reyting: ${best.player.name} (${best.player.averageRating!.toStringAsFixed(2)}).' : ''}',
       );
     }
+    _resolvePyramid();
+  }
+
+  /// Finishes the background leagues, plays the play-offs and decides who
+  /// goes up and down. Moves are applied in [startNextSeason].
+  void _resolvePyramid() {
+    pendingMoves.clear();
+    final pyramid = InitialDatabase.pyramidOf(leagueId);
+    if (pyramid.length < 2) return;
+    final rnd = Random(_salt(calendar.year * 41));
+    for (final d in divisions.values) {
+      d.playUntil(DateTime(9999), rnd);
+    }
+    List<Club> table(LeagueInfo l) => l.id == leagueId
+        ? [for (final s in sortedStandings) getClubById(s.clubId)!]
+        : [for (final s in divisions[l.id]!.sorted) divisions[l.id]!.club(s.clubId)!];
+    for (var i = 0; i < pyramid.length; i++) {
+      final l = pyramid[i];
+      final t = table(l);
+      if (l.id != leagueId) {
+        _news(NewsKind.award, '${l.name}: ${t.first.name} chempion',
+            'Mavsum $seasonLabel. ${t.first.name} ${l.name} chempioni bo‘ldi.',
+            alert: false);
+      }
+      if (i + 1 < pyramid.length) {
+        for (final c in t.reversed.take(l.relegate)) {
+          pendingMoves[c.id] = pyramid[i + 1].id;
+        }
+      }
+      if (i > 0) {
+        final up = t.take(l.promote).toList();
+        if (l.hasPlayoff && t.length >= l.playoffTo) {
+          final lines = <String>[];
+          final seeds = t.sublist(l.playoffFrom - 1, l.playoffTo);
+          final winner = playoff(seeds, rnd, lines.add);
+          up.add(winner);
+          final mine = seeds.any((c) => c.id == _userClubId);
+          _news(
+            NewsKind.match,
+            '${l.name} pley-off: ${winner.name} ko‘tarildi',
+            lines.join(' · '),
+            alert: mine,
+          );
+        }
+        for (final c in up) {
+          pendingMoves[c.id] = pyramid[i - 1].id;
+        }
+      }
+    }
+    String names(bool upward) => pendingMoves.entries
+        .where((e) => (InitialDatabase.info(e.value).tier < InitialDatabase.info(leagueOfClub(e.key)).tier) == upward)
+        .map((e) => getClubById(e.key)!.shortName)
+        .join(', ');
+    _news(NewsKind.board, 'Ko‘tarilish va tushish', 'Ko‘tarildi: ${names(true)}. Tushdi: ${names(false)}.', alert: false);
+    final target = pendingMoves[_userClubId];
+    if (target != null) {
+      final up = InitialDatabase.info(target).tier < leagueInfo.tier;
+      final name = InitialDatabase.leagueName(target);
+      boardConfidence = (boardConfidence + (up ? 25 : -30)).clamp(5, 100);
+      if (up) _managerProfile.trophies++;
+      _news(
+        up ? NewsKind.award : NewsKind.board,
+        up ? 'KO‘TARILDINGIZ! ${userClub.name} → $name' : '${userClub.name} $name ga tushib ketdi',
+        up
+            ? 'Tarixiy mavsum! Keyingi mavsum ${userClub.name} $name da o‘ynaydi.'
+            : 'Kengash qayta ko‘tarilishni kutmoqda. Kompensatsiya to‘lovlari byudjetni yumshatadi.',
+        alert: true,
+      );
+    }
+  }
+
+  /// Applies [pendingMoves]: clubs change league, reputations shift, and
+  /// relegated top-flight sides get parachute money.
+  void _applyMoves() {
+    if (pendingMoves.isEmpty) return;
+    final members = <String, List<Club>>{
+      leagueId: List.of(_allClubs),
+      for (final d in divisions.values) d.id: List.of(d.clubs),
+    };
+    for (final e in pendingMoves.entries) {
+      final from = leagueOfClub(e.key);
+      final club = getClubById(e.key);
+      if (club == null || members[e.value] == null) continue;
+      members[from]!.remove(club);
+      members[e.value]!.add(club);
+      final fromInfo = InitialDatabase.info(from), toInfo = InitialDatabase.info(e.value);
+      final up = toInfo.tier < fromInfo.tier;
+      club.reputation = (club.reputation + (up ? 4 : -4)).clamp(30, 99);
+      if (!up && fromInfo.tier == 1) {
+        _post(club, 'Parashyut to‘lovi (${fromInfo.name})', 35000000, category: FinanceCategory.prize);
+      } else if (up && toInfo.tier == 1) {
+        _post(club, '${toInfo.name}ga ko‘tarilish bonusi', 15000000, category: FinanceCategory.prize);
+      } else if (up) {
+        _post(club, 'Ko‘tarilish bonusi', 3000000, category: FinanceCategory.prize);
+      }
+    }
+    leagueId = members.entries.firstWhere((e) => e.value.any((c) => c.id == _userClubId)).key;
+    _allClubs = members[leagueId]!;
+    divisions.clear();
+    for (final e in members.entries) {
+      if (e.key == leagueId) continue;
+      divisions[e.key] = Division(e.key, e.value, SeasonCalendar(calendar.year + 1, (e.value.length - 1) * 2));
+    }
+    pendingMoves.clear();
   }
 
   /// Ages the league, develops players, renews or releases contracts,
@@ -1479,9 +1684,11 @@ class GameState extends ChangeNotifier {
   void startNextSeason() {
     if (!seasonFinished) return;
     final rnd = Random(_salt(calendar.year * 17));
+    final wasLeague = leagueId;
+    _applyMoves();
     calendar = SeasonCalendar(calendar.year + 1, totalRounds);
     final released = <String>[];
-    for (final club in _allClubs) {
+    for (final club in marketClubs) {
       final user = club.id == _userClubId;
       for (final p in List<Player>.of(club.squad)) {
         p.history.insert(
@@ -1532,6 +1739,11 @@ class GameState extends ChangeNotifier {
       _ensureMatchdaySquad(club);
       if (!user) autoPickLineup(club);
     }
+    // Released AI players flood the market; keep the best of them.
+    if (freeAgents.length > 80) {
+      freeAgents.sort((a, b) => b.ovr.compareTo(a.ovr));
+      freeAgents.removeRange(80, freeAgents.length);
+    }
     final u = userClub;
     if (u.startingXI.length < 11) autoPickLineup(u);
     _ensureMatchdaySquad(u);
@@ -1539,11 +1751,15 @@ class GameState extends ChangeNotifier {
     offers.clear();
     _generateSeasonSchedule();
     _initializeStandings();
+    for (final d in divisions.values) {
+      d.calendar = SeasonCalendar(calendar.year, d.rounds);
+      d.newSeason(_salt(calendar.year * 3 + InitialDatabase.info(d.id).tier));
+    }
     _currentRound = 1;
     objective = _objectiveFor(u);
     _news(
       NewsKind.board,
-      'Yangi mavsum: $seasonLabel',
+      'Yangi mavsum: $seasonLabel${wasLeague != leagueId ? ' · ${leagueInfo.name}' : ''}',
       'Kengash maqsadi: ${objective.title}. Akademiyadan 2 ta yosh futbolchi asosiy jamoaga ko‘tarildi.'
           '${released.isNotEmpty ? ' Klubni tark etganlar: ${released.join(', ')}.' : ''}',
     );
@@ -1793,6 +2009,11 @@ class GameState extends ChangeNotifier {
 
   static String _m(int v) => '€${(v / 1000000).toStringAsFixed(1)}M';
 
+  Set<String> get _recentUserFixtures {
+    final mine = _fixtures.where((f) => f.isPlayed && f.involves(_userClubId ?? '')).toList();
+    return {for (final f in mine.skip(max(0, mine.length - 3))) f.id};
+  }
+
   // ------------------------------------------------------------ save/load
   static const saveVersion = 1;
 
@@ -1809,12 +2030,22 @@ class GameState extends ChangeNotifier {
     'board': boardConfidence,
     'manager': _managerProfile.toMap(),
     'standings': _standingsMap.values.map(SaveCodec.standing).toList(),
-    // Shot maps are kept for the user's own matches only (save size).
+    // Full detail (shots, lines, momentum) only for the user's matches and
+    // commentary only for the last three of them: saves must fit browser
+    // storage over a 46-round season.
     'fixtures': [
       for (final f in _fixtures)
-        SaveCodec.fixture(f, shots: f.homeClubId == _userClubId || f.awayClubId == _userClubId),
+        SaveCodec.fixture(
+          f,
+          shots: f.involves(_userClubId ?? ''),
+          full: f.involves(_userClubId ?? ''),
+          commentary: _recentUserFixtures.contains(f.id),
+        ),
     ],
-    'ledger': ledger.map(SaveCodec.entry).toList(),
+    'ledger': [
+      for (final e in ledger)
+        if (e.clubId == _userClubId) SaveCodec.entry(e),
+    ],
     'transfers': transferHistory.map(SaveCodec.transfer).toList(),
     'news': news.map(SaveCodec.news).toList(),
     'offers': [
@@ -1826,6 +2057,20 @@ class GameState extends ChangeNotifier {
         [h.season, h.championName, h.userPosition, h.userPoints, h.topScorer],
     ],
     'balance': balanceHistory,
+    'divisions': [
+      for (final d in divisions.values)
+        {
+          'id': d.id,
+          'clubs': d.clubs.map(SaveCodec.club).toList(),
+          'standings': d.table.values.map(SaveCodec.standing).toList(),
+          // Background results only: [round, home, away, homeGoals, awayGoals].
+          'fixtures': [
+            for (final f in d.fixtures)
+              [f.round, f.homeClubId, f.awayClubId, if (f.isPlayed) ...[f.homeScore, f.awayScore]],
+          ],
+        },
+    ],
+    'moves': pendingMoves,
   };
 
   /// Restores a career written by [toSave]. Returns false for unknown data.
@@ -1836,6 +2081,7 @@ class GameState extends ChangeNotifier {
     careerSeed = m['seed'] ?? careerSeed;
     _currentRound = m['round'];
     leagueId = m['league'] ?? 'super';
+    divisions.clear();
     seasonFinished = m['finished'] ?? false;
     final o = m['objective'] as List;
     objective = BoardObjective(o[0], o[1]);
@@ -1874,6 +2120,39 @@ class GameState extends ChangeNotifier {
     balanceHistory
       ..clear()
       ..addAll([for (final v in m['balance'] as List? ?? []) (v as num).toInt()]);
+    divisions.clear();
+    for (final raw in m['divisions'] as List? ?? []) {
+      final dm = Map<String, dynamic>.from(raw);
+      final clubs = [for (final c in dm['clubs'] as List) SaveCodec.clubFrom(Map<String, dynamic>.from(c))];
+      final d = Division(dm['id'], clubs, SeasonCalendar(calendar.year, (clubs.length - 1) * 2));
+      d.table = {
+        for (final s in dm['standings'] as List)
+          (s as Map)['c'] as String: SaveCodec.standingFrom(Map<String, dynamic>.from(s)),
+      };
+      var i = 0;
+      d.fixtures = [
+        for (final f in dm['fixtures'] as List)
+          Fixture(
+            id: 'd${d.id}_${calendar.year}_${i++}',
+            round: f[0],
+            homeClubId: f[1],
+            awayClubId: f[2],
+            date: d.calendar.dateOfRound(f[0]),
+            homeScore: f.length > 3 ? f[3] : null,
+            awayScore: f.length > 3 ? f[4] : null,
+            isPlayed: f.length > 3,
+          ),
+      ];
+      divisions[d.id] = d;
+    }
+    if (divisions.isEmpty && InitialDatabase.pyramidOf(leagueId).length > 1) {
+      // Saves from before the pyramid: start the other leagues now.
+      _setupDivisions();
+      if (_currentRound > 1) _playDivisions(calendar.dateOfRound(_currentRound - 1));
+    }
+    pendingMoves
+      ..clear()
+      ..addAll(Map<String, String>.from(m['moves'] ?? {}));
     lastTransferError = null;
     _isInitialized = true;
     notifyListeners();

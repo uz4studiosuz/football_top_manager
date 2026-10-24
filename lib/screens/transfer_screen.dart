@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../data/initial_database.dart';
 import '../models/club.dart';
 import '../models/player.dart';
 import '../services/game_state.dart';
@@ -17,6 +18,7 @@ class _TransferScreenState extends State<TransferScreen> {
   final game = GameState();
   String query = '';
   int category = 0;
+  int league = 0; // 0 = every league of the pyramid
   String sort = 'Reyting';
   RangeValues ageRange = const RangeValues(16, 40);
 
@@ -172,7 +174,10 @@ class _TransferScreenState extends State<TransferScreen> {
   Widget _market(BuildContext context) {
     final cats = [null, ...PositionCategory.values.reversed];
     final entries = <({Player p, Club c})>[];
-    for (final c in game.allClubs.where((c) => c.id != game.userClubId)) {
+    final pyramid = InitialDatabase.pyramidOf(game.leagueId);
+    final only = league == 0 || league > pyramid.length ? null : pyramid[league - 1].id;
+    for (final c in game.marketClubs.where((c) => c.id != game.userClubId)) {
+      if (only != null && game.leagueOfClub(c.id) != only) continue;
       for (final p in c.squad) {
         final cat = cats[category];
         if ((cat == null || p.mainPosition.category == cat) &&
@@ -206,6 +211,14 @@ class _TransferScreenState extends State<TransferScreen> {
             fillColor: AppColors.surface,
           ),
         ),
+        if (pyramid.length > 1) ...[
+          const SizedBox(height: 10),
+          PillTabs(
+            labels: ['Barcha ligalar', for (final l in pyramid) l.name],
+            index: league,
+            onChanged: (i) => setState(() => league = i),
+          ),
+        ],
         const SizedBox(height: 10),
         PillTabs(
           labels: const ['Barchasi', 'Hujum', 'Yarim himoya', 'Himoya', 'Darvoza'],

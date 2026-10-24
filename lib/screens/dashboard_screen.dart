@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../data/initial_database.dart';
 import '../models/finance.dart';
 import '../models/club.dart';
 import '../models/league.dart';
@@ -178,6 +179,24 @@ class DashboardScreen extends StatelessWidget {
                               ),
                             ),
                             StandingsTable(compact: true, highlightClubId: club.id),
+                            if (StandingsTable.zoneLabel(rank) case final zone?)
+                              Padding(
+                                padding: const EdgeInsets.fromLTRB(16, 6, 16, 2),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.place_rounded, size: 15, color: StandingsTable.zoneColor(rank)),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        'Hozir: $zone zonasida',
+                                        style: AppText.small,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                           ],
                         ),
                       ),
@@ -404,6 +423,21 @@ class DashboardScreen extends StatelessWidget {
             met ? 'Bajarildi' : 'Bajarilmadi',
             valueColor: met ? AppColors.win : AppColors.loss,
           ),
+          if (game.pendingMoves[game.userClubId] case final next?)
+            InfoRow(
+              'Keyingi mavsum',
+              InitialDatabase.leagueName(next),
+              valueColor: InitialDatabase.info(next).tier < game.leagueInfo.tier ? AppColors.win : AppColors.loss,
+            ),
+          if (game.pendingMoves.isNotEmpty) ...[
+            const Divider(height: 22),
+            for (final l in InitialDatabase.pyramidOf(game.leagueId))
+              if (game.pendingMoves.entries.where((e) => e.value == l.id).toList() case final arriving when arriving.isNotEmpty)
+                InfoRow(
+                  '${l.name}ga',
+                  arriving.map((e) => game.getClubById(e.key)?.shortName ?? '').join(', '),
+                ),
+          ],
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,

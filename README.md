@@ -29,9 +29,17 @@ responsive navigation and touch/mouse interactions share the same Flutter code.
   colours 90+ sky blue / 80–89 green / 70–79 amber / ≤69 red.
 - Navigation: Boshqaruv · Jamoa (pitch, list, team tactics, instructions) ·
   Jadval · Transfer · Moliya (finance, real-date calendar, inbox, club profile).
-- Two leagues: Super League (8 clubs, 14 rounds) and Premier League 2025/26
-  (20 clubs, 38 rounds, real managers and squads merged with 2026.db), with
+- Leagues: Super League (8 clubs, 14 rounds) and the English pyramid –
+  Premier League 2025/26 (20 clubs, 38 rounds), Championship and League One
+  (24 clubs, 46 rounds each, squads and coaches from 2026.db) – with
   look-alike vector crests and portraits.
+- The whole pyramid plays every season: the other divisions are simulated
+  in the background (viewable tables), 3 go down, the top 2 plus the
+  play-off winner (3rd–6th, two-legged semis and a final) go up. Relegated
+  top-flight clubs get parachute money; TV money, sponsorship, prizes and
+  running costs scale with the division. The transfer market covers every
+  division with a league filter.
+- Player and Manager of the Month awards.
 - 16 formations; auto line-up solves the best XI with the Hungarian algorithm
   so players stay in their own positions. Tapping a player shows his fitting
   positions; dragging previews his OVR and fit at every slot.
@@ -87,6 +95,7 @@ manager's proficiency in the chosen playstyle.
 | `assets/data/clubs.json` | Clubs, budgets, crests, tactics and squad IDs |
 | `assets/data/players.json` | Players, 26 attributes, look-alike face hints, playing styles |
 | `assets/data/clubs_epl.json`, `players_epl.json` | Premier League 2025/26 (`tool/epl_data.py`) |
+| `assets/data/clubs_ch.json`, `clubs_l1.json` (+ players) | Championship and League One (`tool/efl_data.py`) |
 | `assets/data/names.json` | Locale name pools for generated players |
 | `assets/data/squad_templates.json` | 23-slot template for new clubs |
 
@@ -95,6 +104,6 @@ Generators: `tool/expand_squads.py`, `tool/star_faces.py`,
 
 ## Verification
 
-`flutter test` (37 tests: rules, engine, ratings, save/restore, corners,
+`flutter test` (38 tests: rules, engine, ratings, save/restore, corners,
 free kicks, widgets). `flutter test tool/capture_ui_test.dart` writes
 screenshots to `artifacts/qa`.

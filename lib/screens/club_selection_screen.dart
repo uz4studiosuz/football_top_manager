@@ -45,6 +45,15 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
   String _expectation(Club c) {
     final ranked = List<Club>.of(_clubs)..sort((a, b) => b.squadDepthRating.compareTo(a.squadDepthRating));
     final rank = ranked.indexOf(c) + 1;
+    final info = InitialDatabase.info(_league);
+    if (info.tier > 1) {
+      return switch (rank) {
+        <= 2 => 'Avtomatik ko‘tarilish',
+        <= 6 => 'Pley-off (top-${info.playoffTo})',
+        <= 12 => 'Top-12',
+        _ => info.relegate > 0 ? 'Ligada qolish' : 'Top-16',
+      };
+    }
     if (_clubs.length > 10) {
       return switch (rank) {
         1 => 'Chempionlik',

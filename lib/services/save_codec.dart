@@ -7,9 +7,23 @@ import '../models/player.dart';
 /// Kept apart from the models so static data loading stays untouched.
 abstract final class SaveCodec {
   // ---------------------------------------------------------------- player
-  static Map<String, dynamic> player(Player p) => {
-    ...p.toMap(),
-    'rt': {
+  // Compact player format (short keys, attribute and face lists): a
+  // 68-club pyramid has ~1,700 players and must fit browser storage.
+  static const _statKeys = [
+    'attackingAwareness', 'ballControl', 'dribbling', 'tightPossession', 'lowPass', 'loftedPass',
+    'finishing', 'heading', 'setPieceTaking', 'curl', 'defensiveAwareness', 'defensiveEngagement',
+    'tackling', 'aggression', 'gkAwareness', 'gkCatching', 'gkParrying', 'gkReflexes', 'gkReach',
+    'speed', 'acceleration', 'kickingPower', 'jumping', 'physicalContact', 'balance', 'stamina',
+  ];
+  static const _faceKeys = [
+    'skin', 'hair', 'cut', 'shape', 'eyes', 'nose', 'mouth', 'brow', 'age', 'eyeColor', 'beardStyle',
+    'glasses', 'freckles',
+  ];
+
+  static Map<String, dynamic> player(Player p) {
+    final stats = p.stats.toMap();
+    final face = p.face.toMap();
+    final rt = <String, dynamic>{
       'st': p.currentStamina,
       'mo': p.morale,
       'ir': p.injuryRounds,
@@ -23,17 +37,73 @@ abstract final class SaveCodec {
       'r': p.seasonRedCards,
       'min': p.seasonMinutes,
       'motm': p.seasonMotm,
-      'rs': p.seasonRatingSum,
+      'rs': double.parse(p.seasonRatingSum.toStringAsFixed(2)),
       'rn': p.seasonRated,
       'rr': p.recentRatings,
       'h': p.history,
-      'gr': p.growth,
-    },
-  };
+      'gr': double.parse(p.growth.toStringAsFixed(3)),
+    }..removeWhere((k, v) => v == null || v == 0 || (v is List && v.isEmpty) || (k == 'st' && v == 100));
+    return {
+      'k': 1,
+      'i': p.id,
+      'n': p.name,
+      's': p.shortName,
+      'a': p.age,
+      'na': p.nationality,
+      'fl': p.countryFlag,
+      'no': p.number,
+      'po': p.mainPosition.code,
+      if (p.altPositions.isNotEmpty) 'al': [for (final x in p.altPositions) x.code],
+      'ft': p.preferredFoot.name == 'left' ? 1 : 0,
+      'wf': p.weakFoot,
+      'sv': [for (final k in _statKeys) stats[k]],
+      'c': [p.contract.contractYears, p.contract.weeklyWage, p.contract.releaseClause],
+      'mv': p.marketValue,
+      'pt': p.potential,
+      'ps': p.playingStyle.name,
+      if (p.instruction.name != 'balanced') 'ins': p.instruction.name,
+      'he': ?p.height,
+      if (p.traits.isNotEmpty) 'tr': p.traits,
+      'fc': [for (final k in _faceKeys) face[k] is bool ? (face[k] ? 1 : 0) : face[k]],
+      if (rt.isNotEmpty) 'rt': rt,
+    };
+  }
 
-  static Player playerFrom(Map<String, dynamic> m) {
+  /// Expands the compact format back into the asset/legacy layout.
+  static Map<String, dynamic> _expand(Map<String, dynamic> m) {
+    final sv = m['sv'] as List, fc = m['fc'] as List, c = m['c'] as List;
+    return {
+      'id': m['i'],
+      'name': m['n'],
+      'shortName': m['s'],
+      'age': m['a'],
+      'nationality': m['na'],
+      'countryFlag': m['fl'],
+      'number': m['no'],
+      'mainPosition': m['po'],
+      'altPositions': m['al'] ?? const [],
+      'preferredFoot': m['ft'] == 1 ? 'left' : 'right',
+      'weakFoot': m['wf'],
+      'stats': {for (var i = 0; i < _statKeys.length; i++) _statKeys[i]: sv[i]},
+      'contract': {'contractYears': c[0], 'weeklyWage': c[1], 'releaseClause': c[2]},
+      'marketValue': m['mv'],
+      'potential': m['pt'],
+      'playingStyle': m['ps'],
+      'instruction': m['ins'] ?? 'balanced',
+      'height': m['he'],
+      'traits': m['tr'],
+      'face': {
+        for (var i = 0; i < _faceKeys.length; i++)
+          _faceKeys[i]: i >= 11 ? fc[i] == 1 : fc[i],
+      },
+      'rt': m['rt'],
+    };
+  }
+
+  static Player playerFrom(Map<String, dynamic> raw) {
+    final m = raw['k'] == 1 ? _expand(raw) : raw;
     final p = Player.fromMap(m);
-    final rt = m['rt'] as Map<String, dynamic>?;
+    final rt = m['rt'] == null ? null : Map<String, dynamic>.from(m['rt']);
     if (rt == null) return p;
     p.currentStamina = rt['st'] ?? 100;
     p.morale = rt['mo'] ?? 85;
@@ -70,11 +140,11 @@ abstract final class SaveCodec {
   }
 
   // ---------------------------------------------------------------- events
-  static Map<String, dynamic> event(MatchEvent e) => {
+  static Map<String, dynamic> event(MatchEvent e, {bool text = true}) => {
     'mi': e.minute,
     if (e.extraMinute > 0) 'x': e.extraMinute,
     't': e.type.name,
-    'd': e.description,
+    if (text) 'd': e.description,
     'c': e.clubId,
     if (e.playerName != null) 'pn': e.playerName,
     if (e.playerId != null) 'pi': e.playerId,
@@ -89,7 +159,7 @@ abstract final class SaveCodec {
     minute: m['mi'],
     extraMinute: m['x'] ?? 0,
     type: MatchEventType.values.asNameMap()[m['t']] ?? MatchEventType.info,
-    description: m['d'],
+    description: m['d'] ?? '',
     clubId: m['c'],
     playerName: m['pn'],
     playerId: m['pi'],
@@ -178,7 +248,11 @@ abstract final class SaveCodec {
   }
 
   // --------------------------------------------------------------- fixture
-  static Map<String, dynamic> fixture(Fixture f, {bool shots = true}) => {
+  /// [full] keeps everything for the user's own matches; other matches keep
+  /// incidents, ratings and a mini line per player (minutes, goals,
+  /// assists, cards) so tables, histories and reports still work.
+  /// [commentary] also keeps the play-by-play text.
+  static Map<String, dynamic> fixture(Fixture f, {bool shots = true, bool full = true, bool commentary = true}) => {
     'id': f.id,
     'r': f.round,
     'h': f.homeClubId,
@@ -197,14 +271,29 @@ abstract final class SaveCodec {
         f.homeYellows, f.awayYellows, f.homeReds, f.awayReds, f.attendance,
       ],
       'xg': [f.homeXG, f.awayXG],
-      'e': f.events.map(event).toList(),
-      'ra': f.ratings,
-      'ps': {for (final e in f.playerStats.entries) e.key: line(e.value)},
-      'hl': f.homeLineup,
-      'al': f.awayLineup,
-      'hb': f.homeBench,
-      'ab': f.awayBench,
-      'mo': f.momentum.map((v) => v.round()).toList(),
+      'e': [
+        for (final e in f.events)
+          if (commentary || e.type.isIncident) event(e, text: commentary),
+      ],
+      if (full) 'ra': {for (final e in f.ratings.entries) e.key: double.parse(e.value.toStringAsFixed(1))},
+      if (full)
+        'ps': {for (final e in f.playerStats.entries) e.key: line(e.value)}
+      else
+        'pm': {
+          for (final e in f.playerStats.entries)
+            if (e.value.minutes > 0)
+              e.key: [
+                e.value.minutes.round(), e.value.goals, e.value.assists, e.value.yellow, e.value.red,
+                if (f.ratings[e.key] != null) double.parse(f.ratings[e.key]!.toStringAsFixed(1)),
+              ],
+        },
+      if (full) ...{
+        'hl': f.homeLineup,
+        'al': f.awayLineup,
+        'hb': f.homeBench,
+        'ab': f.awayBench,
+        'mo': f.momentum.map((v) => v.round()).toList(),
+      },
       if (shots && f.shots.isNotEmpty) 'sh': f.shots.map((s) => s.toMap()).toList(),
       if (f.motmId != null) 'motm': f.motmId,
     },
@@ -258,10 +347,19 @@ abstract final class SaveCodec {
     f.events = [for (final e in m['e'] as List) eventFrom(Map<String, dynamic>.from(e))];
     f.ratings = {
       for (final e in Map<String, dynamic>.from(m['ra'] ?? {}).entries) e.key: (e.value as num).toDouble(),
+      for (final e in Map<String, dynamic>.from(m['pm'] ?? {}).entries)
+        if ((e.value as List).length > 5) e.key: (e.value[5] as num).toDouble(),
     };
     f.playerStats = {
       for (final e in Map<String, dynamic>.from(m['ps'] ?? {}).entries)
         e.key: lineFrom(e.key, Map<String, dynamic>.from(e.value)),
+      for (final e in Map<String, dynamic>.from(m['pm'] ?? {}).entries)
+        e.key: PlayerMatchStats(e.key)
+          ..minutes = (e.value[0] as num).toDouble()
+          ..goals = e.value[1]
+          ..assists = e.value[2]
+          ..yellow = e.value[3]
+          ..red = e.value[4],
     };
     f.homeLineup = List<String>.from(m['hl'] ?? []);
     f.awayLineup = List<String>.from(m['al'] ?? []);

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../data/initial_database.dart';
 import '../models/club.dart';
 import '../services/game_state.dart';
 import '../services/season_calendar.dart';
@@ -19,6 +20,7 @@ class _StandingsScreenState extends State<StandingsScreen> {
   int round = 0;
   int seenRound = 0;
   int leaders = 0;
+  String? view; // league whose table is shown (null = own)
 
   @override
   Widget build(BuildContext context) {
@@ -58,9 +60,21 @@ class _StandingsScreenState extends State<StandingsScreen> {
     );
   }
 
-  Widget _table(BuildContext context, GameState game) => ListView(
+  Widget _table(BuildContext context, GameState game) {
+    final pyramid = InitialDatabase.pyramidOf(game.leagueId);
+    final shown = view != null && game.divisions.containsKey(view) ? view! : game.leagueId;
+    final own = shown == game.leagueId;
+    return ListView(
     padding: const EdgeInsets.all(12),
     children: [
+      if (pyramid.length > 1) ...[
+        PillTabs(
+          labels: [for (final l in pyramid) l.id == game.leagueId ? '${l.name} ★' : l.name],
+          index: pyramid.indexWhere((l) => l.id == shown),
+          onChanged: (i) => setState(() => view = pyramid[i].id),
+        ),
+        const SizedBox(height: 12),
+      ],
       AppCard(
         padding: const EdgeInsets.fromLTRB(0, 14, 0, 8),
         child: Column(
@@ -68,9 +82,13 @@ class _StandingsScreenState extends State<StandingsScreen> {
           children: [
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: SectionHeader('Mavsum ${game.seasonLabel}', icon: Icons.emoji_events_outlined),
+              child: SectionHeader(
+                own ? 'Mavsum ${game.seasonLabel}' : '${InitialDatabase.leagueName(shown)} · ${game.seasonLabel}',
+                icon: Icons.emoji_events_outlined,
+              ),
             ),
             StandingsTable(
+              leagueId: own ? null : shown,
               highlightClubId: game.userClubId,
               onTapClub: (c) => c.id == game.userClubId
                   ? null
@@ -85,16 +103,13 @@ class _StandingsScreenState extends State<StandingsScreen> {
           spacing: 16,
           runSpacing: 8,
           children: [
-            _legend(StandingsTable.zoneColor(1), 'Chempion'),
-            _legend(StandingsTable.zoneColor(2), 'Chempionlar ligasi'),
-            _legend(StandingsTable.zoneColor(5), 'Yevropa ligasi'),
-            if (game.clubCount > 10) _legend(StandingsTable.zoneColor(6), 'Konferensiya ligasi'),
-            _legend(StandingsTable.zoneColor(game.clubCount), game.clubCount > 10 ? 'Quyi ligaga tushish' : 'Quyi liga xavfi'),
+            for (final (c, t) in StandingsTable.legend(own ? null : shown)) _legend(c, t),
           ],
         ),
       ),
     ],
   );
+  }
 
   Widget _legend(Color c, String t) => Row(
     mainAxisSize: MainAxisSize.min,

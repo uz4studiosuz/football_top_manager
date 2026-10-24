@@ -42,18 +42,36 @@ class SeasonCalendar {
       ((d.month == 9 || d.month == 10 || d.month == 11) && d.day >= 8 && d.day <= 14) ||
       (d.month == 3 && d.day >= 22 && d.day <= 28);
 
+  static bool _festive(DateTime d) => (d.month == 12 && d.day >= 20) || (d.month == 1 && d.day <= 6);
+
   List<DateTime> get _weekly {
     final dates = <DateTime>[];
     var d = firstMatchDay;
     while (dates.length < rounds) {
       if (!_internationalBreak(d)) {
         dates.add(d);
-        final festive = (d.month == 12 && d.day >= 20) || (d.month == 1 && d.day <= 6);
-        if (festive && dates.length < rounds) dates.add(d.add(const Duration(days: 3)));
+        if (_festive(d) && dates.length < rounds) dates.add(d.add(const Duration(days: 3)));
       }
       d = d.add(const Duration(days: 7));
     }
-    return dates;
+    final lastDay = DateTime(year + 1, 5, 24);
+    if (!dates.last.isAfter(lastDay)) return dates;
+    // Not enough weekends (46-round Championship): Tuesday rounds are
+    // spread evenly through the season, on top of the festive ones.
+    final weekends = <DateTime>[
+      for (var s = firstMatchDay; !s.isAfter(lastDay); s = s.add(const Duration(days: 7)))
+        if (!_internationalBreak(s)) s,
+    ];
+    final plain = [for (var i = 0; i < weekends.length; i++) if (!_festive(weekends[i])) i];
+    final festive = weekends.length - plain.length;
+    final need = (rounds - weekends.length - festive).clamp(0, plain.length);
+    final midweek = {for (var k = 0; k < need; k++) plain[((k + 0.5) * plain.length / need).floor()]};
+    final dense = <DateTime>[];
+    for (var i = 0; i < weekends.length; i++) {
+      dense.add(weekends[i]);
+      if (_festive(weekends[i]) || midweek.contains(i)) dense.add(weekends[i].add(const Duration(days: 3)));
+    }
+    return dense.take(rounds).toList();
   }
 
   DateTime dateOfRound(int round) {

@@ -119,6 +119,64 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
     });
   }
 
+  /// League choice first: the new club takes the place of that league's
+  /// weakest side.
+  Widget _leagueCard() {
+    final clubs = InitialDatabase.getClubs(_league)..sort((a, b) => a.reputation.compareTo(b.reputation));
+    final rounds = (clubs.length - 1) * 2;
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SectionHeader('Qaysi ligada o‘ynaysiz?', icon: Icons.emoji_events_outlined),
+          for (final l in InitialDatabase.leagues)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Material(
+                color: l.id == _league ? AppColors.primarySoft : AppColors.surfaceAlt,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(color: l.id == _league ? AppColors.primary : AppColors.line, width: l.id == _league ? 2 : 1),
+                ),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () => setState(() => _league = l.id),
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        Icon(
+                          l.id == _league ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                          color: l.id == _league ? AppColors.primary : AppColors.ink3,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(l.name, style: AppText.bodyStrong),
+                              Text(
+                                '${InitialDatabase.getClubs(l.id).length} klub · ${(InitialDatabase.getClubs(l.id).length - 1) * 2} tur',
+                                style: AppText.caption,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          Text(
+            'Klubingiz ${clubs.first.name} o‘rnini egallaydi · $rounds tur.',
+            style: AppText.small,
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('Yangi Jamoa Yaratish')),
@@ -127,6 +185,8 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
       child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        _leagueCard(),
+        const SizedBox(height: 12),
         AppCard(
           child: Column(
             children: [
@@ -150,14 +210,6 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SectionHeader('1. Jamoa Ma\'lumotlari'),
-              const Text('Qaysi ligada o‘ynaysiz?', style: AppText.small),
-              const SizedBox(height: 8),
-              PillTabs(
-                labels: [for (final l in InitialDatabase.leagues) l.name],
-                index: InitialDatabase.leagues.indexWhere((l) => l.id == _league),
-                onChanged: (i) => setState(() => _league = InitialDatabase.leagues[i].id),
-              ),
-              const SizedBox(height: 12),
               TextField(
                 controller: _nameController,
                 decoration: const InputDecoration(labelText: 'Klub nomi', prefixIcon: Icon(Icons.shield_outlined)),
