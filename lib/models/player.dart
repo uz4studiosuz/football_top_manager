@@ -429,6 +429,30 @@ enum PlayerInstruction {
   final bool offence;
 }
 
+/// How well a player suits a position.
+enum PositionFit {
+  natural('Asosiy pozitsiya'),
+  alternative('Muqobil pozitsiya'),
+  similar('Yaqin pozitsiya'),
+  poor('Begona pozitsiya');
+
+  const PositionFit(this.label);
+  final String label;
+}
+
+const _families = <Set<PlayerPosition>>[
+  {PlayerPosition.lb, PlayerPosition.rb},
+  {PlayerPosition.dmf, PlayerPosition.cmf},
+  {PlayerPosition.cmf, PlayerPosition.amf},
+  {PlayerPosition.lmf, PlayerPosition.lwf},
+  {PlayerPosition.rmf, PlayerPosition.rwf},
+  {PlayerPosition.lmf, PlayerPosition.rmf},
+  {PlayerPosition.lwf, PlayerPosition.rwf},
+  {PlayerPosition.amf, PlayerPosition.ss},
+  {PlayerPosition.ss, PlayerPosition.cf},
+  {PlayerPosition.dmf, PlayerPosition.cb},
+];
+
 /// Futbolchi modeli
 class Player {
   FaceConfig face;
@@ -752,6 +776,20 @@ class Player {
     }
     return (raw * familiarity).round().clamp(40, 100);
   }
+
+  PositionFit fitFor(PlayerPosition pos) {
+    if (pos == mainPosition) return PositionFit.natural;
+    if (altPositions.contains(pos)) return PositionFit.alternative;
+    if (_families.any((f) => f.contains(pos) && f.contains(mainPosition))) {
+      return PositionFit.similar;
+    }
+    return PositionFit.poor;
+  }
+
+  /// Positions sorted by how well he plays them (best first).
+  List<PlayerPosition> get bestPositions =>
+      List.of(PlayerPosition.values)
+        ..sort((a, b) => getEffectiveOVR(b).compareTo(getEffectiveOVR(a)));
 
   /// Natural ability is stable; fitness and morale affect match strength only.
   int get ovr => getEffectiveOVR(mainPosition);

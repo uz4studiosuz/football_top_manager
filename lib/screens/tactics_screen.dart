@@ -24,6 +24,13 @@ class _TacticsScreenState extends State<TacticsScreen> {
   final _squadScroll = ScrollController();
   Timer? _dragTimer;
   Offset? _dragPointer;
+  Player? _dragging; // shows every slot's fit while a player is dragged
+
+  static Color fitColor(PositionFit f) => switch (f) {
+    PositionFit.natural || PositionFit.alternative => AppColors.win,
+    PositionFit.similar => AppColors.warning,
+    PositionFit.poor => AppColors.live,
+  };
   bool get _inMatch => widget.onSwap != null;
 
   void _startDrag() {
@@ -113,7 +120,9 @@ class _TacticsScreenState extends State<TacticsScreen> {
                       ValueBadge(p.ovr, size: 38),
                     ],
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 12),
+                  _fitSummary(p, club),
+                  const SizedBox(height: 12),
                   OutlinedButton.icon(
                     onPressed: () {
                       Navigator.pop(ctx);
@@ -298,7 +307,7 @@ class _TacticsScreenState extends State<TacticsScreen> {
                                 Padding(
                                   padding: const EdgeInsets.only(right: 8),
                                   child: ChoiceChip(
-                                    label: Text(f.short),
+                                    label: Text(f.label),
                                     selected: t.formation == f,
                                     showCheckmark: false,
                                     onSelected: (_) => game.updateTactics(t.copyWith(formation: f)),
@@ -396,22 +405,110 @@ class _TacticsScreenState extends State<TacticsScreen> {
     ),
   );
 
+  /// Current slot, fit and the player's best positions (no need to open
+  /// the full profile while picking a line-up).
+  Widget _fitSummary(Player p, Club club) {
+    final slot = club.startingLineupIds.indexOf(p.id);
+    final pos = slot >= 0 ? club.slotPosition(slot) : null;
+    final best = p.bestPositions.where((x) => x != PlayerPosition.gk || p.mainPosition.isGoalkeeper).take(5);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (pos != null)
+          Row(
+            children: [
+              Icon(Icons.place_outlined, size: 16, color: fitColor(p.fitFor(pos))),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  'Hozir: ${pos.code} · ${p.fitFor(pos).label} · OVR ${p.getEffectiveOVR(pos)}',
+                  style: AppText.small.copyWith(color: fitColor(p.fitFor(pos)), fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
+          ),
+        const SizedBox(height: 8),
+        const Text('Mos pozitsiyalar', style: AppText.caption),
+        const SizedBox(height: 6),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: [
+            for (final x in best)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: fitColor(p.fitFor(x)).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: fitColor(p.fitFor(x)).withValues(alpha: 0.5)),
+                ),
+                child: Text(
+                  '${x.code}  ${p.getEffectiveOVR(x)}',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: fitColor(p.fitFor(x))),
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  void _beginDrag(Player p) {
+    _startDrag();
+    setState(() => _dragging = p);
+  }
+
+  void _finishDrag() {
+    _endDrag();
+    if (mounted) setState(() => _dragging = null);
+  }
+
   Widget _dragTarget(Player p, PlayerPosition? pos, {bool bench = false}) => DragTarget<String>(
     onWillAcceptWithDetails: (d) => d.data != p.id && !widget.unavailable.contains(p.id),
     onAcceptWithDetails: (d) => _swap(d.data, p.id),
     builder: (context, candidates, rejected) {
-      final node = _node(p, pos, bench: bench, selected: candidates.isNotEmpty);
+      final base = _node(p, pos, bench: bench, selected: candidates.isNotEmpty);
+      final dragged = _dragging;
+      // While dragging, each pitch slot previews the dragged player's
+      // rating and fit there: green = his position, amber = close, red = foreign.
+      final node = dragged != null && pos != null && dragged != p
+          ? Stack(
+              clipBehavior: Clip.none,
+              children: [
+                base,
+                Positioned(
+                  top: -12,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: fitColor(dragged.fitFor(pos)),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.white, width: candidates.isNotEmpty ? 2 : 1),
+                      ),
+                      child: Text(
+                        '${pos.code} ${dragged.getEffectiveOVR(pos)}',
+                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            )
+          : base;
       final feedback = Material(
         color: Colors.transparent,
         child: _node(p, pos, bench: bench, selected: true),
       );
       final child = GestureDetector(onTap: () => _menu(p), child: node);
-      if (widget.unavailable.contains(p.id)) return Opacity(opacity: 0.35, child: node);
+      if (widget.unavailable.contains(p.id)) return Opacity(opacity: 0.35, child: base);
       if (MediaQuery.sizeOf(context).width >= 700) {
         return Draggable<String>(
-          onDragStarted: _startDrag,
+          onDragStarted: () => _beginDrag(p),
           onDragUpdate: (d) => _dragPointer = d.globalPosition,
-          onDragEnd: (_) => _endDrag(),
+          onDragEnd: (_) => _finishDrag(),
           data: p.id,
           feedback: feedback,
           childWhenDragging: Opacity(opacity: 0.3, child: node),
@@ -419,9 +516,9 @@ class _TacticsScreenState extends State<TacticsScreen> {
         );
       }
       return LongPressDraggable<String>(
-        onDragStarted: _startDrag,
+        onDragStarted: () => _beginDrag(p),
         onDragUpdate: (d) => _dragPointer = d.globalPosition,
-        onDragEnd: (_) => _endDrag(),
+        onDragEnd: (_) => _finishDrag(),
         data: p.id,
         delay: const Duration(milliseconds: 180),
         feedback: feedback,
@@ -433,7 +530,7 @@ class _TacticsScreenState extends State<TacticsScreen> {
 
   Widget _node(Player p, PlayerPosition? pos, {bool bench = false, bool selected = false}) {
     final ovr = p.getEffectiveOVR(pos);
-    final outOfPosition = pos != null && pos != p.mainPosition && !p.altPositions.contains(pos);
+    final fit = pos == null ? PositionFit.natural : p.fitFor(pos);
     final club = game.userClub;
     return Container(
       key: ValueKey('tactical_${p.id}'),
@@ -486,7 +583,9 @@ class _TacticsScreenState extends State<TacticsScreen> {
                 style: TextStyle(
                   fontSize: 9,
                   fontWeight: FontWeight.w700,
-                  color: outOfPosition ? AppColors.live : AppColors.ink3,
+                  color: fit == PositionFit.natural || fit == PositionFit.alternative
+                      ? AppColors.ink3
+                      : fitColor(fit),
                 ),
               ),
               if (!p.isAvailable) ...[

@@ -9,6 +9,7 @@ import '../models/finance.dart';
 import '../models/face.dart';
 import 'match_field.dart';
 import 'save_codec.dart';
+import 'lineup_solver.dart';
 import 'season_calendar.dart';
 
 /// Yetakchi futbolchilar reytingi modeli
@@ -483,32 +484,29 @@ class GameState extends ChangeNotifier {
         ? p.getEffectiveOVR(pos) * (0.75 + p.currentStamina / 100 * 0.25) +
               ((p.averageRating ?? 6.6) - 6.6) * 6
         : p.getEffectiveOVR(pos) * (0.86 + p.currentStamina / 100 * 0.14);
-    // Fill scarce slots first: GK, then defence, then the rest.
-    final order = List<int>.generate(slots.length, (i) => i)
-      ..sort((a, b) {
-        int rank(PlayerPosition p) => p.isGoalkeeper
-            ? 0
-            : p.isDefender
-            ? 1
-            : p.isAttacker
-            ? 2
-            : 3;
-        return rank(slots[a].defaultPosition).compareTo(
-          rank(slots[b].defaultPosition),
-        );
-      });
-    for (final i in order) {
-      final pos = slots[i].defaultPosition;
-      final options = pool
-          .where(
-            (p) =>
-                !chosen.contains(p) &&
-                (pos.isGoalkeeper == p.mainPosition.isGoalkeeper),
-          )
-          .toList();
-      if (options.isEmpty) continue;
-      options.sort((a, b) => score(b, pos).compareTo(score(a, pos)));
-      chosen[i] = options.first;
+    // Optimal assignment: natural positions are strongly preferred, so the
+    // best centre-back plays centre-back instead of filling a full-back gap.
+    double fit(Player p, PlayerPosition pos) {
+      if (pos.isGoalkeeper != p.mainPosition.isGoalkeeper) return -1000;
+      return score(p, pos) +
+          switch (p.fitFor(pos)) {
+            PositionFit.natural => 10,
+            PositionFit.alternative => 6,
+            PositionFit.similar => 1,
+            PositionFit.poor => -12,
+          };
+    }
+
+    if (pool.length >= slots.length) {
+      final matrix = [
+        for (final s in slots) [for (final p in pool) fit(p, s.defaultPosition)],
+      ];
+      final pick = LineupSolver.assign(matrix);
+      for (var i = 0; i < slots.length; i++) {
+        if (pick[i] >= 0 && fit(pool[pick[i]], slots[i].defaultPosition) > -500) {
+          chosen[i] = pool[pick[i]];
+        }
+      }
     }
     // Any hole (e.g. no keeper available) is filled by whoever is left.
     for (var i = 0; i < chosen.length; i++) {

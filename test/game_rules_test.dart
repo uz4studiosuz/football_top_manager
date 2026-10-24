@@ -6,6 +6,7 @@ import 'package:football_top_manager/services/match_clock.dart';
 import 'package:football_top_manager/models/league.dart';
 import 'dart:convert';
 import 'package:football_top_manager/models/player.dart';
+import 'package:football_top_manager/models/club.dart';
 import 'package:football_top_manager/models/face.dart';
 
 void main() {
@@ -372,6 +373,32 @@ void main() {
     expect(game.leagueId, 'epl');
     expect(game.totalRounds, 38);
     expect(game.currentRound, 4);
+  });
+
+  test('Auto lineup keeps players in their own positions', () {
+    final ars = InitialDatabase.getClubs('epl').firstWhere((c) => c.id == 'epl_ars');
+    game.startCareerWithExistingClub(ars);
+    final c = game.userClub;
+    for (final f in FormationType.values) {
+      c.tactics = c.tactics.copyWith(formation: f);
+      game.autoPickLineup(c);
+      expect(c.startingXI.length, 11, reason: f.label);
+      expect(c.startingLineupIds.toSet().length, 11);
+      for (var i = 0; i < 11; i++) {
+        final pos = c.slotPosition(i);
+        final p = c.startingXI[i];
+        expect(pos.isGoalkeeper, p.mainPosition.isGoalkeeper, reason: '${f.label} slot $i');
+        if (p.mainPosition == PlayerPosition.cb && pos != PlayerPosition.cb) {
+          // A centre-back may only leave CB when the formation has fewer CB
+          // slots than good centre-backs.
+          expect(p.fitFor(pos), isNot(PositionFit.poor), reason: '${p.name} at ${pos.code} in ${f.label}');
+        }
+      }
+    }
+    c.tactics = c.tactics.copyWith(formation: FormationType.f433);
+    game.autoPickLineup(c);
+    final cbs = [for (var i = 0; i < 11; i++) if (c.slotPosition(i) == PlayerPosition.cb) c.startingXI[i].name];
+    expect(cbs, containsAll(['William Saliba', 'Gabriel Magalhães']));
   });
 
   test('Injured and suspended starters are replaced automatically', () {
