@@ -42,7 +42,11 @@ enum CrestEmblem {
   bird('Qush'),
   ship('Kema'),
   tower('Minora'),
-  lion('Sher');
+  lion('Sher'),
+  trident('Sanchqi'),
+  tree('Daraxt'),
+  hammers('Bolg‘alar'),
+  wolf('Bo‘ri');
 
   const CrestEmblem(this.label);
   final String label;
@@ -551,6 +555,14 @@ class ClubCrestPainter extends CustomPainter {
         _tower(canvas, r, color);
       case CrestEmblem.lion:
         _lion(canvas, r, color);
+      case CrestEmblem.trident:
+        _trident(canvas, r, color);
+      case CrestEmblem.tree:
+        _tree(canvas, r, color);
+      case CrestEmblem.hammers:
+        _hammers(canvas, r, color);
+      case CrestEmblem.wolf:
+        _wolf(canvas, r, color);
     }
   }
 
@@ -723,6 +735,112 @@ class ClubCrestPainter extends CustomPainter {
     canvas.drawRect(Rect.fromLTWH(x + w * 0.38, y + h * 0.52, w * 0.24, h * 0.04), paint);
     canvas.drawRect(Rect.fromLTWH(x + w * 0.42, y + h * 0.3, w * 0.16, h * 0.03), paint);
     canvas.drawCircle(Offset(x + w * 0.5, y + h * 0.66), w * 0.035, cut);
+  }
+
+  void _trident(Canvas canvas, Rect r, Color color) {
+    final paint = Paint()..color = color;
+    final w = r.width, h = r.height, x = r.left, y = r.top;
+    canvas.drawRect(Rect.fromLTWH(x + w * 0.46, y + h * 0.28, w * 0.08, h * 0.68), paint);
+    canvas.drawPath(
+      Path()
+        ..moveTo(x + w * 0.2, y + h * 0.1)
+        ..lineTo(x + w * 0.28, y + h * 0.04)
+        ..lineTo(x + w * 0.3, y + h * 0.3)
+        ..quadraticBezierTo(x + w * 0.5, y + h * 0.42, x + w * 0.7, y + h * 0.3)
+        ..lineTo(x + w * 0.72, y + h * 0.04)
+        ..lineTo(x + w * 0.8, y + h * 0.1)
+        ..lineTo(x + w * 0.78, y + h * 0.36)
+        ..quadraticBezierTo(x + w * 0.5, y + h * 0.52, x + w * 0.22, y + h * 0.36)
+        ..close(),
+      paint,
+    );
+    canvas.drawPath(
+      Path()
+        ..moveTo(x + w * 0.5, y + h * 0.0)
+        ..lineTo(x + w * 0.58, y + h * 0.16)
+        ..lineTo(x + w * 0.42, y + h * 0.16)
+        ..close(),
+      paint,
+    );
+    canvas.drawRect(Rect.fromLTWH(x + w * 0.47, y + h * 0.14, w * 0.06, h * 0.16), paint);
+  }
+
+  void _tree(Canvas canvas, Rect r, Color color) {
+    final paint = Paint()..color = color;
+    final w = r.width, h = r.height, x = r.left, y = r.top;
+    canvas.drawRect(Rect.fromLTWH(x + w * 0.45, y + h * 0.55, w * 0.1, h * 0.32), paint);
+    for (final c in [
+      Offset(0.5, 0.22), Offset(0.3, 0.38), Offset(0.7, 0.38), Offset(0.4, 0.5), Offset(0.6, 0.5),
+    ]) {
+      canvas.drawCircle(Offset(x + w * c.dx, y + h * c.dy), w * 0.17, paint);
+    }
+    // Wavy river under the tree.
+    final wave = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = h * 0.04;
+    final path = Path()..moveTo(x + w * 0.15, y + h * 0.93);
+    for (var i = 0; i < 4; i++) {
+      path.relativeQuadraticBezierTo(w * 0.0875, -h * 0.05, w * 0.175, 0);
+    }
+    canvas.drawPath(path, wave);
+  }
+
+  void _hammers(Canvas canvas, Rect r, Color color) {
+    final paint = Paint()..color = color;
+    final w = r.width, h = r.height;
+    for (final sign in [-1.0, 1.0]) {
+      canvas.save();
+      canvas.translate(r.center.dx, r.center.dy);
+      canvas.rotate(sign * 0.65);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromCenter(center: Offset(0, h * 0.08), width: w * 0.08, height: h * 0.78), Radius.circular(w * 0.03)),
+        paint,
+      );
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromCenter(center: Offset(0, -h * 0.3), width: w * 0.36, height: h * 0.16), Radius.circular(w * 0.03)),
+        paint,
+      );
+      canvas.restore();
+    }
+  }
+
+  void _wolf(Canvas canvas, Rect r, Color color) {
+    final paint = Paint()..color = color;
+    final w = r.width, h = r.height, x = r.left, y = r.top;
+    Offset p(double a, double b) => Offset(x + w * a, y + h * b);
+    // Angular wolf head facing left, ears up – drawn as facets.
+    final head = Path()
+      ..moveTo(p(0.62, 0.05).dx, p(0.62, 0.05).dy)
+      ..lineTo(p(0.72, 0.32).dx, p(0.72, 0.32).dy)
+      ..lineTo(p(0.86, 0.12).dx, p(0.86, 0.12).dy)
+      ..lineTo(p(0.88, 0.5).dx, p(0.88, 0.5).dy)
+      ..lineTo(p(0.74, 0.86).dx, p(0.74, 0.86).dy)
+      ..lineTo(p(0.5, 0.96).dx, p(0.5, 0.96).dy)
+      ..lineTo(p(0.44, 0.74).dx, p(0.44, 0.74).dy)
+      ..lineTo(p(0.12, 0.62).dx, p(0.12, 0.62).dy)
+      ..lineTo(p(0.2, 0.5).dx, p(0.2, 0.5).dy)
+      ..lineTo(p(0.4, 0.42).dx, p(0.4, 0.42).dy)
+      ..lineTo(p(0.5, 0.26).dx, p(0.5, 0.26).dy)
+      ..close();
+    canvas.drawPath(head, paint);
+    final cut = Paint()..color = config.primaryColor;
+    canvas.drawPath(
+      Path()
+        ..moveTo(p(0.52, 0.44).dx, p(0.52, 0.44).dy)
+        ..lineTo(p(0.64, 0.4).dx, p(0.64, 0.4).dy)
+        ..lineTo(p(0.6, 0.48).dx, p(0.6, 0.48).dy)
+        ..close(),
+      cut,
+    );
+    canvas.drawPath(
+      Path()
+        ..moveTo(p(0.44, 0.74).dx, p(0.44, 0.74).dy)
+        ..lineTo(p(0.62, 0.62).dx, p(0.62, 0.62).dy)
+        ..lineTo(p(0.56, 0.8).dx, p(0.56, 0.8).dy)
+        ..close(),
+      cut,
+    );
   }
 
   void _lion(Canvas canvas, Rect r, Color color) {

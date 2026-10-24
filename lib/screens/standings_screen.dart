@@ -27,7 +27,7 @@ class _StandingsScreenState extends State<StandingsScreen> {
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Super League Markazi'),
+          title: Text('${game.leagueName} Markazi'),
           bottom: const TabBar(
             tabs: [
               Tab(text: 'Turnir jadvali'),
@@ -88,7 +88,8 @@ class _StandingsScreenState extends State<StandingsScreen> {
             _legend(StandingsTable.zoneColor(1), 'Chempion'),
             _legend(StandingsTable.zoneColor(2), 'Chempionlar ligasi'),
             _legend(StandingsTable.zoneColor(5), 'Yevropa ligasi'),
-            _legend(StandingsTable.zoneColor(8), 'Quyi liga xavfi'),
+            if (game.clubCount > 10) _legend(StandingsTable.zoneColor(6), 'Konferensiya ligasi'),
+            _legend(StandingsTable.zoneColor(game.clubCount), game.clubCount > 10 ? 'Quyi ligaga tushish' : 'Quyi liga xavfi'),
           ],
         ),
       ),
@@ -127,7 +128,7 @@ class _StandingsScreenState extends State<StandingsScreen> {
                 ),
               ),
               IconButton(
-                onPressed: round < GameState.totalRounds ? () => setState(() => round++) : null,
+                onPressed: round < game.totalRounds ? () => setState(() => round++) : null,
                 icon: const Icon(Icons.chevron_right_rounded),
               ),
             ],

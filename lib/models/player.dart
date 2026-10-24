@@ -448,6 +448,8 @@ class Player {
   PlayerContract contract;
   int marketValue; // Bozor bahosi (EUR)
   int potential; // Kelajakdagi eng yuqori OVR
+  int? height; // sm
+  List<String> traits; // maxsus mahoratlar (masalan "Tezlik", "Havo o‘yini")
   late PlayingStyle playingStyle;
   late DefendingStyle defendingStyle;
   late Set<AiStyle> aiStyles;
@@ -490,6 +492,8 @@ class Player {
     required this.marketValue,
     int? potential,
     PlayingStyle? playingStyle,
+    this.height,
+    List<String>? traits,
     int? currentStamina,
     this.morale = 85,
     this.injuryRounds = 0,
@@ -503,6 +507,7 @@ class Player {
     this.seasonRedCards = 0,
   }) : face = face ?? FaceConfig.forPlayer(id, nationality, age),
        currentStamina = currentStamina ?? 100,
+       traits = traits ?? [],
        potential = potential ?? 0 {
     final profile = PlayingProfile.derive(mainPosition.code, stats.toMap());
     this.playingStyle = playingStyle ?? profile.style;
@@ -596,6 +601,8 @@ class Player {
     'marketValue': marketValue,
     'potential': potential,
     'playingStyle': playingStyle.name,
+    'height': ?height,
+    if (traits.isNotEmpty) 'traits': traits,
   };
   factory Player.fromMap(Map<String, dynamic> m) => Player(
     // Data may carry partial look-alike hints; the rest stays procedural.
@@ -626,6 +633,8 @@ class Player {
     marketValue: m['marketValue'],
     potential: m['potential'],
     playingStyle: PlayingStyle.values.asNameMap()[m['playingStyle']],
+    height: m['height'],
+    traits: m['traits'] == null ? null : List<String>.from(m['traits']),
   );
   // ===========================================================================
   // OVR (Overall) HISOBLASH ALGORITMI (PRD 3.4)

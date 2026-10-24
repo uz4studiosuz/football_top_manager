@@ -201,6 +201,15 @@ _Region _region(String nationality) {
     'Shvetsiya',
     'Shimoliy Irlandiya',
     'Gruziya',
+    'Uels',
+    'Serbiya',
+    'Chexiya',
+    'Slovakiya',
+    'Sloveniya',
+    'Bosniya',
+    'Islandiya',
+    'Finlandiya',
+    'Kosovo',
   };
   const south = {
     'Ispaniya',
@@ -212,8 +221,11 @@ _Region _region(String nationality) {
     'Gretsiya',
     'O‘zbekiston',
   };
-  const latin = {'Argentina', 'Urugvay', 'Kolumbiya', 'Ekvador', 'Braziliya'};
-  const african = {'Gana', 'Senegal', 'Nigeriya', 'Kamerun', 'Kot-d’Ivuar'};
+  const latin = {'Argentina', 'Urugvay', 'Kolumbiya', 'Ekvador', 'Braziliya', 'Meksika', 'Paragvay', 'Venesuela', 'Chili'};
+  const african = {
+    'Gana', 'Senegal', 'Nigeriya', 'Kamerun', 'Kot-d’Ivuar', 'Mali', 'Gvineya', 'KDR',
+    'Burkina-Faso', 'Zimbabve', 'Gaiti', 'Yamayka', 'Gabon', 'Zambiya',
+  };
   const mena = {'Marokash', 'Misr', 'Eron', 'Jazoir', 'Tunis', 'Isroil'};
   const asian = {'Janubiy Koreya', 'Yaponiya'};
   if (north.contains(nationality)) return _Region.north;

@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import '../models/club.dart';
+import '../data/initial_database.dart';
 import '../models/player.dart';
 import '../ui/face_avatar.dart';
 import '../services/game_state.dart';
@@ -11,7 +12,8 @@ import '../models/manager_profile.dart';
 /// Foydalanuvchi o'z jamoasini noldan yaratish ekrani
 class CustomClubCreatorScreen extends StatefulWidget {
   final ManagerProfile? managerProfile;
-  const CustomClubCreatorScreen({super.key, this.managerProfile});
+  final String league;
+  const CustomClubCreatorScreen({super.key, this.managerProfile, this.league = 'super'});
   @override
   State<CustomClubCreatorScreen> createState() => _CustomClubCreatorScreenState();
 }
@@ -30,6 +32,7 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
   Color _secondary = const Color(0xFF0F172A);
   Color _trim = const Color(0xFFF2C14E);
   String _monogram = 'TS';
+  late String _league = widget.league;
   late List<Player> _candidates = GameState.starCandidates();
   int _star = 0;
   static const _colors = [
@@ -93,6 +96,7 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
       crestConfig: _crest,
       managerProfile: widget.managerProfile,
       star: _candidates[_star],
+      league: _league,
     );
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
@@ -146,6 +150,14 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SectionHeader('1. Jamoa Ma\'lumotlari'),
+              const Text('Qaysi ligada o‘ynaysiz?', style: AppText.small),
+              const SizedBox(height: 8),
+              PillTabs(
+                labels: [for (final l in InitialDatabase.leagues) l.name],
+                index: InitialDatabase.leagues.indexWhere((l) => l.id == _league),
+                onChanged: (i) => setState(() => _league = InitialDatabase.leagues[i].id),
+              ),
+              const SizedBox(height: 12),
               TextField(
                 controller: _nameController,
                 decoration: const InputDecoration(labelText: 'Klub nomi', prefixIcon: Icon(Icons.shield_outlined)),

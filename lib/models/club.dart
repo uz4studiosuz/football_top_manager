@@ -387,6 +387,7 @@ class Club {
   int ticketPrice; // o‘rtacha chipta narxi (EUR)
   int fanMood; // 0–100
   String? captainId, cornerTakerId, freeKickTakerId, penaltyTakerId;
+  String managerName;
   TeamTactics tactics;
   final ClubCrestConfig crestConfig;
   List<Player> squad;
@@ -418,6 +419,7 @@ class Club {
     this.cornerTakerId,
     this.freeKickTakerId,
     this.penaltyTakerId,
+    this.managerName = '',
   });
 
   Map<String, dynamic> toMap() => {
@@ -441,6 +443,7 @@ class Club {
     'cornerTakerId': cornerTakerId,
     'freeKickTakerId': freeKickTakerId,
     'penaltyTakerId': penaltyTakerId,
+    'managerName': managerName,
     'tactics': tactics.toMap(),
     'crest': crestConfig.toMap(),
     'squad': squad.map((p) => p.toMap()).toList(),
@@ -469,6 +472,7 @@ class Club {
     cornerTakerId: m['cornerTakerId'],
     freeKickTakerId: m['freeKickTakerId'],
     penaltyTakerId: m['penaltyTakerId'],
+    managerName: m['managerName'] ?? '',
     tactics: TeamTactics.fromMap(m['tactics'] as Map),
     crestConfig: ClubCrestConfig.fromMap(m['crest'] as Map),
     squad: (m['squad'] as List)

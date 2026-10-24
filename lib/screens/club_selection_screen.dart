@@ -17,12 +17,19 @@ class ClubSelectionScreen extends StatefulWidget {
 }
 
 class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
-  late final List<Club> _clubs = InitialDatabase.getSuperLeagueClubs();
+  String _league = 'super';
+  late List<Club> _clubs = InitialDatabase.getClubs(_league);
   int _selected = 0;
+
+  void _switchLeague(String id) => setState(() {
+    _league = id;
+    _clubs = InitialDatabase.getClubs(id)..sort((a, b) => b.reputation.compareTo(a.reputation));
+    _selected = 0;
+  });
   Club get _club => _clubs[_selected];
 
   void _start(Club club) {
-    GameState().startCareerWithExistingClub(club, managerProfile: widget.managerProfile);
+    GameState().startCareerWithExistingClub(club, managerProfile: widget.managerProfile, league: _league);
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const MainNavigationScreen()),
       (route) => false,
@@ -32,6 +39,15 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
   String _expectation(Club c) {
     final ranked = List<Club>.of(_clubs)..sort((a, b) => b.squadDepthRating.compareTo(a.squadDepthRating));
     final rank = ranked.indexOf(c) + 1;
+    if (_clubs.length > 10) {
+      return switch (rank) {
+        1 => 'Chempionlik',
+        <= 4 => 'Top-4 (Chempionlar ligasi)',
+        <= 7 => 'Top-6 (Yevrokubok)',
+        <= 12 => 'Top-10',
+        _ => 'Ligada qolish',
+      };
+    }
     return switch (rank) {
       1 => 'Chempionlik',
       2 || 3 => 'Top-3',
@@ -49,6 +65,15 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
       body: ListView(
         padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
         children: [
+          PillTabs(
+            labels: [
+              for (final l in InitialDatabase.leagues)
+                '${l.name} · ${InitialDatabase.getClubs(l.id).length} klub',
+            ],
+            index: InitialDatabase.leagues.indexWhere((l) => l.id == _league),
+            onChanged: (i) => _switchLeague(InitialDatabase.leagues[i].id),
+          ),
+          const SizedBox(height: 12),
           SizedBox(
             height: 112,
             child: ListView.separated(
@@ -62,7 +87,7 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
                     onTap: () => Navigator.push(
                       context,
                       MaterialPageRoute<void>(
-                        builder: (_) => CustomClubCreatorScreen(managerProfile: widget.managerProfile),
+                        builder: (_) => CustomClubCreatorScreen(managerProfile: widget.managerProfile, league: _league),
                       ),
                     ),
                     child: const Column(

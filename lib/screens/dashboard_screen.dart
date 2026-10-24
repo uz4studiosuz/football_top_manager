@@ -63,7 +63,7 @@ class DashboardScreen extends StatelessWidget {
                         style: AppText.h3.copyWith(fontSize: 16),
                       ),
                       Text(
-                        'Super League · ${game.seasonLabel}',
+                        '${game.leagueName} · ${game.seasonLabel}',
                         style: AppText.caption,
                       ),
                     ],
@@ -209,7 +209,7 @@ class DashboardScreen extends StatelessWidget {
     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
     child: Row(
       children: [
-        Expanded(child: StatTile('$rank/8', 'Liga o‘rni', color: StandingsTable.zoneColor(rank) == Colors.transparent ? null : StandingsTable.zoneColor(rank))),
+        Expanded(child: StatTile('$rank/${game.clubCount}', 'Liga o‘rni', color: StandingsTable.zoneColor(rank) == Colors.transparent ? null : StandingsTable.zoneColor(rank))),
         Expanded(child: StatTile('${s.points}', 'Ochko')),
         Expanded(
           child: Column(
@@ -355,7 +355,7 @@ class DashboardScreen extends StatelessWidget {
   }
 
   Widget _roundDone(BuildContext context, GameState game) {
-    final nextDate = game.currentRound < GameState.totalRounds
+    final nextDate = game.currentRound < game.totalRounds
         ? game.calendar.dateOfRound(game.currentRound + 1)
         : null;
     return AppCard(

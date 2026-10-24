@@ -54,7 +54,11 @@ class GameState extends ChangeNotifier {
   factory GameState() => _instance;
   GameState._internal();
 
-  static const totalRounds = 14;
+  /// Double round robin: 14 rounds for 8 clubs, 38 for 20.
+  int get totalRounds => _allClubs.length < 2 ? 14 : (_allClubs.length - 1) * 2;
+  String leagueId = 'super';
+  String get leagueName => InitialDatabase.leagueName(leagueId);
+  int get clubCount => _allClubs.length;
   static const maxSquad = 28;
   static const minSquad = 18;
   static const firstSeason = 2026;
@@ -233,10 +237,12 @@ class GameState extends ChangeNotifier {
   void startCareerWithExistingClub(
     Club selectedClub, {
     ManagerProfile? managerProfile,
+    String? league,
   }) {
     if (managerProfile != null) _managerProfile = managerProfile;
     _resetRecords();
-    _allClubs = InitialDatabase.getSuperLeagueClubs();
+    leagueId = league ?? InitialDatabase.leagueOf(selectedClub.id) ?? 'super';
+    _allClubs = InitialDatabase.getClubs(leagueId);
     _userClubId = selectedClub.id;
     _beginCareer();
   }
@@ -249,9 +255,10 @@ class GameState extends ChangeNotifier {
     required ClubCrestConfig crestConfig,
     ManagerProfile? managerProfile,
     Player? star,
+    String league = 'super',
   }) {
     if (managerProfile != null) _managerProfile = managerProfile;
-    final baseClubs = InitialDatabase.getSuperLeagueClubs();
+    final baseClubs = InitialDatabase.getClubs(league);
     final customClubId = 'custom_${DateTime.now().microsecondsSinceEpoch}';
     final squad = _generateCustomSquad(customClubId);
     if (star != null) {
@@ -288,16 +295,21 @@ class GameState extends ChangeNotifier {
       benchIds: squad.skip(11).take(Club.matchdayBench).map((p) => p.id).toList(),
     );
     _resetRecords();
-    _allClubs = [...baseClubs.take(7), customClub];
+    leagueId = league;
+    // The new club takes the place of the league's weakest side.
+    final keep = List<Club>.of(baseClubs)..sort((a, b) => b.reputation.compareTo(a.reputation));
+    _allClubs = [...keep.take(baseClubs.length - 1), customClub];
     _userClubId = customClubId;
     _beginCareer();
   }
 
   void _beginCareer() {
     careerSeed = Random().nextInt(1 << 30);
+    calendar = SeasonCalendar(firstSeason, totalRounds);
     for (final c in _allClubs) {
       _ensureMatchdaySquad(c);
-      if (c.id != _userClubId) autoPickLineup(c);
+      // Seed files for big leagues list squads, not a tactical XI.
+      if (c.id != _userClubId || leagueId != 'super') autoPickLineup(c);
     }
     _generateSeasonSchedule();
     _initializeStandings();
@@ -325,6 +337,16 @@ class GameState extends ChangeNotifier {
     final ranked = List<Club>.of(_allClubs)
       ..sort((a, b) => b.squadDepthRating.compareTo(a.squadDepthRating));
     final rank = ranked.indexOf(c) + 1;
+    final n = _allClubs.length;
+    if (n > 10) {
+      return switch (rank) {
+        1 => const BoardObjective('Chempionlik', 1),
+        <= 4 => const BoardObjective('Top-4 (Chempionlar ligasi)', 4),
+        <= 7 => const BoardObjective('Top-6 (Yevrokubok)', 6),
+        <= 12 => const BoardObjective('Top-10', 10),
+        _ => BoardObjective('Ligada qolish', n - 3),
+      };
+    }
     return switch (rank) {
       1 => const BoardObjective('Chempionlik', 1),
       2 || 3 => const BoardObjective('Top-3', 3),
@@ -364,11 +386,11 @@ class GameState extends ChangeNotifier {
     for (final f in List<Fixture>.of(_fixtures)) {
       _fixtures.add(
         Fixture(
-          id: 'fix_${calendar.year}_r${f.round + 7}_${f.id}',
-          round: f.round + 7,
+          id: 'fix_${calendar.year}_r${f.round + n - 1}_${f.id}',
+          round: f.round + n - 1,
           homeClubId: f.awayClubId,
           awayClubId: f.homeClubId,
-          date: calendar.dateOfRound(f.round + 7),
+          date: calendar.dateOfRound(f.round + n - 1),
         ),
       );
     }
@@ -910,7 +932,9 @@ class GameState extends ChangeNotifier {
   }
 
   void _applyMatchEconomics() {
+    final days = calendar.daysAfterRound(_currentRound);
     final weeks = calendar.weeksAfterRound(_currentRound);
+    int perDays(int weekly) => (weekly * days / 7).round();
     for (final club in _allClubs) {
       final f = _fixtures
           .where((f) => f.round == _currentRound && f.involves(club.id))
@@ -937,12 +961,13 @@ class GameState extends ChangeNotifier {
       final pos = positionOf(club.id);
       _post(club, 'Teletranslyatsiya ulushi', 1800000 + (8 - pos) * 150000,
           category: FinanceCategory.broadcast);
-      _post(club, 'Homiylik va savdo · $weeks hafta', weeklyCommercial(club) * weeks,
+      final span = days % 7 == 0 ? '$weeks hafta' : '$days kun';
+      _post(club, 'Homiylik va savdo · $span', perDays(weeklyCommercial(club)),
           category: FinanceCategory.commercial);
-      _post(club, 'Futbolchi maoshlari · $weeks hafta', -club.totalWeeklyWages * weeks,
+      _post(club, 'Futbolchi maoshlari · $span', -perDays(club.totalWeeklyWages),
           category: FinanceCategory.wages);
-      _post(club, 'Klub, akademiya va xodimlar · $weeks hafta',
-          -(250000 + club.reputation * 2000) * weeks,
+      _post(club, 'Klub, akademiya va xodimlar · $span',
+          -perDays(250000 + club.reputation * 2000),
           category: FinanceCategory.operations);
       for (final p in club.squad) {
         final starter = club.startingLineupIds.contains(p.id);
@@ -1210,7 +1235,7 @@ class GameState extends ChangeNotifier {
     final ai = _allClubs.where((c) => c.id != _userClubId).toList();
     final random = Random(_salt(_currentRound * 7919 + calendar.year));
     ai.shuffle(random);
-    for (final buyer in ai.take(2)) {
+    for (final buyer in ai.take(max(2, ai.length ~/ 5))) {
       // Strengthen the weakest line of the XI.
       final weakest = [
         PositionCategory.defense,
@@ -1409,8 +1434,11 @@ class GameState extends ChangeNotifier {
     const prizes = [60, 48, 38, 30, 24, 19, 15, 12];
     for (var i = 0; i < table.length; i++) {
       final club = getClubById(table[i].clubId)!;
-      _post(club, 'Liga mukofot puli · ${i + 1}-o‘rin',
-          prizes[i.clamp(0, 7)] * 1000000,
+      // Merit payments: the 20-club league pays about £2.4M per place.
+      final prize = table.length <= 8
+          ? prizes[i.clamp(0, 7)] * 1000000
+          : (20 + (table.length - 1 - i) * 2.4).round() * 1000000;
+      _post(club, 'Liga mukofot puli · ${i + 1}-o‘rin', prize,
           category: FinanceCategory.prize);
     }
     if (champion.id == _userClubId) _managerProfile.trophies++;
@@ -1451,7 +1479,7 @@ class GameState extends ChangeNotifier {
   void startNextSeason() {
     if (!seasonFinished) return;
     final rnd = Random(_salt(calendar.year * 17));
-    calendar = SeasonCalendar(calendar.year + 1);
+    calendar = SeasonCalendar(calendar.year + 1, totalRounds);
     final released = <String>[];
     for (final club in _allClubs) {
       final user = club.id == _userClubId;
@@ -1764,6 +1792,7 @@ class GameState extends ChangeNotifier {
     'user': _userClubId,
     'round': _currentRound,
     'year': calendar.year,
+    'league': leagueId,
     'finished': seasonFinished,
     'objective': [objective.title, objective.targetPosition],
     'board': boardConfidence,
@@ -1791,12 +1820,13 @@ class GameState extends ChangeNotifier {
     _userClubId = m['user'];
     careerSeed = m['seed'] ?? careerSeed;
     _currentRound = m['round'];
-    calendar = SeasonCalendar(m['year']);
+    leagueId = m['league'] ?? 'super';
     seasonFinished = m['finished'] ?? false;
     final o = m['objective'] as List;
     objective = BoardObjective(o[0], o[1]);
     boardConfidence = m['board'] ?? 70;
     _managerProfile = ManagerProfile.fromMap(Map<String, dynamic>.from(m['manager']));
+    calendar = SeasonCalendar(m['year'], totalRounds);
     _standingsMap = {
       for (final raw in m['standings'] as List)
         (raw as Map)['c'] as String: SaveCodec.standingFrom(Map<String, dynamic>.from(raw)),

@@ -239,7 +239,7 @@ class _MatchScreenState extends State<MatchScreen> {
       length: 4,
       child: Scaffold(
         appBar: AppBar(
-          title: Text('Super League · ${widget.fixture.round}-tur', style: AppText.h3),
+          title: Text('${_game.leagueName} · ${widget.fixture.round}-tur', style: AppText.h3),
           actions: [
             IconButton(
               tooltip: 'Raqib tarkibi',

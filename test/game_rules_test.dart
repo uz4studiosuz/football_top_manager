@@ -341,6 +341,39 @@ void main() {
     expect(back.ovr, p.ovr);
   });
 
+  test('Premier League career: 20 clubs, 38 rounds, real dates and zones', () {
+    final city = InitialDatabase.getClubs('epl').firstWhere((c) => c.id == 'epl_mci');
+    game.startCareerWithExistingClub(city);
+    expect(game.leagueId, 'epl');
+    expect(game.leagueName, 'Premier League');
+    expect(game.allClubs.length, 20);
+    expect(game.totalRounds, 38);
+    expect(game.fixtures.length, 380);
+    for (final c in game.allClubs) {
+      expect(game.fixtures.where((f) => f.homeClubId == c.id).length, 19);
+      expect(c.startingXI.length, 11);
+      expect(c.startingXI.where((p) => p.mainPosition.isGoalkeeper).length, 1);
+    }
+    final dates = [for (var r = 1; r <= 38; r++) game.calendar.dateOfRound(r)];
+    for (var i = 1; i < dates.length; i++) {
+      expect(dates[i].isAfter(dates[i - 1]), isTrue);
+    }
+    expect(dates.last.isBefore(DateTime(2027, 6, 1)), isTrue);
+    expect(game.userClub.managerName, 'Pep Guardiola');
+    expect(city.squad.any((p) => p.name == 'Abdukodir Khusanov'), isTrue);
+    for (var r = 1; r <= 3; r++) {
+      game.finishMatch(fixture: game.nextUserFixture!, homeScore: 1, awayScore: 0, events: []);
+      game.nextRound();
+    }
+    expect(game.sortedStandings.every((s) => s.played == 3), isTrue);
+    final json = jsonEncode(game.toSave());
+    game.resetCareer();
+    expect(game.restore(jsonDecode(json)), isTrue);
+    expect(game.leagueId, 'epl');
+    expect(game.totalRounds, 38);
+    expect(game.currentRound, 4);
+  });
+
   test('Injured and suspended starters are replaced automatically', () {
     final c = game.userClub;
     final p = c.startingXI[5];

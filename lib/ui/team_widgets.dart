@@ -120,13 +120,17 @@ class StandingsTable extends StatelessWidget {
     this.onTapClub,
   });
 
-  static Color zoneColor(int pos) => switch (pos) {
-    1 => const Color(0xFF374DF5),
-    2 || 3 || 4 => const Color(0xFF12A150),
-    5 => const Color(0xFFF5A524),
-    8 => const Color(0xFFE5352B),
-    _ => Colors.transparent,
-  };
+  /// Table zones: champion, Champions League, Europa League, Conference
+  /// League (big leagues) and relegation (bottom three in a 20-club league).
+  static Color zoneColor(int pos, [int? clubs]) {
+    final n = clubs ?? GameState().clubCount;
+    if (pos == 1) return const Color(0xFF374DF5);
+    if (pos <= 4) return const Color(0xFF12A150);
+    if (pos == 5) return const Color(0xFFF5A524);
+    if (n > 10 && pos == 6) return const Color(0xFF14B8A6);
+    if (n > 10 ? pos > n - 3 : pos == n) return const Color(0xFFE5352B);
+    return Colors.transparent;
+  }
 
   @override
   Widget build(BuildContext context) => ListenableBuilder(
@@ -177,6 +181,12 @@ class StandingsTable extends StatelessWidget {
           ),
         ),
         for (var i = 0; i < rows.length; i++)
+          // The compact table of a big league shows the top four and the
+          // clubs around the manager's side.
+          if (!compact ||
+              rows.length <= 10 ||
+              i < 4 ||
+              (i - rows.indexWhere((r) => r.clubId == highlightClubId)).abs() <= 2)
           Builder(
             builder: (context) {
               final s = rows[i];

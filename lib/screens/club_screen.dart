@@ -409,7 +409,7 @@ class _CalendarViewState extends State<CalendarView> {
                   _dateRow(Icons.ac_unit_rounded, 'Qishki tanaffus', cal.dateOfRound(8).add(const Duration(days: 7))),
                   _dateRow(Icons.lock_open_rounded, 'Qishki oyna ochiladi', cal.winterOpen),
                   _dateRow(Icons.lock_outline_rounded, 'Qishki oyna yopiladi', cal.winterClose),
-                  _dateRow(Icons.emoji_events_outlined, 'So‘nggi tur', cal.dateOfRound(GameState.totalRounds)),
+                  _dateRow(Icons.emoji_events_outlined, 'So‘nggi tur', cal.dateOfRound(game.totalRounds)),
                 ],
               ),
             ),

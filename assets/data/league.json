@@ -5,5 +5,21 @@
   "clubsFile": "clubs.json",
   "playersFile": "players.json",
   "templatesFile": "squad_templates.json",
-  "namesFile": "names.json"
+  "namesFile": "names.json",
+  "leagues": [
+    {
+      "id": "super",
+      "name": "Super League",
+      "country": "Yevropa",
+      "clubsFile": "clubs.json",
+      "playersFile": "players.json"
+    },
+    {
+      "id": "epl",
+      "name": "Premier League",
+      "country": "Angliya",
+      "clubsFile": "clubs_epl.json",
+      "playersFile": "players_epl.json"
+    }
+  ]
 }
