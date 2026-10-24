@@ -1,4 +1,6 @@
 import 'dart:math';
+import '../l10n/l10n.dart';
+import 'commentary_i18n.dart';
 
 /// Uzbek match commentary with several phrasings per moment, so the live
 /// log reads like a broadcast instead of repeating one template.
@@ -171,7 +173,12 @@ class Commentary {
     String o = '',
     String s = '',
   }) {
-    final options = _bank[key] ?? const ['{p}'];
+    final bank = switch (L10n.lang) {
+      AppLang.en => commentaryEn,
+      AppLang.ru => commentaryRu,
+      AppLang.uz => _bank,
+    };
+    final options = bank[key] ?? _bank[key] ?? const ['{p}'];
     return options[random.nextInt(options.length)]
         .replaceAll('{p}', p)
         .replaceAll('{a}', a)
