@@ -926,6 +926,7 @@
  "O‘yin boshlandi": "Матч начался",
  "O‘yin boshqaruvi": "Управление матчем",
  "O‘yin davomida faqat zaxiradagi futbolchilar maydonga tushishi mumkin. Rezervdagilarni o‘yindan oldin zaxira yoki asosiy tarkibga qo‘ying.": "Во время матча на поле могут выйти только игроки со скамейки. Переведите резервистов в запас или основу до матча.",
+ "O‘yin davomidagi o‘zgarishlar faqat shu o‘yin uchun: o‘yindan keyin asosiy taktika qaytadi.": "Изменения во время матча действуют только в этом матче: после него вернётся основная тактика.",
  "O‘yin falsafasi": "Игровая философия",
  "O‘yin kuni zaxirasi · {0}/{1}": "Запасные на матч · {0}/{1}",
  "O‘yin kuni zaxirasi: {0} kishi. Har o‘yinda 5 ta almashtirish.": "Запасные на матч: {0} игроков. 5 замен за матч.",

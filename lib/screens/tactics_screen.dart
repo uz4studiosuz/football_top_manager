@@ -356,6 +356,22 @@ class _TacticsScreenState extends State<TacticsScreen> {
                           },
                         ),
                         const SizedBox(height: 10),
+                        if (_inMatch)
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.info_outline, size: 16, color: AppColors.warning),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    tr('O‘yin davomidagi o‘zgarishlar faqat shu o‘yin uchun: o‘yindan keyin asosiy taktika qaytadi.'),
+                                    style: AppText.caption.copyWith(color: AppColors.warning),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         Row(
                           children: [
                             Icon(Icons.drag_indicator, size: 16, color: AppColors.ink3),

@@ -926,6 +926,7 @@
  "O‘yin boshlandi": "Kick-off",
  "O‘yin boshqaruvi": "Match control",
  "O‘yin davomida faqat zaxiradagi futbolchilar maydonga tushishi mumkin. Rezervdagilarni o‘yindan oldin zaxira yoki asosiy tarkibga qo‘ying.": "During a match only substitutes on the bench can come on. Move reserves to the bench or the starting XI before the match.",
+ "O‘yin davomidagi o‘zgarishlar faqat shu o‘yin uchun: o‘yindan keyin asosiy taktika qaytadi.": "Changes during the match apply to this match only: your main tactics return afterwards.",
  "O‘yin falsafasi": "Playing philosophy",
  "O‘yin kuni zaxirasi · {0}/{1}": "Matchday bench · {0}/{1}",
  "O‘yin kuni zaxirasi: {0} kishi. Har o‘yinda 5 ta almashtirish.": "Matchday bench: {0} players. 5 substitutions per match.",

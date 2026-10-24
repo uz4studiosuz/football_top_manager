@@ -75,6 +75,19 @@ class _MatchScreenState extends State<MatchScreen> {
   /// Live orders shouted from the touchline; they change the tactics for
   /// this match only (restored at the final whistle).
   late TeamTactics _baseTactics;
+
+  /// The tactics and individual instructions from before kick-off: changes
+  /// made during the match apply to this match only.
+  late final TeamTactics _preMatchTactics;
+  late final Map<String, PlayerInstruction> _preMatchInstructions;
+
+  void _restorePreMatch() {
+    _user.tactics = _preMatchTactics;
+    for (final p in _user.squad) {
+      final ins = _preMatchInstructions[p.id];
+      if (ins != null) p.instruction = ins;
+    }
+  }
   final Set<String> _orders = {};
 
   void _toggleOrder(String order) {
@@ -114,8 +127,9 @@ class _MatchScreenState extends State<MatchScreen> {
 
   @override
   void deactivate() {
-    // Live orders never outlive the match.
-    _user.tactics = _baseTactics;
+    // Nothing changed during the match outlives it (and the save knows).
+    _restorePreMatch();
+    Future.microtask(GameState().touch);
     super.deactivate();
   }
 
@@ -250,6 +264,8 @@ class _MatchScreenState extends State<MatchScreen> {
     _field.recordReplays = true;
     _field.derby = _game.isDerby(_home, _away);
     _baseTactics = _user.tactics;
+    _preMatchTactics = _user.tactics;
+    _preMatchInstructions = {for (final p in _user.squad) p.id: p.instruction};
     _feed.addAll(_field.takeEvents().reversed);
     _clock.start();
     _timer = Timer.periodic(const Duration(milliseconds: 33), (_) => _tick());
@@ -333,7 +349,7 @@ class _MatchScreenState extends State<MatchScreen> {
   void _save() {
     if (_saved || _needsShootout) return;
     _saved = true;
-    _user.tactics = _baseTactics;
+    _restorePreMatch();
     _game.finishMatch(
       fixture: widget.fixture,
       homeScore: _field.homeStats.goals,
@@ -493,7 +509,8 @@ class _MatchScreenState extends State<MatchScreen> {
         ),
       ),
     );
-    // Changes made in the Tactics screen become the new base for live orders.
+    // Changes made in the Tactics screen become the base for live orders
+    // (for this match only; the pre-match tactics return at full time).
     if (_orders.isEmpty) _baseTactics = _user.tactics;
     if (mounted) setState(() => _playing = resume && !_field.isHalfTime);
   }
@@ -1192,6 +1209,13 @@ class _SubstitutionSheetState extends State<_SubstitutionSheet> {
     );
   }
 
+  /// Where the player is playing right now (his slot), or his own position
+  /// for substitutes.
+  String _slotCode(Player p) {
+    final i = widget.club.startingLineupIds.indexOf(p.id);
+    return i < 0 ? p.mainPosition.code : widget.club.slotPosition(i).code;
+  }
+
   /// [star]: null = no star, false = suits the position, true = best choice.
   Widget _row(Player p, {required Widget trailing, String? subtitle, bool? star, required VoidCallback onTap}) => InkWell(
     onTap: onTap,
@@ -1226,7 +1250,7 @@ class _SubstitutionSheetState extends State<_SubstitutionSheet> {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    PositionChip(p.mainPosition.code),
+                    PositionChip(_slotCode(p)),
                     const SizedBox(width: 8),
                     SizedBox(
                       width: 70,
