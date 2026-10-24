@@ -11,7 +11,7 @@ void main() {
     const n = 160;
     var goals = 0, shots = 0, onTarget = 0, passes = 0, completed = 0;
     var corners = 0, fouls = 0, yellows = 0, reds = 0, offsides = 0;
-    var homeWins = 0, draws = 0, saves = 0, pens = 0, injuries = 0, subs = 0;
+    var homeWins = 0, draws = 0, saves = 0, pens = 0, injuries = 0, subs = 0, errShot = 0, errGoal = 0;
     var xg = 0.0, ratingSum = 0.0, ratingN = 0, ratingMin = 10.0, ratingMax = 0.0;
     final sw = Stopwatch()..start();
     for (var i = 0; i < n; i++) {
@@ -35,6 +35,10 @@ void main() {
       xg += hs.xg + as.xg;
       injuries += f.injuries.length;
       pens += f.shots.where((s) => s.xg == 0.76).length;
+      for (final l in f.lines.values) {
+        errShot += l.errorsLeadingToShot;
+        errGoal += l.errorsLeadingToGoal;
+      }
       if (hs.goals > as.goals) homeWins++;
       if (hs.goals == as.goals) draws++;
       for (final r in f.allRatings().values) {
@@ -54,6 +58,7 @@ corners ${avg(corners)}  fouls ${avg(fouls)}  yellows ${avg(yellows)}  reds ${av
 offsides ${avg(offsides)}  saves ${avg(saves)}  penalties ${avg(pens)}  injuries ${avg(injuries)}  subs ${avg(subs)}
 home win ${(homeWins * 100 / n).round()}%  draw ${(draws * 100 / n).round()}%
 rating avg ${(ratingSum / ratingN).toStringAsFixed(2)}  min $ratingMin  max $ratingMax
+errors → shot ${avg(errShot)}  → goal ${avg(errGoal)}
 ''');
   });
 }

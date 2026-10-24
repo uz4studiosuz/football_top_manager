@@ -58,6 +58,7 @@ class _Flight {
   final double duration, xg;
   final Player? blocker;
   final ShotRecord? record;
+  final String? errorBy;
   double elapsed = 0;
   final Set<String> checked = {};
   _Flight({
@@ -74,6 +75,7 @@ class _Flight {
     this.xg = 0,
     this.blocker,
     this.record,
+    this.errorBy,
   });
   bool get shot =>
       kind == _Kind.shot ||
@@ -129,6 +131,13 @@ class MatchField {
   int _consumed = 0;
   String? _lastPasser;
   Offset? _lastPassFrom;
+  // Last ball lost deep in a team's own third (for "error leading to shot").
+  ({String id, bool home, double time})? _error;
+
+  void _markError(Player p, bool losingHome, Offset at) {
+    final depth = losingHome ? 1 - at.dx : at.dx;
+    if (depth > 0.8) _error = (id: p.id, home: losingHome, time: time);
+  }
   // Set-piece origin of the current attack (corner / free-kick delivery).
   String? _origin;
   bool _originHome = true;
@@ -722,6 +731,7 @@ class MatchField {
         _line(carrier)
           ..possessionLost += 1
           ..duelsLost += 1;
+        _markError(carrier, homePossession, ball);
         _def.tackles++;
         if (random.nextDouble() < 0.18) {
           _emit(
@@ -1184,7 +1194,9 @@ class MatchField {
       line
         ..dribblesWon += 1
         ..duelsWon += 1;
-      _line(d).duelsLost += 1;
+      _line(d)
+        ..duelsLost += 1
+        ..dribbledPast += 1;
       _beaten[d.id] = 0.85;
       _hold = _hold * 0.4;
       if (random.nextDouble() < 0.14) {
@@ -1199,6 +1211,7 @@ class MatchField {
       line
         ..possessionLost += 1
         ..duelsLost += 1;
+      _markError(carrier, homePossession, ball);
       _line(d)
         ..tackles += 1
         ..duelsWon += 1;
@@ -1275,8 +1288,19 @@ class MatchField {
         _line(passer)
           ..keyPasses += 1
           ..xa += xg;
+        if (big) _line(passer).bigChancesCreated += 1;
       }
     }
+    String? errorBy;
+    final err = _error;
+    if (err != null && err.home != isHome && time - err.time < 0.3) {
+      final culprit = defend.playerById(err.id);
+      if (culprit != null) {
+        _line(culprit).errorsLeadingToShot += 1;
+        errorBy = culprit.id;
+      }
+    }
+    _error = null;
     _spike(isHome, xg * 110 + (big ? 18 : 0));
     final gkFactor = keeper == null
         ? 2.4
@@ -1432,6 +1456,7 @@ class MatchField {
       ),
       xg: xg,
       record: record,
+      errorBy: errorBy,
     );
     phase = FieldPhase.shot;
     _setPieceDelivery = false;
@@ -1484,6 +1509,7 @@ class MatchField {
               ..interceptions += 1
               ..touches += 1;
             _line(flight.actor).possessionLost += 1;
+            _markError(flight.actor, flight.home, ball);
             (homePossession ? homeStats : awayStats).interceptions++;
             if (random.nextDouble() < 0.12) {
               _emit(
@@ -1542,6 +1568,7 @@ class MatchField {
       _lastPasser = null;
     } else {
       _lastPasser = null;
+      _markError(flight.actor, flight.home, ball);
       _line(_xi(_club)[owner]).touches += 1;
     }
     phase = FieldPhase.openPlay;
@@ -1658,6 +1685,14 @@ class MatchField {
         final assister = (f.home ? home : away).playerById(f.assist!);
         if (assister != null) _line(assister).assists += 1;
       }
+      if (f.errorBy != null) {
+        final culprit = defendClub.playerById(f.errorBy!);
+        if (culprit != null) {
+          _line(culprit)
+            ..errorsLeadingToShot -= 1
+            ..errorsLeadingToGoal += 1;
+        }
+      }
       for (var i = 0; i < 11; i++) {
         final p = _xi(defendClub)[i];
         if (!dismissed.contains(p.id)) _line(p).goalsConceded += 1;
@@ -1703,6 +1738,7 @@ class MatchField {
           random.nextDouble() >
           (keeper.stats.gkCatching + keeper.stats.gkParrying) / 240;
       if (f.kind == _Kind.penalty) {
+        _line(keeper).penaltiesSaved += 1;
         _emit(
           MatchEventType.save,
           _talk.say('penaltySaved', p: f.actor.shortName, a: keeper.shortName),
@@ -2104,6 +2140,8 @@ class MatchField {
     if (random.nextDouble() < 0.013) _injure(victim, homePossession);
     _lastPasser = null;
     if (inBox) {
+      _line(defender).penaltiesConceded += 1;
+      _line(victim).penaltiesWon += 1;
       _emit(
         MatchEventType.penalty,
         _talk.say('penaltyAwarded', p: victim.shortName, a: defender.shortName),

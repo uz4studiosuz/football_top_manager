@@ -8,7 +8,7 @@ import 'custom_club_creator_screen.dart';
 import 'main_navigation_screen.dart';
 import '../models/manager_profile.dart';
 
-/// Choose one of the eight Super League clubs (or create a new one).
+/// Choose a club from any league (or create a new one).
 class ClubSelectionScreen extends StatefulWidget {
   final ManagerProfile? managerProfile;
   const ClubSelectionScreen({super.key, this.managerProfile});
@@ -24,6 +24,12 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
   void _switchLeague(String id) => setState(() {
     _league = id;
     _clubs = InitialDatabase.getClubs(id)..sort((a, b) => b.reputation.compareTo(a.reputation));
+    // Big-league seed files list squads only; show each club's real best XI.
+    if (id != 'super') {
+      for (final c in _clubs) {
+        GameState().autoPickLineup(c);
+      }
+    }
     _selected = 0;
   });
   Club get _club => _clubs[_selected];

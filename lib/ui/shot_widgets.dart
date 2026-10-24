@@ -274,7 +274,7 @@ class ShotDetails extends StatelessWidget {
           ),
         const SizedBox(height: 10),
         AspectRatio(
-          aspectRatio: 3.2,
+          aspectRatio: 3.4,
           child: CustomPaint(painter: GoalMouthPainter(s, color)),
         ),
         const SizedBox(height: 10),
@@ -355,9 +355,9 @@ class GoalMouthPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // x spans -0.5..1.5 goal widths, y spans 0..1.7 goal heights.
+    // x spans -0.5..1.5 goal widths, y spans 0..1.5 goal heights.
     final ground = size.height * 0.94;
-    Offset at(double x, double y) => Offset((x + 0.5) / 2 * size.width, ground - y / 1.7 * ground);
+    Offset at(double x, double y) => Offset((x + 0.5) / 2 * size.width, ground - y / 1.5 * ground);
     canvas.drawLine(Offset(0, ground), Offset(size.width, ground), Paint()
       ..color = AppColors.line
       ..strokeWidth = 2);
@@ -393,7 +393,7 @@ class GoalMouthPainter extends CustomPainter {
       tp.paint(canvas, at(0.5, 0.5) - Offset(tp.width / 2, tp.height / 2));
       return;
     }
-    final p = at(shot.mouthX.clamp(-0.48, 1.48), shot.mouthY.clamp(0.04, 1.66));
+    final p = at(shot.mouthX.clamp(-0.48, 1.48), shot.mouthY.clamp(0.04, 1.44));
     final r = size.height * 0.075;
     if (shot.goal || shot.outcome == 'save') {
       canvas.drawCircle(p, r, Paint()..color = shot.goal ? color : Colors.white);

@@ -105,6 +105,7 @@ abstract final class SaveCodec {
     'tackles', 'interceptions', 'clearances', 'blocks', 'dribbles', 'dribblesWon', 'duelsWon',
     'duelsLost', 'fouls', 'fouled', 'saves', 'goalsConceded', 'yellow', 'red', 'possessionLost',
     'offsides', 'bigChancesMissed', 'crosses', 'touches',
+    'errorsLeadingToShot', 'errorsLeadingToGoal', 'penaltiesConceded', 'penaltiesWon', 'penaltiesSaved', 'bigChancesCreated', 'dribbledPast',
   ];
 
   static List<int> _lineValues(PlayerMatchStats l) => [
@@ -112,6 +113,7 @@ abstract final class SaveCodec {
     l.tackles, l.interceptions, l.clearances, l.blocks, l.dribbles, l.dribblesWon, l.duelsWon,
     l.duelsLost, l.fouls, l.fouled, l.saves, l.goalsConceded, l.yellow, l.red, l.possessionLost,
     l.offsides, l.bigChancesMissed, l.crosses, l.touches,
+    l.errorsLeadingToShot, l.errorsLeadingToGoal, l.penaltiesConceded, l.penaltiesWon, l.penaltiesSaved, l.bigChancesCreated, l.dribbledPast,
   ];
 
   static Map<String, dynamic> line(PlayerMatchStats l) => {
@@ -134,7 +136,9 @@ abstract final class SaveCodec {
       ..subOnMinute = m['on']
       ..subOffMinute = m['off'];
     final v = (m['v'] as List).cast<num>();
-    assert(v.length == _lineFields.length);
+    // Older saves stop after 'touches'; missing values stay 0.
+    assert(v.length == _lineFields.length || v.length == 26);
+    int next(int i) => i < v.length ? v[i].toInt() : 0;
     var i = 0;
     l
       ..passes = v[i++].toInt()
@@ -162,7 +166,14 @@ abstract final class SaveCodec {
       ..offsides = v[i++].toInt()
       ..bigChancesMissed = v[i++].toInt()
       ..crosses = v[i++].toInt()
-      ..touches = v[i++].toInt();
+      ..touches = v[i++].toInt()
+      ..errorsLeadingToShot = next(i++)
+      ..errorsLeadingToGoal = next(i++)
+      ..penaltiesConceded = next(i++)
+      ..penaltiesWon = next(i++)
+      ..penaltiesSaved = next(i++)
+      ..bigChancesCreated = next(i++)
+      ..dribbledPast = next(i++);
     return l;
   }
 

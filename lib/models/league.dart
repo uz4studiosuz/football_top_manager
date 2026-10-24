@@ -118,7 +118,14 @@ class PlayerMatchStats {
       offsides = 0,
       bigChancesMissed = 0,
       crosses = 0,
-      touches = 0;
+      touches = 0,
+      errorsLeadingToShot = 0,
+      errorsLeadingToGoal = 0,
+      penaltiesConceded = 0,
+      penaltiesWon = 0,
+      penaltiesSaved = 0,
+      bigChancesCreated = 0,
+      dribbledPast = 0;
   double xg = 0, xa = 0;
   bool injured = false;
   int? subOnMinute, subOffMinute;
@@ -130,30 +137,43 @@ class PlayerMatchStats {
     required bool forward,
     required int goalDifference,
   }) {
+    // SofaScore-like: a common core plus weights that depend on the role
+    // (keepers judged on saves, defenders on defending, forwards on output).
+    final midfielder = !goalkeeper && !defender && !forward;
     var r = 6.35;
     r += goals * (forward ? 0.95 : defender ? 1.2 : 1.05);
     r += assists * 0.7;
-    r += keyPasses * 0.16;
-    r += (shotsOnTarget - goals).clamp(0, 99) * 0.1;
+    r += keyPasses * (midfielder ? 0.18 : 0.15);
+    r += bigChancesCreated * 0.22;
+    r += (shotsOnTarget - goals).clamp(0, 99) * (forward ? 0.12 : 0.1);
     r -= (shots - shotsOnTarget).clamp(0, 99) * 0.03;
-    r -= bigChancesMissed * 0.22;
-    r += passesCompleted * 0.009;
-    r -= (passes - passesCompleted) * 0.03;
-    r += tackles * 0.12 + interceptions * 0.1 + clearances * 0.05 + blocks * 0.1;
-    r += dribblesWon * 0.09 - (dribbles - dribblesWon) * 0.04;
+    r -= bigChancesMissed * (forward ? 0.25 : 0.2);
+    r += passesCompleted * (midfielder ? 0.011 : 0.008);
+    r -= (passes - passesCompleted) * (midfielder ? 0.034 : 0.028);
+    r += tackles * (defender ? 0.13 : 0.11) +
+        interceptions * (defender ? 0.12 : 0.09) +
+        clearances * (defender ? 0.06 : 0.04) +
+        blocks * 0.1;
+    r += dribblesWon * (forward ? 0.1 : 0.08) - (dribbles - dribblesWon) * 0.04;
+    r -= dribbledPast * (defender ? 0.09 : 0.06);
     r += (duelsWon - duelsLost) * 0.02;
     r -= fouls * 0.06;
     r += fouled * 0.03;
-    r -= yellow * 0.25 + red * 1.5;
-    r -= possessionLost * 0.022;
+    // Discipline: a second yellow counts as a red.
+    r -= yellow * 0.3 + red * 1.6;
+    r -= possessionLost * (forward ? 0.016 : 0.024);
     r -= offsides * 0.04;
+    // Decisive moments.
+    r -= errorsLeadingToShot * 0.35 + errorsLeadingToGoal * 1.0;
+    r -= penaltiesConceded * 0.7;
+    r += penaltiesWon * 0.4;
     final cleanSheet = minutes >= 60 && goalsConceded == 0;
     if (goalkeeper) {
-      r += saves * 0.3 - goalsConceded * 0.22 + (cleanSheet ? 0.45 : 0);
+      r += saves * 0.3 + penaltiesSaved * 0.9 - goalsConceded * 0.22 + (cleanSheet ? 0.45 : 0);
     } else if (defender) {
       r -= goalsConceded * 0.09;
       if (cleanSheet) r += 0.3;
-    } else if (!forward && cleanSheet) {
+    } else if (midfielder && cleanSheet) {
       r += 0.08;
     }
     r += goalDifference.clamp(-3, 3) * 0.06;
@@ -162,7 +182,6 @@ class PlayerMatchStats {
   }
 }
 
-/// Uchrashuv taqvimi (Fixture)
 /// One attempt on goal with SofaScore-style details.
 class ShotRecord {
   final Offset origin, end;
@@ -274,6 +293,7 @@ class ShotRecord {
   }
 }
 
+/// Uchrashuv taqvimi (Fixture)
 class Fixture {
   final String id;
   final int round;

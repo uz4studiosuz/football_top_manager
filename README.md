@@ -29,8 +29,14 @@ responsive navigation and touch/mouse interactions share the same Flutter code.
   colours 90+ sky blue / 80–89 green / 70–79 amber / ≤69 red.
 - Navigation: Boshqaruv · Jamoa (pitch, list, team tactics, instructions) ·
   Jadval · Transfer · Moliya (finance, real-date calendar, inbox, club profile).
-- Eight clubs with 23-man squads, look-alike vector crests (crowned roundel,
-  ringed badges, pointed shield, heater shields) and look-alike portraits.
+- Two leagues: Super League (8 clubs, 14 rounds) and Premier League 2025/26
+  (20 clubs, 38 rounds, real managers and squads merged with 2026.db), with
+  look-alike vector crests and portraits.
+- 16 formations; auto line-up solves the best XI with the Hungarian algorithm
+  so players stay in their own positions. Tapping a player shows his fitting
+  positions; dragging previews his OVR and fit at every slot.
+- Pop-up banners and a dashboard inbox for offers, injuries, OVR growth,
+  contracts and transfer windows.
 - Every player has an eFootball playing style (PlayerPlayingStyles.md),
   a defending style and AI styles; all of them change match behaviour.
 - New clubs get an average squad (≈64–73) plus one star chosen from three.
@@ -41,10 +47,18 @@ responsive navigation and touch/mouse interactions share the same Flutter code.
 
 `lib/services/match_field.dart` drives a 2D pitch where action time runs at
 `MatchField.tempo` relative to the clock. Calibrated averages per match
-(`flutter test tool/calibrate_test.dart`): ~2.8 goals, ~23 shots, ~8 on
-target, ~830 passes at 84%, ~9 corners, ~24 fouls, ~4 yellows, ~3 offsides,
-home win ≈45% / draw ≈24%. Players earn live SofaScore-style ratings;
-fixtures store momentum, shot maps, player lines and man of the match.
+(`flutter test tool/calibrate_test.dart`): ~3.0 goals, xG ~2.6, ~24 shots,
+~8 on target, ~830 passes at 84%, ~9 corners, ~21 fouls, ~3.6 yellows,
+~3 offsides, home win ≈45% / draw ≈26%. Keepers cannot be tackled with the
+ball and defenders avoid risky lanes in their own third, so goals come from
+build-up rather than gifts.
+
+Players earn live SofaScore-style ratings weighted by role, including errors
+leading to a shot/goal, penalties won/conceded/saved, big chances created,
+times dribbled past and cards. Every shot records body part, situation,
+assist origin, goal-frame point and xGOT: tap a goal incident for the
+SofaScore-like goal sheet, or a dot on the shot map. Fixtures store
+momentum, shots (user matches), player lines and man of the match.
 
 Real rules: added time, 5 substitutions in 3 in-play windows (half-time
 free), yellow accumulation and red-card bans, injuries, offsides, penalties,
@@ -72,6 +86,7 @@ manager's proficiency in the chosen playstyle.
 | --- | --- |
 | `assets/data/clubs.json` | Clubs, budgets, crests, tactics and squad IDs |
 | `assets/data/players.json` | Players, 26 attributes, look-alike face hints, playing styles |
+| `assets/data/clubs_epl.json`, `players_epl.json` | Premier League 2025/26 (`tool/epl_data.py`) |
 | `assets/data/names.json` | Locale name pools for generated players |
 | `assets/data/squad_templates.json` | 23-slot template for new clubs |
 
@@ -80,6 +95,6 @@ Generators: `tool/expand_squads.py`, `tool/star_faces.py`,
 
 ## Verification
 
-`flutter test` (33 tests: rules, engine, ratings, save/restore, corners,
+`flutter test` (37 tests: rules, engine, ratings, save/restore, corners,
 free kicks, widgets). `flutter test tool/capture_ui_test.dart` writes
 screenshots to `artifacts/qa`.

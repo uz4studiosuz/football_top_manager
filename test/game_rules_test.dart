@@ -1,4 +1,5 @@
 import 'package:football_top_manager/services/match_field.dart';
+import 'package:football_top_manager/services/save_codec.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:football_top_manager/data/initial_database.dart';
 import 'package:football_top_manager/services/game_state.dart';
@@ -216,6 +217,20 @@ void main() {
         .length;
     expect(rated, greaterThanOrEqualTo(8 * 11));
     expect(game.ledger.any((e) => e.category.name == 'tickets'), isTrue);
+    // Shot details survive the save codec.
+    expect(f.shots.length, f.homeShots + f.awayShots);
+    final back = SaveCodec.fixtureFrom(jsonDecode(jsonEncode(SaveCodec.fixture(f))));
+    expect(back.shots.length, f.shots.length);
+    for (var i = 0; i < f.shots.length; i++) {
+      final a = f.shots[i], b = back.shots[i];
+      expect([b.goal, b.body, b.situation, b.assistId, b.outcome], [a.goal, a.body, a.situation, a.assistId, a.outcome]);
+      expect(b.xgot, closeTo(a.xgot, 0.001));
+      if (a.goal) expect(a.hasMouth && a.mouthX >= 0 && a.mouthX <= 1 && a.mouthY <= 1, isTrue);
+    }
+    // Lines saved before the decisive-moment stats still load.
+    final line = SaveCodec.line(f.playerStats.values.first);
+    line['v'] = (line['v'] as List).take(26).toList();
+    expect(SaveCodec.lineFrom('x', jsonDecode(jsonEncode(line))).errorsLeadingToGoal, 0);
   });
 
   test('Realistic averages over many simulated matches', () {
