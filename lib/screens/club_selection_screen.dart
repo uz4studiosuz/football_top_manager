@@ -7,6 +7,7 @@ import '../ui/widgets.dart';
 import 'custom_club_creator_screen.dart';
 import 'main_navigation_screen.dart';
 import '../models/manager_profile.dart';
+import '../l10n/l10n.dart';
 
 /// Choose a club from any league (or create a new one).
 class ClubSelectionScreen extends StatefulWidget {
@@ -48,26 +49,26 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
     final info = InitialDatabase.info(_league);
     if (info.tier > 1) {
       return switch (rank) {
-        <= 2 => 'Avtomatik ko‘tarilish',
-        <= 6 => 'Pley-off (top-${info.playoffTo})',
-        <= 12 => 'Top-12',
-        _ => info.relegate > 0 ? 'Ligada qolish' : 'Top-16',
+        <= 2 => tr('Avtomatik ko‘tarilish'),
+        <= 6 => trf('Pley-off (top-{0})', [info.playoffTo]),
+        <= 12 => tr('Top-12'),
+        _ => info.relegate > 0 ? tr('Ligada qolish') : tr('Top-16'),
       };
     }
     if (_clubs.length > 10) {
       return switch (rank) {
-        1 => 'Chempionlik',
-        <= 4 => 'Top-4 (Chempionlar ligasi)',
-        <= 7 => 'Top-6 (Yevrokubok)',
-        <= 12 => 'Top-10',
-        _ => 'Ligada qolish',
+        1 => tr('Chempionlik'),
+        <= 4 => tr('Top-4 (Chempionlar ligasi)'),
+        <= 7 => tr('Top-6 (Yevrokubok)'),
+        <= 12 => tr('Top-10'),
+        _ => tr('Ligada qolish'),
       };
     }
     return switch (rank) {
-      1 => 'Chempionlik',
-      2 || 3 => 'Top-3',
-      4 || 5 => 'Top-4',
-      _ => 'Top-6',
+      1 => tr('Chempionlik'),
+      2 || 3 => tr('Top-3'),
+      4 || 5 => tr('Top-4'),
+      _ => tr('Top-6'),
     };
   }
 
@@ -76,7 +77,7 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
     final club = _club;
     final stars = List.of(club.squad)..sort((a, b) => b.ovr.compareTo(a.ovr));
     return Scaffold(
-      appBar: AppBar(title: const Text('Klubni tanlang')),
+      appBar: AppBar(title: Text(tr('Klubni tanlang'))),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
         children: [
@@ -105,12 +106,12 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
                         builder: (_) => CustomClubCreatorScreen(managerProfile: widget.managerProfile, league: _league),
                       ),
                     ),
-                    child: const Column(
+                    child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(Icons.add_circle_outline_rounded, size: 38, color: AppColors.primary),
                         SizedBox(height: 8),
-                        Text('Yangi klub', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primary)),
+                        Text(tr('Yangi klub'), style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primary)),
                       ],
                     ),
                   );
@@ -142,24 +143,24 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
                 Text('${club.nickname} · ${club.city} · ${club.founded}', style: AppText.caption),
                 const SizedBox(height: 4),
                 Text(
-                  '${club.stadiumName} · ${(club.stadiumCapacity / 1000).toStringAsFixed(0)}K muxlis',
+                  trf('{0} · {1}K muxlis', [club.stadiumName, (club.stadiumCapacity / 1000).toStringAsFixed(0)]),
                   style: AppText.caption,
                 ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
                     _metric('OVR', ValueBadge(club.teamOVR, size: 40)),
-                    _metric('HUJUM', ValueBadge(club.attackRating, size: 40, filled: false)),
-                    _metric('MARKAZ', ValueBadge(club.midfieldRating, size: 40, filled: false)),
-                    _metric('HIMOYA', ValueBadge(club.defenseRating, size: 40, filled: false)),
+                    _metric(tr('HUJUM'), ValueBadge(club.attackRating, size: 40, filled: false)),
+                    _metric(tr('MARKAZ'), ValueBadge(club.midfieldRating, size: 40, filled: false)),
+                    _metric(tr('HIMOYA'), ValueBadge(club.defenseRating, size: 40, filled: false)),
                   ],
                 ),
                 const Divider(height: 28),
-                InfoRow('Transfer byudjeti', club.formattedTransferBudget),
-                InfoRow('Maosh limiti', club.formattedWageBudget),
-                InfoRow('Tarkib', '${club.squad.length} futbolchi · qiymati ${formatMoney(club.squadValue)}'),
-                InfoRow('Kengash kutmoqda', _expectation(club)),
-                InfoRow('O‘yin uslubi', club.tactics.playstyle.displayName),
+                InfoRow(tr('Transfer byudjeti'), club.formattedTransferBudget),
+                InfoRow(tr('Maosh limiti'), club.formattedWageBudget),
+                InfoRow(tr('Tarkib'), '${club.squad.length} futbolchi · qiymati ${formatMoney(club.squadValue)}'),
+                InfoRow(tr('Kengash kutmoqda'), _expectation(club)),
+                InfoRow(tr('O‘yin uslubi'), club.tactics.playstyle.displayName),
               ],
             ),
           ),
@@ -168,9 +169,9 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
             padding: const EdgeInsets.fromLTRB(0, 14, 0, 6),
             child: Column(
               children: [
-                const Padding(
+                Padding(
                   padding: EdgeInsets.symmetric(horizontal: 16),
-                  child: SectionHeader('Asosiy yulduzlar', icon: Icons.star_outline_rounded),
+                  child: SectionHeader(tr('Asosiy yulduzlar'), icon: Icons.star_outline_rounded),
                 ),
                 for (final p in stars.take(5)) PlayerTile(player: p, club: club, showRating: false),
               ],
@@ -182,7 +183,7 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
             child: FilledButton.icon(
               onPressed: () => _start(club),
               icon: const Icon(Icons.play_arrow_rounded),
-              label: FittedBox(child: Text('${club.name.toUpperCase()}NI BOSHQARISH')),
+              label: FittedBox(child: Text(trf('{0}NI BOSHQARISH', [club.name.toUpperCase()]))),
             ),
           ),
         ],

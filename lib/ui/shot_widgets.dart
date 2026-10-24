@@ -4,9 +4,10 @@ import '../models/club.dart';
 import '../models/league.dart';
 import 'football_pitch.dart';
 import 'widgets.dart';
+import '../l10n/l10n.dart';
 
 String _shooterName(ShotRecord s, Club home, Club away) =>
-    (s.home ? home : away).playerById(s.playerId)?.name ?? 'Futbolchi';
+    (s.home ? home : away).playerById(s.playerId)?.name ?? tr('Futbolchi');
 
 /// The recorded shot behind a goal incident (same scorer, closest minute).
 ShotRecord? shotForGoal(List<ShotRecord> shots, MatchEvent e) {
@@ -120,8 +121,8 @@ class _ShotMapViewState extends State<ShotMapView> {
         if (selected == null)
           Text(
             visible.isEmpty
-                ? 'Hali zarbalar yo‘q.'
-                : 'Doira kattaligi – xG, to‘ldirilgan – gol. Nuqtani bosing: kim va qanday tepgan.',
+                ? tr('Hali zarbalar yo‘q.')
+                : tr('Doira kattaligi – xG, to‘ldirilgan – gol. Nuqtani bosing: kim va qanday tepgan.'),
             style: AppText.caption,
           )
         else ...[
@@ -285,11 +286,11 @@ class ShotDetails extends StatelessWidget {
           ],
         ),
         const Divider(height: 18),
-        fact('Vaziyat', s.situationLabel),
-        fact('Zarba turi', s.bodyLabel),
-        fact('Natija', s.outcomeLabel),
-        if (s.goal) fact('Gol zonasi', s.zoneLabel),
-        fact('Masofa', '${_meters(s).round()} m'),
+        fact(tr('Vaziyat'), s.situationLabel),
+        fact(tr('Zarba turi'), s.bodyLabel),
+        fact(tr('Natija'), s.outcomeLabel),
+        if (s.goal) fact(tr('Gol zonasi'), s.zoneLabel),
+        fact(tr('Masofa'), '${_meters(s).round()} m'),
         if (assist != null) ...[
           const Divider(height: 18),
           Row(
@@ -298,7 +299,7 @@ class ShotDetails extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  s.goal ? 'Assist: ${assist.name}' : 'Pas bergan: ${assist.name}',
+                  s.goal ? trf('Assist: {0}', [assist.name]) : trf('Pas bergan: {0}', [assist.name]),
                   style: AppText.bodyStrong.copyWith(fontSize: 13),
                 ),
               ),
@@ -387,7 +388,7 @@ class GoalMouthPainter extends CustomPainter {
     );
     if (!shot.hasMouth) {
       final tp = TextPainter(
-        text: const TextSpan(text: 'Zarba to‘sildi', style: AppText.caption),
+        text: TextSpan(text: tr('Zarba to‘sildi'), style: AppText.caption),
         textDirection: TextDirection.ltr,
       )..layout();
       tp.paint(canvas, at(0.5, 0.5) - Offset(tp.width / 2, tp.height / 2));

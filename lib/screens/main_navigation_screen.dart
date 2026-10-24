@@ -8,6 +8,7 @@ import 'finance_screen.dart';
 import 'tactics_screen.dart';
 import 'standings_screen.dart';
 import 'transfer_screen.dart';
+import '../l10n/l10n.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -154,7 +155,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                       child: const Icon(Icons.sports_soccer, color: Colors.white),
                     ),
                     const SizedBox(height: 6),
-                    const Text('FTM27', style: AppText.overline),
+                    Text(tr('FTM27'), style: AppText.overline),
                     const SizedBox(height: 18),
                     for (var i = 0; i < labels.length; i++)
                       _RailItem(
@@ -314,14 +315,14 @@ class AlertBanner extends StatelessWidget {
   });
 
   String get _label => switch (item.kind) {
-    NewsKind.transfer => 'TRANSFER TAKLIFI',
-    NewsKind.injury => 'JAROHAT',
-    NewsKind.award => 'RIVOJLANISH',
-    NewsKind.contract => 'SHARTNOMA',
-    NewsKind.window => 'TRANSFER OYNASI',
-    NewsKind.board => 'KENGASH',
-    NewsKind.finance => 'MOLIYA',
-    NewsKind.match => 'O‘YIN',
+    NewsKind.transfer => tr('TRANSFER TAKLIFI'),
+    NewsKind.injury => tr('JAROHAT'),
+    NewsKind.award => tr('RIVOJLANISH'),
+    NewsKind.contract => tr('SHARTNOMA'),
+    NewsKind.window => tr('TRANSFER OYNASI'),
+    NewsKind.board => tr('KENGASH'),
+    NewsKind.finance => tr('MOLIYA'),
+    NewsKind.match => tr('O‘YIN'),
   };
 
   @override
@@ -353,7 +354,7 @@ class AlertBanner extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      pending > 0 ? '$_label · yana $pending' : _label,
+                      pending > 0 ? trf('{0} · yana {1}', [_label, pending]) : _label,
                       style: AppText.overline.copyWith(color: c, fontSize: 10),
                     ),
                     const SizedBox(height: 2),

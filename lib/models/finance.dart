@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/l10n.dart';
 
 enum FinanceCategory {
   tickets('Chipta tushumi', Icons.confirmation_number_outlined, true),
@@ -12,8 +13,9 @@ enum FinanceCategory {
   transferOut('Transfer xarajati', Icons.call_made_rounded, false),
   agent('Agent va imzo', Icons.badge_outlined, false);
 
-  const FinanceCategory(this.label, this.icon, this.income);
-  final String label;
+  const FinanceCategory(this._label, this.icon, this.income);
+  final String _label;
+  String get label => tr(_label);
   final IconData icon;
   final bool income;
 }

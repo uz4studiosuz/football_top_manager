@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../models/face.dart';
 import 'app_theme.dart';
+import '../l10n/l10n.dart';
 export '../models/face.dart';
 
 /// Vector portrait: shaded head, almond eyes, tapered brows, layered hair,
@@ -28,7 +29,7 @@ class FaceAvatar extends StatelessWidget {
       painter: FacePainter(config, shirt, trim, background: background),
     );
     return Semantics(
-      label: 'Shaxsiy portret',
+      label: tr('Shaxsiy portret'),
       child: SizedBox.square(
         dimension: size,
         child: circle ? ClipOval(child: paint) : paint,
@@ -1099,8 +1100,8 @@ class _FaceStudioState extends State<FaceStudio> {
       ],
       [
         _choices('beardStyle', 'Soqol', FaceConfig.beardCount, labels: FaceConfig.beardLabels, zoom: _beardZoom),
-        const Text(
-          'Soqol yuz shakli va jag‘ chizig‘iga moslashadi.',
+        Text(
+          tr('Soqol yuz shakli va jag‘ chizig‘iga moslashadi.'),
           style: AppText.caption,
         ),
       ],
@@ -1150,7 +1151,7 @@ class _FaceStudioState extends State<FaceStudio> {
                   ? null
                   : () => setState(() => widget.onChanged(_undo.removeLast())),
               icon: const Icon(Icons.undo_rounded, size: 18),
-              label: const Text('Orqaga'),
+              label: Text(tr('Orqaga')),
             ),
             const SizedBox(width: 6),
             TextButton.icon(
@@ -1163,7 +1164,7 @@ class _FaceStudioState extends State<FaceStudio> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: PillTabsInline(
-            labels: const ['Yuz', 'Ko‘z', 'Soch', 'Soqol', 'Boshqa'],
+            labels: [tr('Yuz'), 'Ko‘z', 'Soch', 'Soqol', 'Boshqa'],
             index: tab,
             onChanged: (i) => setState(() => tab = i),
           ),
@@ -1262,11 +1263,11 @@ class _FaceEditorState extends State<_FaceEditor> {
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: AppColors.surface,
     appBar: AppBar(
-      title: const Text('Portret yaratish'),
+      title: Text(tr('Portret yaratish')),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context, current),
-          child: const Text('Saqlash'),
+          child: Text(tr('Saqlash')),
         ),
       ],
     ),

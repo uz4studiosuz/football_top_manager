@@ -4,6 +4,7 @@ import '../models/club.dart';
 import '../models/player.dart';
 import '../models/league.dart';
 import 'commentary.dart';
+import '../l10n/l10n.dart';
 
 enum FieldPhase {
   kickoff,
@@ -272,25 +273,25 @@ class MatchField {
   }
 
   String get actionLabel => switch (phase) {
-    FieldPhase.kickoff => 'Markazdan boshlash',
+    FieldPhase.kickoff => tr('Markazdan boshlash'),
     FieldPhase.openPlay =>
       '${_club.shortName} · ${_xi(_club)[owner].shortName}',
     FieldPhase.pass => switch (_flight?.kind) {
-      _Kind.cross || _Kind.corner => 'Kross',
-      _ => 'Uzatma',
+      _Kind.cross || _Kind.corner => tr('Kross'),
+      _ => tr('Uzatma'),
     },
-    FieldPhase.shot => 'Zarba',
+    FieldPhase.shot => tr('Zarba'),
     FieldPhase.goal => 'GOL',
     FieldPhase.stoppage => switch (_pending) {
-      _SetPiece.corner => 'Burchak to‘pi',
-      _SetPiece.freeKick => 'Jarima zarbasi',
-      _SetPiece.penalty => 'Penalti',
-      _SetPiece.throwIn => 'Autdan tashlash',
-      _SetPiece.goalKick => 'Darvozadan zarba',
-      _ => 'O‘yin to‘xtadi',
+      _SetPiece.corner => tr('Burchak to‘pi'),
+      _SetPiece.freeKick => tr('Jarima zarbasi'),
+      _SetPiece.penalty => tr('Penalti'),
+      _SetPiece.throwIn => tr('Autdan tashlash'),
+      _SetPiece.goalKick => tr('Darvozadan zarba'),
+      _ => tr('O‘yin to‘xtadi'),
     },
-    FieldPhase.halfTime => 'Tanaffus',
-    FieldPhase.fullTime => 'O‘yin yakunlandi',
+    FieldPhase.halfTime => tr('Tanaffus'),
+    FieldPhase.fullTime => tr('O‘yin yakunlandi'),
   };
 
   int get homePossessionPercent {

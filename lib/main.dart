@@ -5,6 +5,7 @@ import 'screens/onboarding_screen.dart';
 import 'data/initial_database.dart';
 import 'services/save_service.dart';
 import 'ui/widgets.dart';
+import 'l10n/l10n.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,7 +25,7 @@ class FootballTopManagerApp extends StatelessWidget {
   const FootballTopManagerApp({super.key});
   @override
   Widget build(BuildContext context) => MaterialApp(
-    title: 'Football Top Manager 2027',
+    title: tr('Football Top Manager 2027'),
     debugShowCheckedModeBanner: false,
     theme: buildAppTheme(),
     home: const StartupScreen(),
@@ -51,7 +52,7 @@ class _StartupScreenState extends State<StartupScreen> {
     future: _boot,
     builder: (context, snap) {
       if (snap.connectionState != ConnectionState.done) {
-        return const LoadingView(message: 'Liga va karyera yuklanmoqda…');
+        return LoadingView(message: tr('Liga va karyera yuklanmoqda…'));
       }
       return snap.data == true ? const MainNavigationScreen() : const OnboardingScreen();
     },

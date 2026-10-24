@@ -5,6 +5,7 @@ import '../services/game_state.dart';
 import '../ui/face_avatar.dart';
 import '../ui/widgets.dart';
 import 'widgets/player_detail_view.dart';
+import '../l10n/l10n.dart';
 
 /// Build a player completely from scratch and sign him to your club.
 class PlayerCreatorScreen extends StatefulWidget {
@@ -66,7 +67,7 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
     PlayingStyle.defensiveGoalkeeper: {'GK'},
   };
 
-  final _name = TextEditingController(text: 'Yangi Futbolchi');
+  final _name = TextEditingController(text: tr('Yangi Futbolchi'));
   final _random = Random();
   int age = 20;
   String nationality = 'O‘zbekiston';
@@ -93,7 +94,7 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
 
   Player get _preview => Player(
     id: 'creator_preview',
-    name: _name.text.trim().isEmpty ? 'Futbolchi' : _name.text.trim(),
+    name: _name.text.trim().isEmpty ? tr('Futbolchi') : _name.text.trim(),
     shortName: _name.text.trim(),
     age: age,
     nationality: nationality,
@@ -133,7 +134,7 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
   Future<void> _create() async {
     final game = GameState();
     if (_name.text.trim().length < 2) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ismni kiriting (kamida 2 belgi)')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Ismni kiriting (kamida 2 belgi)'))));
       return;
     }
     final p = game.addCreatedPlayer(
@@ -153,11 +154,11 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
     );
     if (!mounted) return;
     if (p == null) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(game.lastTransferError ?? 'Qo‘shib bo‘lmadi')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(game.lastTransferError ?? tr('Qo‘shib bo‘lmadi'))));
       return;
     }
     Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${p.name} zaxiraga qo‘shildi (OVR ${p.ovr}). Jamoa → Sxema va tarkib → Zaxira')));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(trf('{0} zaxiraga qo‘shildi (OVR {1}). Jamoa → Sxema va tarkib → Zaxira', [p.name, p.ovr]))));
     PlayerDetailView.show(context, player: p, club: game.userClub);
   }
 
@@ -172,12 +173,12 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
     final issue = game.isInitialized ? game.createdPlayerIssue() : null;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Futbolchi yaratish'),
+        title: Text(tr('Futbolchi yaratish')),
         actions: [
           TextButton.icon(
             onPressed: _randomize,
             icon: const Icon(Icons.casino_outlined, size: 18),
-            label: const Text('Tasodifiy'),
+            label: Text(tr('Tasodifiy')),
           ),
         ],
       ),
@@ -221,7 +222,7 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
                           const SizedBox(width: 6),
                           Flexible(
                             child: Text(
-                              '${countries[nationality]} $age yosh · #$number',
+                              trf('{0} {1} yosh · #{2}', [countries[nationality], age, number]),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: AppText.caption,
@@ -241,7 +242,7 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
                     const Text('OVR', style: AppText.overline),
                     const SizedBox(height: 4),
                     ValueBadge(max(potential, ovr), size: 30, filled: false),
-                    const Text('Salohiyat', style: AppText.caption),
+                    Text(tr('Salohiyat'), style: AppText.caption),
                   ],
                 ),
               ],
@@ -253,17 +254,17 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SectionHeader('Shaxsiy ma’lumot', icon: Icons.badge_outlined),
+                SectionHeader(tr('Shaxsiy ma’lumot'), icon: Icons.badge_outlined),
                 TextField(
                   controller: _name,
-                  decoration: const InputDecoration(labelText: 'Ism va familiya', prefixIcon: Icon(Icons.person_outline)),
+                  decoration: InputDecoration(labelText: tr('Ism va familiya'), prefixIcon: Icon(Icons.person_outline)),
                   onChanged: (_) => setState(() {}),
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
                   initialValue: nationality,
                   isExpanded: true,
-                  decoration: const InputDecoration(labelText: 'Millati', prefixIcon: Icon(Icons.flag_outlined)),
+                  decoration: InputDecoration(labelText: tr('Millati'), prefixIcon: Icon(Icons.flag_outlined)),
                   items: [
                     for (final c in countries.keys) DropdownMenuItem(value: c, child: Text('${countries[c]}  $c')),
                   ],
@@ -272,15 +273,15 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
                 const SizedBox(height: 8),
                 _slider('Yosh', age, 16, 40, (v) => setState(() => age = v)),
                 _slider('Futbolka raqami', number, 1, 99, (v) => setState(() => number = v)),
-                const Text('Asosiy oyoq', style: AppText.bodyStrong),
-                const SizedBox(height: 8),
+                Text(tr('Asosiy oyoq'), style: AppText.bodyStrong),
+                SizedBox(height: 8),
                 SizedBox(
                   width: double.infinity,
                   child: SegmentedButton<PreferredFoot>(
                     showSelectedIcon: false,
-                    segments: const [
-                      ButtonSegment(value: PreferredFoot.right, label: Text('O‘ng')),
-                      ButtonSegment(value: PreferredFoot.left, label: Text('Chap')),
+                    segments: [
+                      ButtonSegment(value: PreferredFoot.right, label: Text(tr('O‘ng'))),
+                      ButtonSegment(value: PreferredFoot.left, label: Text(tr('Chap'))),
                     ],
                     selected: {foot},
                     onSelectionChanged: (s) => setState(() => foot = s.first),
@@ -289,7 +290,7 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    const Expanded(child: Text('Kuchsiz oyoq', style: AppText.bodyStrong)),
+                    Expanded(child: Text(tr('Kuchsiz oyoq'), style: AppText.bodyStrong)),
                     for (var i = 1; i <= 5; i++)
                       IconButton(
                         visualDensity: VisualDensity.compact,
@@ -310,8 +311,8 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SectionHeader('Pozitsiya va uslub', icon: Icons.sports_soccer),
-                const Text('Asosiy pozitsiya', style: AppText.small),
+                SectionHeader(tr('Pozitsiya va uslub'), icon: Icons.sports_soccer),
+                Text(tr('Asosiy pozitsiya'), style: AppText.small),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 6,
@@ -331,7 +332,7 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
                   ],
                 ),
                 const SizedBox(height: 14),
-                const Text('Muqobil pozitsiyalar (jarimasiz o‘ynaydi)', style: AppText.small),
+                Text(tr('Muqobil pozitsiyalar (jarimasiz o‘ynaydi)'), style: AppText.small),
                 const SizedBox(height: 8),
                 Wrap(
                   spacing: 6,
@@ -349,11 +350,11 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
                 DropdownButtonFormField<PlayingStyle?>(
                   initialValue: style,
                   isExpanded: true,
-                  decoration: const InputDecoration(labelText: 'O‘yin uslubi', prefixIcon: Icon(Icons.style_outlined)),
+                  decoration: InputDecoration(labelText: tr('O‘yin uslubi'), prefixIcon: Icon(Icons.style_outlined)),
                   items: [
                     DropdownMenuItem<PlayingStyle?>(
                       value: null,
-                      child: Text('Avtomatik (atributlarga qarab) · ${PlayingProfile.derive(position.code, attrs).style.title}'),
+                      child: Text(trf('Avtomatik (atributlarga qarab) · {0}', [PlayingProfile.derive(position.code, attrs).style.title])),
                     ),
                     for (final s in fits) DropdownMenuItem<PlayingStyle?>(value: s, child: Text('${s.title} · ${s.uzbek}')),
                   ],
@@ -370,9 +371,9 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SectionHeader('Tez shablon', icon: Icons.auto_fix_high_rounded),
-                const Text(
-                  'Pozitsiyaga mos atributlarni tanlangan darajada avtomatik to‘ldiradi. Keyin har birini qo‘lda sozlashingiz mumkin.',
+                SectionHeader(tr('Tez shablon'), icon: Icons.auto_fix_high_rounded),
+                Text(
+                  tr('Pozitsiyaga mos atributlarni tanlangan darajada avtomatik to‘ldiradi. Keyin har birini qo‘lda sozlashingiz mumkin.'),
                   style: AppText.caption,
                 ),
                 _slider('Daraja (taxminiy OVR)', target, 50, 95, (v) => setState(() => target = v)),
@@ -384,7 +385,7 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
                       potential = max(potential, target);
                     }),
                     icon: const Icon(Icons.refresh_rounded),
-                    label: Text('${position.code} shablonini qo‘llash'),
+                    label: Text(trf('{0} shablonini qo‘llash', [position.code])),
                   ),
                 ),
               ],
@@ -407,15 +408,15 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SectionHeader('Salohiyat', icon: Icons.trending_up_rounded),
-                const Text(
-                  'Futbolchi yaxshi o‘ynasa va yosh bo‘lsa, OVR shu chegaragacha o‘sadi.',
+                SectionHeader(tr('Salohiyat'), icon: Icons.trending_up_rounded),
+                Text(
+                  tr('Futbolchi yaxshi o‘ynasa va yosh bo‘lsa, OVR shu chegaragacha o‘sadi.'),
                   style: AppText.caption,
                 ),
                 _slider('Eng yuqori OVR', max(potential, ovr), ovr, 99, (v) => setState(() => potential = v)),
-                InfoRow('Bozor bahosi', formatMoney(Player.valuation(ovr, age, max(potential, ovr)))),
-                InfoRow('Haftalik maosh (talab)', formatMoney(preview.calculatedRenewalWageDemand)),
-                if (club != null) InfoRow('Bo‘sh maosh limiti', formatMoney(club.remainingWageBudget)),
+                InfoRow(tr('Bozor bahosi'), formatMoney(Player.valuation(ovr, age, max(potential, ovr)))),
+                InfoRow(tr('Haftalik maosh (talab)'), formatMoney(preview.calculatedRenewalWageDemand)),
+                if (club != null) InfoRow(tr('Bo‘sh maosh limiti'), formatMoney(club.remainingWageBudget)),
               ],
             ),
           ),
@@ -430,7 +431,7 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
             child: FilledButton.icon(
               onPressed: issue == null && game.isInitialized ? _create : null,
               icon: const Icon(Icons.person_add_alt_1_rounded),
-              label: Text('Jamoaga qo‘shish · OVR $ovr'),
+              label: Text(trf('Jamoaga qo‘shish · OVR {0}', [ovr])),
             ),
           ),
         ],

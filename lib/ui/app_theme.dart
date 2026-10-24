@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/l10n.dart';
 
 /// Clean, SofaScore-inspired design tokens. Every screen reads colours from
 /// here so the whole game keeps one calm, data-first visual language.
@@ -101,7 +102,7 @@ ThemeData buildAppTheme() {
   return ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
-    fontFamily: 'Roboto',
+    fontFamily: tr('Roboto'),
     scaffoldBackgroundColor: AppColors.bg,
     colorScheme: const ColorScheme.light(
       primary: AppColors.primary,
@@ -119,7 +120,7 @@ ThemeData buildAppTheme() {
       outlineVariant: AppColors.line,
       error: AppColors.live,
     ),
-    appBarTheme: const AppBarTheme(
+    appBarTheme: AppBarTheme(
       backgroundColor: AppColors.surface,
       foregroundColor: AppColors.ink,
       surfaceTintColor: Colors.transparent,
@@ -127,25 +128,25 @@ ThemeData buildAppTheme() {
       scrolledUnderElevation: 0,
       centerTitle: false,
       titleTextStyle: TextStyle(
-        fontFamily: 'Roboto',
+        fontFamily: tr('Roboto'),
         fontSize: 18,
         fontWeight: FontWeight.w700,
         color: AppColors.ink,
       ),
     ),
-    tabBarTheme: const TabBarThemeData(
+    tabBarTheme: TabBarThemeData(
       dividerColor: AppColors.line,
       indicatorColor: AppColors.primary,
       labelColor: AppColors.primary,
       unselectedLabelColor: AppColors.ink2,
       indicatorSize: TabBarIndicatorSize.label,
       labelStyle: TextStyle(
-        fontFamily: 'Roboto',
+        fontFamily: tr('Roboto'),
         fontSize: 13,
         fontWeight: FontWeight.w700,
       ),
       unselectedLabelStyle: TextStyle(
-        fontFamily: 'Roboto',
+        fontFamily: tr('Roboto'),
         fontSize: 13,
         fontWeight: FontWeight.w500,
       ),
@@ -184,8 +185,8 @@ ThemeData buildAppTheme() {
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         minimumSize: const Size(44, 46),
-        textStyle: const TextStyle(
-          fontFamily: 'Roboto',
+        textStyle: TextStyle(
+          fontFamily: tr('Roboto'),
           fontSize: 14,
           fontWeight: FontWeight.w700,
         ),
@@ -206,8 +207,8 @@ ThemeData buildAppTheme() {
         foregroundColor: AppColors.primary,
         minimumSize: const Size(44, 46),
         side: const BorderSide(color: AppColors.line),
-        textStyle: const TextStyle(
-          fontFamily: 'Roboto',
+        textStyle: TextStyle(
+          fontFamily: tr('Roboto'),
           fontSize: 14,
           fontWeight: FontWeight.w600,
         ),
@@ -217,17 +218,17 @@ ThemeData buildAppTheme() {
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
         foregroundColor: AppColors.primary,
-        textStyle: const TextStyle(
-          fontFamily: 'Roboto',
+        textStyle: TextStyle(
+          fontFamily: tr('Roboto'),
           fontSize: 13,
           fontWeight: FontWeight.w600,
         ),
       ),
     ),
-    chipTheme: const ChipThemeData(
+    chipTheme: ChipThemeData(
       labelStyle: TextStyle(
         color: AppColors.ink,
-        fontFamily: 'Roboto',
+        fontFamily: tr('Roboto'),
         fontSize: 12,
         fontWeight: FontWeight.w600,
       ),
@@ -274,16 +275,16 @@ ThemeData buildAppTheme() {
       backgroundColor: AppColors.ink,
       shape: RoundedRectangleBorder(borderRadius: radius),
     ),
-    listTileTheme: const ListTileThemeData(
+    listTileTheme: ListTileThemeData(
       iconColor: AppColors.ink2,
       titleTextStyle: TextStyle(
-        fontFamily: 'Roboto',
+        fontFamily: tr('Roboto'),
         fontSize: 14,
         fontWeight: FontWeight.w600,
         color: AppColors.ink,
       ),
       subtitleTextStyle: TextStyle(
-        fontFamily: 'Roboto',
+        fontFamily: tr('Roboto'),
         fontSize: 12,
         color: AppColors.ink2,
       ),

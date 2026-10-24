@@ -1,6 +1,7 @@
 import 'face.dart';
 import 'club.dart';
 import 'package:flutter/material.dart';
+import '../l10n/l10n.dart';
 
 enum ManagerPhilosophy {
   possession(
@@ -34,8 +35,11 @@ enum ManagerPhilosophy {
     Icons.compare_arrows_rounded,
   );
 
-  const ManagerPhilosophy(this.title, this.description, this.icon);
-  final String title, description;
+  const ManagerPhilosophy(this._title, this._description, this.icon);
+  final String _title;
+  String get title => tr(_title);
+  final String _description;
+  String get description => tr(_description);
   final IconData icon;
   Color get accentColor => const Color(0xFF1769E0);
   static ManagerPhilosophy forStyle(TeamPlaystyle style) => switch (style) {
@@ -137,10 +141,10 @@ class ManagerProfile {
   double get winRate => matchesManaged > 0 ? wins / matchesManaged * 100 : 0;
   String get recordString => '$wins-$draws-$losses';
   String get reputationRank => matchesManaged < 10
-      ? 'Yangi menejer'
+      ? tr('Yangi menejer')
       : winRate >= 60
-      ? 'Yetakchi menejer'
-      : 'Tajribali menejer';
+      ? tr('Yetakchi menejer')
+      : tr('Tajribali menejer');
   ManagerProfile copyWith({
     String? name,
     String? avatarId,

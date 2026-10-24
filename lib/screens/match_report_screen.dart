@@ -9,6 +9,7 @@ import '../ui/match_widgets.dart';
 import '../ui/shot_widgets.dart';
 import '../ui/widgets.dart';
 import 'widgets/player_detail_view.dart';
+import '../l10n/l10n.dart';
 
 /// Post-match page for any played fixture (SofaScore event page layout).
 class MatchReportScreen extends StatefulWidget {
@@ -30,7 +31,7 @@ class _MatchReportScreenState extends State<MatchReportScreen> {
       length: 4,
       child: Scaffold(
         appBar: AppBar(
-          title: Text('${GameState().leagueName} · ${f.round}-tur', style: AppText.h3),
+          title: Text(trf('{0} · {1}-tur', [GameState().leagueName, f.round]), style: AppText.h3),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(178),
             child: Column(
@@ -40,20 +41,20 @@ class _MatchReportScreenState extends State<MatchReportScreen> {
                   away: a,
                   homeScore: f.homeScore ?? 0,
                   awayScore: f.awayScore ?? 0,
-                  status: 'Yakunlandi',
+                  status: tr('Yakunlandi'),
                   events: f.events,
                   caption: f.date == null
                       ? null
                       : '${SeasonCalendar.format(f.date!, year: true)}${f.attendance > 0 ? ' · ${f.attendance} muxlis' : ''}',
                 ),
-                const TabBar(
+                TabBar(
                   isScrollable: true,
                   tabAlignment: TabAlignment.center,
                   tabs: [
-                    Tab(text: 'Ko‘rinish'),
-                    Tab(text: 'Statistika'),
-                    Tab(text: 'Tarkiblar'),
-                    Tab(text: 'Izohlar'),
+                    Tab(text: tr('Ko‘rinish')),
+                    Tab(text: tr('Statistika')),
+                    Tab(text: tr('Tarkiblar')),
+                    Tab(text: tr('Izohlar')),
                   ],
                 ),
               ],
@@ -72,7 +73,7 @@ class _MatchReportScreenState extends State<MatchReportScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SectionHeader('Hujum momenti', icon: Icons.insights_outlined),
+                        SectionHeader(tr('Hujum momenti'), icon: Icons.insights_outlined),
                         MomentumChart(
                           values: f.momentum,
                           events: f.events,
@@ -85,7 +86,7 @@ class _MatchReportScreenState extends State<MatchReportScreen> {
                 AppCard(
                   child: Column(
                     children: [
-                      const SectionHeader('Muhim voqealar', icon: Icons.timeline_rounded),
+                      SectionHeader(tr('Muhim voqealar'), icon: Icons.timeline_rounded),
                       IncidentTimeline(
                         events: f.events,
                         newestFirst: false,
@@ -122,7 +123,7 @@ class _MatchReportScreenState extends State<MatchReportScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const SectionHeader('Zarbalar xaritasi', icon: Icons.scatter_plot_outlined),
+                        SectionHeader(tr('Zarbalar xaritasi'), icon: Icons.scatter_plot_outlined),
                         ShotMapView(
                           shots: f.shots,
                           home: h,
@@ -177,12 +178,12 @@ class _MatchReportScreenState extends State<MatchReportScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('O‘YIN QAHRAMONI', style: AppText.overline),
+                Text(tr('O‘YIN QAHRAMONI'), style: AppText.overline),
                 const SizedBox(height: 2),
                 Text(p.name, style: AppText.h3),
                 if (line != null)
                   Text(
-                    '${line.goals} gol · ${line.assists} assist · ${line.passesCompleted}/${line.passes} pas',
+                    trf('{0} gol · {1} assist · {2}/{3} pas', [line.goals, line.assists, line.passesCompleted, line.passes]),
                     style: AppText.caption,
                   ),
               ],

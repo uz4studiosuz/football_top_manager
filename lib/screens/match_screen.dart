@@ -15,6 +15,7 @@ import 'match_report_screen.dart';
 import 'widgets/opponent_squad_sheet.dart';
 import 'widgets/player_detail_view.dart';
 import 'tactics_screen.dart';
+import '../l10n/l10n.dart';
 
 /// O'yin davomidagi taktik kayfiyat (In-Game Mentality)
 enum InGameMentality {
@@ -134,8 +135,8 @@ class _MatchScreenState extends State<MatchScreen> {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('${p.shortName} jarohat oldi. Almashtirish kerak.'),
-              action: SnackBarAction(label: 'Almashtirish', onPressed: () => _openSubs(preselect: p)),
+              content: Text(trf('{0} jarohat oldi. Almashtirish kerak.', [p.shortName])),
+              action: SnackBarAction(label: tr('Almashtirish'), onPressed: () => _openSubs(preselect: p)),
             ),
           );
         });
@@ -252,10 +253,10 @@ class _MatchScreenState extends State<MatchScreen> {
       length: 4,
       child: Scaffold(
         appBar: AppBar(
-          title: Text('${_game.leagueName} · ${widget.fixture.round}-tur', style: AppText.h3),
+          title: Text(trf('{0} · {1}-tur', [_game.leagueName, widget.fixture.round]), style: AppText.h3),
           actions: [
             IconButton(
-              tooltip: 'Raqib tarkibi',
+              tooltip: tr('Raqib tarkibi'),
               icon: const Icon(Icons.groups_outlined),
               onPressed: () => OpponentSquadSheet.show(context, opponentClub: _rival),
             ),
@@ -263,7 +264,7 @@ class _MatchScreenState extends State<MatchScreen> {
               TextButton.icon(
                 onPressed: _instantFinish,
                 icon: const Icon(Icons.fast_forward_rounded, size: 18),
-                label: const Text('Tezkor'),
+                label: Text(tr('Tezkor')),
               ),
           ],
         ),
@@ -292,12 +293,12 @@ class _MatchScreenState extends State<MatchScreen> {
               children: [
                 Container(
                   color: AppColors.surface,
-                  child: const TabBar(
+                  child: TabBar(
                     tabs: [
-                      Tab(text: 'Jonli'),
-                      Tab(text: 'Statistika'),
-                      Tab(text: 'Tarkiblar'),
-                      Tab(text: 'Izohlar'),
+                      Tab(text: tr('Jonli')),
+                      Tab(text: tr('Statistika')),
+                      Tab(text: tr('Tarkiblar')),
+                      Tab(text: tr('Izohlar')),
                     ],
                   ),
                 ),
@@ -317,7 +318,7 @@ class _MatchScreenState extends State<MatchScreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const SectionHeader('Zarbalar xaritasi', icon: Icons.scatter_plot_outlined),
+                                SectionHeader(tr('Zarbalar xaritasi'), icon: Icons.scatter_plot_outlined),
                                 ShotMapView(
                                   shots: _field.shots,
                                   home: _home,
@@ -369,13 +370,13 @@ class _MatchScreenState extends State<MatchScreen> {
     final leave = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('O‘yindan chiqasizmi?'),
-        content: const Text(
-          'Uchrashuv to‘xtatilmaydi: qolgan vaqt avtomatik simulyatsiya qilinadi va natija jadvalga yoziladi.',
+        title: Text(tr('O‘yindan chiqasizmi?')),
+        content: Text(
+          tr('Uchrashuv to‘xtatilmaydi: qolgan vaqt avtomatik simulyatsiya qilinadi va natija jadvalga yoziladi.'),
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Davom etish')),
-          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Natijani hisoblab chiqish')),
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('Davom etish'))),
+          FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(tr('Natijani hisoblab chiqish'))),
         ],
       ),
     );
@@ -437,8 +438,8 @@ class _MatchScreenState extends State<MatchScreen> {
                 child: Container(
                   color: Colors.black.withValues(alpha: 0.25),
                   alignment: Alignment.center,
-                  child: const Text(
-                    'GOOOL!',
+                  child: Text(
+                    tr('GOOOL!'),
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 40,
@@ -507,7 +508,7 @@ class _MatchScreenState extends State<MatchScreen> {
                   ),
                 ActionChip(
                   avatar: const Icon(Icons.tune_rounded, size: 15),
-                  label: const Text('Taktika'),
+                  label: Text(tr('Taktika')),
                   visualDensity: VisualDensity.compact,
                   onPressed: done ? null : _openTactics,
                 ),
@@ -539,7 +540,7 @@ class _MatchScreenState extends State<MatchScreen> {
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Text(
-            ft ? 'O‘YIN TUGADI' : 'TANAFFUS',
+            ft ? tr('O‘YIN TUGADI') : tr('TANAFFUS'),
             style: const TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.w800, letterSpacing: 2),
           ),
           Text(
@@ -547,9 +548,9 @@ class _MatchScreenState extends State<MatchScreen> {
             style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 6),
-          stat('To‘p nazorati', '${_field.homePossessionPercent}%', '${100 - _field.homePossessionPercent}%'),
+          stat(tr('To‘p nazorati'), '${_field.homePossessionPercent}%', '${100 - _field.homePossessionPercent}%'),
           stat('xG', h.xg.toStringAsFixed(2), a.xg.toStringAsFixed(2)),
-          stat('Zarbalar', '${h.shots}', '${a.shots}'),
+          stat(tr('Zarbalar'), '${h.shots}', '${a.shots}'),
           const SizedBox(height: 8),
           if (ft)
             Row(
@@ -561,13 +562,13 @@ class _MatchScreenState extends State<MatchScreen> {
                     context,
                     MaterialPageRoute<void>(builder: (_) => MatchReportScreen(fixture: widget.fixture)),
                   ),
-                  child: const Text('Hisobot'),
+                  child: Text(tr('Hisobot')),
                 ),
                 const SizedBox(width: 10),
                 FilledButton(
                   style: FilledButton.styleFrom(minimumSize: const Size(0, 38)),
                   onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('Boshqaruvga qaytish'),
+                  child: Text(tr('Boshqaruvga qaytish')),
                 ),
               ],
             )
@@ -578,7 +579,7 @@ class _MatchScreenState extends State<MatchScreen> {
                 OutlinedButton(
                   style: OutlinedButton.styleFrom(foregroundColor: Colors.white, minimumSize: const Size(0, 38)),
                   onPressed: _subsLeft > 0 ? () => _openSubs() : null,
-                  child: const Text('Almashtirish'),
+                  child: Text(tr('Almashtirish')),
                 ),
                 const SizedBox(width: 10),
                 FilledButton(
@@ -588,7 +589,7 @@ class _MatchScreenState extends State<MatchScreen> {
                     _drain();
                     _playing = true;
                   }),
-                  child: const Text('2-bo‘limni boshlash'),
+                  child: Text(tr('2-bo‘limni boshlash')),
                 ),
               ],
             ),
@@ -606,7 +607,7 @@ class _MatchScreenState extends State<MatchScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SectionHeader('Hujum momenti', icon: Icons.insights_outlined),
+              SectionHeader(tr('Hujum momenti'), icon: Icons.insights_outlined),
               MomentumChart(
                 values: _field.momentum,
                 events: _field.events,
@@ -615,7 +616,7 @@ class _MatchScreenState extends State<MatchScreen> {
               ),
               const SizedBox(height: 10),
               StatCompareRow(
-                label: 'To‘p nazorati',
+                label: tr('To‘p nazorati'),
                 homeText: '${_field.homePossessionPercent}%',
                 awayText: '${100 - _field.homePossessionPercent}%',
                 home: _field.homePossessionPercent.toDouble(),
@@ -633,7 +634,7 @@ class _MatchScreenState extends State<MatchScreen> {
                 awayColor: colors.$2,
               ),
               StatCompareRow(
-                label: 'Zarbalar (nishonga)',
+                label: tr('Zarbalar (nishonga)'),
                 homeText: '${_field.homeStats.shots} (${_field.homeStats.onTarget})',
                 awayText: '${_field.awayStats.shots} (${_field.awayStats.onTarget})',
                 home: _field.homeStats.shots.toDouble(),
@@ -658,7 +659,7 @@ class _MatchScreenState extends State<MatchScreen> {
         AppCard(
           child: Column(
             children: [
-              const SectionHeader('Muhim voqealar', icon: Icons.timeline_rounded),
+              SectionHeader(tr('Muhim voqealar'), icon: Icons.timeline_rounded),
               IncidentTimeline(
                 events: _field.events,
                 onGoalTap: (e) => _openGoal(e, colors),
@@ -775,7 +776,7 @@ class _SubstitutionSheetState extends State<_SubstitutionSheet> {
                       style: AppText.h3,
                     ),
                   ),
-                  Text('${5 - used}/5 qoldi', style: AppText.small),
+                  Text(trf('{0}/5 qoldi', [5 - used]), style: AppText.small),
                 ],
               ),
             ),
@@ -787,7 +788,7 @@ class _SubstitutionSheetState extends State<_SubstitutionSheet> {
                       _row(
                         p,
                         trailing: RatingBadge(f.ratingFor(p.id), size: 12),
-                        subtitle: f.isInjuredOnPitch(p.id) ? 'Jarohatlangan' : null,
+                        subtitle: f.isInjuredOnPitch(p.id) ? tr('Jarohatlangan') : null,
                         onTap: () => setState(() => out = p),
                       )
                   else ...[
@@ -805,7 +806,7 @@ class _SubstitutionSheetState extends State<_SubstitutionSheet> {
                     TextButton.icon(
                       onPressed: () => setState(() => out = null),
                       icon: const Icon(Icons.arrow_back_rounded),
-                      label: const Text('Boshqa futbolchini tanlash'),
+                      label: Text(tr('Boshqa futbolchini tanlash')),
                     ),
                   ],
                 ],
@@ -905,7 +906,7 @@ class MatchPitchPainter extends CustomPainter {
         final tp = TextPainter(
           text: TextSpan(
             text: '${p.number}',
-            style: TextStyle(color: text, fontSize: radius * 0.95, fontWeight: FontWeight.w800, fontFamily: 'Roboto'),
+            style: TextStyle(color: text, fontSize: radius * 0.95, fontWeight: FontWeight.w800, fontFamily: tr('Roboto')),
           ),
           textDirection: TextDirection.ltr,
         )..layout();

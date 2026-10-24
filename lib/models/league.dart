@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../l10n/l10n.dart';
 
 /// O'yindagi voqea turlari (Match Events)
 enum MatchEventType {
@@ -22,8 +23,9 @@ enum MatchEventType {
   bigChance('Katta imkoniyat'),
   info('Ma’lumot');
 
-  const MatchEventType(this.label);
-  final String label;
+  const MatchEventType(this._label);
+  final String _label;
+  String get label => tr(_label);
   IconData get iconData => switch (this) {
     kickoff => Icons.sports_outlined,
     pass => Icons.trending_flat_rounded,
@@ -222,33 +224,33 @@ class ShotRecord {
   bool get hasMouth => mouthX > -5;
 
   String get bodyLabel => switch (body) {
-    'left' => 'Chap oyoq',
-    'head' => 'Bosh',
-    _ => 'O‘ng oyoq',
+    'left' => tr('Chap oyoq'),
+    'head' => tr('Bosh'),
+    _ => tr('O‘ng oyoq'),
   };
 
   String get situationLabel => switch (situation) {
-    'assisted' => 'Uyushgan hujum',
-    'corner' => 'Burchak to‘pi',
-    'setPiece' => 'Standart holat',
-    'freeKick' => 'Jarima zarbasi',
-    'penalty' => 'Penalti',
-    _ => 'Ochiq o‘yin',
+    'assisted' => tr('Uyushgan hujum'),
+    'corner' => tr('Burchak to‘pi'),
+    'setPiece' => tr('Standart holat'),
+    'freeKick' => tr('Jarima zarbasi'),
+    'penalty' => tr('Penalti'),
+    _ => tr('Ochiq o‘yin'),
   };
 
   String get outcomeLabel => switch (outcome) {
-    'goal' => 'Gol',
-    'save' => 'Qaytarildi',
-    'block' => 'To‘sildi',
-    'woodwork' => 'Darvoza ramkasi',
-    _ => 'Nishondan tashqari',
+    'goal' => tr('Gol'),
+    'save' => tr('Qaytarildi'),
+    'block' => tr('To‘sildi'),
+    'woodwork' => tr('Darvoza ramkasi'),
+    _ => tr('Nishondan tashqari'),
   };
 
   /// Nine-zone name of where the ball crossed the line.
   String get zoneLabel {
     if (!hasMouth) return '–';
-    final col = mouthX < 0.34 ? 'chap' : (mouthX > 0.66 ? 'o‘ng' : 'markaz');
-    final row = mouthY < 0.34 ? 'Pastki' : (mouthY > 0.66 ? 'Yuqori' : 'O‘rta');
+    final col = mouthX < 0.34 ? 'chap' : (mouthX > 0.66 ? tr('o‘ng') : 'markaz');
+    final row = mouthY < 0.34 ? tr('Pastki') : (mouthY > 0.66 ? tr('Yuqori') : tr('O‘rta'));
     return '$row $col';
   }
 

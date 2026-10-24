@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
+import '../l10n/l10n.dart';
 
 /// Crest outlines. None is a copy of a real badge; the families only evoke
 /// the silhouette clubs are known for (roundels, pointed shields, heaters...).
@@ -13,8 +14,9 @@ enum CrestShape {
   heater('Qalqon'),
   badge('Nishon');
 
-  const CrestShape(this.label);
-  final String label;
+  const CrestShape(this._label);
+  final String _label;
+  String get label => tr(_label);
 }
 
 enum CrestPattern {
@@ -30,8 +32,9 @@ enum CrestPattern {
   rings('Halqalar'),
   splitCross('Xoch va chiziq');
 
-  const CrestPattern(this.label);
-  final String label;
+  const CrestPattern(this._label);
+  final String _label;
+  String get label => tr(_label);
 }
 
 enum CrestEmblem {
@@ -48,8 +51,9 @@ enum CrestEmblem {
   hammers('Bolg‘alar'),
   wolf('Bo‘ri');
 
-  const CrestEmblem(this.label);
-  final String label;
+  const CrestEmblem(this._label);
+  final String _label;
+  String get label => tr(_label);
 }
 
 @immutable
@@ -441,7 +445,7 @@ class ClubCrestPainter extends CustomPainter {
           text: TextSpan(
             text: ch,
             style: TextStyle(
-              fontFamily: 'Roboto',
+              fontFamily: tr('Roboto'),
               fontSize: fs,
               fontWeight: FontWeight.w800,
               color: color,
@@ -575,7 +579,7 @@ class ClubCrestPainter extends CustomPainter {
         style: TextStyle(
           color: color,
           fontSize: fs,
-          fontFamily: 'Roboto',
+          fontFamily: tr('Roboto'),
           fontWeight: FontWeight.w900,
           letterSpacing: -fs * 0.04,
           shadows: [

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'player.dart';
 import 'crest.dart';
+import '../l10n/l10n.dart';
 
 export 'crest.dart';
 
@@ -51,12 +52,13 @@ enum TeamPlaystyle {
 
   const TeamPlaystyle(
     this.displayName,
-    this.description,
+    this._description,
     this.icon,
     this.accentColor,
   );
   final String displayName;
-  final String description;
+  final String _description;
+  String get description => tr(_description);
   final IconData icon;
   final Color accentColor;
 }
@@ -326,8 +328,9 @@ enum BuildUpStyle {
   mixed('Aralash'),
   long('Uzun pas');
 
-  const BuildUpStyle(this.label);
-  final String label;
+  const BuildUpStyle(this._label);
+  final String _label;
+  String get label => tr(_label);
 }
 
 enum AttackingArea {
@@ -335,8 +338,9 @@ enum AttackingArea {
   balanced('Muvozanat'),
   centre('Markaz');
 
-  const AttackingArea(this.label);
-  final String label;
+  const AttackingArea(this._label);
+  final String _label;
+  String get label => tr(_label);
 }
 
 enum DefensiveApproach {
@@ -344,16 +348,18 @@ enum DefensiveApproach {
   balanced('Muvozanat'),
   allOutDefence('All-out Defence');
 
-  const DefensiveApproach(this.label);
-  final String label;
+  const DefensiveApproach(this._label);
+  final String _label;
+  String get label => tr(_label);
 }
 
 enum ContainmentArea {
   middle('Markazni yopish'),
   wide('Qanotlarni yopish');
 
-  const ContainmentArea(this.label);
-  final String label;
+  const ContainmentArea(this._label);
+  final String _label;
+  String get label => tr(_label);
 }
 
 /// Jamoa taktik konfiguratsiyasi
@@ -665,5 +671,5 @@ class Club {
   String get formattedTransferBudget =>
       '€${(transferBudget / 1000000).toStringAsFixed(1)}M';
   String get formattedWageBudget =>
-      '€${(wageBudget / 1000).toStringAsFixed(0)}K/hft';
+      trf('€{0}K/hft', [(wageBudget / 1000).toStringAsFixed(0)]);
 }

@@ -1,3 +1,4 @@
+import '../l10n/l10n.dart';
 /// eFootball-style player roles (see PlayerPlayingStyles.md). Every player
 /// has one main playing style, one defending style and up to three AI
 /// styles; the match engine reads them to shape runs, passes and duels.
@@ -26,8 +27,12 @@ enum PlayingStyle {
   attackingGoalkeeper('Attacking Goalkeeper', 'Hujumkor darvozabon', 'Himoya ortini tozalash uchun oldinga chiqadi.'),
   defensiveGoalkeeper('Defensive Goalkeeper', 'Himoyaviy darvozabon', 'Chiziqda qolib refleks bilan qaytaradi.');
 
-  const PlayingStyle(this.title, this.uzbek, this.description);
-  final String title, uzbek, description;
+  const PlayingStyle(this.title, this._uzbek, this._description);
+  final String title;
+  final String _uzbek;
+  String get uzbek => tr(_uzbek);
+  final String _description;
+  String get description => tr(_description);
 }
 
 enum DefendingStyle {
@@ -40,8 +45,10 @@ enum DefendingStyle {
   sweeperGk('Sweeper GK', 'Chiquvchi darvozabon'),
   basic('Basic', 'Muvozanatli');
 
-  const DefendingStyle(this.title, this.uzbek);
-  final String title, uzbek;
+  const DefendingStyle(this.title, this._uzbek);
+  final String title;
+  final String _uzbek;
+  String get uzbek => tr(_uzbek);
 }
 
 enum AiStyle {
@@ -53,8 +60,10 @@ enum AiStyle {
   earlyCrosser('Early Crosser', 'Erta kross'),
   longRanger('Long Ranger', 'Uzoqdan zarba');
 
-  const AiStyle(this.title, this.uzbek);
-  final String title, uzbek;
+  const AiStyle(this.title, this._uzbek);
+  final String title;
+  final String _uzbek;
+  String get uzbek => tr(_uzbek);
 }
 
 /// Attribute-driven assignment so imported or generated players always get a

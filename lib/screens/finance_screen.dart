@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'club_screen.dart';
+import '../l10n/l10n.dart';
 
 /// "Moliya" tab: finances first, with the calendar, inbox and club profile
 /// one swipe away.
@@ -10,15 +11,15 @@ class FinanceScreen extends StatelessWidget {
     length: 4,
     child: Scaffold(
       appBar: AppBar(
-        title: const Text('Klub moliyasi'),
-        bottom: const TabBar(
+        title: Text(tr('Klub moliyasi')),
+        bottom: TabBar(
           isScrollable: true,
           tabAlignment: TabAlignment.start,
           tabs: [
-            Tab(text: 'Moliya'),
-            Tab(text: 'Kalendar'),
-            Tab(text: 'Yangiliklar'),
-            Tab(text: 'Klub profili'),
+            Tab(text: tr('Moliya')),
+            Tab(text: tr('Kalendar')),
+            Tab(text: tr('Yangiliklar')),
+            Tab(text: tr('Klub profili')),
           ],
         ),
       ),

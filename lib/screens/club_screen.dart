@@ -7,6 +7,7 @@ import '../services/season_calendar.dart';
 import '../ui/team_widgets.dart';
 import '../ui/widgets.dart';
 import 'match_report_screen.dart';
+import '../l10n/l10n.dart';
 
 /// Club hub: finances, real-date calendar, inbox and club profile.
 class ClubScreen extends StatelessWidget {
@@ -16,15 +17,15 @@ class ClubScreen extends StatelessWidget {
     length: 4,
     child: Scaffold(
       appBar: AppBar(
-        title: const Text('Klub'),
-        bottom: const TabBar(
+        title: Text(tr('Klub')),
+        bottom: TabBar(
           isScrollable: true,
           tabAlignment: TabAlignment.start,
           tabs: [
-            Tab(text: 'Moliya'),
-            Tab(text: 'Kalendar'),
-            Tab(text: 'Yangiliklar'),
-            Tab(text: 'Klub profili'),
+            Tab(text: tr('Moliya')),
+            Tab(text: tr('Kalendar')),
+            Tab(text: tr('Yangiliklar')),
+            Tab(text: tr('Klub profili')),
           ],
         ),
       ),
@@ -63,7 +64,7 @@ class FinanceView extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Transfer byudjeti (bank)', style: AppText.small),
+                  Text(tr('Transfer byudjeti (bank)'), style: AppText.small),
                   const SizedBox(height: 4),
                   Text(
                     formatMoney(c.transferBudget, digits: 2),
@@ -71,7 +72,7 @@ class FinanceView extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Mavsum: +${formatMoney(income)}  ·  ${formatMoney(spend)}',
+                    trf('Mavsum: +{0}  ·  {1}', [formatMoney(income), formatMoney(spend)]),
                     style: AppText.caption,
                   ),
                   const SizedBox(height: 14),
@@ -83,7 +84,7 @@ class FinanceView extends StatelessWidget {
                         : AppColors.primary,
                   ),
                   const SizedBox(height: 6),
-                  const Text('Balans dinamikasi (har tur)', style: AppText.caption),
+                  Text(tr('Balans dinamikasi (har tur)'), style: AppText.caption),
                 ],
               ),
             ),
@@ -92,16 +93,16 @@ class FinanceView extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SectionHeader('Maosh fondi', icon: Icons.payments_outlined),
+                  SectionHeader(tr('Maosh fondi'), icon: Icons.payments_outlined),
                   MeterRow(
-                    label: 'Haftalik maoshlar / limit',
+                    label: tr('Haftalik maoshlar / limit'),
                     value: wagePct,
                     trailing: '${formatMoney(c.totalWeeklyWages)} / ${formatMoney(c.wageBudget)}',
                     color: wagePct > 0.95 ? AppColors.loss : wagePct > 0.85 ? AppColors.warning : AppColors.win,
                   ),
-                  InfoRow('Bo‘sh maosh imkoniyati', '${formatMoney(c.remainingWageBudget)}/hafta'),
-                  InfoRow('Homiylik va savdo', '${formatMoney(weeklyCommercial)}/hafta'),
-                  InfoRow('Tarkib qiymati', formatMoney(c.squadValue)),
+                  InfoRow(tr('Bo‘sh maosh imkoniyati'), '${formatMoney(c.remainingWageBudget)}/hafta'),
+                  InfoRow(tr('Homiylik va savdo'), '${formatMoney(weeklyCommercial)}/hafta'),
+                  InfoRow(tr('Tarkib qiymati'), formatMoney(c.squadValue)),
                 ],
               ),
             ),
@@ -112,9 +113,9 @@ class FinanceView extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SectionHeader('Daromad va xarajat tarkibi', icon: Icons.donut_small_outlined),
+                  SectionHeader(tr('Daromad va xarajat tarkibi'), icon: Icons.donut_small_outlined),
                   if (byCategory.isEmpty)
-                    const EmptyState(icon: Icons.receipt_long_outlined, text: 'Birinchi turdan keyin moliyaviy hisobot shakllanadi.'),
+                    EmptyState(icon: Icons.receipt_long_outlined, text: tr('Birinchi turdan keyin moliyaviy hisobot shakllanadi.')),
                   for (final cat in FinanceCategory.values)
                     if (byCategory.containsKey(cat))
                       _CategoryRow(
@@ -131,12 +132,12 @@ class FinanceView extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: SectionHeader('Operatsiyalar', icon: Icons.receipt_long_outlined),
+                    child: SectionHeader(tr('Operatsiyalar'), icon: Icons.receipt_long_outlined),
                   ),
                   if (entries.isEmpty)
-                    const EmptyState(icon: Icons.hourglass_empty_rounded, text: 'Hali operatsiyalar yo‘q'),
+                    EmptyState(icon: Icons.hourglass_empty_rounded, text: tr('Hali operatsiyalar yo‘q')),
                   for (final e in entries.reversed.take(40))
                     ListTile(
                       dense: true,
@@ -147,7 +148,7 @@ class FinanceView extends StatelessWidget {
                       ),
                       title: Text(e.label, style: AppText.bodyStrong.copyWith(fontSize: 13)),
                       subtitle: Text(
-                        '${e.date == null ? '' : '${SeasonCalendar.format(e.date!)} · '}${e.round}-tur',
+                        trf('{0}{1}-tur', [e.date == null ? '' : '${SeasonCalendar.format(e.date!)} · ', e.round]),
                         style: AppText.caption,
                       ),
                       trailing: Text(
@@ -223,12 +224,12 @@ class _TicketCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SectionHeader('Chipta narxi', icon: Icons.confirmation_number_outlined),
+          SectionHeader(tr('Chipta narxi'), icon: Icons.confirmation_number_outlined),
           Row(
             children: [
               Text('€${club.ticketPrice}', style: AppText.number.copyWith(fontSize: 24)),
               const SizedBox(width: 8),
-              Text('tavsiya: €$base', style: AppText.caption),
+              Text(trf('tavsiya: €{0}', [base]), style: AppText.caption),
             ],
           ),
           Slider(
@@ -239,10 +240,10 @@ class _TicketCard extends StatelessWidget {
             label: '€${club.ticketPrice}',
             onChanged: (v) => game.setTicketPrice(v.round()),
           ),
-          InfoRow('Kutilayotgan tomoshabinlar', '$attendance / ${club.stadiumCapacity}'),
-          InfoRow('Bir uy o‘yini tushumi', formatMoney(game.projectedGate(club))),
-          const Text(
-            'Yuqori narx tushumni oshiradi, lekin tribunalar bo‘shaydi va muxlislar kayfiyati pasayadi.',
+          InfoRow(tr('Kutilayotgan tomoshabinlar'), '$attendance / ${club.stadiumCapacity}'),
+          InfoRow(tr('Bir uy o‘yini tushumi'), formatMoney(game.projectedGate(club))),
+          Text(
+            tr('Yuqori narx tushumni oshiradi, lekin tribunalar bo‘shaydi va muxlislar kayfiyati pasayadi.'),
             style: AppText.caption,
           ),
         ],
@@ -404,7 +405,7 @@ class _CalendarViewState extends State<CalendarView> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SectionHeader('Mavsum muhim sanalari', icon: Icons.event_note_outlined),
+                  SectionHeader(tr('Mavsum muhim sanalari'), icon: Icons.event_note_outlined),
                   _dateRow(Icons.sports_soccer, 'Mavsum boshlanishi', cal.dateOfRound(1)),
                   _dateRow(Icons.lock_outline_rounded, 'Yozgi oyna yopiladi', cal.summerClose),
                   _dateRow(Icons.ac_unit_rounded, 'Qishki tanaffus', cal.dateOfRound(8).add(const Duration(days: 7))),
@@ -419,9 +420,9 @@ class _CalendarViewState extends State<CalendarView> {
               padding: const EdgeInsets.fromLTRB(0, 14, 0, 6),
               child: Column(
                 children: [
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: SectionHeader('Barcha uchrashuvlarim', icon: Icons.list_alt_rounded),
+                    child: SectionHeader(tr('Barcha uchrashuvlarim'), icon: Icons.list_alt_rounded),
                   ),
                   for (final f in game.fixturesOf(userId))
                     FixtureTile(
@@ -500,7 +501,7 @@ class _NewsViewState extends State<NewsView> {
     return ListenableBuilder(
       listenable: game,
       builder: (context, _) => game.news.isEmpty
-          ? const EmptyState(icon: Icons.inbox_outlined, text: 'Yangiliklar yo‘q')
+          ? EmptyState(icon: Icons.inbox_outlined, text: tr('Yangiliklar yo‘q'))
           : ListView(
               padding: const EdgeInsets.all(12),
               children: [
@@ -580,7 +581,7 @@ class NewsPage extends StatelessWidget {
   const NewsPage({super.key});
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Yangiliklar')),
+    appBar: AppBar(title: Text(tr('Yangiliklar'))),
     body: const NewsView(),
   );
 }
@@ -608,11 +609,11 @@ class ClubProfileView extends StatelessWidget {
                   Text(c.name, style: AppText.h2),
                   Text('${c.nickname} · ${c.city} · ${c.founded}', style: AppText.caption),
                   const Divider(height: 26),
-                  InfoRow('Stadion', c.stadiumName),
-                  InfoRow('Sig‘imi', '${c.stadiumCapacity}'),
-                  InfoRow('Obro‘ (reputatsiya)', '${c.reputation}/100'),
-                  InfoRow('Tarkib', '${c.squad.length} futbolchi · o‘rtacha ${c.averageAge.toStringAsFixed(1)} yosh'),
-                  InfoRow('Jamoa OVR', '${c.teamOVR}'),
+                  InfoRow(tr('Stadion'), c.stadiumName),
+                  InfoRow(tr('Sig‘imi'), '${c.stadiumCapacity}'),
+                  InfoRow(tr('Obro‘ (reputatsiya)'), '${c.reputation}/100'),
+                  InfoRow(tr('Tarkib'), '${c.squad.length} futbolchi · o‘rtacha ${c.averageAge.toStringAsFixed(1)} yosh'),
+                  InfoRow(tr('Jamoa OVR'), '${c.teamOVR}'),
                 ],
               ),
             ),
@@ -622,12 +623,12 @@ class ClubProfileView extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: SectionHeader('Mavsumlar tarixi', icon: Icons.history_rounded),
+                    child: SectionHeader(tr('Mavsumlar tarixi'), icon: Icons.history_rounded),
                   ),
                   if (game.seasonHistory.isEmpty)
-                    const EmptyState(icon: Icons.history_toggle_off_rounded, text: 'Birinchi mavsum davom etmoqda'),
+                    EmptyState(icon: Icons.history_toggle_off_rounded, text: tr('Birinchi mavsum davom etmoqda')),
                   for (final s in game.seasonHistory.reversed)
                     ListTile(
                       leading: CircleAvatar(
@@ -635,8 +636,8 @@ class ClubProfileView extends StatelessWidget {
                         child: Text('${s.userPosition}', style: AppText.number),
                       ),
                       title: Text(s.season),
-                      subtitle: Text('Chempion: ${s.championName} · To‘purar: ${s.topScorer}'),
-                      trailing: Text('${s.userPoints} o‘', style: AppText.number),
+                      subtitle: Text(trf('Chempion: {0} · To‘purar: {1}', [s.championName, s.topScorer])),
+                      trailing: Text(trf('{0} o‘', [s.userPoints]), style: AppText.number),
                     ),
                 ],
               ),
@@ -646,12 +647,12 @@ class ClubProfileView extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(0, 14, 0, 6),
               child: Column(
                 children: [
-                  const Padding(
+                  Padding(
                     padding: EdgeInsets.symmetric(horizontal: 16),
-                    child: SectionHeader('Liga transferlari', icon: Icons.swap_horiz_rounded),
+                    child: SectionHeader(tr('Liga transferlari'), icon: Icons.swap_horiz_rounded),
                   ),
                   if (game.transferHistory.isEmpty)
-                    const EmptyState(icon: Icons.swap_horiz_rounded, text: 'Hali transferlar yo‘q'),
+                    EmptyState(icon: Icons.swap_horiz_rounded, text: tr('Hali transferlar yo‘q')),
                   for (final t in game.transferHistory.take(30))
                     ListTile(
                       dense: true,

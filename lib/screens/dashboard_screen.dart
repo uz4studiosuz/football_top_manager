@@ -14,6 +14,7 @@ import 'match_report_screen.dart';
 import 'match_screen.dart';
 import 'widgets/opponent_squad_sheet.dart';
 import 'widgets/player_detail_view.dart';
+import '../l10n/l10n.dart';
 
 class DashboardScreen extends StatelessWidget {
   final VoidCallback onNavigateToTactics;
@@ -75,7 +76,7 @@ class DashboardScreen extends StatelessWidget {
             ),
             actions: [
               IconButton(
-                tooltip: 'Yangiliklar',
+                tooltip: tr('Yangiliklar'),
                 onPressed: () => Navigator.push(
                   context,
                   MaterialPageRoute<void>(builder: (_) => const NewsPage()),
@@ -87,7 +88,7 @@ class DashboardScreen extends StatelessWidget {
                 ),
               ),
               IconButton(
-                tooltip: 'Menejer profili',
+                tooltip: tr('Menejer profili'),
                 onPressed: () => Navigator.push(
                   context,
                   MaterialPageRoute<void>(
@@ -111,8 +112,8 @@ class DashboardScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: Row(
                   children: [
-                    const Expanded(
-                      child: Text('Sezon markazi', style: AppText.h1),
+                    Expanded(
+                      child: Text(tr('Sezon markazi'), style: AppText.h1),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -172,9 +173,9 @@ class DashboardScreen extends StatelessWidget {
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 16),
                               child: SectionHeader(
-                                'Liga jadvali',
+                                tr('Liga jadvali'),
                                 icon: Icons.leaderboard_outlined,
-                                action: 'To‘liq',
+                                action: tr('To‘liq'),
                                 onAction: onNavigateToTable,
                               ),
                             ),
@@ -188,7 +189,7 @@ class DashboardScreen extends StatelessWidget {
                                     const SizedBox(width: 6),
                                     Expanded(
                                       child: Text(
-                                        'Hozir: $zone zonasida',
+                                        trf('Hozir: {0} zonasida', [zone]),
                                         style: AppText.small,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
@@ -247,7 +248,7 @@ class DashboardScreen extends StatelessWidget {
                       ),
               ),
               const SizedBox(height: 2),
-              const Text('Forma', style: AppText.caption),
+              Text(tr('Forma'), style: AppText.caption),
             ],
           ),
         ),
@@ -278,16 +279,16 @@ class DashboardScreen extends StatelessWidget {
             children: [
               const Icon(Icons.sports_soccer, size: 16, color: AppColors.primary),
               const SizedBox(width: 8),
-              const Expanded(
-                child: Text('NAVBATDAGI UCHRASHUV', style: AppText.overline),
+              Expanded(
+                child: Text(tr('NAVBATDAGI UCHRASHUV'), style: AppText.overline),
               ),
-              Text('${f.round}-tur', style: AppText.caption),
+              Text(trf('{0}-tur', [f.round]), style: AppText.caption),
             ],
           ),
           const SizedBox(height: 18),
           Row(
             children: [
-              Expanded(child: ClubHeading(club: h, caption: 'OVR ${h.teamOVR} · ${game.positionOf(h.id)}-o‘rin')),
+              Expanded(child: ClubHeading(club: h, caption: trf('OVR {0} · {1}-o‘rin', [h.teamOVR, game.positionOf(h.id)]))),
               Column(
                 children: [
                   Text(
@@ -303,7 +304,7 @@ class DashboardScreen extends StatelessWidget {
                   const Text('20:00', style: AppText.caption),
                 ],
               ),
-              Expanded(child: ClubHeading(club: a, caption: 'OVR ${a.teamOVR} · ${game.positionOf(a.id)}-o‘rin')),
+              Expanded(child: ClubHeading(club: a, caption: trf('OVR {0} · {1}-o‘rin', [a.teamOVR, game.positionOf(a.id)]))),
             ],
           ),
           const SizedBox(height: 10),
@@ -337,7 +338,7 @@ class DashboardScreen extends StatelessWidget {
                 child: OutlinedButton.icon(
                   onPressed: () => OpponentSquadSheet.show(context, opponentClub: rival),
                   icon: const Icon(Icons.remove_red_eye_rounded, size: 17),
-                  label: const FittedBox(child: Text('Raqib tahlili')),
+                  label: FittedBox(child: Text(tr('Raqib tahlili'))),
                 ),
               ),
               const SizedBox(width: 10),
@@ -351,7 +352,7 @@ class DashboardScreen extends StatelessWidget {
                     );
                   },
                   icon: const Icon(Icons.play_arrow_rounded, size: 20),
-                  label: const FittedBox(child: Text('Boshlash')),
+                  label: FittedBox(child: Text(tr('Boshlash'))),
                 ),
               ),
             ],
@@ -368,7 +369,7 @@ class DashboardScreen extends StatelessWidget {
               );
             },
             icon: const Icon(Icons.fast_forward_rounded, size: 18),
-            label: const Text('Tezkor natija'),
+            label: Text(tr('Tezkor natija')),
           ),
         ],
       ),
@@ -383,9 +384,9 @@ class DashboardScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SectionHeader('Tur yakunlandi', icon: Icons.check_circle_outline),
+          SectionHeader(tr('Tur yakunlandi'), icon: Icons.check_circle_outline),
           Text(
-            'Barcha natijalar jadvalga yozildi.${nextDate != null ? ' Keyingi o‘yin kuni: ${SeasonCalendar.format(nextDate)}.' : ''}',
+            trf('Barcha natijalar jadvalga yozildi.{0}', [nextDate != null ? ' Keyingi o‘yin kuni: ${SeasonCalendar.format(nextDate)}.' : '']),
             style: AppText.small,
           ),
           const SizedBox(height: 14),
@@ -395,7 +396,7 @@ class DashboardScreen extends StatelessWidget {
               child: FilledButton.icon(
                 onPressed: game.nextRound,
                 icon: const Icon(Icons.arrow_forward_rounded),
-                label: const Text('Keyingi turga o‘tish'),
+                label: Text(tr('Keyingi turga o‘tish')),
               ),
             ),
         ],
@@ -413,19 +414,19 @@ class DashboardScreen extends StatelessWidget {
         children: [
           const Icon(Icons.emoji_events_rounded, size: 40, color: AppColors.gold),
           const SizedBox(height: 8),
-          Text('Mavsum ${game.seasonLabel} yakunlandi', style: AppText.h2),
+          Text(trf('Mavsum {0} yakunlandi', [game.seasonLabel]), style: AppText.h2),
           const SizedBox(height: 14),
-          ClubHeading(club: champion, size: 64, caption: 'Chempion · ${table.first.points} ochko'),
+          ClubHeading(club: champion, size: 64, caption: trf('Chempion · {0} ochko', [table.first.points])),
           const SizedBox(height: 14),
-          InfoRow('Sizning o‘rningiz', '$pos-o‘rin'),
+          InfoRow(tr('Sizning o‘rningiz'), '$pos-o‘rin'),
           InfoRow(
-            'Kengash maqsadi (${game.objective.title})',
-            met ? 'Bajarildi' : 'Bajarilmadi',
+            trf('Kengash maqsadi ({0})', [game.objective.title]),
+            met ? tr('Bajarildi') : tr('Bajarilmadi'),
             valueColor: met ? AppColors.win : AppColors.loss,
           ),
           if (game.pendingMoves[game.userClubId] case final next?)
             InfoRow(
-              'Keyingi mavsum',
+              tr('Keyingi mavsum'),
               InitialDatabase.leagueName(next),
               valueColor: InitialDatabase.info(next).tier < game.leagueInfo.tier ? AppColors.win : AppColors.loss,
             ),
@@ -444,7 +445,7 @@ class DashboardScreen extends StatelessWidget {
             child: FilledButton.icon(
               onPressed: game.startNextSeason,
               icon: const Icon(Icons.autorenew_rounded),
-              label: const Text('Yangi mavsumni boshlash'),
+              label: Text(tr('Yangi mavsumni boshlash')),
             ),
           ),
         ],
@@ -462,13 +463,13 @@ class DashboardScreen extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Asosiy tarkibda o‘ynay olmaydiganlar: ${list.map((p) => p.shortName).join(', ')}',
+              trf('Asosiy tarkibda o‘ynay olmaydiganlar: {0}', [list.map((p) => p.shortName).join(', ')]),
               style: AppText.small.copyWith(color: AppColors.ink),
             ),
           ),
           TextButton(
             onPressed: game.fixUnavailableStarters,
-            child: const Text('Almashtirish'),
+            child: Text(tr('Almashtirish')),
           ),
         ],
       ),
@@ -488,7 +489,7 @@ class DashboardScreen extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Expanded(child: Text('OXIRGI NATIJA', style: AppText.overline)),
+              Expanded(child: Text(tr('OXIRGI NATIJA'), style: AppText.overline)),
               FormChip(result, size: 20),
               const SizedBox(width: 4),
               const Icon(Icons.chevron_right_rounded, color: AppColors.ink3),
@@ -529,7 +530,7 @@ class DashboardScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text('O‘yin qahramoni', style: AppText.caption),
+                      Text(tr('O‘yin qahramoni'), style: AppText.caption),
                       Text(motm.name, style: AppText.bodyStrong.copyWith(fontSize: 13)),
                     ],
                   ),
@@ -549,10 +550,10 @@ class DashboardScreen extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: SectionHeader('Taqvim', icon: Icons.event_outlined, action: 'Barchasi', onAction: onNavigateToTable),
+          child: SectionHeader(tr('Taqvim'), icon: Icons.event_outlined, action: tr('Barchasi'), onAction: onNavigateToTable),
         ),
         if (upcoming.isEmpty)
-          const EmptyState(icon: Icons.event_busy_outlined, text: 'Mavsumda boshqa o‘yin qolmadi')
+          EmptyState(icon: Icons.event_busy_outlined, text: tr('Mavsumda boshqa o‘yin qolmadi'))
         else
           for (final f in upcoming) FixtureTile(fixture: f, highlightClubId: club.id),
       ],
@@ -571,16 +572,16 @@ class DashboardScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SectionHeader('Boshqaruv kengashi', icon: Icons.account_balance_outlined),
-          InfoRow('Mavsum maqsadi', game.objective.title),
+          SectionHeader(tr('Boshqaruv kengashi'), icon: Icons.account_balance_outlined),
+          InfoRow(tr('Mavsum maqsadi'), game.objective.title),
           InfoRow(
-            'Joriy holat',
+            tr('Joriy holat'),
             '$pos-o‘rin',
             valueColor: pos <= game.objective.targetPosition ? AppColors.win : AppColors.loss,
           ),
-          MeterRow(label: 'Kengash ishonchi', value: conf / 100, trailing: '$conf%', color: color),
+          MeterRow(label: tr('Kengash ishonchi'), value: conf / 100, trailing: '$conf%', color: color),
           MeterRow(
-            label: 'Muxlislar kayfiyati',
+            label: tr('Muxlislar kayfiyati'),
             value: game.userClub.fanMood / 100,
             trailing: '${game.userClub.fanMood}%',
             color: AppColors.primary,
@@ -603,9 +604,9 @@ class DashboardScreen extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             child: SectionHeader(
-              rated.isNotEmpty ? 'Eng yaxshi reytinglar' : 'Yetakchi futbolchilar',
+              rated.isNotEmpty ? tr('Eng yaxshi reytinglar') : tr('Yetakchi futbolchilar'),
               icon: Icons.star_outline_rounded,
-              action: 'Tarkib',
+              action: tr('Tarkib'),
               onAction: onNavigateToSquad,
             ),
           ),
@@ -613,7 +614,7 @@ class DashboardScreen extends StatelessWidget {
             PlayerTile(
               player: p,
               club: club,
-              subtitle: '${p.seasonMatches} o‘yin · ${p.seasonGoals} gol · ${p.seasonAssists} assist',
+              subtitle: trf('{0} o‘yin · {1} gol · {2} assist', [p.seasonMatches, p.seasonGoals, p.seasonAssists]),
               onTap: () => PlayerDetailView.show(context, player: p, club: club),
             ),
         ],
@@ -704,9 +705,9 @@ class DashboardScreen extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: SectionHeader(
-            'Yangiliklar',
+            tr('Yangiliklar'),
             icon: Icons.newspaper_outlined,
-            action: 'Barchasi',
+            action: tr('Barchasi'),
             onAction: () => Navigator.push(
               context,
               MaterialPageRoute<void>(builder: (_) => const NewsPage()),

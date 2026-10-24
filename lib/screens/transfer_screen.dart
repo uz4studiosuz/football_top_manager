@@ -7,6 +7,7 @@ import '../ui/face_avatar.dart';
 import '../ui/team_widgets.dart';
 import '../ui/widgets.dart';
 import 'widgets/player_detail_view.dart';
+import '../l10n/l10n.dart';
 
 class TransferScreen extends StatefulWidget {
   const TransferScreen({super.key});
@@ -33,7 +34,7 @@ class _TransferScreenState extends State<TransferScreen> {
           final f = (fee / 100000).round() * 100000;
           final issue = game.transferIssue(p, seller, game.userClub, f);
           return AlertDialog(
-            title: const Text('Transfer taklifi'),
+            title: Text(tr('Transfer taklifi')),
             content: SizedBox(
               width: 380,
               child: Column(
@@ -49,7 +50,7 @@ class _TransferScreenState extends State<TransferScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(p.name, style: AppText.h3),
-                            Text('${seller.name} · ${p.mainPosition.code} · ${p.age} yosh', style: AppText.caption),
+                            Text(trf('{0} · {1} · {2} yosh', [seller.name, p.mainPosition.code, p.age]), style: AppText.caption),
                           ],
                         ),
                       ),
@@ -57,10 +58,10 @@ class _TransferScreenState extends State<TransferScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
-                  InfoRow('Klub so‘ragan narx', formatMoney(ask)),
-                  InfoRow('Bozor bahosi', formatMoney(p.marketValue)),
+                  InfoRow(tr('Klub so‘ragan narx'), formatMoney(ask)),
+                  InfoRow(tr('Bozor bahosi'), formatMoney(p.marketValue)),
                   const SizedBox(height: 8),
-                  Text('Taklifingiz: ${formatMoney(f)}', style: AppText.h3.copyWith(color: AppColors.primary)),
+                  Text(trf('Taklifingiz: {0}', [formatMoney(f)]), style: AppText.h3.copyWith(color: AppColors.primary)),
                   Slider(
                     min: ask * 0.6,
                     max: ask * 1.4,
@@ -70,12 +71,12 @@ class _TransferScreenState extends State<TransferScreen> {
                       message = null;
                     }),
                   ),
-                  InfoRow('Agent va imzo', formatMoney(game.signingCost(p, f))),
-                  InfoRow('Haftalik maosh', formatMoney(game.offeredWage(p))),
-                  InfoRow('Shartnoma', '3 yil'),
+                  InfoRow(tr('Agent va imzo'), formatMoney(game.signingCost(p, f))),
+                  InfoRow(tr('Haftalik maosh'), formatMoney(game.offeredWage(p))),
+                  InfoRow(tr('Shartnoma'), '3 yil'),
                   const Divider(),
-                  InfoRow('Jami xarajat', formatMoney(f + game.signingCost(p, f))),
-                  InfoRow('Byudjetingiz', game.userClub.formattedTransferBudget),
+                  InfoRow(tr('Jami xarajat'), formatMoney(f + game.signingCost(p, f))),
+                  InfoRow(tr('Byudjetingiz'), game.userClub.formattedTransferBudget),
                   if (issue != null || message != null)
                     Padding(
                       padding: const EdgeInsets.only(top: 10),
@@ -88,7 +89,7 @@ class _TransferScreenState extends State<TransferScreen> {
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Bekor qilish')),
+              TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Bekor qilish'))),
               FilledButton(
                 onPressed: issue == null
                     ? () {
@@ -97,7 +98,7 @@ class _TransferScreenState extends State<TransferScreen> {
                           case NegotiationResult.accepted:
                             Navigator.pop(ctx);
                             ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('${p.name} jamoaga qo‘shildi')),
+                              SnackBar(content: Text(trf('{0} jamoaga qo‘shildi', [p.name]))),
                             );
                           case NegotiationResult.countered:
                             update(() {
@@ -111,7 +112,7 @@ class _TransferScreenState extends State<TransferScreen> {
                         }
                       }
                     : null,
-                child: const Text('Taklif yuborish'),
+                child: Text(tr('Taklif yuborish')),
               ),
             ],
           );
@@ -125,15 +126,15 @@ class _TransferScreenState extends State<TransferScreen> {
     length: 4,
     child: Scaffold(
       appBar: AppBar(
-        title: const Text('Transfer markazi'),
-        bottom: const TabBar(
+        title: Text(tr('Transfer markazi')),
+        bottom: TabBar(
           isScrollable: true,
           tabAlignment: TabAlignment.start,
           tabs: [
-            Tab(text: 'Bozor'),
-            Tab(text: 'Erkin agentlar'),
-            Tab(text: 'Takliflar'),
-            Tab(text: 'Qoidalar'),
+            Tab(text: tr('Bozor')),
+            Tab(text: tr('Erkin agentlar')),
+            Tab(text: tr('Takliflar')),
+            Tab(text: tr('Qoidalar')),
           ],
         ),
       ),
@@ -163,7 +164,7 @@ class _TransferScreenState extends State<TransferScreen> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(game.userClub.formattedTransferBudget, style: AppText.number),
-              Text('${game.userClub.squad.length}/${GameState.maxSquad} futbolchi', style: AppText.caption),
+              Text(trf('{0}/{1} futbolchi', [game.userClub.squad.length, GameState.maxSquad]), style: AppText.caption),
             ],
           ),
         ],
@@ -204,8 +205,8 @@ class _TransferScreenState extends State<TransferScreen> {
         const SizedBox(height: 12),
         TextField(
           onChanged: (v) => setState(() => query = v),
-          decoration: const InputDecoration(
-            hintText: 'Futbolchini qidirish',
+          decoration: InputDecoration(
+            hintText: tr('Futbolchini qidirish'),
             prefixIcon: Icon(Icons.search_rounded),
             filled: true,
             fillColor: AppColors.surface,
@@ -214,21 +215,21 @@ class _TransferScreenState extends State<TransferScreen> {
         if (pyramid.length > 1) ...[
           const SizedBox(height: 10),
           PillTabs(
-            labels: ['Barcha ligalar', for (final l in pyramid) l.name],
+            labels: [tr('Barcha ligalar'), for (final l in pyramid) l.name],
             index: league,
             onChanged: (i) => setState(() => league = i),
           ),
         ],
         const SizedBox(height: 10),
         PillTabs(
-          labels: const ['Barchasi', 'Hujum', 'Yarim himoya', 'Himoya', 'Darvoza'],
+          labels: [tr('Barchasi'), 'Hujum', 'Yarim himoya', 'Himoya', 'Darvoza'],
           index: category,
           onChanged: (i) => setState(() => category = i),
         ),
         const SizedBox(height: 6),
         Row(
           children: [
-            Text('Yosh: ${ageRange.start.round()}–${ageRange.end.round()}', style: AppText.caption),
+            Text(trf('Yosh: {0}–{1}', [ageRange.start.round(), ageRange.end.round()]), style: AppText.caption),
             Expanded(
               child: RangeSlider(
                 min: 16,
@@ -252,14 +253,14 @@ class _TransferScreenState extends State<TransferScreen> {
         AppCard(
           padding: const EdgeInsets.symmetric(vertical: 6),
           child: entries.isEmpty
-              ? const EmptyState(icon: Icons.search_off_rounded, text: 'Mos futbolchi topilmadi')
+              ? EmptyState(icon: Icons.search_off_rounded, text: tr('Mos futbolchi topilmadi'))
               : Column(
                   children: [
                     for (final e in entries.take(80))
                       PlayerTile(
                         player: e.p,
                         club: e.c,
-                        subtitle: '${e.c.shortName} · ${e.p.age} yosh · salohiyat ${e.p.potential}',
+                        subtitle: trf('{0} · {1} yosh · salohiyat {2}', [e.c.shortName, e.p.age, e.p.potential]),
                         onTap: () => PlayerDetailView.show(context, player: e.p, club: e.c),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -287,10 +288,10 @@ class _TransferScreenState extends State<TransferScreen> {
   Widget _freeAgents(BuildContext context) => ListView(
     padding: const EdgeInsets.all(12),
     children: [
-      const AppCard(
+      AppCard(
         color: AppColors.primarySoft,
         child: Text(
-          'Shartnomasi tugagan futbolchilarni istalgan vaqtda (oyna yopiq bo‘lsa ham) imzolash mumkin. To‘lov – faqat 8 haftalik maosh miqdorida imzo bonusi.',
+          tr('Shartnomasi tugagan futbolchilarni istalgan vaqtda (oyna yopiq bo‘lsa ham) imzolash mumkin. To‘lov – faqat 8 haftalik maosh miqdorida imzo bonusi.'),
           style: AppText.small,
         ),
       ),
@@ -298,14 +299,14 @@ class _TransferScreenState extends State<TransferScreen> {
       AppCard(
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: game.freeAgents.isEmpty
-            ? const EmptyState(icon: Icons.person_search_outlined, text: 'Hozircha erkin agentlar yo‘q')
+            ? EmptyState(icon: Icons.person_search_outlined, text: tr('Hozircha erkin agentlar yo‘q'))
             : Column(
                 children: [
                   for (final p in List.of(game.freeAgents)..sort((a, b) => b.ovr.compareTo(a.ovr)))
                     PlayerTile(
                       player: p,
                       club: game.userClub,
-                      subtitle: '${p.age} yosh · ${formatMoney(p.calculatedRenewalWageDemand)}/hafta',
+                      subtitle: trf('{0} yosh · {1}/hafta', [p.age, formatMoney(p.calculatedRenewalWageDemand)]),
                       showRating: false,
                       onTap: () => PlayerDetailView.show(context, player: p),
                       trailing: Row(
@@ -318,10 +319,10 @@ class _TransferScreenState extends State<TransferScreen> {
                             onPressed: () {
                               final ok = game.signFreeAgent(p);
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(ok ? '${p.name} imzoladi' : (game.lastTransferError ?? 'Bajarilmadi'))),
+                                SnackBar(content: Text(ok ? trf('{0} imzoladi', [p.name]) : (game.lastTransferError ?? tr('Bajarilmadi')))),
                               );
                             },
-                            child: const Text('Imzolash', style: TextStyle(fontSize: 12)),
+                            child: Text(tr('Imzolash'), style: TextStyle(fontSize: 12)),
                           ),
                         ],
                       ),
@@ -340,9 +341,9 @@ class _TransferScreenState extends State<TransferScreen> {
       AppCard(
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: game.offers.isEmpty
-            ? const EmptyState(
+            ? EmptyState(
                 icon: Icons.mark_email_unread_outlined,
-                text: 'Futbolchilaringiz uchun hozircha taklif yo‘q. Ochiq transfer oynasida klublar taklif yuboradi.',
+                text: tr('Futbolchilaringiz uchun hozircha taklif yo‘q. Ochiq transfer oynasida klublar taklif yuboradi.'),
               )
             : Column(
                 children: [
@@ -358,21 +359,21 @@ class _TransferScreenState extends State<TransferScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(o.player.name, style: AppText.bodyStrong),
-                                Text('${o.buyer.name} · ${formatMoney(o.fee)} (baho ${formatMoney(o.player.marketValue)})', style: AppText.caption),
+                                Text(trf('{0} · {1} (baho {2})', [o.buyer.name, formatMoney(o.fee), formatMoney(o.player.marketValue)]), style: AppText.caption),
                               ],
                             ),
                           ),
                           IconButton(
-                            tooltip: 'Rad etish',
+                            tooltip: tr('Rad etish'),
                             onPressed: () => game.rejectOffer(o),
                             icon: const Icon(Icons.close_rounded, color: AppColors.live),
                           ),
                           IconButton.filled(
-                            tooltip: 'Qabul qilish',
+                            tooltip: tr('Qabul qilish'),
                             onPressed: () {
                               final ok = game.acceptOffer(o);
                               ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(ok ? '${o.player.name} sotildi' : (game.lastTransferError ?? 'Bajarilmadi'))),
+                                SnackBar(content: Text(ok ? trf('{0} sotildi', [o.player.name]) : (game.lastTransferError ?? tr('Bajarilmadi')))),
                               );
                             },
                             icon: const Icon(Icons.check_rounded),
@@ -393,7 +394,7 @@ class _TransferScreenState extends State<TransferScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const SectionHeader('Liga transfer reglamenti', icon: Icons.gavel_rounded),
+            SectionHeader(tr('Liga transfer reglamenti'), icon: Icons.gavel_rounded),
             for (final rule in [
               'Yozgi oyna: 16 iyun – 1 sentabr. Qishki oyna: 1 yanvar – 2 fevral.',
               'Ro‘yxat: ${GameState.minSquad}–${GameState.maxSquad} futbolchi. Klub kamida ikki darvozabonni saqlaydi.',
@@ -426,17 +427,17 @@ class _TransferScreenState extends State<TransferScreen> {
         padding: const EdgeInsets.fromLTRB(0, 14, 0, 6),
         child: Column(
           children: [
-            const Padding(
+            Padding(
               padding: EdgeInsets.symmetric(horizontal: 16),
-              child: SectionHeader('Yakunlangan transferlar', icon: Icons.history_rounded),
+              child: SectionHeader(tr('Yakunlangan transferlar'), icon: Icons.history_rounded),
             ),
             if (game.transferHistory.isEmpty)
-              const EmptyState(icon: Icons.swap_horiz_rounded, text: 'Hali transfer amalga oshirilmagan.'),
+              EmptyState(icon: Icons.swap_horiz_rounded, text: tr('Hali transfer amalga oshirilmagan.')),
             for (final t in game.transferHistory)
               ListTile(
                 dense: true,
                 title: Text(t.playerName, style: AppText.bodyStrong.copyWith(fontSize: 13)),
-                subtitle: Text('${t.fromClub} → ${t.toClub} · ${t.round}-tur', style: AppText.caption),
+                subtitle: Text(trf('{0} → {1} · {2}-tur', [t.fromClub, t.toClub, t.round]), style: AppText.caption),
                 trailing: Text(formatMoney(t.fee), style: AppText.number.copyWith(fontSize: 13)),
               ),
           ],

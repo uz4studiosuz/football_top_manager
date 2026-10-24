@@ -6,6 +6,7 @@ import '../models/manager_profile.dart';
 import '../ui/face_avatar.dart';
 import '../ui/widgets.dart';
 import '../services/save_service.dart';
+import '../l10n/l10n.dart';
 
 class ManagerProfileScreen extends StatefulWidget {
   const ManagerProfileScreen({super.key});
@@ -18,10 +19,10 @@ class _ManagerProfileScreenState extends State<ManagerProfileScreen> {
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Yangi karyera boshlash'),
-        content: const Text('Joriy karyera yakunlanadi. Yangi menejer va klub yaratasiz.'),
+        title: Text(tr('Yangi karyera boshlash')),
+        content: Text(tr('Joriy karyera yakunlanadi. Yangi menejer va klub yaratasiz.')),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Bekor qilish')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Bekor qilish'))),
           FilledButton(
             onPressed: () {
               Navigator.pop(ctx);
@@ -30,7 +31,7 @@ class _ManagerProfileScreenState extends State<ManagerProfileScreen> {
                 (route) => false,
               );
             },
-            child: const Text('Yangi karyera'),
+            child: Text(tr('Yangi karyera')),
           ),
         ],
       ),
@@ -41,10 +42,10 @@ class _ManagerProfileScreenState extends State<ManagerProfileScreen> {
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Chiqish va tozalash'),
-        content: const Text('Saqlangan karyera butunlay o‘chiriladi. Bu amalni qaytarib bo‘lmaydi.'),
+        title: Text(tr('Chiqish va tozalash')),
+        content: Text(tr('Saqlangan karyera butunlay o‘chiriladi. Bu amalni qaytarib bo‘lmaydi.')),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Bekor qilish')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Bekor qilish'))),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: AppColors.live),
             onPressed: () async {
@@ -59,7 +60,7 @@ class _ManagerProfileScreenState extends State<ManagerProfileScreen> {
                 (route) => false,
               );
             },
-            child: const Text('O‘chirish'),
+            child: Text(tr('O‘chirish')),
           ),
         ],
       ),
@@ -71,7 +72,7 @@ class _ManagerProfileScreenState extends State<ManagerProfileScreen> {
     final game = GameState(), m = game.managerProfile;
     final club = game.isInitialized ? game.userClub : null;
     return Scaffold(
-      appBar: AppBar(title: const Text('Menejer profili')),
+      appBar: AppBar(title: Text(tr('Menejer profili'))),
       body: ListView(
         padding: const EdgeInsets.all(12),
         children: [
@@ -82,7 +83,7 @@ class _ManagerProfileScreenState extends State<ManagerProfileScreen> {
                 const SizedBox(height: 12),
                 Text(m.name, style: AppText.h1),
                 const SizedBox(height: 4),
-                Text('${m.countryFlag} ${m.nationality} · ${m.age} yosh', style: AppText.small),
+                Text(trf('{0} {1} · {2} yosh', [m.countryFlag, m.nationality, m.age]), style: AppText.small),
                 if (club != null) ...[
                   const SizedBox(height: 8),
                   Row(
@@ -92,7 +93,7 @@ class _ManagerProfileScreenState extends State<ManagerProfileScreen> {
                       const SizedBox(width: 6),
                       Flexible(
                         child: Text(
-                          '${club.name} bosh murabbiyi',
+                          trf('{0} bosh murabbiyi', [club.name]),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppText.small,
@@ -110,7 +111,7 @@ class _ManagerProfileScreenState extends State<ManagerProfileScreen> {
                     }
                   },
                   icon: const Icon(Icons.face_outlined),
-                  label: const Text('Yuzni tahrirlash'),
+                  label: Text(tr('Yuzni tahrirlash')),
                 ),
                 const Divider(height: 20),
                 Row(
@@ -137,9 +138,9 @@ class _ManagerProfileScreenState extends State<ManagerProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SectionHeader('Falsafa reytinglari', icon: Icons.psychology_outlined),
-                const Text(
-                  'Har besh uchrashuvda amaldagi uslub +1 ga o‘sadi. Reyting pas aniqligi va jamoa qarorlariga ta’sir qiladi.',
+                SectionHeader(tr('Falsafa reytinglari'), icon: Icons.psychology_outlined),
+                Text(
+                  tr('Har besh uchrashuvda amaldagi uslub +1 ga o‘sadi. Reyting pas aniqligi va jamoa qarorlariga ta’sir qiladi.'),
                   style: AppText.caption,
                 ),
                 const SizedBox(height: 8),
@@ -181,9 +182,9 @@ class _ManagerProfileScreenState extends State<ManagerProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SectionHeader('Karyera', icon: Icons.save_outlined),
-                const Text(
-                  'Karyera har bir o‘zgarishdan keyin avtomatik saqlanadi (telefon va brauzerda).',
+                SectionHeader(tr('Karyera'), icon: Icons.save_outlined),
+                Text(
+                  tr('Karyera har bir o‘zgarishdan keyin avtomatik saqlanadi (telefon va brauzerda).'),
                   style: AppText.caption,
                 ),
                 const SizedBox(height: 12),
@@ -192,25 +193,25 @@ class _ManagerProfileScreenState extends State<ManagerProfileScreen> {
                     await SaveService.save();
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Karyera saqlandi')),
+                        SnackBar(content: Text(tr('Karyera saqlandi'))),
                       );
                     }
                   },
                   icon: const Icon(Icons.save_rounded),
-                  label: const Text('Hozir saqlash'),
+                  label: Text(tr('Hozir saqlash')),
                 ),
                 const SizedBox(height: 8),
                 OutlinedButton.icon(
                   onPressed: _newCareer,
                   icon: const Icon(Icons.add_circle_outline),
-                  label: const Text('Yangi karyera'),
+                  label: Text(tr('Yangi karyera')),
                 ),
                 const SizedBox(height: 8),
                 OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(foregroundColor: AppColors.live),
                   onPressed: _logout,
                   icon: const Icon(Icons.logout_rounded),
-                  label: const Text('Chiqish va saqlanganni tozalash'),
+                  label: Text(tr('Chiqish va saqlanganni tozalash')),
                 ),
               ],
             ),

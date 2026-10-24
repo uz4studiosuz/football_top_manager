@@ -9,6 +9,7 @@ import '../ui/widgets.dart';
 import 'match_report_screen.dart';
 import 'widgets/opponent_squad_sheet.dart';
 import 'widgets/player_detail_view.dart';
+import '../l10n/l10n.dart';
 
 class StandingsScreen extends StatefulWidget {
   const StandingsScreen({super.key});
@@ -29,12 +30,12 @@ class _StandingsScreenState extends State<StandingsScreen> {
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: Text('${game.leagueName} Markazi'),
-          bottom: const TabBar(
+          title: Text(trf('{0} Markazi', [game.leagueName])),
+          bottom: TabBar(
             tabs: [
-              Tab(text: 'Turnir jadvali'),
-              Tab(text: 'Turlar'),
-              Tab(text: 'Futbolchilar'),
+              Tab(text: tr('Turnir jadvali')),
+              Tab(text: tr('Turlar')),
+              Tab(text: tr('Futbolchilar')),
             ],
           ),
         ),
@@ -83,7 +84,7 @@ class _StandingsScreenState extends State<StandingsScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: SectionHeader(
-                own ? 'Mavsum ${game.seasonLabel}' : '${InitialDatabase.leagueName(shown)} · ${game.seasonLabel}',
+                own ? trf('Mavsum {0}', [game.seasonLabel]) : '${InitialDatabase.leagueName(shown)} · ${game.seasonLabel}',
                 icon: Icons.emoji_events_outlined,
               ),
             ),
@@ -137,7 +138,7 @@ class _StandingsScreenState extends State<StandingsScreen> {
               Expanded(
                 child: Column(
                   children: [
-                    Text('$round-tur', style: AppText.h3),
+                    Text(trf('{0}-tur', [round]), style: AppText.h3),
                     Text('${SeasonCalendar.weekday(date)}, ${SeasonCalendar.format(date, year: true)}', style: AppText.caption),
                   ],
                 ),
@@ -184,7 +185,7 @@ class _StandingsScreenState extends State<StandingsScreen> {
       padding: const EdgeInsets.all(12),
       children: [
         PillTabs(
-          labels: const ['To\'purarlar', 'Assistentlar', 'Reyting', 'Quruq o‘yinlar'],
+          labels: [tr('To\'purarlar'), 'Assistentlar', 'Reyting', 'Quruq o‘yinlar'],
           index: leaders,
           onChanged: (i) => setState(() => leaders = i),
         ),
@@ -192,7 +193,7 @@ class _StandingsScreenState extends State<StandingsScreen> {
         AppCard(
           padding: const EdgeInsets.symmetric(vertical: 6),
           child: current.$1.isEmpty
-              ? const EmptyState(icon: Icons.bar_chart_rounded, text: 'Birinchi turdan keyin statistika paydo bo‘ladi')
+              ? EmptyState(icon: Icons.bar_chart_rounded, text: tr('Birinchi turdan keyin statistika paydo bo‘ladi'))
               : Column(
                   children: [
                     for (var i = 0; i < current.$1.length && i < 25; i++)
@@ -223,7 +224,7 @@ class _StandingsScreenState extends State<StandingsScreen> {
                                         ClubCrestWidget(config: current.$1[i].club.crestConfig, size: 14),
                                         const SizedBox(width: 5),
                                         Text(
-                                          '${current.$1[i].club.shortName} · ${current.$1[i].player.seasonMatches} o‘yin',
+                                          trf('{0} · {1} o‘yin', [current.$1[i].club.shortName, current.$1[i].player.seasonMatches]),
                                           style: AppText.caption,
                                         ),
                                       ],

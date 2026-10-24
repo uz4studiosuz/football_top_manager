@@ -4,6 +4,7 @@ import '../../models/player.dart';
 import '../../services/game_state.dart';
 import '../../ui/face_avatar.dart';
 import '../../ui/widgets.dart';
+import '../../l10n/l10n.dart';
 
 /// Team tactics in eFootball terms: playstyle, attack, defence and extras.
 class TeamTacticsView extends StatelessWidget {
@@ -29,14 +30,14 @@ class TeamTacticsView extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Padding(
+                      Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: SectionHeader('Jamoa o‘yin uslubi', icon: Icons.psychology_outlined),
+                        child: SectionHeader(tr('Jamoa o‘yin uslubi'), icon: Icons.psychology_outlined),
                       ),
-                      const Padding(
+                      Padding(
                         padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
                         child: Text(
-                          'Menejer reytingi shu uslubdagi pas aniqligi va qarorlarga bevosita ta’sir qiladi.',
+                          tr('Menejer reytingi shu uslubdagi pas aniqligi va qarorlarga bevosita ta’sir qiladi.'),
                           style: AppText.caption,
                         ),
                       ),
@@ -63,7 +64,7 @@ class TeamTacticsView extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SectionHeader('Hujum', icon: Icons.north_east_rounded),
+                      SectionHeader(tr('Hujum'), icon: Icons.north_east_rounded),
                       _segment<BuildUpStyle>(
                         'Hujum qurilishi',
                         BuildUpStyle.values,
@@ -94,7 +95,7 @@ class TeamTacticsView extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SectionHeader('Himoya', icon: Icons.shield_outlined),
+                      SectionHeader(tr('Himoya'), icon: Icons.shield_outlined),
                       _segment<DefensiveApproach>(
                         'Himoya yondashuvi',
                         DefensiveApproach.values,
@@ -125,7 +126,7 @@ class TeamTacticsView extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SectionHeader('O‘yin boshqaruvi', icon: Icons.timer_outlined),
+                      SectionHeader(tr('O‘yin boshqaruvi'), icon: Icons.timer_outlined),
                       _switch('Vaqtni cho‘zish', 'Oldinda bo‘lsa 75-daqiqadan keyin o‘yinni sekinlashtiradi',
                           t.timeWasting, (v) => set(t.copyWith(timeWasting: v))),
                     ],
@@ -224,7 +225,7 @@ class IndividualInstructionsView extends StatelessWidget {
             isExpanded: true,
             decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
             items: [
-              const DropdownMenuItem<String?>(value: null, child: Text('Avtomatik (eng yaxshisi)')),
+              DropdownMenuItem<String?>(value: null, child: Text(tr('Avtomatik (eng yaxshisi)'))),
               for (final p in xi)
                 DropdownMenuItem<String?>(value: p.id, child: Text('${p.shortName} · ${p.mainPosition.code}')),
             ],
@@ -244,7 +245,7 @@ class IndividualInstructionsView extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SectionHeader('Kapitan va standart vaziyatlar', icon: Icons.flag_outlined),
+                      SectionHeader(tr('Kapitan va standart vaziyatlar'), icon: Icons.flag_outlined),
                       picker('Kapitan', Icons.copyright_rounded, c.captainId, (v) => c.captainId = v),
                       picker('Burchak ijrochisi', Icons.flag_circle_outlined, c.cornerTakerId, (v) => c.cornerTakerId = v),
                       picker('Jarima zarbasi ijrochisi', Icons.adjust_rounded, c.freeKickTakerId, (v) => c.freeKickTakerId = v),
@@ -258,9 +259,9 @@ class IndividualInstructionsView extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Padding(
+                      Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: SectionHeader('Individual ko‘rsatmalar', icon: Icons.person_pin_circle_outlined),
+                        child: SectionHeader(tr('Individual ko‘rsatmalar'), icon: Icons.person_pin_circle_outlined),
                       ),
                       for (final p in xi) _InstructionRow(player: p, club: c),
                     ],
@@ -271,7 +272,7 @@ class IndividualInstructionsView extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SectionHeader('Ko‘rsatmalar lug‘ati', icon: Icons.menu_book_outlined),
+                      SectionHeader(tr('Ko‘rsatmalar lug‘ati'), icon: Icons.menu_book_outlined),
                       for (final i in PlayerInstruction.values)
                         Padding(
                           padding: const EdgeInsets.symmetric(vertical: 5),

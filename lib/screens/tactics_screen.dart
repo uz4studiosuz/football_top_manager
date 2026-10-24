@@ -10,6 +10,7 @@ import 'widgets/player_detail_view.dart';
 import 'widgets/team_instructions_view.dart';
 import 'squad_screen.dart';
 import 'player_creator_screen.dart';
+import '../l10n/l10n.dart';
 
 class TacticsScreen extends StatefulWidget {
   final bool Function(Player, Player)? onSwap;
@@ -73,9 +74,9 @@ class _TacticsScreenState extends State<TacticsScreen> {
       setState(() {});
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Bu almashtirishga hozir ruxsat yo‘q. Limit va o‘yindan chiqqan futbolchilarni tekshiring.',
+            tr('Bu almashtirishga hozir ruxsat yo‘q. Limit va o‘yindan chiqqan futbolchilarni tekshiring.'),
           ),
         ),
       );
@@ -111,7 +112,7 @@ class _TacticsScreenState extends State<TacticsScreen> {
                               children: [
                                 PositionChip(p.mainPosition.code),
                                 const SizedBox(width: 8),
-                                Text('${p.currentStamina}% tayyor', style: AppText.caption),
+                                Text(trf('{0}% tayyor', [p.currentStamina]), style: AppText.caption),
                               ],
                             ),
                           ],
@@ -129,13 +130,13 @@ class _TacticsScreenState extends State<TacticsScreen> {
                       PlayerDetailView.show(context, player: p, club: club);
                     },
                     icon: const Icon(Icons.person_outline),
-                    label: const Text('To‘liq profil'),
+                    label: Text(tr('To‘liq profil')),
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<PlayerInstruction>(
                     initialValue: p.instruction,
                     isExpanded: true,
-                    decoration: const InputDecoration(labelText: 'Individual ko‘rsatma'),
+                    decoration: InputDecoration(labelText: tr('Individual ko‘rsatma')),
                     items: [
                       for (final role in PlayerInstruction.values)
                         DropdownMenuItem(value: role, child: Text(role.label)),
@@ -151,7 +152,7 @@ class _TacticsScreenState extends State<TacticsScreen> {
                   const SizedBox(height: 6),
                   Text(p.instruction.description, style: AppText.caption),
                   const SizedBox(height: 16),
-                  const Text('Almashtirish uchun futbolchi tanlang', style: AppText.bodyStrong),
+                  Text(tr('Almashtirish uchun futbolchi tanlang'), style: AppText.bodyStrong),
                   const SizedBox(height: 6),
                   Expanded(
                     child: ListView(
@@ -208,58 +209,58 @@ class _TacticsScreenState extends State<TacticsScreen> {
           length: 4,
           child: Scaffold(
             appBar: AppBar(
-              title: const Text('Jamoa'),
+              title: Text(tr('Jamoa')),
               actions: [
                 if (!_inMatch)
                   IconButton(
-                    tooltip: 'Futbolchi yaratish',
+                    tooltip: tr('Futbolchi yaratish'),
                     icon: const Icon(Icons.person_add_alt_1_rounded),
                     onPressed: () => Navigator.push(
                       context,
-                      MaterialPageRoute<void>(builder: (_) => const PlayerCreatorScreen()),
+                      MaterialPageRoute<void>(builder: (_) => PlayerCreatorScreen()),
                     ),
                   ),
                 if (!_inMatch)
                   PopupMenuButton<bool>(
-                    tooltip: 'Avto tarkib',
+                    tooltip: tr('Avto tarkib'),
                     onSelected: (byForm) {
                       game.autoPickUserLineup(byForm: byForm);
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
                             byForm
-                                ? 'Tarkib forma va jismoniy holat bo‘yicha tanlandi'
-                                : 'Eng kuchli va pozitsiyaga mos tarkib tanlandi',
+                                ? tr('Tarkib forma va jismoniy holat bo‘yicha tanlandi')
+                                : tr('Eng kuchli va pozitsiyaga mos tarkib tanlandi'),
                           ),
                         ),
                       );
                     },
-                    itemBuilder: (_) => const [
+                    itemBuilder: (_) => [
                       PopupMenuItem(
                         value: false,
                         child: ListTile(
                           leading: Icon(Icons.bolt_rounded),
-                          title: Text('Eng kuchli tarkib'),
-                          subtitle: Text('Pozitsiyaga mos OVR'),
+                          title: Text(tr('Eng kuchli tarkib')),
+                          subtitle: Text(tr('Pozitsiyaga mos OVR')),
                         ),
                       ),
                       PopupMenuItem(
                         value: true,
                         child: ListTile(
                           leading: Icon(Icons.trending_up_rounded),
-                          title: Text('Forma bo‘yicha'),
-                          subtitle: Text('Reyting va jismoniy holat'),
+                          title: Text(tr('Forma bo‘yicha')),
+                          subtitle: Text(tr('Reyting va jismoniy holat')),
                         ),
                       ),
                     ],
-                    child: const Padding(
+                    child: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 12),
                       child: Row(
                         children: [
                           Icon(Icons.auto_fix_high_rounded, size: 18, color: AppColors.primary),
                           SizedBox(width: 6),
                           Text(
-                            'Avto tarkib',
+                            tr('Avto tarkib'),
                             style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600),
                           ),
                         ],
@@ -267,14 +268,14 @@ class _TacticsScreenState extends State<TacticsScreen> {
                     ),
                   ),
               ],
-              bottom: const TabBar(
+              bottom: TabBar(
                 isScrollable: true,
                 tabAlignment: TabAlignment.start,
                 tabs: [
-                  Tab(text: 'Sxema va tarkib'),
-                  Tab(text: 'Ro‘yxat'),
-                  Tab(text: 'Taktika'),
-                  Tab(text: 'Ko‘rsatmalar'),
+                  Tab(text: tr('Sxema va tarkib')),
+                  Tab(text: tr('Ro‘yxat')),
+                  Tab(text: tr('Taktika')),
+                  Tab(text: tr('Ko‘rsatmalar')),
                 ],
               ),
             ),
@@ -317,13 +318,13 @@ class _TacticsScreenState extends State<TacticsScreen> {
                           ),
                         ),
                         const SizedBox(height: 10),
-                        const Row(
+                        Row(
                           children: [
                             Icon(Icons.drag_indicator, size: 16, color: AppColors.ink3),
                             SizedBox(width: 6),
                             Expanded(
                               child: Text(
-                                'Ushlab suring: o‘rin almashtirish. Bosing: profil va ko‘rsatma.',
+                                tr('Ushlab suring: o‘rin almashtirish. Bosing: profil va ko‘rsatma.'),
                                 style: AppText.caption,
                               ),
                             ),
@@ -332,15 +333,15 @@ class _TacticsScreenState extends State<TacticsScreen> {
                         const SizedBox(height: 10),
                         _pitch(club),
                         const SizedBox(height: 16),
-                        _group('Zaxira', club.bench, 'O‘yin kuni zaxirasi · ${club.bench.length}/${Club.matchdayBench}'),
+                        _group(tr('Zaxira'), club.bench, 'O‘yin kuni zaxirasi · ${club.bench.length}/${Club.matchdayBench}'),
                         const SizedBox(height: 12),
-                        _group('Rezerv', club.reserves, 'Tarkibdan tashqari · ${club.reserves.length}'),
+                        _group(tr('Rezerv'), club.reserves, 'Tarkibdan tashqari · ${club.reserves.length}'),
                         const SizedBox(height: 24),
                       ],
                     ),
                   ),
                 ),
-                const SquadList(),
+                SquadList(),
                 const TeamTacticsView(),
                 const IndividualInstructionsView(),
               ],
@@ -421,14 +422,14 @@ class _TacticsScreenState extends State<TacticsScreen> {
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
-                  'Hozir: ${pos.code} · ${p.fitFor(pos).label} · OVR ${p.getEffectiveOVR(pos)}',
+                  trf('Hozir: {0} · {1} · OVR {2}', [pos.code, p.fitFor(pos).label, p.getEffectiveOVR(pos)]),
                   style: AppText.small.copyWith(color: fitColor(p.fitFor(pos)), fontWeight: FontWeight.w600),
                 ),
               ),
             ],
           ),
         const SizedBox(height: 8),
-        const Text('Mos pozitsiyalar', style: AppText.caption),
+        Text(tr('Mos pozitsiyalar'), style: AppText.caption),
         const SizedBox(height: 6),
         Wrap(
           spacing: 6,

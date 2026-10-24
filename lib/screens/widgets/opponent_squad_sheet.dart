@@ -7,6 +7,7 @@ import '../../ui/team_widgets.dart';
 import '../../ui/widgets.dart';
 import '../match_report_screen.dart';
 import 'player_detail_view.dart';
+import '../../l10n/l10n.dart';
 
 /// Pre-match scouting: head-to-head comparison, rival line-up and form.
 class OpponentSquadSheet extends StatelessWidget {
@@ -32,7 +33,7 @@ class OpponentSquadSheet extends StatelessWidget {
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Raqib tahlili'),
+          title: Text(tr('Raqib tahlili')),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(150),
             child: Column(
@@ -41,17 +42,17 @@ class OpponentSquadSheet extends StatelessWidget {
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
                   child: Row(
                     children: [
-                      Expanded(child: ClubHeading(club: user, size: 48, caption: '${game.positionOf(user.id)}-o‘rin · ${userStanding.points} o‘')),
+                      Expanded(child: ClubHeading(club: user, size: 48, caption: trf('{0}-o‘rin · {1} o‘', [game.positionOf(user.id), userStanding.points]))),
                       const Text('vs', style: TextStyle(fontSize: 18, color: AppColors.ink3, fontWeight: FontWeight.w600)),
-                      Expanded(child: ClubHeading(club: rival, size: 48, caption: '${game.positionOf(rival.id)}-o‘rin · ${rivalStanding.points} o‘')),
+                      Expanded(child: ClubHeading(club: rival, size: 48, caption: trf('{0}-o‘rin · {1} o‘', [game.positionOf(rival.id), rivalStanding.points]))),
                     ],
                   ),
                 ),
-                const TabBar(
+                TabBar(
                   tabs: [
-                    Tab(text: 'Solishtirish'),
-                    Tab(text: 'Tarkib'),
-                    Tab(text: 'Forma'),
+                    Tab(text: tr('Solishtirish')),
+                    Tab(text: tr('Tarkib')),
+                    Tab(text: tr('Forma')),
                   ],
                 ),
               ],
@@ -67,7 +68,7 @@ class OpponentSquadSheet extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SectionHeader('Jamoalar kuchi', icon: Icons.compare_arrows_rounded),
+                      SectionHeader(tr('Jamoalar kuchi'), icon: Icons.compare_arrows_rounded),
                       for (final row in <(String, num, num)>[
                         ('Match OVR', user.teamOVR, rival.teamOVR),
                         ('Hujum', user.attackRating, rival.attackRating),
@@ -94,9 +95,9 @@ class OpponentSquadSheet extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const SectionHeader('Skaut hisoboti', icon: Icons.assignment_outlined),
-                      InfoRow('Sxema', '${user.tactics.formation.short}  vs  ${rival.tactics.formation.short}'),
-                      InfoRow('O‘rtacha yosh', '${average(user, (p) => p.age).toStringAsFixed(1)}  vs  ${average(rival, (p) => p.age).toStringAsFixed(1)}'),
+                      SectionHeader(tr('Skaut hisoboti'), icon: Icons.assignment_outlined),
+                      InfoRow(tr('Sxema'), '${user.tactics.formation.short}  vs  ${rival.tactics.formation.short}'),
+                      InfoRow(tr('O‘rtacha yosh'), '${average(user, (p) => p.age).toStringAsFixed(1)}  vs  ${average(rival, (p) => p.age).toStringAsFixed(1)}'),
                       const Divider(height: 22),
                       _report(Icons.psychology_outlined, 'Raqib rejasi', rival.tactics.playstyle.displayName, rival.tactics.playstyle.description),
                       _report(
@@ -104,8 +105,8 @@ class OpponentSquadSheet extends StatelessWidget {
                         'Pressing va himoya',
                         'Chiziq ${rival.tactics.defensiveLine}/5 · pressing ${rival.tactics.pressing}/5',
                         rival.tactics.counterPress
-                            ? 'Yo‘qotishdan keyin bosim qiladi. Tez, xavfsiz pas uchun sheriklarni yaqin tuting.'
-                            : 'To‘pni qaytargach sxemaga tushadi. Qanotlar va chiziqlar orasidagi bo‘shliqni qidiring.',
+                            ? tr('Yo‘qotishdan keyin bosim qiladi. Tez, xavfsiz pas uchun sheriklarni yaqin tuting.')
+                            : tr('To‘pni qaytargach sxemaga tushadi. Qanotlar va chiziqlar orasidagi bo‘shliqni qidiring.'),
                       ),
                       if (star.isNotEmpty)
                         _report(
@@ -149,9 +150,9 @@ class OpponentSquadSheet extends StatelessWidget {
                   padding: const EdgeInsets.fromLTRB(0, 14, 0, 6),
                   child: Column(
                     children: [
-                      const Padding(
+                      Padding(
                         padding: EdgeInsets.symmetric(horizontal: 16),
-                        child: SectionHeader('Barcha futbolchilar'),
+                        child: SectionHeader(tr('Barcha futbolchilar')),
                       ),
                       for (final p in List.of(rival.squad)..sort((a, b) => b.ovr.compareTo(a.ovr)))
                         PlayerTile(
@@ -187,7 +188,7 @@ class OpponentSquadSheet extends StatelessWidget {
                         ),
                         const SizedBox(height: 6),
                         if (!game.fixturesOf(c.id).any((f) => f.isPlayed))
-                          const EmptyState(icon: Icons.event_outlined, text: 'Mavsum hali boshlanmagan.'),
+                          EmptyState(icon: Icons.event_outlined, text: tr('Mavsum hali boshlanmagan.')),
                         for (final f in game.fixturesOf(c.id).where((f) => f.isPlayed).toList().reversed.take(5))
                           FixtureTile(
                             fixture: f,

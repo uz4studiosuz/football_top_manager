@@ -7,6 +7,7 @@ import '../services/game_state.dart';
 import '../services/season_calendar.dart';
 import 'face_avatar.dart';
 import 'widgets.dart';
+import '../l10n/l10n.dart';
 
 /// SofaScore-like event row: date column, two team lines, scores on the right.
 class FixtureTile extends StatelessWidget {
@@ -74,7 +75,7 @@ class FixtureTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    played ? 'FT' : '${fixture.round}-tur',
+                    played ? 'FT' : trf('{0}-tur', [fixture.round]),
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
@@ -175,7 +176,7 @@ class StandingsTable extends StatelessWidget {
       (_green, 'Chempionlar ligasi'),
       (_orange, 'Yevropa ligasi'),
       if (big) (_teal, 'Konferensiya ligasi'),
-      (_red, big ? 'Quyi ligaga tushish' : 'Quyi liga xavfi'),
+      (_red, big ? tr('Quyi ligaga tushish') : tr('Quyi liga xavfi')),
     ];
   }
 
@@ -214,17 +215,17 @@ class StandingsTable extends StatelessWidget {
           child: Row(
             children: [
               cell('#', 28, style: head),
-              Expanded(child: Text('Jamoa', style: head)),
+              Expanded(child: Text(tr('Jamoa'), style: head)),
               cell('O', 26, style: head),
               if (full) ...[
                 cell('G', 24, style: head),
                 cell('D', 24, style: head),
                 cell('M', 24, style: head),
-                cell('To‘plar', 50, style: head),
+                cell(tr('To‘plar'), 50, style: head),
               ],
               cell('±', 32, style: head),
-              cell('O‘', 32, style: head),
-              if (form) SizedBox(width: 118, child: Text('  Forma', style: head)),
+              cell(tr('O‘'), 32, style: head),
+              if (form) SizedBox(width: 118, child: Text(tr('  Forma'), style: head)),
             ],
           ),
         ),
@@ -400,7 +401,7 @@ class PlayerTile extends StatelessWidget {
                       const SizedBox(width: 6),
                       Flexible(
                         child: Text(
-                          subtitle ?? '#${p.number} · ${p.age} yosh · ${p.currentStamina}%',
+                          subtitle ?? trf('#{0} · {1} yosh · {2}%', [p.number, p.age, p.currentStamina]),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppText.caption,

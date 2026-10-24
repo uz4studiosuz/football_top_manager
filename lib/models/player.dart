@@ -3,6 +3,7 @@ import 'face.dart';
 import 'playing_style.dart';
 export 'playing_style.dart';
 import 'package:flutter/foundation.dart';
+import '../l10n/l10n.dart';
 
 /// O'yinchi pozitsiyalari (eFootball / PES standarti)
 enum PlayerPosition {
@@ -48,8 +49,9 @@ enum PositionCategory {
   defense('Himoya'),
   goalkeeper('Darvoza');
 
-  const PositionCategory(this.label);
-  final String label;
+  const PositionCategory(this._label);
+  final String _label;
+  String get label => tr(_label);
 }
 
 /// Yetakchi oyoq
@@ -57,8 +59,9 @@ enum PreferredFoot {
   right('O\'ng (Right)'),
   left('Chap (Left)');
 
-  const PreferredFoot(this.label);
-  final String label;
+  const PreferredFoot(this._label);
+  final String _label;
+  String get label => tr(_label);
 }
 
 /// Canonical eFootball-style attributes, each bounded to 40–100.
@@ -424,8 +427,11 @@ enum PlayerInstruction {
   tightMarking('Tight Marking', 'Yaqin masofadan bosim: ko‘proq Olib qo‘yish va qoidabuzarlik', false),
   deepLine('Deep Line', 'Himoyada chuqurroq turib, orqa zonani sug‘urtalaydi', false);
 
-  const PlayerInstruction(this.label, this.description, this.offence);
-  final String label, description;
+  const PlayerInstruction(this._label, this._description, this.offence);
+  final String _label;
+  String get label => tr(_label);
+  final String _description;
+  String get description => tr(_description);
   final bool offence;
 }
 
@@ -436,8 +442,9 @@ enum PositionFit {
   similar('Yaqin pozitsiya'),
   poor('Begona pozitsiya');
 
-  const PositionFit(this.label);
-  final String label;
+  const PositionFit(this._label);
+  final String _label;
+  String get label => tr(_label);
 }
 
 const _families = <Set<PlayerPosition>>[

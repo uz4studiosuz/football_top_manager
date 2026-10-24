@@ -4,6 +4,7 @@ import '../ui/face_avatar.dart';
 import '../ui/widgets.dart';
 import 'club_selection_screen.dart';
 import 'custom_club_creator_screen.dart';
+import '../l10n/l10n.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -12,7 +13,7 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  final _name = TextEditingController(text: 'Azizbek Rahimov');
+  final _name = TextEditingController(text: tr('Azizbek Rahimov'));
   final _form = GlobalKey<FormState>();
   int step = 0, age = 35;
   String nationality = 'O‘zbekiston';
@@ -67,7 +68,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      title: const Row(
+      title: Row(
         children: [
           Icon(Icons.sports_soccer, color: AppColors.primary),
           SizedBox(width: 8),
@@ -75,7 +76,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             child: FittedBox(
               fit: BoxFit.scaleDown,
               child: Text(
-                'FOOTBALL TOP MANAGER 2027',
+                tr('FOOTBALL TOP MANAGER 2027'),
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, letterSpacing: 0.6),
               ),
             ),
@@ -95,7 +96,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('KARYERA YARATISH  ·  ${step + 1} / 4', style: AppText.overline),
+                    Text(trf('KARYERA YARATISH  ·  {0} / 4', [step + 1]), style: AppText.overline),
                     const SizedBox(height: 8),
                     Text(titles[step], style: AppText.h1.copyWith(fontSize: 26)),
                     const SizedBox(height: 4),
@@ -133,8 +134,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             children: [
                               TextFormField(
                                 controller: _name,
-                                decoration: const InputDecoration(
-                                  labelText: 'Ism va familiya',
+                                decoration: InputDecoration(
+                                  labelText: tr('Ism va familiya'),
                                   prefixIcon: Icon(Icons.person_outline),
                                 ),
                                 validator: (v) => v == null || v.trim().length < 2 ? 'Kamida ikki belgi kiriting' : null,
@@ -143,8 +144,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               DropdownButtonFormField<String>(
                                 initialValue: nationality,
                                 isExpanded: true,
-                                decoration: const InputDecoration(
-                                  labelText: 'Millatingiz',
+                                decoration: InputDecoration(
+                                  labelText: tr('Millatingiz'),
                                   prefixIcon: Icon(Icons.flag_outlined),
                                 ),
                                 items: [
@@ -156,7 +157,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               const SizedBox(height: 20),
                               Row(
                                 children: [
-                                  const Text('Yosh', style: AppText.bodyStrong),
+                                  Text(tr('Yosh'), style: AppText.bodyStrong),
                                   const Spacer(),
                                   Text('$age', style: AppText.number.copyWith(fontSize: 18, color: AppColors.primary)),
                                 ],
@@ -226,7 +227,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 children: [
                                   Text(_name.text, style: AppText.h2),
                                   const SizedBox(height: 4),
-                                  Text('${countries[nationality]} $nationality · $age yosh', style: AppText.small),
+                                  Text(trf('{0} {1} · {2} yosh', [countries[nationality], nationality, age]), style: AppText.small),
                                   const SizedBox(height: 4),
                                   Text('${philosophy.title} · 70', style: AppText.small.copyWith(color: AppColors.primary)),
                                 ],
@@ -271,7 +272,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       child: TextButton.icon(
                         onPressed: step > 0 ? () => setState(() => step--) : null,
                         icon: const Icon(Icons.arrow_back, size: 18),
-                        label: const FittedBox(fit: BoxFit.scaleDown, child: Text('Orqaga')),
+                        label: FittedBox(fit: BoxFit.scaleDown, child: Text(tr('Orqaga'))),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -280,7 +281,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         child: FilledButton.icon(
                           onPressed: next,
                           icon: const Icon(Icons.arrow_forward, size: 18),
-                          label: const FittedBox(fit: BoxFit.scaleDown, child: Text('Davom etish')),
+                          label: FittedBox(fit: BoxFit.scaleDown, child: Text(tr('Davom etish'))),
                         ),
                       )
                     else

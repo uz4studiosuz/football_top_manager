@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'app_theme.dart';
+import '../l10n/l10n.dart';
 
 export 'app_theme.dart';
 
@@ -540,8 +541,8 @@ class _TrendPainter extends CustomPainter {
     }
     if (values.length < 2) {
       final tp = TextPainter(
-        text: const TextSpan(
-          text: 'Grafik birinchi turdan keyin paydo bo‘ladi',
+        text: TextSpan(
+          text: tr('Grafik birinchi turdan keyin paydo bo‘ladi'),
           style: TextStyle(fontSize: 12, color: AppColors.ink3),
         ),
         textDirection: TextDirection.ltr,
@@ -665,7 +666,7 @@ class LoadingView extends StatelessWidget {
             child: const Icon(Icons.sports_soccer, color: Colors.white, size: 36),
           ),
           const SizedBox(height: 16),
-          const Text('FOOTBALL TOP MANAGER 2027', style: AppText.overline),
+          Text(tr('FOOTBALL TOP MANAGER 2027'), style: AppText.overline),
           const SizedBox(height: 20),
           const SizedBox(width: 28, height: 28, child: CircularProgressIndicator(strokeWidth: 3)),
           const SizedBox(height: 12),

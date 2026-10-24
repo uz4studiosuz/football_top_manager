@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../models/player.dart';
 import '../../ui/football_pitch.dart';
 import '../../ui/widgets.dart';
+import '../../l10n/l10n.dart';
 
 class PlayerAttributesView extends StatelessWidget {
   final Player player;
@@ -26,7 +27,7 @@ class PlayerAttributesView extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SectionHeader('Atributlar xaritasi', icon: Icons.radar_rounded),
+              SectionHeader(tr('Atributlar xaritasi'), icon: Icons.radar_rounded),
               Center(
                 child: SizedBox(
                   width: 280,
@@ -153,11 +154,11 @@ class _Radar extends CustomPainter {
           children: [
             TextSpan(
               text: '${labels[i]}\n',
-              style: const TextStyle(fontFamily: 'Roboto', fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.ink3),
+              style: TextStyle(fontFamily: tr('Roboto'), fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.ink3),
             ),
             TextSpan(
               text: '${values[i]}',
-              style: TextStyle(fontFamily: 'Roboto', fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.attribute(values[i])),
+              style: TextStyle(fontFamily: tr('Roboto'), fontSize: 13, fontWeight: FontWeight.w800, color: AppColors.attribute(values[i])),
             ),
           ],
         ),
@@ -217,9 +218,9 @@ class _PositionRatingsViewState extends State<PositionRatingsView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SectionHeader('Pozitsion reytinglar', icon: Icons.grid_view_rounded),
-              const Text(
-                'Asosiy pozitsiya ramkada, muqobillar oq nuqta bilan. Rang – reyting darajasi.',
+              SectionHeader(tr('Pozitsion reytinglar'), icon: Icons.grid_view_rounded),
+              Text(
+                tr('Asosiy pozitsiya ramkada, muqobillar oq nuqta bilan. Rang – reyting darajasi.'),
                 style: AppText.caption,
               ),
               const SizedBox(height: 12),
@@ -262,14 +263,14 @@ class _PositionRatingsViewState extends State<PositionRatingsView> {
                   children: [
                     Text('${selected.code} · ${selected.fullName}', style: AppText.h3),
                     const SizedBox(height: 4),
-                    Text('Match kuchi (charchoq bilan): ${p.getMatchOVR(selected)}', style: AppText.small),
+                    Text(trf('Match kuchi (charchoq bilan): {0}', [p.getMatchOVR(selected)]), style: AppText.small),
                     const SizedBox(height: 2),
                     Text(
                       selected == p.mainPosition
-                          ? 'Asosiy pozitsiya'
+                          ? tr('Asosiy pozitsiya')
                           : p.altPositions.contains(selected)
-                          ? 'Tanish muqobil pozitsiya'
-                          : 'Pozitsiyaga moslashuv jarimasi qo‘llanadi',
+                          ? tr('Tanish muqobil pozitsiya')
+                          : tr('Pozitsiyaga moslashuv jarimasi qo‘llanadi'),
                       style: AppText.caption,
                     ),
                   ],

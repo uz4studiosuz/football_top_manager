@@ -8,6 +8,7 @@ import 'face_avatar.dart';
 import 'football_pitch.dart';
 import 'shot_widgets.dart';
 import 'widgets.dart';
+import '../l10n/l10n.dart';
 
 /// One statistic row shared by the live screen and the match report.
 class StatLine {
@@ -34,42 +35,42 @@ List<(String, List<StatLine>)> statGroupsFromEngine(MatchField e) {
     (
       'Umumiy',
       [
-        StatLine('To‘p nazorati', hp, 100 - hp, format: _pct),
-        StatLine('Kutilgan gollar (xG)', h.xg, a.xg, format: _dec),
-        StatLine('Katta imkoniyatlar', h.bigChances, a.bigChances),
-        StatLine('Jami zarbalar', h.shots, a.shots),
-        StatLine('Darvozabon seyvlari', h.saves, a.saves),
-        StatLine('Burchaklar', h.corners, a.corners),
-        StatLine('Qoidabuzarliklar', h.fouls, a.fouls, higherIsBetter: false),
-        StatLine('Jarima zarbalari', h.freeKicks, a.freeKicks),
+        StatLine(tr('To‘p nazorati'), hp, 100 - hp, format: _pct),
+        StatLine(tr('Kutilgan gollar (xG)'), h.xg, a.xg, format: _dec),
+        StatLine(tr('Katta imkoniyatlar'), h.bigChances, a.bigChances),
+        StatLine(tr('Jami zarbalar'), h.shots, a.shots),
+        StatLine(tr('Darvozabon seyvlari'), h.saves, a.saves),
+        StatLine(tr('Burchaklar'), h.corners, a.corners),
+        StatLine(tr('Qoidabuzarliklar'), h.fouls, a.fouls, higherIsBetter: false),
+        StatLine(tr('Jarima zarbalari'), h.freeKicks, a.freeKicks),
       ],
     ),
     (
       'Zarbalar',
       [
-        StatLine('Nishonga', h.onTarget, a.onTarget),
-        StatLine('Nishondan tashqari', h.shots - h.onTarget - h.blocked, a.shots - a.onTarget - a.blocked),
-        StatLine('To‘silgan', h.blocked, a.blocked),
+        StatLine(tr('Nishonga'), h.onTarget, a.onTarget),
+        StatLine(tr('Nishondan tashqari'), h.shots - h.onTarget - h.blocked, a.shots - a.onTarget - a.blocked),
+        StatLine(tr('To‘silgan'), h.blocked, a.blocked),
       ],
     ),
     (
       'Hujum va paslar',
       [
-        StatLine('Paslar', h.passes, a.passes),
-        StatLine('Aniq paslar', h.completedPasses, a.completedPasses),
-        StatLine('Pas aniqligi', h.passAccuracy, a.passAccuracy, format: _pct),
-        StatLine('Krosslar', h.crosses, a.crosses),
-        StatLine('Driblinglar', h.dribbles, a.dribbles),
-        StatLine('Ofsaydlar', h.offsides, a.offsides, higherIsBetter: false),
+        StatLine(tr('Paslar'), h.passes, a.passes),
+        StatLine(tr('Aniq paslar'), h.completedPasses, a.completedPasses),
+        StatLine(tr('Pas aniqligi'), h.passAccuracy, a.passAccuracy, format: _pct),
+        StatLine(tr('Krosslar'), h.crosses, a.crosses),
+        StatLine(tr('Driblinglar'), h.dribbles, a.dribbles),
+        StatLine(tr('Ofsaydlar'), h.offsides, a.offsides, higherIsBetter: false),
       ],
     ),
     (
       'Himoya va intizom',
       [
-        StatLine('Olib qo‘yishlar', h.tackles, a.tackles),
-        StatLine('Pas kesishlar', h.interceptions, a.interceptions),
-        StatLine('Sariq kartochkalar', h.yellows, a.yellows, higherIsBetter: false),
-        StatLine('Qizil kartochkalar', h.reds, a.reds, higherIsBetter: false),
+        StatLine(tr('Olib qo‘yishlar'), h.tackles, a.tackles),
+        StatLine(tr('Pas kesishlar'), h.interceptions, a.interceptions),
+        StatLine(tr('Sariq kartochkalar'), h.yellows, a.yellows, higherIsBetter: false),
+        StatLine(tr('Qizil kartochkalar'), h.reds, a.reds, higherIsBetter: false),
       ],
     ),
   ];
@@ -82,30 +83,30 @@ List<(String, List<StatLine>)> statGroupsFromFixture(Fixture f) {
     (
       'Umumiy',
       [
-        StatLine('To‘p nazorati', f.homePossession, f.awayPossession, format: _pct),
-        StatLine('Kutilgan gollar (xG)', f.homeXG, f.awayXG, format: _dec),
-        StatLine('Katta imkoniyatlar', f.homeBigChances, f.awayBigChances),
-        StatLine('Jami zarbalar', f.homeShots, f.awayShots),
-        StatLine('Nishonga', f.homeShotsOnTarget, f.awayShotsOnTarget),
-        StatLine('Darvozabon seyvlari', f.homeSaves, f.awaySaves),
-        StatLine('Burchaklar', f.homeCorners, f.awayCorners),
+        StatLine(tr('To‘p nazorati'), f.homePossession, f.awayPossession, format: _pct),
+        StatLine(tr('Kutilgan gollar (xG)'), f.homeXG, f.awayXG, format: _dec),
+        StatLine(tr('Katta imkoniyatlar'), f.homeBigChances, f.awayBigChances),
+        StatLine(tr('Jami zarbalar'), f.homeShots, f.awayShots),
+        StatLine(tr('Nishonga'), f.homeShotsOnTarget, f.awayShotsOnTarget),
+        StatLine(tr('Darvozabon seyvlari'), f.homeSaves, f.awaySaves),
+        StatLine(tr('Burchaklar'), f.homeCorners, f.awayCorners),
       ],
     ),
     (
       'Paslar va himoya',
       [
-        StatLine('Paslar', f.homePasses, f.awayPasses),
-        StatLine('Pas aniqligi', hAcc, aAcc, format: _pct),
-        StatLine('Olib qo‘yishlar', f.homeTackles, f.awayTackles),
-        StatLine('Ofsaydlar', f.homeOffsides, f.awayOffsides, higherIsBetter: false),
-        StatLine('Qoidabuzarliklar', f.homeFouls, f.awayFouls, higherIsBetter: false),
+        StatLine(tr('Paslar'), f.homePasses, f.awayPasses),
+        StatLine(tr('Pas aniqligi'), hAcc, aAcc, format: _pct),
+        StatLine(tr('Olib qo‘yishlar'), f.homeTackles, f.awayTackles),
+        StatLine(tr('Ofsaydlar'), f.homeOffsides, f.awayOffsides, higherIsBetter: false),
+        StatLine(tr('Qoidabuzarliklar'), f.homeFouls, f.awayFouls, higherIsBetter: false),
         StatLine(
-          'Jarima zarbalari',
+          tr('Jarima zarbalari'),
           f.awayFouls + f.awayOffsides,
           f.homeFouls + f.homeOffsides,
         ),
-        StatLine('Sariq kartochkalar', f.homeYellows, f.awayYellows, higherIsBetter: false),
-        StatLine('Qizil kartochkalar', f.homeReds, f.awayReds, higherIsBetter: false),
+        StatLine(tr('Sariq kartochkalar'), f.homeYellows, f.awayYellows, higherIsBetter: false),
+        StatLine(tr('Qizil kartochkalar'), f.homeReds, f.awayReds, higherIsBetter: false),
       ],
     ),
   ];
@@ -335,10 +336,10 @@ class _IncidentRow extends StatelessWidget {
     };
     final sub = switch (e.type) {
       MatchEventType.goal => e.secondaryName == null ? 'Gol' : 'Assist: ${e.secondaryName}',
-      MatchEventType.substitution => 'Chiqdi: ${e.secondaryName ?? ''}',
-      MatchEventType.injury => 'Jarohat',
-      MatchEventType.yellowCard => 'Sariq kartochka',
-      MatchEventType.redCard => 'Qizil kartochka',
+      MatchEventType.substitution => trf('Chiqdi: {0}', [e.secondaryName ?? '']),
+      MatchEventType.injury => tr('Jarohat'),
+      MatchEventType.yellowCard => tr('Sariq kartochka'),
+      MatchEventType.redCard => tr('Qizil kartochka'),
       _ => e.type.label,
     };
     final content = Flexible(
@@ -880,7 +881,7 @@ Future<void> showPlayerMatchSheet(
             const Divider(height: 1),
             Flexible(
               child: rows.isEmpty
-                  ? const EmptyState(icon: Icons.bar_chart_rounded, text: 'Bu o‘yinda maydonga tushmadi')
+                  ? EmptyState(icon: Icons.bar_chart_rounded, text: tr('Bu o‘yinda maydonga tushmadi'))
                   : ListView(
                       shrinkWrap: true,
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -908,7 +909,7 @@ Future<void> showPlayerMatchSheet(
                     onOpenProfile();
                   },
                   icon: const Icon(Icons.person_outline),
-                  label: const Text('Profilni ko‘rish'),
+                  label: Text(tr('Profilni ko‘rish')),
                 ),
               ),
             ),
@@ -985,19 +986,19 @@ class SubstitutesList extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
+        Padding(
           padding: EdgeInsets.fromLTRB(16, 10, 16, 4),
-          child: Text('ZAXIRADAN TUSHGANLAR', style: AppText.overline),
+          child: Text(tr('ZAXIRADAN TUSHGANLAR'), style: AppText.overline),
         ),
         if (used.isEmpty)
-          const Padding(
+          Padding(
             padding: EdgeInsets.fromLTRB(16, 4, 16, 8),
-            child: Text('Hali almashtirish bo‘lmadi', style: AppText.caption),
+            child: Text(tr('Hali almashtirish bo‘lmadi'), style: AppText.caption),
           ),
         for (final p in used) row(p),
-        const Padding(
+        Padding(
           padding: EdgeInsets.fromLTRB(16, 12, 16, 4),
-          child: Text('ZAXIRA', style: AppText.overline),
+          child: Text(tr('ZAXIRA'), style: AppText.overline),
         ),
         for (final p in unused) row(p),
       ],
@@ -1142,34 +1143,34 @@ class LineupList extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        header('ASOSIY TARKIB'),
+        header(tr('ASOSIY TARKIB')),
         for (final p in xi)
           row(
             p,
             off: lines[p.id]?.subOffMinute != null,
             change: lines[p.id]?.subOffMinute == null
                 ? null
-                : '${lines[p.id]!.subOffMinute}′ · chiqdi'
-                      '${replacedBy[p.shortName] == null ? '' : ', o‘rniga ${replacedBy[p.shortName]}'}',
+                : trf('{0}′ · chiqdi', [lines[p.id]!.subOffMinute]) +
+                      (replacedBy[p.shortName] == null ? '' : trf(', o‘rniga {0}', [replacedBy[p.shortName]])),
           ),
-        header('ZAXIRADAN TUSHGANLAR'),
+        header(tr('ZAXIRADAN TUSHGANLAR')),
         if (cameOn.isEmpty)
-          const Padding(
+          Padding(
             padding: EdgeInsets.fromLTRB(16, 4, 16, 8),
-            child: Text('Almashtirish bo‘lmadi', style: AppText.caption),
+            child: Text(tr('Almashtirish bo‘lmadi'), style: AppText.caption),
           ),
         for (final p in cameOn)
           row(
             p,
             on: true,
-            change: '${lines[p.id]!.subOnMinute}′ · tushdi'
-                '${replaced[p.id] == null ? '' : ', ${replaced[p.id]} o‘rniga'}',
+            change: trf('{0}′ · tushdi', [lines[p.id]!.subOnMinute]) +
+                (replaced[p.id] == null ? '' : trf(', {0} o‘rniga', [replaced[p.id]])),
           ),
-        header('ZAXIRA'),
+        header(tr('ZAXIRA')),
         if (unused.isEmpty)
-          const Padding(
+          Padding(
             padding: EdgeInsets.fromLTRB(16, 4, 16, 8),
-            child: Text('Barcha zaxiralar maydonga tushdi', style: AppText.caption),
+            child: Text(tr('Barcha zaxiralar maydonga tushdi'), style: AppText.caption),
           ),
         for (final p in unused) row(p),
         const SizedBox(height: 6),

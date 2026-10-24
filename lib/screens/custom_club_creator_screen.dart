@@ -8,6 +8,7 @@ import '../services/game_state.dart';
 import '../ui/widgets.dart';
 import 'main_navigation_screen.dart';
 import '../models/manager_profile.dart';
+import '../l10n/l10n.dart';
 
 /// Foydalanuvchi o'z jamoasini noldan yaratish ekrani
 class CustomClubCreatorScreen extends StatefulWidget {
@@ -19,9 +20,9 @@ class CustomClubCreatorScreen extends StatefulWidget {
 }
 
 class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
-  final _nameController = TextEditingController(text: 'Toshkent Stars');
+  final _nameController = TextEditingController(text: tr('Toshkent Stars'));
   final _shortNameController = TextEditingController(text: 'TKS');
-  final _stadiumController = TextEditingController(text: 'Milliy Arena');
+  final _stadiumController = TextEditingController(text: tr('Milliy Arena'));
   int _stadiumCapacity = 45000;
   CrestShape _shape = CrestShape.modernShield;
   CrestPattern _pattern = CrestPattern.verticalStripes;
@@ -84,7 +85,7 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
     final stadium = _stadiumController.text.trim();
     if (name.isEmpty || shortName.isEmpty || stadium.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Iltimos, barcha maydonlarni to\'ldiring!')),
+        SnackBar(content: Text(tr('Iltimos, barcha maydonlarni to\'ldiring!'))),
       );
       return;
     }
@@ -128,7 +129,7 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SectionHeader('Qaysi ligada o‘ynaysiz?', icon: Icons.emoji_events_outlined),
+          SectionHeader(tr('Qaysi ligada o‘ynaysiz?'), icon: Icons.emoji_events_outlined),
           for (final l in InitialDatabase.leagues)
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
@@ -156,7 +157,7 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
                             children: [
                               Text(l.name, style: AppText.bodyStrong),
                               Text(
-                                '${InitialDatabase.getClubs(l.id).length} klub · ${(InitialDatabase.getClubs(l.id).length - 1) * 2} tur',
+                                trf('{0} klub · {1} tur', [InitialDatabase.getClubs(l.id).length, (InitialDatabase.getClubs(l.id).length - 1) * 2]),
                                 style: AppText.caption,
                               ),
                             ],
@@ -169,7 +170,7 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
               ),
             ),
           Text(
-            'Klubingiz ${clubs.first.name} o‘rnini egallaydi · $rounds tur.',
+            trf('Klubingiz {0} o‘rnini egallaydi · {1} tur.', [clubs.first.name, rounds]),
             style: AppText.small,
           ),
         ],
@@ -179,7 +180,7 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Yangi Jamoa Yaratish')),
+    appBar: AppBar(title: Text(tr('Yangi Jamoa Yaratish'))),
     body: SingleChildScrollView(
       padding: const EdgeInsets.all(12),
       child: Column(
@@ -192,14 +193,14 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
             children: [
               ClubCrestWidget(config: _crest, size: 124),
               const SizedBox(height: 12),
-              Text(_nameController.text.isEmpty ? 'Klub nomi' : _nameController.text, style: AppText.h2),
+              Text(_nameController.text.isEmpty ? tr('Klub nomi') : _nameController.text, style: AppText.h2),
               const SizedBox(height: 2),
               Text('${_shortNameController.text.toUpperCase()} · ${_stadiumController.text}', style: AppText.caption),
               const SizedBox(height: 12),
               OutlinedButton.icon(
                 onPressed: _randomLogo,
                 icon: const Icon(Icons.casino_outlined),
-                label: const Text('Tasodifiy logo yaratish'),
+                label: Text(tr('Tasodifiy logo yaratish')),
               ),
             ],
           ),
@@ -209,10 +210,10 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SectionHeader('1. Jamoa Ma\'lumotlari'),
+              SectionHeader(tr('1. Jamoa Ma\'lumotlari')),
               TextField(
                 controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Klub nomi', prefixIcon: Icon(Icons.shield_outlined)),
+                decoration: InputDecoration(labelText: tr('Klub nomi'), prefixIcon: Icon(Icons.shield_outlined)),
                 onChanged: (val) => setState(() {
                   if (val.length >= 2 && _monogram.length <= 2) _monogram = val.substring(0, 2).toUpperCase();
                 }),
@@ -224,7 +225,7 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
                     child: TextField(
                       controller: _shortNameController,
                       maxLength: 3,
-                      decoration: const InputDecoration(labelText: 'Qisqartma', counterText: '', prefixIcon: Icon(Icons.tag_rounded)),
+                      decoration: InputDecoration(labelText: tr('Qisqartma'), counterText: '', prefixIcon: Icon(Icons.tag_rounded)),
                       onChanged: (val) => setState(() => _monogram = val.toUpperCase()),
                     ),
                   ),
@@ -232,14 +233,14 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
                   Expanded(
                     child: TextField(
                       controller: _stadiumController,
-                      decoration: const InputDecoration(labelText: 'Stadion', prefixIcon: Icon(Icons.stadium_outlined)),
+                      decoration: InputDecoration(labelText: tr('Stadion'), prefixIcon: Icon(Icons.stadium_outlined)),
                       onChanged: (_) => setState(() {}),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
-              Text('Stadion sig‘imi: ${(_stadiumCapacity / 1000).toStringAsFixed(0)} 000 muxlis', style: AppText.small),
+              Text(trf('Stadion sig‘imi: {0} 000 muxlis', [(_stadiumCapacity / 1000).toStringAsFixed(0)]), style: AppText.small),
               Slider(
                 value: _stadiumCapacity.toDouble(),
                 min: 25000,
@@ -255,7 +256,7 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SectionHeader('2. Emblem Shakli'),
+              SectionHeader(tr('2. Emblem Shakli')),
               _previewGrid<CrestShape>(
                 CrestShape.values,
                 _shape,
@@ -264,7 +265,7 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
                 (v) => setState(() => _shape = v),
               ),
               const SizedBox(height: 16),
-              const SectionHeader('3. Naqsh'),
+              SectionHeader(tr('3. Naqsh')),
               _previewGrid<CrestPattern>(
                 CrestPattern.values,
                 _pattern,
@@ -273,7 +274,7 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
                 (v) => setState(() => _pattern = v),
               ),
               const SizedBox(height: 16),
-              const SectionHeader('4. Belgi va bezak'),
+              SectionHeader(tr('4. Belgi va bezak')),
               _previewGrid<CrestEmblem>(
                 CrestEmblem.values,
                 _emblem,
@@ -283,13 +284,13 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
               ),
               SwitchListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Toj'),
+                title: Text(tr('Toj')),
                 value: _crown,
                 onChanged: (v) => setState(() => _crown = v),
               ),
               Row(
                 children: [
-                  const Text('Yulduzlar', style: AppText.bodyStrong),
+                  Text(tr('Yulduzlar'), style: AppText.bodyStrong),
                   Expanded(
                     child: Slider(
                       value: _stars.toDouble(),
@@ -311,7 +312,7 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SectionHeader('5. Klub ranglari'),
+              SectionHeader(tr('5. Klub ranglari')),
               _colorRow('Asosiy rang', _primary, (c) => setState(() => _primary = c)),
               _colorRow('Ikkilamchi rang', _secondary, (c) => setState(() => _secondary = c)),
               _colorRow('Hoshiya rangi', _trim, (c) => setState(() => _trim = c)),
@@ -324,15 +325,15 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SectionHeader(
-                '6. Yulduz futbolchi',
-                action: 'Boshqa variantlar',
+                tr('6. Yulduz futbolchi'),
+                action: tr('Boshqa variantlar'),
                 onAction: () => setState(() {
                   _candidates = GameState.starCandidates();
                   _star = 0;
                 }),
               ),
-              const Text(
-                'Tarkib o‘rtacha darajada (64–73). Bitta yulduzni o‘zingiz tanlaysiz.',
+              Text(
+                tr('Tarkib o‘rtacha darajada (64–73). Bitta yulduzni o‘zingiz tanlaysiz.'),
                 style: AppText.caption,
               ),
               const SizedBox(height: 8),
@@ -361,7 +362,7 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
                                     const SizedBox(width: 6),
                                     Flexible(
                                       child: Text(
-                                        '${_candidates[i].age} yosh · ${_candidates[i].playingStyle.title}',
+                                        trf('{0} yosh · {1}', [_candidates[i].age, _candidates[i].playingStyle.title]),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: AppText.caption,
@@ -387,7 +388,7 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
           ),
         ),
         const SizedBox(height: 12),
-        const AppCard(
+        AppCard(
           color: AppColors.primarySoft,
           child: Row(
             children: [
@@ -395,7 +396,7 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
               SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Klub yaratilgach, 23 kishilik o‘rtacha tarkib, tanlangan yulduz, €80.0M transfer byudjeti va akademiya ajratiladi.',
+                  tr('Klub yaratilgach, 23 kishilik o‘rtacha tarkib, tanlangan yulduz, €80.0M transfer byudjeti va akademiya ajratiladi.'),
                   style: AppText.small,
                 ),
               ),
@@ -408,7 +409,7 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
           child: FilledButton.icon(
             onPressed: _createAndStart,
             icon: const Icon(Icons.rocket_launch_rounded),
-            label: const FittedBox(child: Text('KLUBNI YARATISH VA BOSHLASH')),
+            label: FittedBox(child: Text(tr('KLUBNI YARATISH VA BOSHLASH'))),
           ),
         ),
         const SizedBox(height: 20),

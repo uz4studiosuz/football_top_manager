@@ -5,12 +5,13 @@ import '../ui/team_widgets.dart';
 import '../ui/widgets.dart';
 import 'widgets/player_detail_view.dart';
 import 'player_creator_screen.dart';
+import '../l10n/l10n.dart';
 
 class SquadScreen extends StatelessWidget {
   const SquadScreen({super.key});
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Futbolchilar')),
+    appBar: AppBar(title: Text(tr('Futbolchilar'))),
     body: const SquadList(),
   );
 }
@@ -27,11 +28,11 @@ class _SquadListState extends State<SquadList> {
   int filter = 0;
   String sort = 'OVR';
   static const filters = ['Hammasi', 'Asosiy', 'Zaxira', 'Rezerv', 'Jarohat'];
-  static const groupNames = {
-    PositionCategory.goalkeeper: 'Darvozabonlar',
-    PositionCategory.defense: 'Himoyachilar',
-    PositionCategory.midfield: 'Yarim himoyachilar',
-    PositionCategory.attack: 'Hujumchilar',
+  static Map<PositionCategory, String> get groupNames => {
+    PositionCategory.goalkeeper: tr('Darvozabonlar'),
+    PositionCategory.defense: tr('Himoyachilar'),
+    PositionCategory.midfield: tr('Yarim himoyachilar'),
+    PositionCategory.attack: tr('Hujumchilar'),
   };
 
   @override
@@ -77,7 +78,7 @@ class _SquadListState extends State<SquadList> {
                   context,
                   MaterialPageRoute<void>(builder: (_) => const PlayerCreatorScreen()),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
                     Icon(Icons.person_add_alt_1_rounded, color: AppColors.primary),
                     SizedBox(width: 12),
@@ -85,8 +86,8 @@ class _SquadListState extends State<SquadList> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Futbolchi yaratish', style: AppText.bodyStrong),
-                          Text('Ism, yuz, pozitsiya, uslub va 26 atributni noldan sozlang', style: AppText.caption),
+                          Text(tr('Futbolchi yaratish'), style: AppText.bodyStrong),
+                          Text(tr('Ism, yuz, pozitsiya, uslub va 26 atributni noldan sozlang'), style: AppText.caption),
                         ],
                       ),
                     ),
@@ -98,10 +99,10 @@ class _SquadListState extends State<SquadList> {
               Row(
                 children: [
                   Expanded(
-                    child: PillTabs(labels: filters, index: filter, onChanged: (i) => setState(() => filter = i)),
+                    child: PillTabs(labels: [for (final f in filters) tr(f)], index: filter, onChanged: (i) => setState(() => filter = i)),
                   ),
                   PopupMenuButton<String>(
-                    tooltip: 'Saralash',
+                    tooltip: tr('Saralash'),
                     icon: const Icon(Icons.sort_rounded),
                     initialValue: sort,
                     onSelected: (v) => setState(() => sort = v),
@@ -114,7 +115,7 @@ class _SquadListState extends State<SquadList> {
               ),
               const SizedBox(height: 12),
               if (players.isEmpty)
-                const AppCard(child: EmptyState(icon: Icons.person_off_outlined, text: 'Bu bo‘limda futbolchi yo‘q')),
+                AppCard(child: EmptyState(icon: Icons.person_off_outlined, text: tr('Bu bo‘limda futbolchi yo‘q'))),
               for (final cat in PositionCategory.values.reversed)
                 if (players.any((p) => p.mainPosition.category == cat))
                   AppCard(
@@ -144,7 +145,7 @@ class _SquadListState extends State<SquadList> {
   }
 
   String _subtitle(bool starter, bool bench, Player p) {
-    final role = starter ? 'Asosiy' : bench ? 'Zaxira' : 'Rezerv';
+    final role = starter ? tr('Asosiy') : bench ? tr('Zaxira') : tr('Rezerv');
     if (p.isInjured) return '$role · jarohat (${p.injuryRounds} tur)';
     if (p.isSuspended) return '$role · diskvalifikatsiya';
     return '$role · ${p.age} yosh · ${p.currentStamina}% · ${p.contract.contractYears} yil';

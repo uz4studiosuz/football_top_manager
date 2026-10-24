@@ -9,6 +9,7 @@ import 'player_attributes_view.dart';
 import '../../models/league.dart';
 import '../../services/season_calendar.dart';
 import '../match_report_screen.dart';
+import '../../l10n/l10n.dart';
 
 /// SofaScore-like player page: header card, season numbers, rating form,
 /// attributes, positional map and contract actions.
@@ -56,11 +57,11 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
       length: 4,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Futbolchi profili'),
+          title: Text(tr('Futbolchi profili')),
           actions: [
             if (owned)
               IconButton(
-                tooltip: 'Portretni tahrirlash',
+                tooltip: tr('Portretni tahrirlash'),
                 icon: const Icon(Icons.face_retouching_natural_outlined),
                 onPressed: () async {
                   final face = await editFace(context, p.face, shirt: shirt, nationality: p.nationality, age: p.age);
@@ -76,12 +77,12 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
             child: Column(
               children: [
                 _header(c, shirt),
-                const TabBar(
+                TabBar(
                   tabs: [
-                    Tab(text: 'Umumiy'),
-                    Tab(text: 'Atributlar'),
-                    Tab(text: 'Pozitsiyalar'),
-                    Tab(text: 'O‘yinlar'),
+                    Tab(text: tr('Umumiy')),
+                    Tab(text: tr('Atributlar')),
+                    Tab(text: tr('Pozitsiyalar')),
+                    Tab(text: tr('O‘yinlar')),
                   ],
                 ),
               ],
@@ -172,8 +173,8 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
                 Expanded(
                   child: Text(
                     p.isInjured
-                        ? '${p.injury ?? 'Jarohat'} · ${p.injuryRounds} tur o‘tkazib yuboradi'
-                        : 'Diskvalifikatsiya · ${p.suspensionRounds} tur',
+                        ? trf('{0} · {1} tur o‘tkazib yuboradi', [p.injury ?? 'Jarohat', p.injuryRounds])
+                        : trf('Diskvalifikatsiya · {0} tur', [p.suspensionRounds]),
                     style: AppText.bodyStrong,
                   ),
                 ),
@@ -185,7 +186,7 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SectionHeader('O‘yin uslubi', icon: Icons.style_outlined),
+              SectionHeader(tr('O‘yin uslubi'), icon: Icons.style_outlined),
               Row(
                 children: [
                   Container(
@@ -210,7 +211,7 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
                 children: [
                   const Icon(Icons.shield_outlined, size: 16, color: AppColors.ink3),
                   const SizedBox(width: 8),
-                  const Text('Himoyada:', style: AppText.small),
+                  Text(tr('Himoyada:'), style: AppText.small),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
@@ -242,7 +243,7 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SectionHeader('Ma’lumot', icon: Icons.badge_outlined),
+              SectionHeader(tr('Ma’lumot'), icon: Icons.badge_outlined),
               Row(
                 children: [
                   Expanded(child: StatTile('${p.age}', 'Yosh')),
@@ -253,15 +254,15 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
               ),
               const SizedBox(height: 10),
               MeterRow(
-                label: 'Jismoniy tayyorgarlik',
+                label: tr('Jismoniy tayyorgarlik'),
                 value: p.currentStamina / 100,
                 trailing: '${p.currentStamina}%',
                 color: p.currentStamina > 75 ? AppColors.win : p.currentStamina > 55 ? AppColors.warning : AppColors.loss,
               ),
-              MeterRow(label: 'Kayfiyat', value: p.morale / 100, trailing: '${p.morale}%'),
+              MeterRow(label: tr('Kayfiyat'), value: p.morale / 100, trailing: '${p.morale}%'),
               if (p.altPositions.isNotEmpty)
-                InfoRow('Muqobil pozitsiyalar', p.altPositions.map((e) => e.code).join(', ')),
-              InfoRow('Ko‘rsatma', p.instruction.label),
+                InfoRow(tr('Muqobil pozitsiyalar'), p.altPositions.map((e) => e.code).join(', ')),
+              InfoRow(tr('Ko‘rsatma'), p.instruction.label),
             ],
           ),
         ),
@@ -270,7 +271,7 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SectionHeader('Mavsum ${game.isInitialized ? game.seasonLabel : ''}', icon: Icons.query_stats_rounded),
+              SectionHeader(trf('Mavsum {0}', [game.isInitialized ? game.seasonLabel : '']), icon: Icons.query_stats_rounded),
               Row(
                 children: [
                   Expanded(child: StatTile('${p.seasonMatches}', 'O‘yin')),
@@ -295,7 +296,7 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
               const Divider(height: 26),
               Row(
                 children: [
-                  const Expanded(child: Text('Oxirgi reytinglar', style: AppText.small)),
+                  Expanded(child: Text(tr('Oxirgi reytinglar'), style: AppText.small)),
                   if (p.recentRatings.isEmpty) const Text('—', style: AppText.caption),
                   for (final r in p.recentRatings)
                     Padding(
@@ -307,7 +308,7 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  const Expanded(child: Text('O‘rtacha reyting', style: AppText.small)),
+                  Expanded(child: Text(tr('O‘rtacha reyting'), style: AppText.small)),
                   RatingBadge(p.averageRating, size: 14),
                 ],
               ),
@@ -319,31 +320,31 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SectionHeader('Shartnoma va qiymat', icon: Icons.description_outlined),
-              InfoRow('Bozor bahosi', p.formattedMarketValue),
-              InfoRow('Haftalik maosh', formatMoney(p.contract.weeklyWage)),
+              SectionHeader(tr('Shartnoma va qiymat'), icon: Icons.description_outlined),
+              InfoRow(tr('Bozor bahosi'), p.formattedMarketValue),
+              InfoRow(tr('Haftalik maosh'), formatMoney(p.contract.weeklyWage)),
               InfoRow(
-                'Qolgan muddat',
+                tr('Qolgan muddat'),
                 '${p.contract.contractYears} yil',
                 valueColor: p.contract.contractYears <= 1 ? AppColors.live : null,
               ),
-              if (p.contract.releaseClause > 0) InfoRow('Tovon puli', formatMoney(p.contract.releaseClause)),
+              if (p.contract.releaseClause > 0) InfoRow(tr('Tovon puli'), formatMoney(p.contract.releaseClause)),
               if (owned) ...[
                 const SizedBox(height: 12),
                 FilledButton.icon(
                   onPressed: _renew,
                   icon: const Icon(Icons.edit_document),
-                  label: const Text('Yangi shartnoma taklif qilish'),
+                  label: Text(tr('Yangi shartnoma taklif qilish')),
                 ),
                 const SizedBox(height: 8),
                 OutlinedButton.icon(
                   onPressed: () {
                     final ok = game.sellPlayer(p);
-                    message(ok ? '${p.name} sotildi' : game.lastTransferError ?? 'Sotilmadi');
+                    message(ok ? trf('{0} sotildi', [p.name]) : game.lastTransferError ?? tr('Sotilmadi'));
                     if (ok) Navigator.pop(context);
                   },
                   icon: const Icon(Icons.sell_outlined),
-                  label: const Text('Xaridor topish va sotish'),
+                  label: Text(tr('Xaridor topish va sotish')),
                 ),
               ],
             ],
@@ -355,7 +356,7 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const SectionHeader('Karyera', icon: Icons.history_rounded),
+                SectionHeader(tr('Karyera'), icon: Icons.history_rounded),
                 for (final h in p.history)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 5),
@@ -379,7 +380,7 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
         .reversed
         .toList();
     if (games.isEmpty) {
-      return const EmptyState(icon: Icons.event_busy_outlined, text: 'Bu mavsumda hali maydonga tushmagan');
+      return EmptyState(icon: Icons.event_busy_outlined, text: tr('Bu mavsumda hali maydonga tushmagan'));
     }
     var goals = 0, assists = 0, minutes = 0;
     for (final f in games) {
@@ -435,7 +436,7 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
               child: Column(
                 children: [
                   Text(f.date == null ? '${f.round}-tur' : SeasonCalendar.short(f.date!), style: AppText.caption),
-                  Text(home ? 'Uyda' : 'Safarda', style: AppText.caption.copyWith(fontSize: 10)),
+                  Text(home ? tr('Uyda') : tr('Safarda'), style: AppText.caption.copyWith(fontSize: 10)),
                 ],
               ),
             ),
@@ -505,21 +506,21 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, update) => AlertDialog(
-          title: const Text('Shartnoma taklifi'),
+          title: Text(tr('Shartnoma taklifi')),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Talab: €${(wage / 1000).toStringAsFixed(0)}K / hafta', style: AppText.bodyStrong),
+              Text(trf('Talab: €{0}K / hafta', [(wage / 1000).toStringAsFixed(0)]), style: AppText.bodyStrong),
               const SizedBox(height: 12),
-              const Text('Yangi umumiy muddat', style: AppText.small),
+              Text(tr('Yangi umumiy muddat'), style: AppText.small),
               const SizedBox(height: 8),
               Wrap(
                 spacing: 8,
                 children: [
                   for (final y in [1, 2, 3, 4, 5])
                     ChoiceChip(
-                      label: Text('$y yil'),
+                      label: Text(trf('{0} yil', [y])),
                       selected: years == y,
                       onSelected: (_) => update(() => years = y),
                     ),
@@ -527,22 +528,22 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
               ),
               const SizedBox(height: 10),
               Text(
-                'Bo‘sh maosh limiti: ${formatMoney(game.userClub.remainingWageBudget + p.contract.weeklyWage)}/hafta',
+                trf('Bo‘sh maosh limiti: {0}/hafta', [formatMoney(game.userClub.remainingWageBudget + p.contract.weeklyWage)]),
                 style: AppText.caption,
               ),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Bekor qilish')),
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Bekor qilish'))),
             FilledButton(
               onPressed: () {
                 final ok = game.renewContract(p, years, wage);
                 Navigator.pop(ctx);
                 setState(() {});
                 widget.onContractRenewed?.call();
-                message(ok ? 'Shartnoma imzolandi' : 'Maosh limiti yetarli emas');
+                message(ok ? tr('Shartnoma imzolandi') : tr('Maosh limiti yetarli emas'));
               },
-              child: const Text('Imzolash'),
+              child: Text(tr('Imzolash')),
             ),
           ],
         ),
