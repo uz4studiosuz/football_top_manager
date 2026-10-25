@@ -17,6 +17,7 @@ import 'widgets/player_detail_view.dart';
 import '../l10n/l10n.dart';
 import '../ui/coin.dart';
 import '../services/club_life.dart';
+import '../services/press.dart';
 import 'club_life_screen.dart';
 import 'season_review_screen.dart';
 import 'tactics_screen.dart';
@@ -162,7 +163,11 @@ class DashboardScreen extends StatelessWidget {
                       if (game.seasonFinished)
                         _seasonEnd(context, game)
                       else if (next != null) ...[
-                        if (game.pressFor(next) != null) ...[
+                        if (game.postPressFixture case final last?) ...[
+                          _pressCard(context, game, last, post: true),
+                          const SizedBox(height: 12),
+                        ],
+                        if (!game.life.pressDone.contains(next.id)) ...[
                           _pressCard(context, game, next),
                           const SizedBox(height: 12),
                         ],
@@ -418,71 +423,126 @@ class DashboardScreen extends StatelessWidget {
             if (!game.life.sacked) TextButton(onPressed: game.declineJobOffers, child: Text(tr('Rad etish'))),
           ],
         ),
+        Text(
+          trf('Menejer reytingi: {0} · {1}', [game.managerProfile.reputation.round(), game.managerProfile.reputationLevel]),
+          style: AppText.caption,
+        ),
         const SizedBox(height: 6),
         for (final id in game.life.jobOffers)
-          if (game.getClubById(id) case final c?)
-            ListTile(
-              contentPadding: EdgeInsets.zero,
-              leading: ClubCrestWidget(config: c.crestConfig, size: 36),
-              title: Text(c.name, style: AppText.bodyStrong),
-              subtitle: Text(trf('Obro‘ {0} · OVR {1}', [c.reputation, c.teamOVR]), style: AppText.caption),
-              trailing: FilledButton(
-                onPressed: () => game.switchClub(c),
-                child: Text(tr('Qabul qilish')),
-              ),
+          if (game.jobOfferInfo(id) case final o?)
+            Builder(
+              builder: (context) {
+                final league = InitialDatabase.info(o.$4);
+                final local = game.getClubById(id);
+                final here = o.$4 == game.leagueId;
+                return ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: local != null
+                      ? ClubCrestWidget(config: local.crestConfig, size: 36)
+                      : Text(league.flag.isEmpty ? '🏟️' : league.flag, style: const TextStyle(fontSize: 28)),
+                  title: Text(o.$2, style: AppText.bodyStrong),
+                  subtitle: Text(
+                    [
+                      '${league.name} · ${tr(league.country)}',
+                      trf('Obro‘ {0}', [o.$3]),
+                      if (!here) tr('Yangi ligada mavsum boshidan boshlanadi'),
+                    ].join(' · '),
+                    style: AppText.caption,
+                  ),
+                  trailing: FilledButton(
+                    onPressed: () => _acceptJob(context, game, id),
+                    child: Text(tr('Qabul qilish')),
+                  ),
+                );
+              },
             ),
       ],
     ),
   );
 
-  /// Press conference before a big match: two questions, answers move
-  /// the squad's morale and the fans' mood.
-  Widget _pressCard(BuildContext context, GameState game, Fixture f) => AppCard(
+  Future<void> _acceptJob(BuildContext context, GameState game, String id) async {
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+    String? error;
+    try {
+      error = await game.acceptJob(id);
+    } finally {
+      if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
+    }
+    if (error != null && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+    }
+  }
+
+  /// Press conference before the next match or after the last one: the
+  /// answers move morale, fans, the board and single players.
+  Widget _pressCard(BuildContext context, GameState game, Fixture f, {bool post = false}) => AppCard(
     child: Row(
       children: [
-        const Icon(Icons.mic_none_rounded, color: AppColors.primary, size: 28),
+        Icon(post ? Icons.campaign_outlined : Icons.mic_none_rounded, color: AppColors.primary, size: 28),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(tr('Matbuot anjumani'), style: AppText.bodyStrong),
-              Text(tr('Muhim o‘yin oldidan jurnalistlar savollari kutmoqda.'), style: AppText.caption),
+              Text(post ? tr('O‘yindan keyingi matbuot anjumani') : tr('Matbuot anjumani'), style: AppText.bodyStrong),
+              Text(
+                post ? tr('Jurnalistlar natija haqida so‘ramoqchi.') : tr('O‘yin oldidan jurnalistlar savollari kutmoqda.'),
+                style: AppText.caption,
+              ),
             ],
           ),
         ),
-        FilledButton.tonal(onPressed: () => _runPress(context, game, f), child: Text(tr('Boshlash'))),
+        FilledButton.tonal(onPressed: () => _runPress(context, game, f, post: post), child: Text(tr('Boshlash'))),
       ],
     ),
   );
 
-  Future<void> _runPress(BuildContext context, GameState game, Fixture f) async {
-    final questions = game.pressFor(f);
+  Future<void> _runPress(BuildContext context, GameState game, Fixture f, {bool post = false}) async {
+    final questions = post ? game.postPressFor(f) : game.pressFor(f);
     if (questions == null) return;
-    final picked = <(String, int, int)>[];
+    final picked = <(PressQuestion, PressAnswer)>[];
     for (final q in questions) {
-      final a = await showDialog<(String, int, int)>(
+      final a = await showDialog<PressAnswer>(
         context: context,
         barrierDismissible: false,
         builder: (ctx) => SimpleDialog(
-          title: Text(q.question),
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(tr(q.outlet), style: AppText.caption.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 4),
+              Text(q.question),
+            ],
+          ),
           children: [
             for (final a in q.answers)
               SimpleDialogOption(
                 onPressed: () => Navigator.pop(ctx, a),
-                child: Padding(padding: const EdgeInsets.symmetric(vertical: 6), child: Text('“${a.$1}”', style: AppText.body)),
+                child: Padding(padding: const EdgeInsets.symmetric(vertical: 6), child: Text('“${a.text}”', style: AppText.body)),
               ),
           ],
         ),
       );
       if (a == null || !context.mounted) return;
-      picked.add(a);
+      picked.add((q, a));
     }
-    game.answerPress(f, picked);
-    final morale = picked.fold<int>(0, (s, a) => s + a.$2);
+    game.answerPress(f, picked, post: post);
+    final morale = picked.fold<int>(0, (s, e) => s + e.$2.morale);
+    final fans = picked.fold<int>(0, (s, e) => s + e.$2.fans);
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(trf('Matbuot anjumani tugadi. Jamoa kayfiyati {0}{1}.', [morale >= 0 ? '+' : '', morale]))),
+        SnackBar(
+          content: Text(trf('Matbuot anjumani tugadi. Jamoa kayfiyati {0}{1}, muxlislar {2}{3}.', [
+            morale >= 0 ? '+' : '',
+            morale,
+            fans >= 0 ? '+' : '',
+            fans,
+          ])),
+        ),
       );
     }
   }

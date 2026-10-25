@@ -95,9 +95,15 @@ def main():
     rnd = random.Random(2627)
     manifest = json.loads((DATA / 'league.json').read_text(encoding='utf8'))
     keep = [e for e in manifest['leagues'] if not e.get('world')]
+    # Leagues edited by hand (tool/world_keep.txt, one id per line) keep
+    # their files; everything else is rebuilt from the database.
+    keep_file = Path(__file__).resolve().parent / 'world_keep.txt'
+    hand = {line.split('#')[0].strip() for line in keep_file.read_text(encoding='utf8').splitlines()} - {''} \
+        if keep_file.exists() else set()
     WORLD.mkdir(exist_ok=True)
     for f in [*DATA.glob('*_w_*.json'), *WORLD.glob('*.json')]:
-        f.unlink()
+        if f.stem not in hand:
+            f.unlink()
     groups = {}
     for equid, name, abbr, founded, power, estaid, paid, entid, div, nombre, iso in db.execute(
         """select e.equid, e.equi_nombre, e.equi_abrev, e.equi_funda, e.equi_poder, e.equi_estaid, e.equi_paid,
@@ -140,13 +146,19 @@ def main():
             lname = base_name + (f' {chr(65 + gi)}' if n_groups > 1 else '')
             avg = sum(c[4] for c in chunk) / len(chunk)
             eco = economy_of(avg)
+            # Built even when kept, so the random stream (and every other
+            # league) stays identical.
             players, out_clubs = build(db, rnd, lid, chunk, eco, iso, cname)
+            if lid in hand and (WORLD / f'{lid}.json').exists():
+                edited = json.loads((WORLD / f'{lid}.json').read_text(encoding='utf8'))
+                players, out_clubs = edited['players'], edited['clubs']
+            else:
+                (WORLD / f'{lid}.json').write_text(
+                    json.dumps({'schemaVersion': 2, 'clubs': out_clubs, 'players': players},
+                               ensure_ascii=False, separators=(',', ':')) + '\n',
+                    encoding='utf8')
             total_players += len(players)
             index.extend([c['id'], c['name'], c['reputation'], lid] for c in out_clubs)
-            (WORLD / f'{lid}.json').write_text(
-                json.dumps({'schemaVersion': 2, 'clubs': out_clubs, 'players': players},
-                           ensure_ascii=False, separators=(',', ':')) + '\n',
-                encoding='utf8')
             entry = {'id': lid, 'name': lname, 'country': cname, 'flag': flag_of(cname, iso),
                      'clubsFile': f'world/{lid}.json', 'playersFile': f'world/{lid}.json',
                      'economy': eco, 'tier': div, 'clubs': len(out_clubs), 'level': round(avg),
@@ -177,7 +189,7 @@ def main():
 
 def build(db, rnd, lid, chunk, eco, iso, cname):
     players, clubs = [], []
-    for equid, name, abbr, founded, power, estaid, entid, _, _ in chunk:
+    for equid, name, abbr, founded, power, estaid, entid, nombre, _ in chunk:
         name = clean(name)
         cid = f'{lid}_{equid}'
         stadium = db.execute('select es_nombre, es_tot_general, es_ciudad from eq_estadios where estaid=?', (estaid,)).fetchone()
@@ -280,7 +292,9 @@ def build(db, rnd, lid, chunk, eco, iso, cname):
             'primaryColor': colors[0], 'secondaryColor': colors[1], 'accentColor': colors[2],
             'stadiumName': clean(stadium[0]) if stadium else f'{name} Stadium',
             'stadiumCapacity': max(3000, stadium[1]) if stadium and stadium[1] else 8000,
-            'city': clean(stadium[2]) if stadium and stadium[2] else '',
+            # The database often stores the country as the stadium's city;
+            # an empty city keeps every league match from counting as a derby.
+            'city': clean(stadium[2]) if stadium and stadium[2] and stadium[2] != nombre else '',
             'nickname': '', 'founded': founded or 1920, 'reputation': rep,
             'transferBudget': max(200000, int((rep - 30) ** 2 * 9000 * (0.15 + eco) / 100000) * 100000),
             'wageBudget': max(20000, int(wages * 1.25 / 1000) * 1000),

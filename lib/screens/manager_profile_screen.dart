@@ -143,6 +143,37 @@ class _ManagerProfileScreenState extends State<ManagerProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                SectionHeader(tr('Menejer reytingi'), icon: Icons.trending_up_rounded),
+                Row(
+                  children: [
+                    Text('${m.reputation.round()}', style: AppText.h2.copyWith(color: AppColors.primary)),
+                    const SizedBox(width: 10),
+                    Expanded(child: Text(m.reputationLevel, style: AppText.bodyStrong)),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: m.reputation / 100,
+                    minHeight: 8,
+                    backgroundColor: AppColors.line,
+                    color: AppColors.primary,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  trf('Kutilganidan yaxshi natijalar (kuchliroq raqiblarni yutish, jadvalda yuqoriroq o‘rin, kuboklar) reytingni oshiradi. Mavsum oxirida obro‘si taxminan {0} bo‘lgan klublar – dunyoning istalgan ligasidan – ish taklif qiladi.', [GameState.jobLevel(m.reputation).round()]),
+                  style: AppText.caption,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
                 SectionHeader(tr('Falsafa reytinglari'), icon: Icons.psychology_outlined),
                 Text(
                   tr('Har besh uchrashuvda amaldagi uslub +1 ga o‘sadi. Reyting pas aniqligi va jamoa qarorlariga ta’sir qiladi.'),
@@ -239,6 +270,13 @@ class _ManagerProfileScreenState extends State<ManagerProfileScreen> {
                   ),
                   icon: const Icon(Icons.storage_rounded),
                   label: Text(tr('Baza muharriri')),
+                ),
+                const SizedBox(height: 8),
+                // Open-source licences of the packages and fonts the app uses.
+                OutlinedButton.icon(
+                  onPressed: () => showLicensePage(context: context, applicationName: 'Football Top Manager'),
+                  icon: const Icon(Icons.description_outlined),
+                  label: Text(tr('Litsenziyalar')),
                 ),
                 const SizedBox(height: 8),
                 OutlinedButton.icon(

@@ -1,5 +1,5 @@
 name: football_top_manager
-description: "A new Flutter project."
+description: "Football management game: tactics, transfers, a 2D match engine and leagues from around the world."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -63,6 +63,7 @@ flutter:
     - assets/data/
     - assets/data/world/
     - assets/l10n/
+    - assets/fonts/LICENSE.txt
   fonts:
     - family: Roboto
       fonts:

@@ -244,7 +244,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       const SizedBox(height: 14),
                       _clubChoice(
                         tr('MAVJUD TOP KLUBNI TANLASH'),
-                        tr('Super League (8 gigant) yoki Premier League (20 klub): real tarkiblar, taqvim va kengash maqsadlari.'),
+                        tr('Super League (8 gigant) yoki dunyoning 120 dan ortiq ligasi: tarkiblar, taqvim va kengash maqsadlari.'),
                         Icons.shield_outlined,
                         () => Navigator.push(
                           context,

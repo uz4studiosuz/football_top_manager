@@ -13,7 +13,11 @@ class LeagueInfo {
   final String id, _name, country;
 
   /// Display name in the interface language.
-  String get name => tr(_name);
+  /// A trailing group letter ("… A") is kept as it is.
+  String get name {
+    final m = RegExp(r'^(.*) ([A-Z])$').firstMatch(_name);
+    return m == null ? tr(_name) : '${tr(m.group(1)!)} ${m.group(2)}';
+  }
   final String? pyramid;
   final int tier, promote, relegate, playoffFrom, playoffTo;
   final double economy;
@@ -100,8 +104,66 @@ class InitialDatabase {
   static const overridesKey = 'ftm27_db_overrides_v1';
   static Map<String, String> overrides = {};
 
-  static Future<Map<String, dynamic>> _read(String file) async =>
-      _expand(jsonDecode(overrides[file] ?? await rootBundle.loadString('assets/data/$file')) as Map<String, dynamic>);
+  static Future<Map<String, dynamic>> _read(String file) async {
+    final local = overrides[file];
+    if (local == null) return _expand(jsonDecode(await rootBundle.loadString('assets/data/$file')) as Map<String, dynamic>);
+    final doc = jsonDecode(local) as Map<String, dynamic>;
+    if (doc['_patch'] != 1) return _expand(doc);
+    return _applyPatch(_expand(await readBundled(file)), doc);
+  }
+
+  /// Lists whose entries carry an `id`: edits are stored per entry.
+  static const _patchedLists = ['clubs', 'players', 'leagues'];
+
+  /// Only what differs from the bundled file: browser storage holds about
+  /// 5 MB per site (a career save already takes half), so whole edited
+  /// league files did not fit and were silently lost.
+  static Future<String> _patchFor(String file, Map<String, dynamic> doc) async {
+    Map<String, dynamic> base;
+    try {
+      base = _expand(await readBundled(file));
+    } catch (_) {
+      return jsonEncode(doc); // a file the editor created
+    }
+    final patch = <String, dynamic>{'_patch': 1};
+    for (final e in doc.entries) {
+      final was = base[e.key];
+      if (_patchedLists.contains(e.key) && e.value is List && was is List) {
+        final old = {for (final x in was) (x as Map)['id']: jsonEncode(x)};
+        final now = {for (final x in e.value as List) (x as Map)['id']};
+        patch[e.key] = {
+          'set': [for (final x in e.value as List) if (old[(x as Map)['id']] != jsonEncode(x)) x],
+          'del': [for (final id in old.keys) if (!now.contains(id)) id],
+          'order': [for (final x in e.value as List) (x as Map)['id']],
+        };
+      } else if (jsonEncode(e.value) != jsonEncode(was)) {
+        patch[e.key] = e.value;
+      }
+    }
+    return jsonEncode(patch);
+  }
+
+  static Map<String, dynamic> _applyPatch(Map<String, dynamic> base, Map<String, dynamic> patch) {
+    for (final e in patch.entries) {
+      if (e.key == '_patch') continue;
+      final list = base[e.key];
+      if (_patchedLists.contains(e.key) && list is List && e.value is Map && (e.value as Map).containsKey('set')) {
+        final p = Map<String, dynamic>.from(e.value as Map);
+        final byId = <dynamic, dynamic>{for (final x in list) (x as Map)['id']: x};
+        for (final id in p['del'] as List) {
+          byId.remove(id);
+        }
+        for (final x in p['set'] as List) {
+          byId[(x as Map)['id']] = _expand({'players': [x]})['players'][0];
+        }
+        final order = (p['order'] as List?) ?? byId.keys.toList();
+        base[e.key] = [for (final id in order) if (byId.containsKey(id)) byId[id]];
+      } else {
+        base[e.key] = e.value;
+      }
+    }
+    return base;
+  }
 
   /// World league files store a player's attributes as a list (in
   /// [statKeys] order) to stay small; everything else sees the usual map.
@@ -139,13 +201,27 @@ class InitialDatabase {
     }
   }
 
-  /// Saves edited files and reloads the database for the next career.
-  static Future<void> saveOverrides(Map<String, String> files) async {
-    overrides = {...overrides, ...files};
+  /// Saves edited files (as patches) and reloads the database for the next
+  /// career. Returns an error message when the device would not store them.
+  static Future<String?> saveOverrides(Map<String, Map<String, dynamic>> files) async {
+    final next = <String, String>{};
+    // Older saves kept whole files: they shrink to patches too.
+    for (final e in overrides.entries) {
+      final doc = jsonDecode(e.value) as Map<String, dynamic>;
+      next[e.key] = doc['_patch'] == 1 ? e.value : await _patchFor(e.key, _expand(doc));
+    }
+    for (final e in files.entries) {
+      next[e.key] = await _patchFor(e.key, e.value);
+    }
     try {
-      await (await SharedPreferences.getInstance()).setString(overridesKey, jsonEncode(overrides));
-    } catch (_) {}
+      final ok = await (await SharedPreferences.getInstance()).setString(overridesKey, jsonEncode(next));
+      if (!ok) return tr('Qurilma xotirasiga yozib bo‘lmadi.');
+    } catch (e) {
+      return trf('Qurilma xotirasi to‘la: {0}', ['$e'.split('\n').first]);
+    }
+    overrides = next;
     await reload();
+    return null;
   }
 
   static Future<void> clearOverrides() async {
@@ -210,7 +286,29 @@ class InitialDatabase {
     _custom = (shared[0]['slots'] as List).map((r) => Map<String, dynamic>.from(r)).toList();
     _names = (shared[1]['pools'] as List).map((r) => Map<String, dynamic>.from(r)).toList();
     _leagues = loaded;
+    await _loadWorldIndex();
   }
+
+  /// Every world club as (id, name, reputation, league) from world/index.json,
+  /// so job offers and searches work without loading the leagues.
+  static List<(String, String, int, String)> worldIndex = [];
+
+  static Future<void> _loadWorldIndex() async {
+    try {
+      final raw = jsonDecode(await rootBundle.loadString('assets/data/world/index.json')) as List;
+      worldIndex = [for (final e in raw) (e[0] as String, e[1] as String, (e[2] as num).toInt(), e[3] as String)];
+    } catch (_) {
+      worldIndex = [];
+    }
+  }
+
+  /// [worldIndex] plus the clubs of the leagues loaded at start-up.
+  static List<(String, String, int, String)> get clubIndex => [
+    for (final e in (_leagues ?? {}).entries)
+      if (!info(e.key).lazy)
+        for (final c in e.value) (c['id'] as String, c['name'] as String, (c['reputation'] as num? ?? 60).toInt(), e.key),
+    ...worldIndex,
+  ];
 
   /// Manifest entries of world leagues that are not loaded yet.
   static final Map<String, Map<String, dynamic>> _entries = {};

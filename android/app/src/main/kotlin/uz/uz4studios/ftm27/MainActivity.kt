@@ -1,4 +1,4 @@
-package com.example.football_top_manager
+package uz.uz4studios.ftm27
 
 import io.flutter.embedding.android.FlutterActivity
 

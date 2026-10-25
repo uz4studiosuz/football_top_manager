@@ -213,9 +213,13 @@ class _TransferScreenState extends State<TransferScreen> {
     final cats = [null, ...PositionCategory.values];
     final entries = <({Player p, Club c})>[];
     final pyramid = InitialDatabase.pyramidOf(game.leagueId);
+    // The last tab lists clubs from the countries the scouts have opened.
+    final foreign = game.world.clubs.isNotEmpty;
+    final abroadTab = pyramid.length + 1;
     final only = league == 0 || league > pyramid.length ? null : pyramid[league - 1].id;
     for (final c in game.marketClubs.where((c) => c.id != game.userClubId)) {
       if (only != null && game.leagueOfClub(c.id) != only) continue;
+      if (league == abroadTab && !game.isWorldClub(c)) continue;
       for (final p in c.squad) {
         final cat = cats[category];
         final fits = position == null
@@ -255,10 +259,14 @@ class _TransferScreenState extends State<TransferScreen> {
             fillColor: AppColors.surface,
           ),
         ),
-        if (pyramid.length > 1) ...[
+        if (pyramid.length > 1 || foreign) ...[
           const SizedBox(height: 10),
           PillTabs(
-            labels: [tr('Barcha ligalar'), for (final l in pyramid) l.name],
+            labels: [
+              tr('Barcha ligalar'),
+              for (final l in pyramid) l.name,
+              if (foreign) trf('🌍 Chet el ({0})', [game.world.countries.length]),
+            ],
             index: league,
             onChanged: (i) => setState(() {
               league = i;
@@ -332,7 +340,11 @@ class _TransferScreenState extends State<TransferScreen> {
                       PlayerTile(
                         player: e.p,
                         club: e.c,
-                        subtitle: trf('{0} · {1} yosh · salohiyat {2}', [e.c.shortName, e.p.age, game.isScouted(e.p) ? '${e.p.potential}' : '?']),
+                        subtitle: trf('{0} · {1} yosh · salohiyat {2}', [
+                          game.isWorldClub(e.c) ? '${InitialDatabase.info(game.leagueOfClub(e.c.id)).flag} ${e.c.shortName}' : e.c.shortName,
+                          e.p.age,
+                          game.isScouted(e.p) ? '${e.p.potential}' : '?',
+                        ]),
                         onTap: () => PlayerDetailView.show(context, player: e.p, club: e.c),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,

@@ -338,11 +338,14 @@ class DbEditor extends ChangeNotifier {
   /// Pretty JSON of an edited file, as bundled assets are written.
   String fileJson(String file) => '${const JsonEncoder.withIndent('  ').convert(_docs[file])}\n';
 
-  /// Saves edits on this device: new careers use the edited database.
-  Future<void> saveLocally() async {
-    await InitialDatabase.saveOverrides({for (final f in dirty) f: jsonEncode(_docs[f])});
+  /// Saves edits on this device (new careers use the edited database);
+  /// returns an error message on failure, the edits then stay pending.
+  Future<String?> saveLocally() async {
+    final error = await InitialDatabase.saveOverrides({for (final f in dirty) f: _docs[f]!});
+    if (error != null) return error;
     dirty.clear();
     notifyListeners();
+    return null;
   }
 
   /// Files edited so far (saved or not) on this device, for export.

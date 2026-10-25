@@ -4,6 +4,7 @@ import '../models/club.dart';
 import '../models/league.dart';
 import '../models/player.dart';
 import '../l10n/l10n.dart';
+import 'press.dart';
 
 /// Club buildings the manager can upgrade (levels 0–5).
 enum Facility {
@@ -49,15 +50,38 @@ enum TrainingFocus {
   String get effect => tr(_effect);
 }
 
-/// A fan's post in the social feed.
+/// Who wrote a post in the social feed.
+enum PostKind { fan, journalist, rivalFan, player, club }
+
+/// A post in the social feed (fans, journalists, rival fans, players).
 class FanPost {
   final String author, text;
   final int likes;
   final bool positive;
   final String when;
-  const FanPost(this.author, this.text, this.likes, this.positive, this.when);
-  Map<String, dynamic> toMap() => {'a': author, 't': text, 'l': likes, 'p': positive ? 1 : 0, 'w': when};
-  factory FanPost.fromMap(Map<String, dynamic> m) => FanPost(m['a'], m['t'], m['l'] ?? 0, m['p'] == 1, m['w'] ?? '');
+  final PostKind kind;
+
+  /// A hashtag the post pushes (trending topics count these).
+  final String? tag;
+  const FanPost(this.author, this.text, this.likes, this.positive, this.when, {this.kind = PostKind.fan, this.tag});
+  Map<String, dynamic> toMap() => {
+    'a': author,
+    't': text,
+    'l': likes,
+    'p': positive ? 1 : 0,
+    'w': when,
+    if (kind != PostKind.fan) 'k': kind.index,
+    if (tag != null) 'g': tag,
+  };
+  factory FanPost.fromMap(Map<String, dynamic> m) => FanPost(
+    m['a'],
+    m['t'],
+    m['l'] ?? 0,
+    m['p'] == 1,
+    m['w'] ?? '',
+    kind: PostKind.values[((m['k'] as int?) ?? 0).clamp(0, PostKind.values.length - 1)],
+    tag: m['g'],
+  );
 }
 
 /// End-of-season honours.
@@ -68,13 +92,6 @@ class SeasonAwards {
   Map<String, dynamic> toMap() => {'s': season, 'b': ballonDor, 'g': goldenBoot, 'y': youngPlayer, 't': teamOfSeason};
   factory SeasonAwards.fromMap(Map<String, dynamic> m) =>
       SeasonAwards(m['s'], m['b'], m['g'], m['y'], List<String>.from(m['t'] ?? const []));
-}
-
-/// A press-conference question with three answers (morale, fan mood effects).
-class PressQuestion {
-  final String question;
-  final List<(String answer, int morale, int fans)> answers;
-  const PressQuestion(this.question, this.answers);
 }
 
 /// Everything about running the club beyond the first team: facilities,
@@ -223,24 +240,69 @@ class ClubLife {
     required Random rnd,
   }) {
     final out = <FanPost>[];
-    void add(String text, bool positive) =>
-        out.add(FanPost(_author(user, rnd), text, 20 + rnd.nextInt(positive ? 900 : 500), positive, when));
+    final outTag = '#${user.shortName}Out', trustTag = '#${user.shortName}Ishonamiz';
+    void add(String text, bool positive, {String? tag}) =>
+        out.add(FanPost(_author(user, rnd), text, 20 + rnd.nextInt(positive ? 900 : 500), positive, when, tag: tag));
+    String pick(List<String> options) => options[rnd.nextInt(options.length)];
     final diff = scored - conceded;
     for (final e in userGoals.entries) {
       if (e.value >= 3) {
-        add(trf('{0} yana xet-trik qildi! Bu mavsum chempionmiz! 🔥', [e.key]), true);
+        add(trf('{0} yana xet-trik qildi! Bu mavsum chempionmiz! 🔥', [e.key]), true, tag: '#HatTrick');
       }
     }
     if (diff >= 3) {
-      add(trf('{0}:{1}! {2}ni tor-mor qildik. Bugun hammasi zo‘r edi! 🔥', [scored, conceded, rival.name]), true);
+      add(trf('{0}:{1}! {2}ni tor-mor qildik. Bugun hammasi zo‘r edi! 🔥', [scored, conceded, rival.name]), true, tag: trustTag);
     } else if (diff > 0) {
-      add(trf('Muhim 3 ochko! {0}ga qarshi g‘alaba 👏', [rival.name]), true);
+      add(
+        pick([
+          trf('Muhim 3 ochko! {0}ga qarshi g‘alaba 👏', [rival.name]),
+          tr('Mana shunday o‘ynash kerak! Uchta ochko bizniki 💪'),
+          tr('Jamoa ruhi zo‘r, murabbiyga rahmat 👏'),
+        ]),
+        true,
+        tag: rnd.nextBool() ? trustTag : null,
+      );
     } else if (diff == 0) {
-      add(tr('Durang... Bundan yaxshiroq o‘ynash mumkin edi.'), false);
+      add(
+        pick([
+          tr('Durang... Bundan yaxshiroq o‘ynash mumkin edi.'),
+          tr('Bir ochko – bu kam. Uyda yutish shart edi.'),
+          tr('Himoya yaxshi, hujum esa yo‘q. O‘ylab ko‘rish kerak.'),
+        ]),
+        false,
+      );
     } else if (diff <= -3) {
-      add(trf('Uyat! {0}:{1}. Murabbiy javob bersin! #Out', [scored, conceded]), false);
+      add(trf('Uyat! {0}:{1}. Murabbiy javob bersin! #Out', [scored, conceded]), false, tag: outTag);
     } else {
-      add(tr('Yomon kun. Keyingi o‘yinda qaytamiz 💪'), false);
+      add(
+        pick([
+          tr('Yomon kun. Keyingi o‘yinda qaytamiz 💪'),
+          tr('Yana mag‘lubiyat... Bu tarkib bilan uzoqqa bormaymiz.'),
+          tr('Taktika umuman ishlamadi. Nega reja B yo‘q?'),
+        ]),
+        false,
+        tag: rnd.nextBool() ? outTag : null,
+      );
+    }
+    // Rival fans have their say too, loudest after a derby.
+    final rivalHandle = '@${rival.shortName.toLowerCase()}_${_handles[rnd.nextInt(_handles.length)]}${rnd.nextInt(99)}';
+    if (diff < 0) {
+      out.add(FanPost(rivalHandle, trf('{0}:{1}! Yana keling, mehmonlar 😂', [conceded, scored]), 100 + rnd.nextInt(1500), false, when,
+          kind: PostKind.rivalFan));
+    } else if (diff > 0 && rnd.nextDouble() < 0.5) {
+      out.add(FanPost(rivalHandle, tr('Hakam bo‘lmaganda natija boshqacha bo‘lardi...'), 20 + rnd.nextInt(300), true, when,
+          kind: PostKind.rivalFan));
+    }
+    // A journalist's numbers and the man of the match's own post.
+    if (ratings.isNotEmpty) {
+      final top = (List.of(ratings)..sort((a, b) => b.$2.compareTo(a.$2))).first;
+      out.add(FanPost('@GolGazetasi', trf('{0} {1}:{2} {3}. O‘yin qahramoni: {4} ({5}).', [user.shortName, scored, conceded, rival.shortName, top.$1.shortName, top.$2.toStringAsFixed(1)]),
+          200 + rnd.nextInt(2000), diff >= 0, when, kind: PostKind.journalist));
+      if (diff > 0 && top.$2 >= 7.5) {
+        out.add(FanPost('@${top.$1.shortName.replaceAll('.', '').replaceAll(' ', '').toLowerCase()}',
+            pick([tr('Muhim g‘alaba! Muxlislarga rahmat 💙'), tr('Jamoa uchun hammasini berdik. Davom etamiz! 💪'), tr('Bu gol – sizlar uchun! ⚽')]),
+            1000 + rnd.nextInt(9000), true, when, kind: PostKind.player));
+      }
     }
     if (diff <= 0 && (firstSubMinute == null || firstSubMinute >= 78)) {
       add(
@@ -278,24 +340,40 @@ class ClubLife {
   static String _money(int v) =>
       v >= 1000000 ? '€${(v / 1000000).toStringAsFixed(1)}M' : '€${(v / 1000).round()}K';
 
-  // ------------------------------------------------------------ press
-  static List<PressQuestion> pressQuestions(Club rival, Player? star) => [
-    PressQuestion(trf('{0} bilan uchrashuv oldidan jamoa kayfiyati qanday?', [rival.name]), [
-      (tr('Biz faqat g‘alaba uchun chiqamiz!'), 6, 3),
-      (tr('Har bir o‘yin qiyin, raqibni hurmat qilamiz.'), 2, 0),
-      (tr('Raqib favorit, bosim ularda.'), -3, -2),
-    ]),
-    PressQuestion(
-      star == null
-          ? tr('Raqibning eng kuchli tomoni nima?')
-          : trf('Raqibning eng xavfli o‘yinchisi {0} haqida nima deysiz?', [star.shortName]),
-      [
-        (tr('Uni to‘xtatish rejamiz tayyor.'), 4, 2),
-        (tr('Zo‘r futbolchi, lekin futbol — jamoaviy o‘yin.'), 2, 1),
-        (tr('Raqib haqida gapirmayman.'), 0, -2),
-      ],
-    ),
-  ];
+  /// The press quotes the manager; fans react to how it sounded.
+  List<FanPost> pressPosts(Club user, String outlet, String answer, PressTone tone, String when, Random rnd) {
+    final handle = '@${outlet.replaceAll(' ', '')}';
+    final out = [
+      FanPost(handle, trf('Murabbiy: “{0}”', [answer]), 300 + rnd.nextInt(3000), tone != PressTone.evasive, when, kind: PostKind.journalist),
+    ];
+    switch (tone) {
+      case PressTone.bold:
+        out.add(FanPost(_author(user, rnd), tr('Mana bu murabbiy! Gaplari bilan ruhlantirdi 🔥'), 50 + rnd.nextInt(900), true, when,
+            tag: '#${user.shortName}Ishonamiz'));
+      case PressTone.evasive:
+        out.add(FanPost(_author(user, rnd), tr('Yana savoldan qochdi... Aniq javob qani? 🙄'), 20 + rnd.nextInt(400), false, when));
+      case PressTone.critical:
+        out.add(FanPost(_author(user, rnd), tr('Futbolchilarni ommaviy tanqid qilish – xato. Kiyinish xonasi buzilmasin.'), 30 + rnd.nextInt(600), false,
+            when));
+      case PressTone.calm:
+        break;
+    }
+    return out;
+  }
+
+  /// A journalist's transfer rumour about the user's club.
+  FanPost rumourPost(String text, String when, Random rnd) =>
+      FanPost('@${Press.outlets[rnd.nextInt(Press.outlets.length)].replaceAll(' ', '')}', text,
+          500 + rnd.nextInt(5000), true, when, kind: PostKind.journalist, tag: '#Transfer');
+
+  /// Hashtags of the last posts, most used first.
+  List<(String, int)> get trending {
+    final counts = <String, int>{};
+    for (final p in feed.take(30)) {
+      if (p.tag != null) counts[p.tag!] = (counts[p.tag!] ?? 0) + 1;
+    }
+    return counts.entries.map((e) => (e.key, e.value)).toList()..sort((a, b) => b.$2.compareTo(a.$2));
+  }
 
   // ------------------------------------------------------------ records
   void recordMatch(Club user, Club rival, int scored, int conceded, String season, List<MatchEvent> events) {

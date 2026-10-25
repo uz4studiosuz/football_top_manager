@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../models/player.dart';
+import '../data/countries.dart';
 import '../data/initial_database.dart';
 import '../services/club_life.dart';
+import '../services/world.dart';
 import '../services/game_state.dart';
 import '../ui/face_avatar.dart';
 import '../ui/widgets.dart';
@@ -418,6 +420,29 @@ class _Fans extends StatelessWidget {
             ],
           ),
         ),
+        if (game.life.trending.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          AppCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SectionHeader(tr('Trendda'), icon: Icons.trending_up_rounded),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    for (final (tag, n) in game.life.trending.take(6))
+                      Chip(
+                        label: Text('$tag · $n'),
+                        visualDensity: VisualDensity.compact,
+                        backgroundColor: tag.endsWith('Out') ? AppColors.live.withValues(alpha: 0.1) : AppColors.primarySoft,
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
         const SizedBox(height: 10),
         if (feed.isEmpty)
           EmptyState(icon: Icons.forum_outlined, text: tr('Muxlislar birinchi o‘yinni kutmoqda.'))
@@ -433,46 +458,66 @@ class FanPostTile extends StatelessWidget {
   final FanPost post;
   const FanPostTile({super.key, required this.post});
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.only(bottom: 8),
-    child: AppCard(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: post.positive ? AppColors.win.withValues(alpha: 0.15) : AppColors.live.withValues(alpha: 0.15),
-            child: Icon(post.positive ? Icons.sentiment_satisfied_alt : Icons.sentiment_dissatisfied, color: post.positive ? AppColors.win : AppColors.live, size: 20),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Flexible(child: Text(post.author, style: AppText.bodyStrong.copyWith(fontSize: 13))),
-                    const SizedBox(width: 6),
-                    Text(post.when, style: AppText.caption),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(post.text, style: AppText.body),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    const Icon(Icons.favorite_border, size: 14, color: AppColors.ink3),
-                    const SizedBox(width: 4),
-                    Text('${post.likes}', style: AppText.caption),
-                  ],
-                ),
-              ],
+  Widget build(BuildContext context) {
+    final (icon, color) = switch (post.kind) {
+      PostKind.journalist => (Icons.newspaper_rounded, AppColors.primary),
+      PostKind.player => (Icons.sports_soccer, AppColors.gold),
+      PostKind.club => (Icons.shield_outlined, AppColors.primary),
+      PostKind.rivalFan => (Icons.sports_kabaddi_outlined, AppColors.ink3),
+      PostKind.fan => post.positive ? (Icons.sentiment_satisfied_alt, AppColors.win) : (Icons.sentiment_dissatisfied, AppColors.live),
+    };
+    final verified = post.kind == PostKind.journalist || post.kind == PostKind.player || post.kind == PostKind.club;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: AppCard(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CircleAvatar(
+              radius: 18,
+              backgroundColor: color.withValues(alpha: 0.15),
+              child: Icon(icon, color: color, size: 20),
             ),
-          ),
-        ],
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(child: Text(post.author, style: AppText.bodyStrong.copyWith(fontSize: 13))),
+                      if (verified) ...[
+                        const SizedBox(width: 3),
+                        const Icon(Icons.verified_rounded, size: 14, color: AppColors.primary),
+                      ],
+                      if (post.kind == PostKind.rivalFan) ...[
+                        const SizedBox(width: 6),
+                        Text(tr('raqib muxlisi'), style: AppText.caption.copyWith(color: AppColors.live)),
+                      ],
+                      const SizedBox(width: 6),
+                      Flexible(child: Text(post.when, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.caption)),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(post.text, style: AppText.body),
+                  if (post.tag != null && !post.text.contains(post.tag!))
+                    Text(post.tag!, style: AppText.caption.copyWith(color: AppColors.primary, fontWeight: FontWeight.w600)),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      const Icon(Icons.favorite_border, size: 14, color: AppColors.ink3),
+                      const SizedBox(width: 4),
+                      Text('${post.likes}', style: AppText.caption),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _HallOfFame extends StatelessWidget {
@@ -692,16 +737,145 @@ class _Staff extends StatelessWidget {
   }
 }
 
-/// Scouting: player reports in progress and youth searches abroad.
+/// Scouting: trips abroad (the world market), player reports in progress
+/// and youth searches.
 class _Scouts extends StatelessWidget {
   const _Scouts();
+
+  static String _flagOf(String country) =>
+      InitialDatabase.leagues.where((l) => l.country == country && l.flag.isNotEmpty).firstOrNull?.flag ??
+      countryFlags[country] ??
+      '🏳️';
+
+  /// Picks a country, loads its leagues and sends the scouts.
+  Future<void> _sendAbroad(BuildContext context) async {
+    final game = GameState();
+    final open = {...game.world.countries, ...game.world.missions.keys};
+    final countries = [for (final c in game.scoutDestinations) if (!open.contains(c)) c];
+    var query = '';
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (ctx) => FractionallySizedBox(
+        heightFactor: 0.85,
+        child: StatefulBuilder(
+          builder: (ctx, update) {
+            final shown = [
+              for (final c in countries)
+                if (query.isEmpty || tr(c).toLowerCase().contains(query.toLowerCase())) c,
+            ];
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: TextField(
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.search),
+                      hintText: tr('Davlat'),
+                      border: const OutlineInputBorder(),
+                      isDense: true,
+                    ),
+                    onChanged: (v) => update(() => query = v.trim()),
+                  ),
+                ),
+                Expanded(
+                  child: ListView(
+                    children: [
+                      for (final c in shown)
+                        ListTile(
+                          leading: Text(_flagOf(c), style: const TextStyle(fontSize: 24)),
+                          title: Text(tr(c)),
+                          subtitle: Text(
+                            WorldMarket.leaguesOf(c, const {}).map((l) => l.name).take(3).join(' · '),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          trailing: Text(formatMoney(game.worldScoutCost(c)), style: AppText.caption),
+                          onTap: () => Navigator.pop(ctx, c),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+    if (picked == null || !context.mounted) return;
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+    String? error;
+    try {
+      error = await game.sendScouts(picked);
+    } finally {
+      if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
+    }
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error ?? trf('Skautlar {0}ga jo‘nadi.', [tr(picked)]))),
+      );
+    }
+  }
   @override
   Widget build(BuildContext context) {
     final game = GameState(), life = game.life;
     final nations = {for (final p in InitialDatabase.namePools) p['nationality'] as String}.toList()..sort();
+    final world = game.world;
     return ListView(
       padding: const EdgeInsets.all(12),
       children: [
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SectionHeader(
+                trf('Dunyo skautligi ({0}/{1})', [world.missions.length, game.worldScoutCapacity]),
+                icon: Icons.public_rounded,
+              ),
+              Text(
+                trf('Skautlarni davlatga yuboring: {0} turdan keyin hisobot keladi va u yerdagi klublar transfer bozorida paydo bo‘ladi.', [game.worldScoutRounds]),
+                style: AppText.small,
+              ),
+              const SizedBox(height: 8),
+              for (final e in world.missions.entries)
+                ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: Text(_flagOf(e.key), style: const TextStyle(fontSize: 22)),
+                  title: Text(tr(e.key), style: AppText.bodyStrong),
+                  subtitle: Text(trf('Hisobot {0}-turda', [e.value]), style: AppText.caption),
+                  trailing: const Icon(Icons.hourglass_top_rounded),
+                ),
+              if (world.countries.isNotEmpty) ...[
+                Text(tr('O‘rganilgan davlatlar'), style: AppText.caption.copyWith(fontWeight: FontWeight.w700)),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    for (final c in world.countries.toList()..sort())
+                      Chip(label: Text('${_flagOf(c)} ${tr(c)}'), visualDensity: VisualDensity.compact),
+                  ],
+                ),
+                const SizedBox(height: 6),
+              ],
+              Align(
+                alignment: Alignment.centerRight,
+                child: FilledButton.icon(
+                  onPressed: world.missions.length >= game.worldScoutCapacity ? null : () => _sendAbroad(context),
+                  icon: const Icon(Icons.flight_takeoff_rounded, size: 18),
+                  label: Text(tr('Skaut yuborish')),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
         AppCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

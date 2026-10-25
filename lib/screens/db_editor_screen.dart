@@ -46,8 +46,9 @@ class _DbEditorScreenState extends State<DbEditorScreen> {
   void _snack(String text) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
 
   Future<void> _save() async {
-    await db.saveLocally();
-    _snack(tr('Saqlandi. Yangi karyeralar tahrirlangan bazadan foydalanadi.'));
+    final error = await db.saveLocally();
+    if (!mounted) return;
+    _snack(error ?? tr('Saqlandi. Yangi karyeralar tahrirlangan bazadan foydalanadi.'));
   }
 
   /// Every data file in one ZIP: unzip it over assets/data.
@@ -201,13 +202,21 @@ class _DbEditorScreenState extends State<DbEditorScreen> {
   Widget _hint(String text) => Center(child: Text(text, style: AppText.caption));
 
   Widget _clubsPane() {
+    final q = _query.toLowerCase();
     final results = _query.length < 2
         ? const <(String, Map<String, dynamic>, Map<String, dynamic>)>[]
-        : db
-              .allPlayers()
-              .where((r) => '${r.$3['name']}'.toLowerCase().contains(_query.toLowerCase()))
-              .take(30)
-              .toList();
+        : db.allPlayers().where((r) => '${r.$3['name']}'.toLowerCase().contains(q)).take(30).toList();
+    // Clubs anywhere in the database, world leagues included (opened on tap).
+    final open = {for (final l in db.leagues) l['id'] as String};
+    final clubs = _query.length < 2
+        ? const <(String, String, int, String)>[]
+        : [
+            for (final l in db.leagues)
+              for (final c in db.clubs(l['id'] as String))
+                if ('${c['name']}'.toLowerCase().contains(q)) ('${c['id']}', '${c['name']}', 0, l['id'] as String),
+            for (final e in InitialDatabase.worldIndex)
+              if (!open.contains(e.$4) && e.$2.toLowerCase().contains(q)) e,
+          ].take(20).toList();
     return ListView(
       padding: const EdgeInsets.all(12),
       children: [
@@ -215,12 +224,28 @@ class _DbEditorScreenState extends State<DbEditorScreen> {
           controller: _search,
           decoration: InputDecoration(
             prefixIcon: const Icon(Icons.search),
-            hintText: tr('Futbolchi qidirish'),
+            hintText: tr('Futbolchi yoki klub qidirish'),
             isDense: true,
             border: const OutlineInputBorder(),
           ),
           onChanged: (v) => setState(() => _query = v.trim()),
         ),
+        for (final (id, name, _, league) in clubs)
+          ListTile(
+            dense: true,
+            leading: const Icon(Icons.shield_outlined, size: 20),
+            title: Text(name),
+            subtitle: Text('${InitialDatabase.info(league).flag} ${InitialDatabase.info(league).name}'),
+            onTap: () async {
+              await db.openLeague(league);
+              if (!mounted) return;
+              setState(() {
+                _league = league;
+                _club = id;
+                _player = null;
+              });
+            },
+          ),
         for (final (league, club, p) in results)
           ListTile(
             dense: true,

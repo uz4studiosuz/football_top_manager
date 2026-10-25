@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/services.dart';
@@ -23,6 +24,10 @@ Future<void> main() async {
     ),
   );
   SaveService.startAutoSave();
+  // The bundled font's licence joins the packages' on the licences page.
+  LicenseRegistry.addLicense(() async* {
+    yield LicenseEntryWithLineBreaks(['Roboto'], await rootBundle.loadString('assets/fonts/LICENSE.txt'));
+  });
   runApp(const FootballTopManagerApp());
 }
 

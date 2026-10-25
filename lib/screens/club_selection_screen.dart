@@ -76,8 +76,8 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
     if (_clubs.length > 10) {
       return switch (rank) {
         1 => tr('Chempionlik'),
-        <= 4 => tr('Top-4 (Chempionlar ligasi)'),
-        <= 7 => tr('Top-6 (Yevrokubok)'),
+        <= 4 => tr('Top-4 (kontinental kubok)'),
+        <= 7 => tr('Top-6 (kontinental kubok)'),
         <= 12 => tr('Top-10'),
         _ => tr('Ligada qolish'),
       };

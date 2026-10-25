@@ -166,16 +166,17 @@ class StandingsTable extends StatelessWidget {
     if (info.tier > 1) {
       return [
         (_green, tr('Avtomatik ko‘tarilish')),
-        if (info.hasPlayoff) (_orange, 'Pley-off (${info.playoffFrom}–${info.playoffTo})'),
+        if (info.hasPlayoff) (_orange, trf('Pley-off ({0}–{1})', [info.playoffFrom, info.playoffTo])),
         if (info.relegate > 0) (_red, tr('Quyi ligaga tushish')),
       ];
     }
     final big = (league == null || league == game.leagueId ? game.clubCount : 20) > 10;
+    // Generic names: the real continental competitions are trademarks.
     return [
-      (_blue, 'Chempion'),
-      (_green, tr('Chempionlar ligasi')),
-      (_orange, 'Yevropa ligasi'),
-      if (big) (_teal, 'Konferensiya ligasi'),
+      (_blue, tr('Chempion')),
+      (_green, tr('Kontinental kubok')),
+      (_orange, tr('Ikkinchi kontinental kubok')),
+      if (big) (_teal, tr('Kontinental saralash')),
       (_red, big ? tr('Quyi ligaga tushish') : tr('Quyi liga xavfi')),
     ];
   }

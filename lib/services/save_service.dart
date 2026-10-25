@@ -64,9 +64,12 @@ class SaveService {
     return _restore(raw);
   }
 
-  static bool _restore(String raw) {
+  static Future<bool> _restore(String raw) async {
     try {
-      return GameState().restore(Map<String, dynamic>.from(jsonDecode(raw)));
+      final m = Map<String, dynamic>.from(jsonDecode(raw));
+      // Scouted foreign leagues are rebuilt from the data files first.
+      await GameState().prepareWorld(m);
+      return GameState().restore(m);
     } catch (e) {
       debugPrint('Saqlangan karyerani o‘qib bo‘lmadi: $e');
       return false;
@@ -102,7 +105,7 @@ class SaveService {
 
   /// Loads a career file into the active slot.
   static Future<bool> importCareer(String raw) async {
-    if (!_restore(raw)) return false;
+    if (!await _restore(raw)) return false;
     await save();
     return true;
   }

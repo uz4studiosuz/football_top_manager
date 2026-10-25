@@ -56,8 +56,11 @@ def main():
             players[p['id']] = p
             if p.get('mainPosition') not in POSITIONS:
                 err(p.get('name'), f"unknown position {p.get('mainPosition')}")
+            stats = p.get('stats', {})
+            if isinstance(stats, list):  # world files store attributes as a list in KEYS order
+                stats = dict(zip(KEYS, stats))
             for k in KEYS:
-                v = p.get('stats', {}).get(k)
+                v = stats.get(k)
                 if not isinstance(v, (int, float)):
                     err(p.get('name'), f'stats.{k} missing')
                 elif not 40 <= v <= 100:
