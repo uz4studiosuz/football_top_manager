@@ -4,6 +4,8 @@ import '../data/countries.dart';
 import '../data/initial_database.dart';
 import '../services/club_life.dart';
 import '../services/world.dart';
+import '../services/season_calendar.dart';
+import '../ui/team_widgets.dart';
 import '../services/game_state.dart';
 import '../ui/face_avatar.dart';
 import '../ui/flag.dart';
@@ -11,66 +13,119 @@ import '../ui/widgets.dart';
 import '../l10n/l10n.dart';
 import 'widgets/player_detail_view.dart';
 
-/// Running the club: facilities, training, academy, fans and history.
+/// Running the club: a hub of cards (facilities, training, academy, fans,
+/// honours, dressing room, staff), each opening its own page.
 class ClubLifeScreen extends StatelessWidget {
-  final int initialTab;
-  const ClubLifeScreen({super.key, this.initialTab = 0});
+  const ClubLifeScreen({super.key});
 
+  /// Opens one section directly (7 = scouting, which lives in the market).
   static Future<void> show(BuildContext context, [int tab = 0]) => Navigator.push(
     context,
-    MaterialPageRoute<void>(builder: (_) => ClubLifeScreen(initialTab: tab)),
+    MaterialPageRoute<void>(builder: (_) => ClubSection(index: tab)),
   );
 
+  static List<(String, IconData)> get sections => [
+    (tr('Inshootlar'), Icons.stadium_outlined),
+    (tr('Mashg‘ulot'), Icons.fitness_center_outlined),
+    (tr('Akademiya'), Icons.school_outlined),
+    (tr('Muxlislar'), Icons.forum_outlined),
+    (tr('Shon-sharaf'), Icons.emoji_events_outlined),
+    (tr('Kiyinish xonasi'), Icons.groups_2_outlined),
+    (tr('Shtab'), Icons.badge_outlined),
+    (tr('Skautlar'), Icons.travel_explore_outlined),
+  ];
+
+  /// A one-line status for each card.
+  static String _status(int i) {
+    final game = GameState(), life = game.life;
+    return switch (i) {
+      0 => Facility.values.map((f) => '${f.label} ${life.level(f)}').join(' · '),
+      1 => life.focus.label,
+      2 => trf('Yangi yoshlar: {0}', [life.lastIntake.length]),
+      3 => trf('Kayfiyat {0}%', [game.userClub.fanMood]),
+      4 => trf('{0} ta kubok', [life.trophies.length]),
+      5 => life.wantsOut.isEmpty ? tr('Hammasi joyida') : trf('{0} kishi norozi', [life.wantsOut.length]),
+      6 => trf('{0} ta mutaxassis', [StaffRole.values.where((r) => life.staffLevel(r) > 0).length]),
+      _ => trf('{0} ta safar', [game.world.missions.length]),
+    };
+  }
+
   @override
-  Widget build(BuildContext context) => DefaultTabController(
-    length: 8,
-    initialIndex: initialTab,
-    child: Scaffold(
-      appBar: AppBar(
-        title: Text(tr('Klub boshqaruvi')),
-        bottom: TabBar(
-          isScrollable: true,
-          tabAlignment: TabAlignment.start,
-          tabs: [
-            Tab(text: tr('Inshootlar')),
-            Tab(text: tr('Mashg‘ulot')),
-            Tab(text: tr('Akademiya')),
-            Tab(text: tr('Muxlislar')),
-            Tab(text: tr('Shon-sharaf')),
-            Tab(text: tr('Kiyinish xonasi')),
-            Tab(text: tr('Shtab')),
-            Tab(text: tr('Skautlar')),
-          ],
-        ),
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: Text(tr('Klub boshqaruvi'))),
+    body: ListenableBuilder(
+      listenable: GameState(),
+      builder: (context, _) => LayoutBuilder(
+        builder: (context, box) {
+          final perRow = box.maxWidth >= 900 ? 4 : box.maxWidth >= 560 ? 3 : 2;
+          return GridView.count(
+            padding: const EdgeInsets.all(12),
+            crossAxisCount: perRow,
+            mainAxisSpacing: 10,
+            crossAxisSpacing: 10,
+            childAspectRatio: 1.25,
+            children: [
+              // Scouting moved to the Market tab; the hub keeps seven cards.
+              for (var i = 0; i < 7; i++)
+                AppCard(
+                  onTap: () => show(context, i),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 40,
+                        height: 40,
+                        decoration: BoxDecoration(color: AppColors.primarySoft, borderRadius: BorderRadius.circular(12)),
+                        child: Icon(sections[i].$2, color: AppColors.primary),
+                      ),
+                      const Spacer(),
+                      Text(sections[i].$1, style: AppText.bodyStrong),
+                      const SizedBox(height: 2),
+                      Text(_status(i), maxLines: 2, overflow: TextOverflow.ellipsis, style: AppText.caption),
+                    ],
+                  ),
+                ),
+            ],
+          );
+        },
       ),
-      body: ListenableBuilder(
-        listenable: GameState(),
-        builder: (context, _) => Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 900),
-            // Fresh tab widgets on every change so each tab redraws.
-            child: TabBarView(
-              children: [
-                // ignore: prefer_const_constructors
-                _Facilities(),
-                // ignore: prefer_const_constructors
-                _Training(),
-                // ignore: prefer_const_constructors
-                _Academy(),
-                // ignore: prefer_const_constructors
-                _Fans(),
-                // ignore: prefer_const_constructors
-                _HallOfFame(),
-                // ignore: prefer_const_constructors
-                _DressingRoom(),
-                // ignore: prefer_const_constructors
-                _Staff(),
-                // ignore: prefer_const_constructors
-                _Scouts(),
-              ],
-            ),
-          ),
+    ),
+  );
+}
+
+/// One club section on its own page.
+class ClubSection extends StatelessWidget {
+  final int index;
+  const ClubSection({super.key, required this.index});
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: Text(ClubLifeScreen.sections[index.clamp(0, 7)].$1)),
+    body: ListenableBuilder(
+      listenable: GameState(),
+      builder: (context, _) => Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 900),
+          // A fresh widget on every change so the section redraws.
+          child: switch (index) {
+            // ignore: prefer_const_constructors
+            0 => _Facilities(),
+            // ignore: prefer_const_constructors
+            1 => _Training(),
+            // ignore: prefer_const_constructors
+            2 => _Academy(),
+            // ignore: prefer_const_constructors
+            3 => _Fans(),
+            // ignore: prefer_const_constructors
+            4 => _HallOfFame(),
+            // ignore: prefer_const_constructors
+            5 => _DressingRoom(),
+            // ignore: prefer_const_constructors
+            6 => _Staff(),
+            // ignore: prefer_const_constructors
+            _ => ScoutsView(),
+          },
         ),
       ),
     ),
@@ -132,7 +187,7 @@ class _Facilities extends StatelessWidget {
                     Expanded(
                       child: Text(
                         life.building.containsKey(f)
-                            ? trf('Qurilmoqda · {0}-turda tayyor', [life.building[f]])
+                            ? trf('Qurilmoqda · {0} kuni tayyor', [GameState().roundDate(life.building[f]!)])
                             : life.level(f) >= Facility.maxLevel
                             ? tr('Eng yuqori daraja')
                             : trf('Keyingi bosqich: {0}', [formatMoney(game.facilityCost(f))]),
@@ -275,31 +330,8 @@ class _Training extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        SectionHeader(trf('Jamoa rejasi: atributlar ({0}/3)', [life.teamAttributes.length]), icon: Icons.checklist_rounded),
-        Text(
-          life.teamAttributes.isEmpty
-              ? trf('Tanlanmagan: yo‘nalish bo‘yicha avtomatik – {0}.', [game.teamTrainingAttributes.map((k) => tr(PlayerStats.labels[k] ?? k)).join(', ')])
-              : tr('Butun jamoa shu atributlar ustida ishlaydi.'),
-          style: AppText.caption,
-        ),
-        const SizedBox(height: 6),
-        AppCard(
-          child: Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              for (final k in PlayerStats.labels.keys.where((k) => !k.startsWith('gk')))
-                FilterChip(
-                  label: Text(tr(PlayerStats.labels[k]!), style: const TextStyle(fontSize: 12)),
-                  selected: life.teamAttributes.contains(k),
-                  onSelected: life.teamAttributes.contains(k) || life.teamAttributes.length < 3
-                      ? (_) => game.toggleTeamAttribute(k)
-                      : null,
-                  visualDensity: VisualDensity.compact,
-                ),
-            ],
-          ),
-        ),
+        // ignore: prefer_const_constructors
+        _TeamPlanCard(),
         const SizedBox(height: 12),
         SectionHeader(tr('Individual mashg‘ulot'), icon: Icons.person_outline),
         Text(
@@ -679,7 +711,7 @@ class _DressingRoom extends StatelessWidget {
                     [
                       p.personality.label,
                       if ((life.benchRounds[p.id] ?? 0) >= 2) trf('{0} o‘yin o‘ynamadi', [life.benchRounds[p.id]]),
-                      if (life.promises.containsKey(p.id)) trf('va’da: {0}-turgacha', [life.promises[p.id]]),
+                      if (life.promises.containsKey(p.id)) trf('va’da: {0} gacha', [GameState().roundDate(life.promises[p.id]!)]),
                       if (life.wantsOut.contains(p.id)) tr('ketishni so‘ramoqda'),
                     ].join(' · '),
                     style: AppText.caption,
@@ -766,8 +798,8 @@ class _Staff extends StatelessWidget {
 
 /// Scouting: trips abroad (the world market), player reports in progress
 /// and youth searches.
-class _Scouts extends StatelessWidget {
-  const _Scouts();
+class ScoutsView extends StatelessWidget {
+  const ScoutsView({super.key});
 
   static String _flagOf(String country) =>
       InitialDatabase.leagues.where((l) => l.country == country && l.flag.isNotEmpty).firstOrNull?.flag ??
@@ -777,7 +809,7 @@ class _Scouts extends StatelessWidget {
   /// Picks a country, loads its leagues and sends the scouts.
   Future<void> _sendAbroad(BuildContext context) async {
     final game = GameState();
-    final open = {...game.world.countries, ...game.world.missions.keys};
+    final open = {...game.world.missions.keys};
     final countries = [for (final c in game.scoutDestinations) if (!open.contains(c)) c];
     var query = '';
     final picked = await showModalBottomSheet<String>(
@@ -865,7 +897,7 @@ class _Scouts extends StatelessWidget {
                 icon: Icons.public_rounded,
               ),
               Text(
-                trf('Skautlarni davlatga yuboring: {0} turdan keyin hisobot keladi va u yerdagi klublar transfer bozorida paydo bo‘ladi.', [game.worldScoutRounds]),
+                tr('Skautlarni davlatga yuboring: ular iste’dodlar, yulduzlar va arzon variantlar haqida hisobot olib keladi. Hisobotdagi futbolchilarning atributlari to‘liq ochiladi.'),
                 style: AppText.small,
               ),
               const SizedBox(height: 8),
@@ -875,7 +907,7 @@ class _Scouts extends StatelessWidget {
                   contentPadding: EdgeInsets.zero,
                   leading: FlagView(_flagOf(e.key), nationality: e.key, height: 18),
                   title: Text(tr(e.key), style: AppText.bodyStrong),
-                  subtitle: Text(trf('Hisobot {0}-turda', [e.value]), style: AppText.caption),
+                  subtitle: Text(trf('Hisobot: {0}', [game.roundDate(e.value)]), style: AppText.caption),
                   trailing: const Icon(Icons.hourglass_top_rounded),
                 ),
               if (world.countries.isNotEmpty) ...[
@@ -902,6 +934,37 @@ class _Scouts extends StatelessWidget {
             ],
           ),
         ),
+        for (final r in world.reports) ...[
+          const SizedBox(height: 10),
+          AppCard(
+            padding: const EdgeInsets.fromLTRB(0, 12, 0, 6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      FlagView(_flagOf(r.country), nationality: r.country, height: 16),
+                      const SizedBox(width: 8),
+                      Expanded(child: Text(trf('Skaut hisoboti: {0}', [tr(r.country)]), style: AppText.bodyStrong)),
+                      Text(SeasonCalendar.format(r.date, year: true), style: AppText.caption),
+                    ],
+                  ),
+                ),
+                for (final id in r.playerIds)
+                  if (game.findPlayerById(id) case final p?)
+                    if (game.clubOfPlayer(p) case final club?)
+                      PlayerTile(
+                        player: p,
+                        club: club,
+                        subtitle: trf('{0} · {1} yosh · salohiyat {2}', [club.shortName, p.age, p.potential]),
+                        onTap: () => PlayerDetailView.show(context, player: p, club: club),
+                      ),
+              ],
+            ),
+          ),
+        ],
         const SizedBox(height: 10),
         AppCard(
           child: Column(
@@ -911,7 +974,7 @@ class _Scouts extends StatelessWidget {
               Text(tr('Davlatni tanlang: 3 turdan keyin skautlar 2–3 yosh futbolchini topadi (ba’zan ⭐ wonderkid).'), style: AppText.small),
               const SizedBox(height: 10),
               if (life.youthMission != null)
-                Text(trf('Qidiruv: {0} · {1}-turda tugaydi', [tr(life.youthMission!), life.youthMissionDue]), style: AppText.bodyStrong)
+                Text(trf('Qidiruv: {0} · {1} kuni tugaydi', [tr(life.youthMission!), game.roundDate(life.youthMissionDue)]), style: AppText.bodyStrong)
               else
                 Wrap(
                   spacing: 6,
@@ -945,8 +1008,78 @@ class _Scouts extends StatelessWidget {
                     contentPadding: EdgeInsets.zero,
                     leading: const Icon(Icons.hourglass_top_rounded),
                     title: Text(game.findPlayerById(e.key)?.name ?? e.key),
-                    trailing: Text(trf('{0}-tur', [e.value]), style: AppText.caption),
+                    trailing: Text(game.roundDate(e.value), style: AppText.caption),
                   ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The team plan, line by line: each line trains up to three attributes
+/// that matter for it (no finishing drills for centre-backs).
+class _TeamPlanCard extends StatefulWidget {
+  const _TeamPlanCard();
+  @override
+  State<_TeamPlanCard> createState() => _TeamPlanCardState();
+}
+
+class _TeamPlanCardState extends State<_TeamPlanCard> {
+  String _line = 'att';
+
+  static String _label(String line) => switch (line) {
+    'att' => tr('Hujumchilar'),
+    'mid' => tr('Yarim himoyachilar'),
+    'def' => tr('Himoyachilar'),
+    _ => tr('Darvozabonlar'),
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final game = GameState(), plan = game.life.teamPlan[_line] ?? const <String>[];
+    final sample = game.userClub.squad.where((p) => ClubLife.lineOf(p) == _line).firstOrNull;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SectionHeader(tr('Jamoa rejasi'), icon: Icons.checklist_rounded),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: SegmentedButton<String>(
+            segments: [
+              for (final l in ClubLife.lineAttributes.keys)
+                ButtonSegment(value: l, label: Text('${_label(l)} (${(game.life.teamPlan[l] ?? const []).length}/3)')),
+            ],
+            selected: {_line},
+            showSelectedIcon: false,
+            onSelectionChanged: (v) => setState(() => _line = v.first),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          plan.isEmpty
+              ? trf('Tanlanmagan: har kim o‘z pozitsiyasining asosiy atributlarini mashq qiladi{0}.', [
+                  sample == null ? '' : ' (${game.trainingKeysFor(sample).map((k) => tr(PlayerStats.labels[k] ?? k)).join(', ')})',
+                ])
+              : trf('{0} shu atributlar ustida ishlaydi.', [_label(_line)]),
+          style: AppText.caption,
+        ),
+        const SizedBox(height: 6),
+        AppCard(
+          child: Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final k in ClubLife.lineAttributes[_line]!)
+                FilterChip(
+                  label: Text(tr(PlayerStats.labels[k]!), style: const TextStyle(fontSize: 12)),
+                  selected: plan.contains(k),
+                  onSelected: plan.contains(k) || plan.length < 3
+                      ? (_) => setState(() => game.toggleTeamAttribute(_line, k))
+                      : null,
+                  visualDensity: VisualDensity.compact,
+                ),
             ],
           ),
         ),

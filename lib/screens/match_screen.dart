@@ -111,55 +111,20 @@ class _MatchScreenState extends State<MatchScreen> {
       }
     }
     if (best == null || bestD > max(22.0, size.height * 0.09)) return;
+    final id = best;
     _pickTimer?.cancel();
-    setState(() => _pickedId = best);
-    _pickTimer = Timer(const Duration(seconds: 4), () {
+    setState(() => _pickedId = id);
+    _pickTimer = Timer(const Duration(seconds: 3), () {
       if (mounted) setState(() => _pickedId = null);
     });
+    // The same player sheet as in the line-ups.
+    final home = _home.playerById(id) != null;
+    final club = home ? _home : _away;
+    final p = club.playerById(id);
+    if (p != null) _showPlayer(p, club);
   }
 
-  Widget _pickedCard() {
-    final id = _pickedId!;
-    final home = _home.playerById(id) != null;
-    final p = (home ? _home : _away).playerById(id);
-    if (p == null) return const SizedBox();
-    final line = _field.lines[id];
-    final rating = _field.ratingFor(id);
-    return Container(
-      padding: const EdgeInsets.fromLTRB(8, 6, 12, 6),
-      decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.78), borderRadius: BorderRadius.circular(12)),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          CircleAvatar(
-            radius: 14,
-            backgroundColor: home ? teamColors(_home, _away).$1 : teamColors(_home, _away).$2,
-            child: Text('${p.number}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800)),
-          ),
-          const SizedBox(width: 8),
-          Flexible(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('${p.shortName} · ${p.mainPosition.code} · ${p.ovr}',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12)),
-                Text(
-                  [
-                    if (rating != null) '★ ${rating.toStringAsFixed(1)}',
-                    trf('Chidamlilik {0}%', [p.currentStamina]),
-                    if (line != null && line.goals > 0) trf('{0} gol', [line.goals]),
-                    if (line != null && line.passes > 0) trf('Pas {0}/{1}', [line.passesCompleted, line.passes]),
-                  ].join(' · '),
-                  style: const TextStyle(color: Colors.white70, fontSize: 11),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+
 
   /// Orders already set in the pre-match tactics show as selected; the base
   /// they toggle against is the same tactics with those settings neutral.
@@ -438,16 +403,11 @@ class _MatchScreenState extends State<MatchScreen> {
       if (_handledInjuries.contains(id) || _user.playerById(id) == null) continue;
       _handledInjuries.add(id);
       if (_subsLeft > 0) {
+        // An injured player cannot go on: the substitution is compulsory.
         _playing = false;
         final p = _user.playerById(id)!;
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(trf('{0} jarohat oldi. Almashtirish kerak.', [p.shortName])),
-              action: SnackBarAction(label: tr('Almashtirish'), onPressed: () => _openSubs(preselect: p)),
-            ),
-          );
+          if (mounted) _forceInjurySub(p);
         });
       }
     }
@@ -541,6 +501,67 @@ class _MatchScreenState extends State<MatchScreen> {
     final ok = _field.substitute(_userHome, out.id, incoming.id);
     if (ok) setState(_drain);
     return ok;
+  }
+
+  /// Compulsory substitution for an injured player: the match waits until
+  /// a bench player is chosen.
+  Future<void> _forceInjurySub(Player injured) async {
+    final c = _user;
+    final slot = c.startingLineupIds.indexOf(injured.id);
+    if (slot < 0) return;
+    final pos = c.slotPosition(slot);
+    final options = [
+      for (final b in c.bench)
+        if (!_field.subbedOff.contains(b.id) && !_field.dismissed.contains(b.id) && b.isAvailable) b,
+    ]..sort((a, b) => GameState.slotFit(b, pos).compareTo(GameState.slotFit(a, pos)));
+    if (options.isEmpty) {
+      setState(() => _playing = true);
+      return;
+    }
+    final pick = await showDialog<Player>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          title: Text(trf('{0} jarohat oldi', [injured.shortName])),
+          content: SizedBox(
+            width: 360,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(trf('U o‘ynay olmaydi: {0} o‘rniga kimni chiqarasiz?', [pos.code]), style: AppText.small),
+                const SizedBox(height: 8),
+                Flexible(
+                  child: ListView(
+                    shrinkWrap: true,
+                    children: [
+                      for (final b in options)
+                        ListTile(
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                          leading: PositionChip(b.mainPosition.code),
+                          title: Text(b.shortName),
+                          subtitle: Text(trf('Chidamlilik {0}%', [b.currentStamina])),
+                          trailing: ValueBadge(b.getEffectiveOVR(pos), size: 28),
+                          onTap: () => Navigator.pop(ctx, b),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+    if (!mounted || pick == null) return;
+    setState(() {
+      _field.substitute(_userHome, injured.id, pick.id);
+      _drain();
+      _playing = true;
+    });
   }
 
   Future<void> _openSubs({Player? preselect}) async {
@@ -862,8 +883,7 @@ class _MatchScreenState extends State<MatchScreen> {
                 ),
               ),
             ),
-            if (_pickedId != null)
-              Positioned(left: 8, right: 8, bottom: 8, child: Center(child: _pickedCard())),
+
             Positioned(
               left: 10,
               top: 8,
@@ -1432,9 +1452,8 @@ class MatchPitchPainter extends CustomPainter {
     const FootballPitchPainter(vertical: false, inset: inset).paint(canvas, size);
     final r = FootballPitchPainter.field(size, inset);
     Offset at(Offset p) => Offset(r.left + p.dx * r.width, r.top + p.dy * r.height);
-    // Small markers like broadcast match trackers; numbers only when legible.
-    final radius = max(4.5, size.height * 0.024);
-    final showNumbers = radius >= 6.5;
+    // Markers stay big enough for the shirt number to be read at any size.
+    final radius = max(6.5, size.height * 0.026);
     final from = field.flightFrom, to = field.flightTo;
     if (from != null && to != null) {
       final trail = Paint()
@@ -1464,7 +1483,7 @@ class MatchPitchPainter extends CustomPainter {
             ..style = PaintingStyle.stroke
             ..strokeWidth = carrier ? 2.4 : 1.3,
         );
-        if (showNumbers || picked) {
+        {
           final tp = TextPainter(
             text: TextSpan(
               text: '${p.number}',

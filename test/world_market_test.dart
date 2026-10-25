@@ -29,6 +29,10 @@ void main() {
       game.nextRound();
     }
     expect(game.world.countries, contains('Ispaniya'));
+    // The trip brings back a report of named players, fully scouted.
+    expect(game.world.reports.first.country, 'Ispaniya');
+    expect(game.world.reports.first.playerIds, isNotEmpty);
+    expect(game.world.reports.first.playerIds.every(game.life.scouted.contains), isTrue);
     final spanish = game.marketClubs.where(game.isWorldClub).toList();
     expect(spanish.length, greaterThanOrEqualTo(40), reason: 'LaLiga and LaLiga2');
     expect(game.countryOfClub(spanish.first.id), 'Ispaniya');
@@ -85,5 +89,30 @@ void main() {
     expect(game.calendar.year, GameState.firstSeason + 1);
     expect(game.life.trophies, trophies);
     game.simulateUserFixture(game.nextUserFixture!);
+  });
+
+  test('Any league opens in the market without scouts; attributes stay hidden', () async {
+    final game = GameState()..startCareerWithExistingClub(InitialDatabase.getClubs('epl').first, league: 'epl');
+    await game.browseCountry('Italiya');
+    final italian = game.marketClubs.where(game.isWorldClub).toList();
+    expect(italian, isNotEmpty);
+    final p = italian.first.squad.first;
+    expect(game.isScouted(p), isFalse);
+  });
+
+  test('The squad keeps its minimum when selling or loaning', () {
+    final game = GameState()..startCareerWithExistingClub(InitialDatabase.getClubs('epl').first, league: 'epl');
+    final c = game.userClub;
+    final keepers = c.squad.where((p) => p.mainPosition.isGoalkeeper).toList();
+    while (keepers.length > 2) {
+      c.squad.remove(keepers.removeLast());
+    }
+    expect(game.squadLeaveIssue(keepers.first), isNotNull, reason: 'two keepers at least');
+    while (c.squad.length > GameState.minSquad) {
+      c.squad.remove(c.squad.lastWhere((p) => !p.mainPosition.isGoalkeeper && !c.startingLineupIds.contains(p.id)));
+    }
+    final outfield = c.squad.firstWhere((p) => !p.mainPosition.isGoalkeeper);
+    expect(game.squadLeaveIssue(outfield), isNotNull, reason: 'eighteen at least');
+    expect(game.loanOut(outfield), isNotNull);
   });
 }

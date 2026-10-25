@@ -158,8 +158,9 @@ void main() {
                 field.phase == FieldPhase.pass ||
                 field.phase == FieldPhase.shot)) {
           // Action time runs at MatchField.tempo (players also jog back
-          // quickly after set pieces); still no teleports.
-          expect((point - before[n]).distance, lessThan(0.03));
+          // quickly after set pieces, and sprint onto passes played into
+          // space: up to ~0.035 per frame); still no teleports.
+          expect((point - before[n]).distance, lessThan(0.04));
         }
       }
       expect(field.ball.dx, inInclusiveRange(0, 1));

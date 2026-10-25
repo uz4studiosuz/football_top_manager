@@ -104,7 +104,7 @@ void main() {
     await tester.pumpAndSettle();
     await shot('d-cup');
     for (var t = 0; t < 8; t++) {
-      await mount(ClubLifeScreen(key: ValueKey('life$t'), initialTab: t), phone);
+      await mount(ClubSection(key: ValueKey('life$t'), index: t), phone);
       await shot('m-club-$t');
     }
     await mount(const MainNavigationScreen(), desktop);

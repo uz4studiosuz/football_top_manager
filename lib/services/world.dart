@@ -25,6 +25,9 @@ class WorldMarket {
   /// Seasons played since the data files' season (players age and develop).
   int seasons = 0;
 
+  /// Scouting reports, newest first: country, date and the players named.
+  final List<ScoutReport> reports = [];
+
   /// Loaded clubs by league, and each league's country.
   final Map<String, List<Club>> _clubs = {};
   final Map<String, String> _country = {};
@@ -101,6 +104,7 @@ class WorldMarket {
     missions.clear();
     gone.clear();
     seasons = 0;
+    reports.clear();
     _clubs.clear();
     _country.clear();
   }
@@ -160,6 +164,7 @@ class WorldMarket {
     'm': missions,
     'g': gone.toList(),
     's': seasons,
+    if (reports.isNotEmpty) 'r': [for (final r in reports) r.toMap()],
   };
 
   void restore(Map<String, dynamic>? m) {
@@ -169,5 +174,17 @@ class WorldMarket {
     missions.addAll(Map<String, int>.from(m['m'] ?? {}));
     gone.addAll(List<String>.from(m['g'] ?? const []));
     seasons = m['s'] ?? 0;
+    reports.addAll([for (final r in (m['r'] as List? ?? [])) ScoutReport.fromMap(Map<String, dynamic>.from(r))]);
   }
+}
+
+/// What a scouting trip brought back.
+class ScoutReport {
+  final String country;
+  final DateTime date;
+  final List<String> playerIds;
+  const ScoutReport(this.country, this.date, this.playerIds);
+  Map<String, dynamic> toMap() => {'c': country, 'd': date.toIso8601String(), 'p': playerIds};
+  factory ScoutReport.fromMap(Map<String, dynamic> m) =>
+      ScoutReport(m['c'], DateTime.parse(m['d']), List<String>.from(m['p'] ?? const []));
 }

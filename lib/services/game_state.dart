@@ -1854,6 +1854,10 @@ class GameState extends ChangeNotifier {
     if (seller.squad.length <= minSquad) {
       return trf('Sotuvchi klub kamida {0} futbolchini saqlashi kerak.', [minSquad]);
     }
+    if (seller.id == _userClubId) {
+      final issue = squadLeaveIssue(player);
+      if (issue != null) return issue;
+    }
     if (player.mainPosition.isGoalkeeper &&
         seller.squad.where((p) => p.mainPosition.isGoalkeeper).length <= 2) {
       return tr('Klub darvozabonlar sonini kamaytirmaydi.');
@@ -2021,14 +2025,38 @@ class GameState extends ChangeNotifier {
     return null;
   }
 
+  /// Minimum per line the club keeps (keepers, defenders, midfielders,
+  /// forwards), on top of [minSquad] in total.
+  static const lineMinimum = {
+    PositionCategory.goalkeeper: 2,
+    PositionCategory.defense: 5,
+    PositionCategory.midfield: 4,
+    PositionCategory.attack: 2,
+  };
+
+  /// Why [p] cannot leave the user's club now (sale or loan), or null.
+  String? squadLeaveIssue(Player p) {
+    final c = userClub;
+    if (c.squad.length <= minSquad) return trf('Tarkibda kamida {0} futbolchi qolishi kerak.', [minSquad]);
+    final cat = p.mainPosition.category;
+    final left = c.squad.where((q) => q.id != p.id && q.mainPosition.category == cat).length;
+    if (left < lineMinimum[cat]!) {
+      return trf('{0} chizig‘ida kamida {1} futbolchi qolishi kerak.', [p.mainPosition.code, lineMinimum[cat]]);
+    }
+    return null;
+  }
+
   /// Selling: accept an AI bid; the player and buyer agree terms next round.
-  void acceptDealOffer(TransferDeal d) {
-    if (d.stage != DealStage.offerReceived) return;
+  String? acceptDealOffer(TransferDeal d) {
+    if (d.stage != DealStage.offerReceived) return null;
+    final issue = squadLeaveIssue(d.player);
+    if (issue != null) return issue;
     d
       ..stage = DealStage.medical
       ..dueRound = _currentRound + 1
       ..note = tr('Taklif qabul qilindi. Futbolchi xaridor bilan shartlarni kelishmoqda.');
     notifyListeners();
+    return null;
   }
 
   void counterDealOffer(TransferDeal d, int fee) {
@@ -2196,7 +2224,7 @@ class GameState extends ChangeNotifier {
       for (var i = rnd.nextInt(3); i > 0; i--) targets[rnd.nextInt(min(10, targets.length))],
     ];
     for (final p in picks) {
-      if (dealFor(p) != null || (movedThisSeason(p) && !transferListed.contains(p.id))) continue;
+      if (dealFor(p) != null || (movedThisSeason(p) && !transferListed.contains(p.id)) || squadLeaveIssue(p) != null) continue;
       final buyers = _allClubs
           .where((c) => c.id != _userClubId && c.transferBudget > p.marketValue)
           .toList();
@@ -2891,13 +2919,20 @@ class GameState extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// The team plan's attributes: the three chosen, else the focus's first three.
-  List<String> get teamTrainingAttributes =>
-      life.teamAttributes.isNotEmpty ? life.teamAttributes : (_focusAttributes[life.focus] ?? const []).take(3).toList();
+  /// What a player works on in team training: his line's plan, else the
+  /// key attributes of his position (attackers never drill tackling unless
+  /// the plan says so).
+  List<String> trainingKeysFor(Player p) {
+    final plan = life.teamPlan[ClubLife.lineOf(p)];
+    if (plan != null && plan.isNotEmpty) return plan;
+    return _keyAttributes(p.mainPosition);
+  }
 
-  /// Adds or removes an attribute of the team plan (three at most).
-  void toggleTeamAttribute(String key) {
-    if (!life.teamAttributes.remove(key) && life.teamAttributes.length < 3) life.teamAttributes.add(key);
+  /// Adds or removes an attribute of a line's plan (three at most).
+  void toggleTeamAttribute(String line, String key) {
+    final plan = life.teamPlan.putIfAbsent(line, () => []);
+    if (!plan.remove(key) && plan.length < 3) plan.add(key);
+    if (plan.isEmpty) life.teamPlan.remove(line);
     notifyListeners();
   }
 
@@ -2913,12 +2948,6 @@ class GameState extends ChangeNotifier {
     notifyListeners();
   }
 
-  static const _focusAttributes = <TrainingFocus, List<String>>{
-    TrainingFocus.attacking: ['finishing', 'attackingAwareness', 'dribbling', 'kickingPower', 'curl'],
-    TrainingFocus.defensive: ['defensiveAwareness', 'tackling', 'defensiveEngagement', 'heading'],
-    TrainingFocus.fitness: ['stamina', 'speed', 'acceleration', 'physicalContact'],
-    TrainingFocus.tactical: ['lowPass', 'loftedPass', 'ballControl', 'tightPossession'],
-  };
 
   /// Weekly: constructions finish, individual and team training progress.
   void _weeklyClubLife(int days) {
@@ -2936,9 +2965,8 @@ class GameState extends ChangeNotifier {
       _news(NewsKind.board, trf('{0} tayyor', [f.label]), detail, alert: true);
     }
     final rnd = Random(_salt(_currentRound * 7919));
-    final plan = teamTrainingAttributes;
-    final focusKeys = plan.isEmpty ? null : plan;
     for (final p in c.squad) {
+      final focusKeys = trainingKeysFor(p);
       if (life.focus == TrainingFocus.fitness) p.currentStamina = min(100, p.currentStamina + 5);
       final rate = (p.age <= 21 ? 0.42 : p.age <= 24 ? 0.3 : p.age <= 28 ? 0.18 : p.age <= 31 ? 0.1 : 0.05) *
           life.growthFactor *
@@ -2964,9 +2992,16 @@ class GameState extends ChangeNotifier {
         }
         continue;
       }
-      final key = target ?? (focusKeys == null ? null : focusKeys[rnd.nextInt(focusKeys.length)]);
-      if (key == null) continue;
-      final v = (life.progress[p.id] ?? 0) + rate * (target != null ? 1 : 0.3) * (focusKeys?.contains(key) == true ? 1.2 : 1);
+      final key = target ?? focusKeys[rnd.nextInt(focusKeys.length)];
+      // The weekly focus speeds up its own kind of attributes.
+      final focused = switch (life.focus) {
+        TrainingFocus.attacking => const {'finishing', 'attackingAwareness', 'dribbling', 'kickingPower', 'curl', 'ballControl'},
+        TrainingFocus.defensive => const {'defensiveAwareness', 'tackling', 'defensiveEngagement', 'heading', 'aggression'},
+        TrainingFocus.fitness => const {'stamina', 'speed', 'acceleration', 'physicalContact', 'jumping'},
+        TrainingFocus.tactical => const {'lowPass', 'loftedPass', 'ballControl', 'tightPossession'},
+        TrainingFocus.balanced => const <String>{},
+      }.contains(key);
+      final v = (life.progress[p.id] ?? 0) + rate * (target != null ? 1 : 0.3) * (focusKeys.contains(key) ? 1.2 : 1) * (focused ? 1.25 : 1);
       if (v < 1) {
         life.progress[p.id] = v;
         continue;
@@ -3308,10 +3343,20 @@ class GameState extends ChangeNotifier {
     return ((30000 + 300000 * eco) * max(0.25, _economyOf(userClub)) / 1000).round() * 1000;
   }
 
-  /// Sends scouts to [country]: its leagues load now (once), the report and
-  /// the market open after [worldScoutRounds].
+  /// Calendar date of a round, for deadlines ("12 November 2027").
+  String roundDate(int round) => SeasonCalendar.format(calendar.dateOfRound(round), year: true);
+
+  /// Opens a country's leagues in the transfer market (no scouting needed
+  /// to see the players; their attributes still need a scout).
+  Future<void> browseCountry(String country) async {
+    await world.loadCountry(country, _pyramidIds(leagueId), _prepareWorldClub);
+    world.countries.add(country);
+    notifyListeners();
+  }
+
+  /// Sends scouts to [country]: they come back on [roundDate] with a report
+  /// of its best talents, stars and bargains (fully scouted).
   Future<String?> sendScouts(String country) async {
-    if (world.countries.contains(country)) return tr('Bu davlat allaqachon o‘rganilgan.');
     if (world.missions.containsKey(country)) return tr('Skautlar u yerda ishlamoqda.');
     if (world.missions.length >= worldScoutCapacity) return tr('Barcha skautlar band.');
     final cost = worldScoutCost(country);
@@ -3320,7 +3365,7 @@ class GameState extends ChangeNotifier {
     _post(userClub, trf('Skaut safari: {0}', [tr(country)]), -cost, category: FinanceCategory.operations);
     world.missions[country] = _currentRound + worldScoutRounds;
     _news(NewsKind.transfer, trf('Skautlar {0}ga jo‘nadi', [tr(country)]),
-        trf('Hisobot {0} turdan keyin keladi; shundan so‘ng bu davlat klublari transfer bozorida.', [worldScoutRounds]));
+        trf('Hisobot {0} kuni keladi.', [roundDate(world.missions[country]!)]));
     notifyListeners();
     return null;
   }
@@ -3340,14 +3385,20 @@ class GameState extends ChangeNotifier {
       final talents = pool.where((p) => p.age <= 21).toList()
         ..sort((a, b) => (b.potential * 2 - b.age).compareTo(a.potential * 2 - a.age));
       final stars = List.of(pool)..sort((a, b) => b.ovr.compareTo(a.ovr));
-      final picks = <Player>{...talents.take(3), ...stars.take(3)};
+      // Bargains: good players whose price is low for their level.
+      final bargains = pool.where((p) => p.age <= 29 && p.ovr >= 65).toList()
+        ..sort((a, b) => (b.ovr * 1e6 / max(1, b.marketValue)).compareTo(a.ovr * 1e6 / max(1, a.marketValue)));
+      final level = life.staffLevel(StaffRole.scouting);
+      final picks = <Player>{...talents.take(4 + level ~/ 2), ...stars.take(3), ...bargains.take(2 + level ~/ 2)};
       life.scouted.addAll(picks.map((p) => p.id));
+      world.reports.insert(0, ScoutReport(e.key, currentDate, [for (final p in picks) p.id]));
+      if (world.reports.length > 12) world.reports.removeRange(12, world.reports.length);
       _news(
         NewsKind.transfer,
         trf('Skaut hisoboti: {0}', [tr(e.key)]),
-        trf('{0} ta klub bozorda. Diqqatga sazovor: {1}.', [
-          {for (final c in world.clubs) if (countryOfClub(c.id) == e.key) c.id}.length,
-          picks.map((p) => '${p.name} (${p.mainPosition.code}, ${p.age}, ${p.ovr}→${p.potential})').join(', '),
+        trf('{0} ta futbolchi Skautlar bo‘limida: {1}.', [
+          picks.length,
+          picks.take(4).map((p) => '${p.name} (${p.mainPosition.code}, ${p.age})').join(', '),
         ]),
         alert: true,
       );
@@ -3434,7 +3485,9 @@ class GameState extends ChangeNotifier {
   String? loanOut(Player p) {
     final c = userClub;
     if (!c.squad.contains(p)) return tr('Futbolchi jamoada emas.');
-    if (c.squad.length <= minSquad) return tr('Tarkibda futbolchi yetishmaydi.');
+    if (!isTransferWindowOpen) return trf('Ijara faqat transfer oynasida. {0}.', [transferWindowLabel]);
+    final issue = squadLeaveIssue(p);
+    if (issue != null) return issue;
     final dest = loanDestination(p);
     if (dest == null) return tr('Mos klub topilmadi.');
     _remove(c, p);

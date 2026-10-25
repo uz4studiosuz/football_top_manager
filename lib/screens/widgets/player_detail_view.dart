@@ -1,5 +1,6 @@
 import 'dart:math';
 import '../../ui/flag.dart';
+import '../transfer_screen.dart';
 import 'package:flutter/material.dart';
 import '../../models/player.dart';
 import '../../models/club.dart';
@@ -172,9 +173,28 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
 
   Widget _overview(Club? c) {
     final game = GameState();
+    // Another club's player can be bid for straight from his page.
+    final buyable = c != null && c.id != game.userClubId && game.marketClubs.any((m) => m.id == c.id);
     return ListView(
       padding: const EdgeInsets.all(12),
       children: [
+        if (buyable)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: () => showTransferOffer(context, p, c).then((_) {
+                      if (mounted) setState(() {});
+                    }),
+                    icon: const Icon(Icons.swap_horiz_rounded),
+                    label: Text(trf('Transfer taklifi · {0}', [formatMoney(game.askingPrice(p, c))])),
+                  ),
+                ),
+              ],
+            ),
+          ),
         if (!p.isAvailable)
           AppCard(
             color: const Color(0xFFFFF4F2),
@@ -423,7 +443,7 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
               Text(
                 due == null
                     ? tr('Futbolchining aniq ko‘rsatkichlarini bilish uchun skaut yuboring.')
-                    : trf('Skaut kuzatmoqda: hisobot {0}-turda tayyor bo‘ladi.', [due]),
+                    : trf('Skaut kuzatmoqda: hisobot {0} kuni tayyor bo‘ladi.', [GameState().roundDate(due)]),
                 textAlign: TextAlign.center,
                 style: AppText.small,
               ),
