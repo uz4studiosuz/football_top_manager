@@ -107,6 +107,9 @@ def main():
             continue
         groups.setdefault((paid, div), []).append((equid, name, abbr, founded, power, estaid, entid, nombre, iso))
     leagues, translations, total_players = [], {}, 0
+    # Every world club in one small file ([id, name, reputation, league]):
+    # job offers and the editor's search use it without loading leagues.
+    index = []
     tiers = {}  # paid -> {div: league entry} (only undivided divisions)
     for (paid, div), clubs in sorted(groups.items(), key=lambda kv: (kv[0][0], kv[0][1])):
         clubs.sort(key=lambda c: -c[4])
@@ -116,7 +119,6 @@ def main():
             continue
         if iso in ISO:
             translations[cname] = list(ISO[iso][1:])
-        # Big divisions play in regional groups of at most 20 clubs.
         # Big divisions play in regional groups of at most 24 clubs; every
         # group needs an even number of clubs, so at most one club sits out.
         n_groups = math.ceil(len(clubs) / 24)
@@ -140,6 +142,7 @@ def main():
             eco = economy_of(avg)
             players, out_clubs = build(db, rnd, lid, chunk, eco, iso, cname)
             total_players += len(players)
+            index.extend([c['id'], c['name'], c['reputation'], lid] for c in out_clubs)
             (WORLD / f'{lid}.json').write_text(
                 json.dumps({'schemaVersion': 2, 'clubs': out_clubs, 'players': players},
                            ensure_ascii=False, separators=(',', ':')) + '\n',
@@ -165,6 +168,7 @@ def main():
                 e['relegate'] = 3 if min(e['clubs'], below['clubs']) >= 12 else 2 if min(e['clubs'], below['clubs']) >= 8 else 1
             if d - 1 in chain:
                 e['promote'] = by_div[d - 1]['relegate']
+    (WORLD / 'index.json').write_text(json.dumps(index, ensure_ascii=False, separators=(',', ':')) + '\n', encoding='utf8')
     manifest['leagues'] = keep + leagues
     (DATA / 'league.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=1) + '\n', encoding='utf8')
     L10N.write_text(json.dumps(translations, ensure_ascii=False, indent=1, sort_keys=True) + '\n', encoding='utf8')
