@@ -500,4 +500,36 @@ void main() {
     expect(c.benchIds.where(xi.contains), isEmpty);
     expect(bench.where((id) => c.playerById(id) != null).every(c.benchIds.contains), isTrue);
   });
+
+  test('The keeper slot keeps goal: an outfielder there concedes far more, the keeper on the wing does not save', () {
+    final clubs = InitialDatabase.getClubs('epl');
+    final c = clubs[0], o = clubs[5];
+    game.autoPickLineup(c);
+    game.autoPickLineup(o);
+    int conceded(int seed) {
+      for (final p in [...c.squad, ...o.squad]) {
+        p.currentStamina = 100;
+      }
+      return (MatchField(c, o, seed: seed)..simulateToEnd()).awayStats.goals;
+    }
+    var normal = 0;
+    for (var i = 0; i < 30; i++) {
+      normal += conceded(i);
+    }
+    final ids = c.startingLineupIds;
+    final wing = [for (var i = 1; i < 11; i++) i].firstWhere((i) => c.slotPosition(i).isAttacker);
+    final keeper = ids[0];
+    ids[0] = ids[wing];
+    ids[wing] = keeper;
+    var swapped = 0;
+    for (var i = 0; i < 30; i++) {
+      for (final p in [...c.squad, ...o.squad]) {
+        p.currentStamina = 100;
+      }
+      final f = MatchField(c, o, seed: i)..simulateToEnd();
+      swapped += f.awayStats.goals;
+      expect(f.lines[keeper]?.saves ?? 0, 0);
+    }
+    expect(swapped, greaterThan(normal * 2));
+  });
 }

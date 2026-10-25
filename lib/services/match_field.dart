@@ -203,8 +203,10 @@ class MatchField {
     const keys = ['finishing', 'lowPass', 'loftedPass', 'attackingAwareness', 'ballControl', 'kickingPower', 'curl', 'dribbling'];
     var sum = 0.0, n = 0;
     for (final c in [home, away]) {
-      for (final p in _xi(c)) {
-        if (p.mainPosition.isGoalkeeper != keepers) continue;
+      final xi = _xi(c);
+      for (var i = 0; i < xi.length; i++) {
+        final p = xi[i];
+        if ((i == 0) != keepers || p.mainPosition.isGoalkeeper != keepers) continue;
         final m = p.stats.toMap();
         if (keepers) {
           sum += p.stats.gkRating;
@@ -278,7 +280,7 @@ class MatchField {
     final experience = backs.isEmpty
         ? 0.5
         : (backs
-                      .map((p) => (p.stats.defensiveAwareness - 60) / 35 + (p.age - 23) / 20)
+                      .map((p) => (_st(p).defensiveAwareness - 60) / 35 + (p.age - 23) / 20)
                       .reduce((a, b) => a + b) /
                   backs.length)
               .clamp(0.0, 1.0);
@@ -351,6 +353,55 @@ class MatchField {
 
   // ------------------------------------------------------------ accessors
   List<Player> _xi(Club c) => identical(c, home) ? _homeXI : _awayXI;
+
+  /// Match-day attributes, which every action reads: a player out of
+  /// position loses technique and reading of the game (a keeper on the wing
+  /// is no winger, a centre-back in goal is no keeper), tired legs cost
+  /// touch and timing, and morale shades the rest. Refreshed every minute.
+  final Map<String, PlayerStats> _eff = {};
+  PlayerStats _st(Player p) => _eff[p.id] ??= _effective(p);
+
+  /// The better side (match OVR by slot, so players out of position count
+  /// against it) makes better chances and allows worse ones.
+  double _edge = 0;
+  void _measureEdge() {
+    final d = home.teamOVR - away.teamOVR;
+    _edge = (d * 0.022).clamp(-0.3, 0.3);
+  }
+
+  static const _technical = [
+    'attackingAwareness', 'ballControl', 'dribbling', 'tightPossession', 'lowPass', 'loftedPass', 'finishing',
+    'heading', 'setPieceTaking', 'curl', 'defensiveAwareness', 'defensiveEngagement', 'tackling',
+  ];
+  static const _keeperKeys = ['gkAwareness', 'gkCatching', 'gkParrying', 'gkReflexes', 'gkReach'];
+
+  PlayerStats _effective(Player p) {
+    var slot = _homeXI.indexOf(p);
+    var club = home;
+    if (slot < 0) {
+      slot = _awayXI.indexOf(p);
+      club = away;
+    }
+    final pos = slot < 0 ? p.mainPosition : club.slotPosition(slot);
+    final fit = pos.isGoalkeeper != p.mainPosition.isGoalkeeper
+        ? 18.0
+        : switch (p.fitFor(pos)) {
+            PositionFit.natural => 0.0,
+            PositionFit.alternative => 2.0,
+            PositionFit.similar => 5.0,
+            PositionFit.poor => 11.0,
+          };
+    final form = max(0, 60 - p.currentStamina) / 5 - (p.morale - 60) / 12;
+    if (fit == 0 && form.abs() < 0.5) return p.stats;
+    final m = p.stats.toMap();
+    for (final k in _technical) {
+      m[k] = ((m[k] as int) - fit - form).round();
+    }
+    for (final k in _keeperKeys) {
+      m[k] = ((m[k] as int) - form).round();
+    }
+    return PlayerStats.fromMap(m);
+  }
   static bool _is(Player p, Set<PlayingStyle> styles) =>
       styles.contains(p.playingStyle);
   static const _finishers = {
@@ -381,10 +432,14 @@ class MatchField {
     if (h != _homeSignature) {
       _homeSignature = h;
       _homeXI = home.startingXI;
+      _eff.clear();
+      _measureEdge();
     }
     if (a != _awaySignature) {
       _awaySignature = a;
       _awayXI = away.startingXI;
+      _eff.clear();
+      _measureEdge();
     }
   }
 
@@ -629,6 +684,7 @@ class MatchField {
   }
 
   void _onMinute() {
+    _eff.clear();
     // Fatigue.
     for (final club in [home, away]) {
       final t = club.tactics;
@@ -648,7 +704,7 @@ class MatchField {
           _ => 0.0,
         };
         final endurance = p.traits.contains('Chidamlilik') ? 0.85 : 1.0;
-        if (random.nextDouble() < (rate + extra) * (1.4 - p.stats.stamina / 170) * endurance * (club == home ? homeFitness : awayFitness)) {
+        if (random.nextDouble() < (rate + extra) * (1.4 - _st(p).stamina / 170) * endurance * (club == home ? homeFitness : awayFitness)) {
           p.currentStamina = max(20, p.currentStamina - 1);
         }
       }
@@ -919,8 +975,8 @@ class MatchField {
           (derby ? 0.03 : 0) +
           (defender.personality == Personality.temperamental ? 0.02 : 0) +
           (defender.traits.contains('Agressivlik') ? 0.015 : 0) +
-          (defender.stats.aggression - 40) / 800 -
-          (defender.stats.tackling - 70) / 700 +
+          (_st(defender).aggression - 40) / 800 -
+          (_st(defender).tackling - 70) / 700 +
           (_opponent.tactics.pressing - 3) * 0.006 +
           (_injuredOnPitch.contains(defender.id) ? 0.02 : 0);
       if (random.nextDouble() < foulChance) {
@@ -945,10 +1001,10 @@ class MatchField {
                   (_has(defender, _defending) ? 0.025 : 0) -
                   (_has(carrier, _ballSkill) ? 0.025 : 0) +
                   (_has(defender, _strength) && !_has(carrier, _strength) ? 0.015 : 0) +
-                  (defender.stats.tackling +
-                          defender.stats.defensiveEngagement -
-                          carrier.stats.tightPossession -
-                          carrier.stats.balance) /
+                  (_st(defender).tackling +
+                          _st(defender).defensiveEngagement -
+                          _st(carrier).tightPossession -
+                          _st(carrier).balance) /
                       170 -
                   // A target man holds the ball up against his marker.
                   (carrier.playingStyle == PlayingStyle.targetMan ? 0.05 : 0) -
@@ -1009,13 +1065,13 @@ class MatchField {
       // The chasing defender may pull him down: a penalty in the box,
       // otherwise a free kick (and often a card) for denying a chance.
       final boxRisk = progress > 0.843 && (ball.dy - 0.5).abs() < 0.296 ? 0.1 : 1.0;
-      if (distance < 0.07 && random.nextDouble() < (0.05 + (defender.stats.aggression - 70) / 600) * boxRisk) {
+      if (distance < 0.07 && random.nextDouble() < (0.05 + (_st(defender).aggression - 70) / 600) * boxRisk) {
         _foul(defender, carrier);
         return;
       }
       final keeper = _rivals[0];
       // Through on goal a player runs in close; better finishers can shoot a bit earlier.
-      final shootFrom = 6 + (carrier.stats.finishing + _lvl) / 16 + (carrier.stats.attackingAwareness + _lvl) / 50;
+      final shootFrom = 6 + (_st(carrier).finishing + _lvl) / 16 + (_st(carrier).attackingAwareness + _lvl) / 50;
       if (meters < shootFrom || (keeper - ball).distance < 0.07) {
         breakaways++;
         _startShot(carrier, pressured: false);
@@ -1037,7 +1093,7 @@ class MatchField {
             (_onCounter(homePossession) && meters < 18) ||
             meters < 17 ||
             random.nextDouble() <
-                (0.22 + (carrier.stats.attackingAwareness + _lvl) / 380) *
+                (0.22 + (_st(carrier).attackingAwareness + _lvl) / 380) *
                     mentality *
                     (meters < 20 ? 7.0 : 0.3))) {
       _startShot(carrier, pressured: distance < 0.06);
@@ -1058,7 +1114,7 @@ class MatchField {
           : (carrier.aiStyles.contains(AiStyle.longRanger) &&
                 meters < 33 &&
                 central &&
-                carrier.stats.kickingPower >= 78)
+                _st(carrier).kickingPower >= 78)
           ? 0.045
           : 0.0;
       if (styleShot > 0 && random.nextDouble() < styleShot * mentality) {
@@ -1092,7 +1148,7 @@ class MatchField {
         owner != 0 &&
         progress > 0.35 &&
         random.nextDouble() <
-            (carrier.stats.dribbling + _lvl - 55) /
+            (_st(carrier).dribbling + _lvl - 55) /
                 150 *
                 (carrier.aiStyles.contains(AiStyle.trickster) ||
                         carrier.aiStyles.contains(AiStyle.mazingRun)
@@ -1140,7 +1196,7 @@ class MatchField {
       final pressureMod = (_opponent.tactics.pressing - 3) * 0.015;
       final ok =
           random.nextDouble() <
-          (0.84 + (p.stats.lowPass + _lvl - 75) / 160 - pressureMod + (_has(p, _passing) ? 0.015 : 0)).clamp(0.6, 0.97);
+          (0.84 + (_st(p).lowPass + _lvl - 75) / 160 - pressureMod + (_has(p, _passing) ? 0.015 : 0)).clamp(0.6, 0.97);
       _att.passes++;
       _line(p)
         ..passes += 1
@@ -1190,7 +1246,7 @@ class MatchField {
       if (i == owner || dismissed.contains(mate.id)) continue;
       if (!_setPieceDelivery && _offsidePoint(points[i], homePossession)) {
         // Aware passers rarely pick an offside runner.
-        final slip = (1 - (carrier.stats.attackingAwareness + _lvl) / 105) * 0.3 +
+        final slip = (1 - (_st(carrier).attackingAwareness + _lvl) / 105) * 0.3 +
             (_opponent.tactics.offsideTrap ? 0.08 : 0);
         if (random.nextDouble() > slip) continue;
       }
@@ -1240,7 +1296,7 @@ class MatchField {
       }
       if (style == TeamPlaystyle.longBall ||
           style == TeamPlaystyle.longBallCounter) {
-        score += progress * 0.65 + mate.stats.physicalContact / 1000;
+        score += progress * 0.65 + _st(mate).physicalContact / 1000;
       }
       if (mate.instruction == PlayerInstruction.playmaker) score += 0.08;
       // Runners are found more often going forward; holders get the safe ball.
@@ -1292,7 +1348,7 @@ class MatchField {
       if (ahead > -0.03 && (r.dy - ball.dy).abs() < 0.2 + ahead * 0.8) return false;
       if ((r - ball).distance < 0.05) return false;
       // A quicker defender close behind can still get back.
-      if ((r - ball).distance < 0.1 && xi[i].stats.speed + 4 >= _xi(_club)[owner].stats.speed) return false;
+      if ((r - ball).distance < 0.1 && _st(xi[i]).speed + 4 >= _st(_xi(_club)[owner]).speed) return false;
     }
     return true;
   }
@@ -1300,7 +1356,7 @@ class MatchField {
   /// Goalkeeping quality against one shot: reflexes up close, reach and
   /// positioning from mid-range, handling and reading from distance.
   double _keeperSkill(Player k, double meters, _Kind kind) {
-    final s = k.stats;
+    final s = _st(k);
     if (kind == _Kind.header) return s.gkReflexes * 0.4 + s.gkReach * 0.35 + s.gkAwareness * 0.25;
     if (kind == _Kind.freeKick) return s.gkReach * 0.4 + s.gkAwareness * 0.4 + s.gkReflexes * 0.2;
     if (meters < 12) return s.gkReflexes * 0.5 + s.gkAwareness * 0.3 + s.gkReach * 0.2;
@@ -1311,7 +1367,7 @@ class MatchField {
   /// Open-play strike quality: finishing in the box, power and curl from
   /// range, and a penalty for the weaker foot.
   double _openPlayStrike(Player p, double meters) {
-    final s = p.stats;
+    final s = _st(p);
     var strike = meters < 12
         ? s.finishing * 0.8 + s.ballControl * 0.2
         : meters < 18
@@ -1323,7 +1379,7 @@ class MatchField {
 
   /// How willing a player is to shoot from distance (power, curl, finishing).
   double _longShotWill(Player p) {
-    final s = p.stats;
+    final s = _st(p);
     final quality = s.kickingPower * 0.45 + s.curl * 0.3 + s.finishing * 0.25;
     return ((quality + _lvl - 70) / 24).clamp(0.02, 0.7) * (p.aiStyles.contains(AiStyle.longRanger) ? 1.5 : 1);
   }
@@ -1365,10 +1421,10 @@ class MatchField {
     final lofted =
         distance > 0.32 || _club.tactics.playstyle == TeamPlaystyle.longBall;
     final skill = _setPieceDelivery
-        ? (passer.stats.setPieceTaking + passer.stats.loftedPass) / 2
+        ? (_st(passer).setPieceTaking + _st(passer).loftedPass) / 2
         : lofted
-        ? passer.stats.loftedPass
-        : passer.stats.lowPass;
+        ? _st(passer).loftedPass
+        : _st(passer).lowPass;
     _att.passes++;
     _line(passer)
       ..passes += 1
@@ -1388,7 +1444,7 @@ class MatchField {
                     ? 0.015
                     : 0) +
                 (_opponent.tactics.defensiveLine - 3) * 0.012 -
-                (receiver.stats.attackingAwareness + _lvl - 75) / 900;
+                (_st(receiver).attackingAwareness + _lvl - 75) / 900;
     if (!_setPieceDelivery &&
         (mistimed || _offsidePoint(point, homePossession))) {
       _att.offsides++;
@@ -1417,7 +1473,7 @@ class MatchField {
         (0.87 +
                 (skill + _lvl - 72) / 200 -
                 distance * max(0.02, distancePenalty) -
-                (pressedNow ? 0.05 - (passer.stats.ballControl - 75) / 1500 : 0) +
+                (pressedNow ? 0.05 - (_st(passer).ballControl - 75) / 1500 : 0) +
                 (coaching - 70) / 1500 +
                 (homePossession ? 0.006 : 0) +
                 (_is(passer, _creators) ? 0.02 : 0) +
@@ -1440,7 +1496,7 @@ class MatchField {
     var lead = Offset.zero;
     if (!_setPieceDelivery) {
       final dir = homePossession ? 1.0 : -1.0;
-      final run = (0.022 + (receiver.stats.speed - 60) / 2600).clamp(0.012, 0.045) * (forward > 0.04 ? 1.0 : 0.35);
+      final run = (0.022 + (_st(receiver).speed - 60) / 2600).clamp(0.012, 0.045) * (forward > 0.04 ? 1.0 : 0.35);
       lead = Offset(dir * run, (0.5 - point.dy) * 0.04);
       if (_nearestDistance(_rivals, point + lead, _opponent).$2 < 0.045) lead = lead * 0.4;
     }
@@ -1482,13 +1538,13 @@ class MatchField {
     }
     if (targets.isEmpty) return false;
     targets.sort(
-      (a, b) => (_xi(_club)[b].stats.heading + _xi(_club)[b].stats.jumping)
-          .compareTo(_xi(_club)[a].stats.heading + _xi(_club)[a].stats.jumping),
+      (a, b) => (_st(_xi(_club)[b]).heading + _st(_xi(_club)[b]).jumping)
+          .compareTo(_st(_xi(_club)[a]).heading + _st(_xi(_club)[a]).jumping),
     );
     final target = targets[random.nextDouble() < 0.65 ? 0 : random.nextInt(targets.length)];
     final skill = corner
-        ? (crosser.stats.setPieceTaking * 0.6 + crosser.stats.curl * 0.4)
-        : (crosser.stats.loftedPass * 0.6 + crosser.stats.curl * 0.4);
+        ? (_st(crosser).setPieceTaking * 0.6 + _st(crosser).curl * 0.4)
+        : (_st(crosser).loftedPass * 0.6 + _st(crosser).curl * 0.4);
     final accurate =
         random.nextDouble() < (0.66 + (skill + _lvl - 72) / 140).clamp(0.3, 0.92);
     final to = accurate
@@ -1533,12 +1589,12 @@ class MatchField {
     final success =
         random.nextDouble() <
         (0.46 +
-                (carrier.stats.dribbling +
-                        carrier.stats.balance +
-                        carrier.stats.acceleration -
-                        d.stats.defensiveAwareness -
-                        d.stats.tackling -
-                        d.stats.speed) /
+                (_st(carrier).dribbling +
+                        _st(carrier).balance +
+                        _st(carrier).acceleration -
+                        _st(d).defensiveAwareness -
+                        _st(d).tackling -
+                        _st(d).speed) /
                     230 +
                 (carrier.aiStyles.contains(AiStyle.trickster) ||
                         carrier.aiStyles.contains(AiStyle.mazingRun)
@@ -1611,15 +1667,15 @@ class MatchField {
     final effectiveKind = header ? _Kind.header : kind;
     final strike = _lvl + switch (effectiveKind) {
       _Kind.header =>
-        shooter.stats.heading * 0.65 +
-            shooter.stats.jumping * 0.2 +
-            shooter.stats.physicalContact * 0.15,
+        _st(shooter).heading * 0.65 +
+            _st(shooter).jumping * 0.2 +
+            _st(shooter).physicalContact * 0.15,
       _Kind.freeKick =>
-        shooter.stats.setPieceTaking * 0.5 +
-            shooter.stats.curl * 0.3 +
-            shooter.stats.kickingPower * 0.2,
+        _st(shooter).setPieceTaking * 0.5 +
+            _st(shooter).curl * 0.3 +
+            _st(shooter).kickingPower * 0.2,
       _Kind.penalty =>
-        shooter.stats.setPieceTaking * 0.4 + shooter.stats.finishing * 0.6,
+        _st(shooter).setPieceTaking * 0.4 + _st(shooter).finishing * 0.6,
       _ => _openPlayStrike(shooter, _meters(ball, Offset(isHome ? 1.0 : 0.0, 0.5))),
     } +
         switch (effectiveKind) {
@@ -1644,7 +1700,7 @@ class MatchField {
           (1 + max(0.0, _shape(isHome)) * 0.14);
     }
     // A focused defence (training, team talk) concedes slightly worse chances.
-    if (effectiveKind != _Kind.penalty) xg *= isHome ? awayFocus : homeFocus;
+    if (effectiveKind != _Kind.penalty) xg *= (isHome ? awayFocus : homeFocus) * (1 + (isHome ? _edge : -_edge));
     xg = xg.clamp(0.01, 0.96).toDouble();
     final big = xg >= 0.3;
     _att.shots++;
@@ -1678,16 +1734,19 @@ class MatchField {
     // chance he takes away: a 90+ keeper turns big chances into saves.
     final gkFactor = keeper == null
         ? 2.4
+        // An outfielder in goal gets no help: he concedes most of what is on target.
+        : !keeper.mainPosition.isGoalkeeper
+        ? (1 - (_keeperSkill(keeper, distance, effectiveKind) - 75) / 46).clamp(1.6, 3.0) * 2
         : (1 - (_keeperSkill(keeper, distance, effectiveKind) + _gkLvl + (_has(keeper, _keeping) ? 2 : 0) - 75) / 46).clamp(0.38, 1.65) *
               (keeper.playingStyle == PlayingStyle.defensiveGoalkeeper && distance < 14 ? 0.95 : 1);
     // From range only real strikers of the ball hurt the keeper.
     final skill = (1.24 + (strike - 75) / (distance > 18 ? 30 : 48)).clamp(0.3, 1.9);
     final pGoal = effectiveKind == _Kind.penalty
         ? (0.77 +
-                  (shooter.stats.setPieceTaking + shooter.stats.finishing - 160) /
+                  (_st(shooter).setPieceTaking + _st(shooter).finishing - 160) /
                       420 -
-                  ((keeper?.stats.gkReflexes ?? 40) +
-                          (keeper?.stats.gkAwareness ?? 40) -
+                  ((keeper == null ? 40 : _st(keeper).gkReflexes) +
+                          (keeper == null ? 40 : _st(keeper).gkAwareness) -
                           160) /
                       520)
               .clamp(0.62, 0.92)
@@ -1702,7 +1761,7 @@ class MatchField {
             (rivals[i] - ball).distance > 0.03 &&
             random.nextDouble() <
                 (outcome == 'goal' ? 0.18 : 0.34) *
-                    (0.7 + _xi(defend)[i].stats.defensiveAwareness / 250) *
+                    (0.7 + _st(_xi(defend)[i]).defensiveAwareness / 250) *
                     (1 + max(0.0, -_shape(!isHome)) * 0.22) *
                     (_onCounter(isHome) ? 0.5 : 1)) {
           outcome = 'block';
@@ -1829,7 +1888,7 @@ class MatchField {
       blocker: blocker,
       duration: max(
         0.15,
-        (end - ball).distance / (0.95 + shooter.stats.kickingPower / 180),
+        (end - ball).distance / (0.95 + _st(shooter).kickingPower / 180),
       ),
       xg: xg,
       record: record,
@@ -1872,9 +1931,9 @@ class MatchField {
                       (p.defendingStyle == DefendingStyle.passDisruptor
                           ? 0.07
                           : 0) +
-                      (p.stats.defensiveEngagement * 0.5 +
-                              p.stats.defensiveAwareness * 0.5 -
-                              flight.actor.stats.lowPass) /
+                      (_st(p).defensiveEngagement * 0.5 +
+                              _st(p).defensiveAwareness * 0.5 -
+                              _st(flight.actor).lowPass) /
                           130)
                   .clamp(0.08, 0.68) *
                   _ownHalfCover(!flight.home) *
@@ -1928,6 +1987,15 @@ class MatchField {
       _lastPasser = flight.actor.id;
       _lastPassFrom = flight.from;
       phase = FieldPhase.openPlay;
+      // First touch with a rival on him: ball control decides if it sticks.
+      final receiver = _xi(_club)[owner];
+      final close = _nearestDistance(_rivals, ball, _opponent);
+      if (close.$2 < 0.04 && random.nextDouble() < ((80 - _st(receiver).ballControl) / 200).clamp(0.0, 0.2)) {
+        _line(receiver).possessionLost += 1;
+        homePossession = !homePossession;
+        owner = close.$1;
+        _lastPasser = null;
+      }
       return;
     }
     // Misplaced pass: out of play → throw-in, otherwise a loose ball.
@@ -1980,14 +2048,14 @@ class MatchField {
         (!dismissed.contains(_xi(defendClub)[0].id) &&
             (defendPts[0] - ball).distance < 0.05 &&
             random.nextDouble() <
-                (_xi(defendClub)[0].stats.gkCatching * 0.45 +
-                        _xi(defendClub)[0].stats.gkReach * 0.35 +
-                        _xi(defendClub)[0].stats.gkAwareness * 0.2 -
+                (_st(_xi(defendClub)[0]).gkCatching * 0.45 +
+                        _st(_xi(defendClub)[0]).gkReach * 0.35 +
+                        _st(_xi(defendClub)[0]).gkAwareness * 0.2 -
                         40) /
                     (_xi(defendClub)[0].defendingStyle == DefendingStyle.sweeperGk ? 95 : 120));
-    final atk = attacker.stats.heading * 0.5 +
-        attacker.stats.jumping * 0.35 +
-        attacker.stats.physicalContact * 0.15 +
+    final atk = _st(attacker).heading * 0.5 +
+        _st(attacker).jumping * 0.35 +
+        _st(attacker).physicalContact * 0.15 +
         random.nextDouble() * 30 +
         (f.kind == _Kind.corner ? 2 : 0) +
         (attacker.playingStyle == PlayingStyle.targetMan ? 8 : 0) +
@@ -1998,9 +2066,9 @@ class MatchField {
         // Height and aerial skill win headers.
         ((attacker.height ?? 182) - 182) * 0.25 +
         (_has(attacker, _aerial) ? 4 : 0);
-    final def = defender.stats.heading * 0.45 +
-        defender.stats.jumping * 0.3 +
-        defender.stats.defensiveAwareness * 0.25 +
+    final def = _st(defender).heading * 0.45 +
+        _st(defender).jumping * 0.3 +
+        _st(defender).defensiveAwareness * 0.25 +
         random.nextDouble() * 30 +
         4 +
         ((defender.height ?? 182) - 182) * 0.25 +
@@ -2137,10 +2205,10 @@ class MatchField {
       _lastPasser = null;
       final parried =
           random.nextDouble() >
-          (keeper.stats.gkCatching + keeper.stats.gkParrying) / 200;
+          (_st(keeper).gkCatching + _st(keeper).gkParrying) / 200;
       final spilled = parried &&
           f.kind != _Kind.penalty &&
-          random.nextDouble() < ((90 - keeper.stats.gkParrying) / 120).clamp(0.03, 0.4);
+          random.nextDouble() < ((90 - _st(keeper).gkParrying) / 120).clamp(0.03, 0.4);
       if (f.kind == _Kind.penalty) {
         _line(keeper).penaltiesSaved += 1;
         _emit(
@@ -2376,9 +2444,9 @@ class MatchField {
       if (i > 0 && !dismissed.contains(assigned)) return i;
     }
     return switch (piece) {
-      _SetPiece.corner => _bestTaker(club, (p) => p.stats.setPieceTaking + p.stats.curl),
-      _SetPiece.freeKick => _bestTaker(club, (p) => p.stats.setPieceTaking * 2 + p.stats.curl),
-      _SetPiece.penalty => _bestTaker(club, (p) => p.stats.setPieceTaking + p.stats.finishing),
+      _SetPiece.corner => _bestTaker(club, (p) => _st(p).setPieceTaking + _st(p).curl),
+      _SetPiece.freeKick => _bestTaker(club, (p) => _st(p).setPieceTaking * 2 + _st(p).curl),
+      _SetPiece.penalty => _bestTaker(club, (p) => _st(p).setPieceTaking + _st(p).finishing),
       _ => 1,
     };
   }
@@ -2400,8 +2468,8 @@ class MatchField {
         if (attacking) {
           targets[_pendingTaker] = _pendingSpot;
           final aerial = order.where((i) => i != _pendingTaker).toList()
-            ..sort((a, b) => (xi[b].stats.heading + xi[b].stats.jumping)
-                .compareTo(xi[a].stats.heading + xi[a].stats.jumping));
+            ..sort((a, b) => (_st(xi[b]).heading + _st(xi[b]).jumping)
+                .compareTo(_st(xi[a]).heading + _st(xi[a]).jumping));
           const boxSpots = [
             Offset(0.06, 0.45), Offset(0.07, 0.55), Offset(0.10, 0.40),
             Offset(0.11, 0.60), Offset(0.12, 0.50),
@@ -2420,8 +2488,8 @@ class MatchField {
         } else {
           targets[0] = Offset(goalX == 1.0 ? 0.985 : 0.015, 0.5);
           final markers = order.toList()
-            ..sort((a, b) => (xi[b].stats.defensiveAwareness + xi[b].stats.heading)
-                .compareTo(xi[a].stats.defensiveAwareness + xi[a].stats.heading));
+            ..sort((a, b) => (_st(xi[b]).defensiveAwareness + _st(xi[b]).heading)
+                .compareTo(_st(xi[a]).defensiveAwareness + _st(xi[a]).heading));
           if (!corner) {
             // Wall 9.15 m from the ball, on the line to goal.
             final goal = Offset(goalX, 0.5);
@@ -2486,7 +2554,7 @@ class MatchField {
       if (t == null || dismissed.contains(xi[i].id)) continue;
       final delta = _bound(t) - points[i];
       // Restarts take real seconds: players have time to take position.
-      final speed = 0.5 + xi[i].stats.speed / 500;
+      final speed = 0.5 + _st(xi[i]).speed / 500;
       final desired = delta.distance < 0.003
           ? Offset.zero
           : delta / delta.distance * min(speed, delta.distance * 3);
@@ -2513,7 +2581,7 @@ class MatchField {
     for (var i = 0; i < 11; i++) {
       if (dismissed.contains(xi[i].id)) continue;
       final delta = _kickoffSpot(c, isHome, i) - points[i];
-      final speed = 0.55 + xi[i].stats.speed / 500;
+      final speed = 0.55 + _st(xi[i]).speed / 500;
       final desired = delta.distance < 0.003 ? Offset.zero : delta / delta.distance * min(speed, delta.distance * 3);
       velocity[i] = Offset.lerp(velocity[i], desired, min(1, dt * 4))!;
       points[i] = _bound(points[i] + velocity[i] * dt);
@@ -2580,7 +2648,7 @@ class MatchField {
     }
     final yellowChance =
         0.11 +
-        (defender.stats.aggression - 60) / 420 +
+        (_st(defender).aggression - 60) / 420 +
         (dangerous ? 0.08 : 0) +
         (inBox ? 0.1 : 0) +
         (derby ? 0.05 : 0) +
@@ -3019,10 +3087,33 @@ class MatchField {
         target = Offset.lerp(target, ball, 0.35)!;
       }
       if (!keeper && i != owner && _flight?.receiver != i) target = _roam(p, target, hasBall, isHome, points[i]);
+      // Reading the game. In possession, attacking awareness finds the gap
+      // and gets on the last man's shoulder; out of it, defensive awareness
+      // keeps a defender goal side of the nearest runner (a poor reader
+      // drifts out of the line), and a forward with little defensive
+      // engagement stays upfield instead of tracking back.
+      if (!keeper && i != owner && _flight?.receiver != i && !_setPieceDelivery) {
+        final s = _st(p);
+        if (hasBall) {
+          final read = ((s.attackingAwareness - 55) / 40).clamp(0.0, 1.0);
+          final near = rivals[_nearest(rivals, target, opponent)];
+          final gap = target - near;
+          if (gap.distance > 0.001 && gap.distance < 0.09) target += gap / gap.distance * (0.09 - gap.distance) * read;
+          if (!slotPos.isDefender) target += Offset(direction * read * 0.025, 0);
+        } else if (slotPos.isDefender || slotPos == PlayerPosition.dmf) {
+          final read = ((s.defensiveAwareness - 55) / 40).clamp(0.0, 1.0);
+          final m = rivals[_nearest(rivals, points[i], opponent, ignoreKeeper: true)];
+          if ((m - points[i]).distance < 0.15) target = Offset.lerp(target, m - Offset(direction * 0.02, 0), 0.25 * read)!;
+          target += Offset(sin(time * 1.1 + i * 2) * 0.025 * (1 - read), 0);
+        } else if (i != press && i != secondPress && _markIndex(p, opponent) == null) {
+          final work = ((s.defensiveEngagement - 50) / 40).clamp(0.0, 1.0);
+          target += Offset(direction * (1 - work) * 0.05, 0);
+        }
+      }
       if (hasBall &&
           i != owner &&
           !keeper &&
-          p.stats.attackingAwareness >= 60 &&
+          _st(p).attackingAwareness >= 60 &&
           !_setPieceDelivery &&
           line.length >= 2) {
         final limit = isHome
@@ -3043,7 +3134,7 @@ class MatchField {
       final delta = _bound(target) - points[i];
       final injured = _injuredOnPitch.contains(p.id);
       final speed =
-          (0.045 + p.stats.speed / 1100) *
+          (0.045 + _st(p).speed / 1100) *
           (0.75 + p.currentStamina / 400) *
           (hasBall && i == owner
               ? (p.aiStyles.contains(AiStyle.speedingBullet) ? 0.95 : 0.86)
@@ -3060,7 +3151,7 @@ class MatchField {
       velocity[i] = Offset.lerp(
         velocity[i],
         desired,
-        min(1, dt * (2 + p.stats.acceleration / 18)),
+        min(1, dt * (2 + _st(p).acceleration / 18)),
       )!;
       points[i] = _bound(points[i] + velocity[i] * dt);
     }
