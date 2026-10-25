@@ -7,6 +7,7 @@ import '../services/match_field.dart';
 import 'face_avatar.dart';
 import 'football_pitch.dart';
 import 'shot_widgets.dart';
+import 'heatmap.dart';
 import 'widgets.dart';
 import '../l10n/l10n.dart';
 
@@ -46,7 +47,7 @@ List<(String, List<StatLine>)> statGroupsFromEngine(MatchField e) {
       ],
     ),
     (
-      'Zarbalar',
+      tr('Zarbalar'),
       [
         StatLine(tr('Nishonga'), h.onTarget, a.onTarget),
         StatLine(tr('Nishondan tashqari'), h.shots - h.onTarget - h.blocked, a.shots - a.onTarget - a.blocked),
@@ -54,7 +55,7 @@ List<(String, List<StatLine>)> statGroupsFromEngine(MatchField e) {
       ],
     ),
     (
-      'Hujum va paslar',
+      tr('Hujum va paslar'),
       [
         StatLine(tr('Paslar'), h.passes, a.passes),
         StatLine(tr('Aniq paslar'), h.completedPasses, a.completedPasses),
@@ -65,7 +66,7 @@ List<(String, List<StatLine>)> statGroupsFromEngine(MatchField e) {
       ],
     ),
     (
-      'Himoya va intizom',
+      tr('Himoya va intizom'),
       [
         StatLine(tr('Olib qo‘yishlar'), h.tackles, a.tackles),
         StatLine(tr('Pas kesishlar'), h.interceptions, a.interceptions),
@@ -93,7 +94,7 @@ List<(String, List<StatLine>)> statGroupsFromFixture(Fixture f) {
       ],
     ),
     (
-      'Paslar va himoya',
+      tr('Paslar va himoya'),
       [
         StatLine(tr('Paslar'), f.homePasses, f.awayPasses),
         StatLine(tr('Pas aniqligi'), hAcc, aAcc, format: _pct),
@@ -269,7 +270,7 @@ class IncidentTimeline extends StatelessWidget {
           const Expanded(child: Divider()),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: Text(text, style: AppText.overline),
+            child: Text(tr(text), style: AppText.overline),
           ),
           const Expanded(child: Divider()),
         ],
@@ -277,13 +278,13 @@ class IncidentTimeline extends StatelessWidget {
     );
     Widget quiet(String text) => Padding(
       padding: const EdgeInsets.symmetric(vertical: 10),
-      child: Center(child: Text(text, style: AppText.caption)),
+      child: Center(child: Text(tr(text), style: AppText.caption)),
     );
     final ht = htIndex < 0 ? null : events[htIndex];
     final ft = ftIndex < 0 ? null : events[ftIndex];
     // SofaScore layout: one section per half, each with its own score.
     final firstSection = <Widget>[
-      divider(ht == null ? '1-BO‘LIM' : '1-BO‘LIM  ${ht.homeScore} – ${ht.awayScore}'),
+      divider(ht == null ? tr('1-BO‘LIM') : '${tr('1-BO‘LIM')}  ${ht.homeScore} – ${ht.awayScore}'),
       if (first.isEmpty)
         quiet(ht == null ? 'Hozircha muhim voqealar yo‘q' : 'Muhim voqealar bo‘lmadi')
       else
@@ -292,7 +293,7 @@ class IncidentTimeline extends StatelessWidget {
     final secondSection = ht == null
         ? <Widget>[]
         : <Widget>[
-            divider(ft == null ? '2-BO‘LIM' : '2-BO‘LIM  ${ft.homeScore} – ${ft.awayScore}'),
+            divider(ft == null ? tr('2-BO‘LIM') : '${tr('2-BO‘LIM')}  ${ft.homeScore} – ${ft.awayScore}'),
             if (second.isEmpty)
               quiet(ft == null ? 'Hozircha muhim voqealar yo‘q' : 'Muhim voqealar bo‘lmadi')
             else
@@ -515,7 +516,11 @@ class LineupPitch extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final slots = club.tactics.formation.slots;
-    return AspectRatio(
+    return Center(
+      // Desktop: a phone-sized pitch, not one stretched across the screen.
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 560),
+        child: AspectRatio(
       aspectRatio: 0.92,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(12),
@@ -548,6 +553,8 @@ class LineupPitch extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    ),
       ),
     );
   }
@@ -628,9 +635,10 @@ class _LineupNode extends StatelessWidget {
                   Positioned(
                     left: -12,
                     bottom: -3,
+                    // One boot per assist, side by side (a count past four).
                     child: _mark([
-                      const BootIcon(size: 11),
-                      if (assists > 1) _count(assists),
+                      for (var i = 0; i < assists.clamp(1, 4); i++) const BootIcon(size: 11),
+                      if (assists > 4) _count(assists),
                     ]),
                   ),
                 if (goals > 0)
@@ -638,8 +646,9 @@ class _LineupNode extends StatelessWidget {
                     right: -12,
                     bottom: -3,
                     child: _mark([
-                      const Icon(Icons.sports_soccer, size: 11, color: AppColors.ink),
-                      if (goals > 1) _count(goals),
+                      for (var i = 0; i < goals.clamp(1, 4); i++)
+                        const Icon(Icons.sports_soccer, size: 11, color: AppColors.ink),
+                      if (goals > 4) _count(goals),
                     ]),
                   ),
                 if (booked)
@@ -773,11 +782,11 @@ class RatingsList extends StatelessWidget {
     if (l == null) return '';
     final parts = <String>[
       '${min(90, l.minutes.round())}′',
-      if (l.goals > 0) '${l.goals} gol',
-      if (l.assists > 0) '${l.assists} assist',
-      if (l.saves > 0) '${l.saves} seyv',
+      if (l.goals > 0) trf('{0} gol', [l.goals]),
+      if (l.assists > 0) trf('{0} assist', [l.assists]),
+      if (l.saves > 0) trf('{0} seyv', [l.saves]),
       '${l.passesCompleted}/${l.passes} pas',
-      if (l.tackles + l.interceptions > 0) '${l.tackles + l.interceptions} Olib qo‘yish',
+      if (l.tackles + l.interceptions > 0) trf('{0} Olib qo‘yish', [l.tackles + l.interceptions]),
       if (l.keyPasses > 0) '${l.keyPasses} key pas',
     ];
     return parts.join(' · ');
@@ -786,54 +795,63 @@ class RatingsList extends StatelessWidget {
 
 /// SofaScore-style player match card in a bottom sheet; the full profile
 /// stays one tap away.
+/// Every stat line of [player]'s match, labelled for display.
+List<(String, String)> playerStatRows(Player player, PlayerMatchStats? line) {
+    final l = line;
+    final gk = player.mainPosition.isGoalkeeper;
+    String pct(int a, int b) => b == 0 ? '0%' : '${(a * 100 / b).round()}%';
+    final rows = <(String, String)>[
+      if (l != null) ...[
+        (tr('Daqiqalar'), '${min(90, l.minutes.round())}′'),
+        if (gk) (tr('Seyvlar'), '${l.saves}'),
+        if (gk) (tr('O‘tkazilgan gollar'), '${l.goalsConceded}'),
+        if (gk && l.penaltiesSaved > 0) ('Qaytarilgan penalti', '${l.penaltiesSaved}'),
+        (tr('Gollar'), '${l.goals}'),
+        (tr('Assistlar'), '${l.assists}'),
+        ('xG / xA', '${l.xg.toStringAsFixed(2)} / ${l.xa.toStringAsFixed(2)}'),
+        (tr('Zarbalar (nishonga)'), '${l.shots} (${l.shotsOnTarget})'),
+        if (l.bigChancesMissed > 0) ('Boy berilgan katta imkoniyat', '${l.bigChancesMissed}'),
+        (tr('Kalit paslar'), '${l.keyPasses}'),
+        if (l.bigChancesCreated > 0) ('Yaratilgan katta imkoniyat', '${l.bigChancesCreated}'),
+        (tr('Aniq paslar'), '${l.passesCompleted}/${l.passes} (${pct(l.passesCompleted, l.passes)})'),
+        (tr('Krosslar'), '${l.crosses}'),
+        (tr('Driblinglar'), '${l.dribblesWon}/${l.dribbles}'),
+        (tr('To‘pga tegishlar'), '${l.touches}'),
+        (tr('Olib qo‘yishlar'), '${l.tackles}'),
+        (tr('Pas kesishlar'), '${l.interceptions}'),
+        (tr('Tozalashlar'), '${l.clearances}'),
+        (tr('Bloklangan zarbalar'), '${l.blocks}'),
+        if (l.dribbledPast > 0) (tr('Aldab o‘tilgan'), '${l.dribbledPast}'),
+        ('Yakkakurash (yutgan/yutqazgan)', '${l.duelsWon}/${l.duelsLost}'),
+        (tr('To‘p yo‘qotish'), '${l.possessionLost}'),
+        ('Qoidabuzarlik', '${l.fouls}'),
+        ('Qoidabuzarlikka uchragan', '${l.fouled}'),
+        if (l.offsides > 0) (tr('Ofsaydlar'), '${l.offsides}'),
+        if (l.penaltiesWon > 0) ('Ishlab olingan penalti', '${l.penaltiesWon}'),
+        if (l.penaltiesConceded > 0) (tr('Penaltiga sababchi'), '${l.penaltiesConceded}'),
+        if (l.errorsLeadingToShot > 0) (tr('Zarbaga olib kelgan xato'), '${l.errorsLeadingToShot}'),
+        if (l.errorsLeadingToGoal > 0) (tr('Golga olib kelgan xato'), '${l.errorsLeadingToGoal}'),
+        if (l.yellow + l.red > 0) (tr('Kartochkalar'), '${l.yellow} sariq · ${l.red} qizil'),
+      ],
+    ];
+    return rows;
+}
+
 Future<void> showPlayerMatchSheet(
   BuildContext context, {
   required Player player,
   required Club club,
   PlayerMatchStats? line,
   double? rating,
+  List<int>? heat,
   required VoidCallback onOpenProfile,
+  VoidCallback? onOpenDetails,
 }) => showModalBottomSheet<void>(
   context: context,
   isScrollControlled: true,
   builder: (ctx) {
     final l = line;
-    final gk = player.mainPosition.isGoalkeeper;
-    String pct(int a, int b) => b == 0 ? '0%' : '${(a * 100 / b).round()}%';
-    final rows = <(String, String)>[
-      if (l != null) ...[
-        ('Daqiqalar', '${min(90, l.minutes.round())}′'),
-        if (gk) ('Seyvlar', '${l.saves}'),
-        if (gk) ('O‘tkazilgan gollar', '${l.goalsConceded}'),
-        if (gk && l.penaltiesSaved > 0) ('Qaytarilgan penalti', '${l.penaltiesSaved}'),
-        ('Gollar', '${l.goals}'),
-        ('Assistlar', '${l.assists}'),
-        ('xG / xA', '${l.xg.toStringAsFixed(2)} / ${l.xa.toStringAsFixed(2)}'),
-        ('Zarbalar (nishonga)', '${l.shots} (${l.shotsOnTarget})'),
-        if (l.bigChancesMissed > 0) ('Boy berilgan katta imkoniyat', '${l.bigChancesMissed}'),
-        ('Kalit paslar', '${l.keyPasses}'),
-        if (l.bigChancesCreated > 0) ('Yaratilgan katta imkoniyat', '${l.bigChancesCreated}'),
-        ('Aniq paslar', '${l.passesCompleted}/${l.passes} (${pct(l.passesCompleted, l.passes)})'),
-        ('Krosslar', '${l.crosses}'),
-        ('Driblinglar', '${l.dribblesWon}/${l.dribbles}'),
-        ('To‘pga tegishlar', '${l.touches}'),
-        ('Olib qo‘yishlar', '${l.tackles}'),
-        ('Pas kesishlar', '${l.interceptions}'),
-        ('Tozalashlar', '${l.clearances}'),
-        ('Bloklangan zarbalar', '${l.blocks}'),
-        if (l.dribbledPast > 0) ('Aldab o‘tilgan', '${l.dribbledPast}'),
-        ('Yakkakurash (yutgan/yutqazgan)', '${l.duelsWon}/${l.duelsLost}'),
-        ('To‘p yo‘qotish', '${l.possessionLost}'),
-        ('Qoidabuzarlik', '${l.fouls}'),
-        ('Qoidabuzarlikka uchragan', '${l.fouled}'),
-        if (l.offsides > 0) ('Ofsaydlar', '${l.offsides}'),
-        if (l.penaltiesWon > 0) ('Ishlab olingan penalti', '${l.penaltiesWon}'),
-        if (l.penaltiesConceded > 0) ('Penaltiga sababchi', '${l.penaltiesConceded}'),
-        if (l.errorsLeadingToShot > 0) ('Zarbaga olib kelgan xato', '${l.errorsLeadingToShot}'),
-        if (l.errorsLeadingToGoal > 0) ('Golga olib kelgan xato', '${l.errorsLeadingToGoal}'),
-        if (l.yellow + l.red > 0) ('Kartochkalar', '${l.yellow} sariq · ${l.red} qizil'),
-      ],
-    ];
+    final rows = playerStatRows(player, line);
     return SafeArea(
       child: ConstrainedBox(
         constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(ctx).height * 0.82),
@@ -886,12 +904,17 @@ Future<void> showPlayerMatchSheet(
                       shrinkWrap: true,
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                       children: [
+                        if (heat != null && heat.any((v) => v > 0))
+                          Padding(
+                            padding: const EdgeInsets.only(top: 6, bottom: 10),
+                            child: PlayerHeatmap(cells: heat),
+                          ),
                         for (final r in rows)
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 7),
                             child: Row(
                               children: [
-                                Expanded(child: Text(r.$1, style: AppText.small.copyWith(color: AppColors.ink))),
+                                Expanded(child: Text(tr(r.$1), style: AppText.small.copyWith(color: AppColors.ink))),
                                 Text(r.$2, style: AppText.number.copyWith(fontSize: 13)),
                               ],
                             ),
@@ -901,16 +924,32 @@ Future<void> showPlayerMatchSheet(
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-              child: SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.pop(ctx);
-                    onOpenProfile();
-                  },
-                  icon: const Icon(Icons.person_outline),
-                  label: Text(tr('Profilni ko‘rish')),
-                ),
+              child: Row(
+                children: [
+                  if (onOpenDetails != null && l != null) ...[
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed: () {
+                          Navigator.pop(ctx);
+                          onOpenDetails();
+                        },
+                        icon: const Icon(Icons.insights_rounded),
+                        label: Text(tr('Batafsil')),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        onOpenProfile();
+                      },
+                      icon: const Icon(Icons.person_outline),
+                      label: Text(tr('Profilni ko‘rish')),
+                    ),
+                  ),
+                ],
               ),
             ),
           ],
@@ -1049,7 +1088,7 @@ class LineupList extends StatelessWidget {
 
     Widget header(String text) => Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-      child: Text(text, style: AppText.overline),
+      child: Text(tr(text), style: AppText.overline),
     );
 
     Widget row(Player p, {String? change, bool on = false, bool off = false}) {

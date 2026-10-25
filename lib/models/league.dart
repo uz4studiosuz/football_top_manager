@@ -21,7 +21,8 @@ enum MatchEventType {
   injury('Jarohat'),
   woodwork('Ustun'),
   bigChance('Katta imkoniyat'),
-  info('Ma’lumot');
+  info('Ma’lumot'),
+  varCheck('VAR tekshiruvi');
 
   const MatchEventType(this._label);
   final String _label;
@@ -45,6 +46,7 @@ enum MatchEventType {
     woodwork => Icons.vertical_align_center_rounded,
     bigChance => Icons.local_fire_department_outlined,
     info => Icons.info_outline_rounded,
+    varCheck => Icons.tv_rounded,
   };
 
   /// Key moments shown in the SofaScore-like incident timeline.
@@ -331,6 +333,9 @@ class Fixture {
   List<String> homeBench = [], awayBench = [];
   List<double> momentum = [];
   List<ShotRecord> shots = [];
+
+  /// Encoded player heatmaps (user's matches only; see ui/heatmap.dart).
+  Map<String, String> heat = {};
   String? motmId;
   Fixture({
     required this.id,

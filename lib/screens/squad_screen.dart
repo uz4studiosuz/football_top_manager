@@ -12,7 +12,10 @@ class SquadScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: Text(tr('Futbolchilar'))),
-    body: const SquadList(),
+    body: PageWidth(
+      maxWidth: 1000,
+      child: const SquadList(),
+    ),
   );
 }
 
@@ -64,10 +67,10 @@ class _SquadListState extends State<SquadList> {
               AppCard(
                 child: Row(
                   children: [
-                    Expanded(child: StatTile('${club.squad.length}', 'Futbolchi')),
-                    Expanded(child: StatTile(club.averageAge.toStringAsFixed(1), 'O‘rtacha yosh')),
+                    Expanded(child: StatTile('${club.squad.length}', tr('Futbolchi'))),
+                    Expanded(child: StatTile(club.averageAge.toStringAsFixed(1), tr('O‘rtacha yosh'))),
                     Expanded(child: StatTile(formatMoney(club.squadValue), 'Qiymati')),
-                    Expanded(child: StatTile(formatMoney(club.totalWeeklyWages), 'Maosh/hafta')),
+                    Expanded(child: StatTile(formatMoney(club.totalWeeklyWages), tr('Maosh/hafta'))),
                   ],
                 ),
               ),
@@ -108,7 +111,7 @@ class _SquadListState extends State<SquadList> {
                     onSelected: (v) => setState(() => sort = v),
                     itemBuilder: (_) => [
                       for (final s in ['OVR', 'Reyting', 'Yosh', 'Qiymat', 'Raqam'])
-                        PopupMenuItem(value: s, child: Text(s)),
+                        PopupMenuItem(value: s, child: Text(tr(s))),
                     ],
                   ),
                 ],
@@ -146,7 +149,7 @@ class _SquadListState extends State<SquadList> {
 
   String _subtitle(bool starter, bool bench, Player p) {
     final role = starter ? tr('Asosiy') : bench ? tr('Zaxira') : tr('Rezerv');
-    if (p.isInjured) return '$role · jarohat (${p.injuryRounds} tur)';
+    if (p.isInjured) return trf('{0} · jarohat ({1} tur)', [role, p.injuryRounds]);
     if (p.isSuspended) return '$role · diskvalifikatsiya';
     return '$role · ${p.age} yosh · ${p.currentStamina}% · ${p.contract.contractYears} yil';
   }

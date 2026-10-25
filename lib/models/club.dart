@@ -107,8 +107,9 @@ enum FormationType {
   f541('5-4-1 Low Block'),
   f4321('4-3-2-1 Narrow');
 
-  const FormationType(this.label);
-  final String label;
+  const FormationType(this._label);
+  final String _label;
+  String get label => tr(_label);
   String get short => label.split(' ').first;
 
   List<TacticalSlot> get slots => switch (this) {
@@ -495,7 +496,7 @@ class Club {
   final Color secondaryColor;
   final Color accentColor;
   final String stadiumName;
-  final int stadiumCapacity;
+  int stadiumCapacity; // grows with stadium upgrades
   final String city;
   final String nickname;
   final int founded;

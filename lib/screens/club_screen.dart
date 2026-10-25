@@ -100,8 +100,8 @@ class FinanceView extends StatelessWidget {
                     trailing: '${formatMoney(c.totalWeeklyWages)} / ${formatMoney(c.wageBudget)}',
                     color: wagePct > 0.95 ? AppColors.loss : wagePct > 0.85 ? AppColors.warning : AppColors.win,
                   ),
-                  InfoRow(tr('Bo‘sh maosh imkoniyati'), '${formatMoney(c.remainingWageBudget)}/hafta'),
-                  InfoRow(tr('Homiylik va savdo'), '${formatMoney(weeklyCommercial)}/hafta'),
+                  InfoRow(tr('Bo‘sh maosh imkoniyati'), trf('{0}/hafta', [formatMoney(c.remainingWageBudget)])),
+                  InfoRow(tr('Homiylik va savdo'), trf('{0}/hafta', [formatMoney(weeklyCommercial)])),
                   InfoRow(tr('Tarkib qiymati'), formatMoney(c.squadValue)),
                 ],
               ),
@@ -393,8 +393,8 @@ class _CalendarViewState extends State<CalendarView> {
                     children: [
                       _legend(const Color(0xFFEFF8FF), 'Transfer oynasi'),
                       _legend(AppColors.primary, 'Bugun', outline: true),
-                      _legend(AppColors.win, 'G‘alaba'),
-                      _legend(AppColors.loss, 'Mag‘lubiyat'),
+                      _legend(AppColors.win, tr('G‘alaba')),
+                      _legend(AppColors.loss, tr('Mag‘lubiyat')),
                     ],
                   ),
                 ],
@@ -406,12 +406,12 @@ class _CalendarViewState extends State<CalendarView> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SectionHeader(tr('Mavsum muhim sanalari'), icon: Icons.event_note_outlined),
-                  _dateRow(Icons.sports_soccer, 'Mavsum boshlanishi', cal.dateOfRound(1)),
+                  _dateRow(Icons.sports_soccer, tr('Mavsum boshlanishi'), cal.dateOfRound(1)),
                   _dateRow(Icons.lock_outline_rounded, 'Yozgi oyna yopiladi', cal.summerClose),
                   _dateRow(Icons.ac_unit_rounded, 'Qishki tanaffus', cal.dateOfRound(8).add(const Duration(days: 7))),
                   _dateRow(Icons.lock_open_rounded, 'Qishki oyna ochiladi', cal.winterOpen),
                   _dateRow(Icons.lock_outline_rounded, 'Qishki oyna yopiladi', cal.winterClose),
-                  _dateRow(Icons.emoji_events_outlined, 'So‘nggi tur', cal.dateOfRound(game.totalRounds)),
+                  _dateRow(Icons.emoji_events_outlined, tr('So‘nggi tur'), cal.dateOfRound(game.totalRounds)),
                 ],
               ),
             ),
@@ -457,7 +457,7 @@ class _CalendarViewState extends State<CalendarView> {
         ),
       ),
       const SizedBox(width: 6),
-      Text(label, style: AppText.caption),
+      Text(tr(label), style: AppText.caption),
     ],
   );
 
@@ -467,7 +467,7 @@ class _CalendarViewState extends State<CalendarView> {
       children: [
         Icon(icon, size: 18, color: AppColors.primary),
         const SizedBox(width: 12),
-        Expanded(child: Text(label, style: AppText.small.copyWith(color: AppColors.ink))),
+        Expanded(child: Text(tr(label), style: AppText.small.copyWith(color: AppColors.ink))),
         Text(SeasonCalendar.format(d, year: true), style: AppText.number.copyWith(fontSize: 13)),
       ],
     ),
@@ -582,7 +582,10 @@ class NewsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: Text(tr('Yangiliklar'))),
-    body: const NewsView(),
+    body: PageWidth(
+      maxWidth: 900,
+      child: const NewsView(),
+    ),
   );
 }
 
@@ -612,7 +615,7 @@ class ClubProfileView extends StatelessWidget {
                   InfoRow(tr('Stadion'), c.stadiumName),
                   InfoRow(tr('Sig‘imi'), '${c.stadiumCapacity}'),
                   InfoRow(tr('Obro‘ (reputatsiya)'), '${c.reputation}/100'),
-                  InfoRow(tr('Tarkib'), '${c.squad.length} futbolchi · o‘rtacha ${c.averageAge.toStringAsFixed(1)} yosh'),
+                  InfoRow(tr('Tarkib'), trf('{0} futbolchi · o‘rtacha {1} yosh', [c.squad.length, c.averageAge.toStringAsFixed(1)])),
                   InfoRow(tr('Jamoa OVR'), '${c.teamOVR}'),
                 ],
               ),

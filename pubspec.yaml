@@ -1,5 +1,5 @@
 name: football_top_manager
-description: "A new Flutter project."
+description: "Football management game: tactics, transfers, a 2D match engine and leagues from around the world."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -35,7 +35,9 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   shared_preferences: ^2.5.6
-
+  file_picker: ^13.2.0
+  image_picker: ^1.2.4
+  web: ^1.1.1
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -59,7 +61,9 @@ flutter:
   uses-material-design: true
   assets:
     - assets/data/
+    - assets/data/world/
     - assets/l10n/
+    - assets/fonts/LICENSE.txt
   fonts:
     - family: Roboto
       fonts:

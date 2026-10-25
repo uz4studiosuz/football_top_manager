@@ -6,6 +6,7 @@ import '../ui/face_avatar.dart';
 import '../ui/widgets.dart';
 import 'widgets/player_detail_view.dart';
 import '../l10n/l10n.dart';
+import '../data/countries.dart';
 
 /// Build a player completely from scratch and sign him to your club.
 class PlayerCreatorScreen extends StatefulWidget {
@@ -15,30 +16,7 @@ class PlayerCreatorScreen extends StatefulWidget {
 }
 
 class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
-  static const countries = {
-    'O‘zbekiston': '🇺🇿',
-    'Qozog‘iston': '🇰🇿',
-    'Angliya': '🏴',
-    'Ispaniya': '🇪🇸',
-    'Italiya': '🇮🇹',
-    'Germaniya': '🇩🇪',
-    'Fransiya': '🇫🇷',
-    'Portugaliya': '🇵🇹',
-    'Niderlandiya': '🇳🇱',
-    'Belgiya': '🇧🇪',
-    'Xorvatiya': '🇭🇷',
-    'Braziliya': '🇧🇷',
-    'Argentina': '🇦🇷',
-    'Urugvay': '🇺🇾',
-    'Kolumbiya': '🇨🇴',
-    'Marokash': '🇲🇦',
-    'Senegal': '🇸🇳',
-    'Nigeriya': '🇳🇬',
-    'Misr': '🇪🇬',
-    'Yaponiya': '🇯🇵',
-    'Janubiy Koreya': '🇰🇷',
-    'Turkiya': '🇹🇷',
-  };
+  static const countries = countryFlags;
 
   /// Positions each playing style suits (PlayerPlayingStyles.md).
   static const styleFits = <PlayingStyle, Set<String>>{
@@ -80,7 +58,7 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
   int target = 72;
   int potential = 85;
   late Map<String, int> attrs = _template();
-  late FaceConfig face = FaceConfig.forPlayer('creator', nationality, age);
+  late FaceConfig face = const FaceConfig();
 
   @override
   void dispose() {
@@ -105,7 +83,7 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
     preferredFoot: foot,
     weakFoot: weakFoot,
     stats: PlayerStats.fromMap(attrs),
-    contract: const PlayerContract(contractYears: 3, weeklyWage: 10000),
+    contract: PlayerContract(contractYears: 3, weeklyWage: 10000),
     marketValue: 0,
     potential: potential,
     playingStyle: style,
@@ -182,7 +160,9 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
           ),
         ],
       ),
-      body: ListView(
+      body: PageWidth(
+      maxWidth: 900,
+      child: ListView(
         padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
         children: [
           // --------------------------------------------------- live preview
@@ -266,13 +246,13 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
                   isExpanded: true,
                   decoration: InputDecoration(labelText: tr('Millati'), prefixIcon: Icon(Icons.flag_outlined)),
                   items: [
-                    for (final c in countries.keys) DropdownMenuItem(value: c, child: Text('${countries[c]}  $c')),
+                    for (final c in countries.keys) DropdownMenuItem(value: c, child: Text('${countries[c]}  ${tr(c)}')),
                   ],
                   onChanged: (v) => setState(() => nationality = v!),
                 ),
                 const SizedBox(height: 8),
-                _slider('Yosh', age, 16, 40, (v) => setState(() => age = v)),
-                _slider('Futbolka raqami', number, 1, 99, (v) => setState(() => number = v)),
+                _slider(tr('Yosh'), age, 16, 40, (v) => setState(() => age = v)),
+                _slider(tr('Futbolka raqami'), number, 1, 99, (v) => setState(() => number = v)),
                 Text(tr('Asosiy oyoq'), style: AppText.bodyStrong),
                 SizedBox(height: 8),
                 SizedBox(
@@ -376,7 +356,7 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
                   tr('Pozitsiyaga mos atributlarni tanlangan darajada avtomatik to‘ldiradi. Keyin har birini qo‘lda sozlashingiz mumkin.'),
                   style: AppText.caption,
                 ),
-                _slider('Daraja (taxminiy OVR)', target, 50, 95, (v) => setState(() => target = v)),
+                _slider(tr('Daraja (taxminiy OVR)'), target, 50, 95, (v) => setState(() => target = v)),
                 SizedBox(
                   width: double.infinity,
                   child: FilledButton.tonalIcon(
@@ -413,7 +393,7 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
                   tr('Futbolchi yaxshi o‘ynasa va yosh bo‘lsa, OVR shu chegaragacha o‘sadi.'),
                   style: AppText.caption,
                 ),
-                _slider('Eng yuqori OVR', max(potential, ovr), ovr, 99, (v) => setState(() => potential = v)),
+                _slider(tr('Eng yuqori OVR'), max(potential, ovr), ovr, 99, (v) => setState(() => potential = v)),
                 InfoRow(tr('Bozor bahosi'), formatMoney(Player.valuation(ovr, age, max(potential, ovr)))),
                 InfoRow(tr('Haftalik maosh (talab)'), formatMoney(preview.calculatedRenewalWageDemand)),
                 if (club != null) InfoRow(tr('Bo‘sh maosh limiti'), formatMoney(club.remainingWageBudget)),
@@ -436,6 +416,7 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
           ),
         ],
       ),
+    ),
     );
   }
 
@@ -474,7 +455,7 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
       children: [
         Row(
           children: [
-            Expanded(child: Text(label, style: AppText.bodyStrong)),
+            Expanded(child: Text(tr(label), style: AppText.bodyStrong)),
             Text('$value', style: AppText.number.copyWith(color: AppColors.primary)),
           ],
         ),

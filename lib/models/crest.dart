@@ -445,7 +445,7 @@ class ClubCrestPainter extends CustomPainter {
           text: TextSpan(
             text: ch,
             style: TextStyle(
-              fontFamily: tr('Roboto'),
+              fontFamily: 'Roboto',
               fontSize: fs,
               fontWeight: FontWeight.w800,
               color: color,
@@ -579,7 +579,7 @@ class ClubCrestPainter extends CustomPainter {
         style: TextStyle(
           color: color,
           fontSize: fs,
-          fontFamily: tr('Roboto'),
+          fontFamily: 'Roboto',
           fontWeight: FontWeight.w900,
           letterSpacing: -fs * 0.04,
           shadows: [

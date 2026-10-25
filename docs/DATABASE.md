@@ -12,6 +12,24 @@ refuses data that breaks the rules below.
 | `tool/validate_data.py` | Command-line check, same rules as the game (exit code 1 on errors) |
 | `tool/efl_data.py`, `tool/epl_data.py` | Generators that build leagues from `2026.db` |
 | `tool/epl_faces.py`, `tool/star_faces.py` | Look-alike portrait hints |
+| `tool/world_data.py` | The other 122 leagues from `2026.db` into `world/<id>.json` plus `world/index.json`; ids listed in `tool/world_keep.txt` are left alone |
+| `tool/names_data.py` | Name pools for generated players (`names.json`) from every player in `2026.db` |
+| `tool/fictionalize.py`, `tool/build_play.py` | Store build with invented names (see `docs/PLAY_STORE.md`) |
+| In-app editor (`/editor`) | Edits on the device; searches every club, world leagues open on demand; ZIP export |
+
+An Uzbek step-by-step guide (editing a world club such as Juventus, by hand
+or in the editor) is in `docs/MUHARRIR.md`.
+
+### World leagues
+
+`world/<id>.json` holds one league (`clubs` and `players` together); ids are
+country code + tier (+ group): `es1` LaLiga, `it3b` Serie C group B. Their
+manifest entries carry `"lazy": true`, so the game loads a league only when
+it is picked, scouted or offered as a job. To save space a player's `stats`
+may be a list of the 26 values in `KEYS` order (`validate_data.py`,
+`InitialDatabase.statKeys`); object form works too. Edited world files must
+be listed in `tool/world_keep.txt`, or the next `world_data.py` run rebuilds
+them from the database.
 
 ### DB Studio
 

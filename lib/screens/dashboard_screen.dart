@@ -15,6 +15,12 @@ import 'match_screen.dart';
 import 'widgets/opponent_squad_sheet.dart';
 import 'widgets/player_detail_view.dart';
 import '../l10n/l10n.dart';
+import '../ui/coin.dart';
+import '../services/club_life.dart';
+import '../services/press.dart';
+import 'club_life_screen.dart';
+import 'season_review_screen.dart';
+import 'tactics_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   final VoidCallback onNavigateToTactics;
@@ -39,7 +45,8 @@ class DashboardScreen extends StatelessWidget {
       builder: (context, _) {
         if (!game.isInitialized) return const Scaffold();
         final club = game.userClub, manager = game.managerProfile;
-        final next = game.nextUserFixture;
+        // League match first, then this week's cup tie.
+        final next = game.pendingSuperCup ?? game.nextUserFixture ?? game.pendingCupFixture;
         final standing = game.standingOf(club.id);
         final rank = game.positionOf(club.id);
         final upcoming = game
@@ -75,6 +82,11 @@ class DashboardScreen extends StatelessWidget {
               ],
             ),
             actions: [
+              InkWell(
+                borderRadius: BorderRadius.circular(20),
+                onTap: () => showCoinInfo(context),
+                child: const CoinBalance(),
+              ),
               IconButton(
                 tooltip: tr('Yangiliklar'),
                 onPressed: () => Navigator.push(
@@ -144,11 +156,23 @@ class DashboardScreen extends StatelessWidget {
                 builder: (context, box) {
                   final main = Column(
                     children: [
+                      if (game.life.jobOffers.isNotEmpty) ...[
+                        _jobOffers(context, game),
+                        const SizedBox(height: 12),
+                      ],
                       if (game.seasonFinished)
                         _seasonEnd(context, game)
-                      else if (next != null)
-                        _matchCard(context, game, club, next)
-                      else
+                      else if (next != null) ...[
+                        if (game.postPressFixture case final last?) ...[
+                          _pressCard(context, game, last, post: true),
+                          const SizedBox(height: 12),
+                        ],
+                        if (!game.life.pressDone.contains(next.id)) ...[
+                          _pressCard(context, game, next),
+                          const SizedBox(height: 12),
+                        ],
+                        _matchCard(context, game, club, next),
+                      ] else
                         _roundDone(context, game),
                       if (game.unavailableStarters.isNotEmpty) ...[
                         const SizedBox(height: 12),
@@ -164,6 +188,8 @@ class DashboardScreen extends StatelessWidget {
                   );
                   final side = Column(
                     children: [
+                      _clubLifeCard(context, game),
+                      const SizedBox(height: 12),
                       _boardCard(game),
                       const SizedBox(height: 12),
                       AppCard(
@@ -252,7 +278,7 @@ class DashboardScreen extends StatelessWidget {
             ],
           ),
         ),
-        Expanded(child: StatTile(club.formattedTransferBudget, 'Mablag‘')),
+        Expanded(child: StatTile(club.formattedTransferBudget, tr('Mablag‘'))),
       ],
     ),
   );
@@ -282,7 +308,14 @@ class DashboardScreen extends StatelessWidget {
               Expanded(
                 child: Text(tr('NAVBATDAGI UCHRASHUV'), style: AppText.overline),
               ),
-              Text(trf('{0}-tur', [f.round]), style: AppText.caption),
+              if (game.isDerby(game.getClubById(f.homeClubId)!, game.getClubById(f.awayClubId)!))
+                Container(
+                  margin: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(color: AppColors.live, borderRadius: BorderRadius.circular(8)),
+                  child: Text(tr('DERBI'), style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900)),
+                ),
+              Text(game.isKnockout(f) ? game.fixtureTitle(f) : trf('{0}-tur', [f.round]), style: AppText.caption),
             ],
           ),
           const SizedBox(height: 18),
@@ -344,13 +377,7 @@ class DashboardScreen extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: FilledButton.icon(
-                  onPressed: () {
-                    if (game.unavailableStarters.isNotEmpty) game.fixUnavailableStarters();
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute<void>(builder: (_) => MatchScreen(fixture: f)),
-                    );
-                  },
+                  onPressed: () => _kickOff(context, game, f),
                   icon: const Icon(Icons.play_arrow_rounded, size: 20),
                   label: FittedBox(child: Text(tr('Boshlash'))),
                 ),
@@ -360,8 +387,12 @@ class DashboardScreen extends StatelessWidget {
           const SizedBox(height: 4),
           TextButton.icon(
             onPressed: () async {
-              if (game.unavailableStarters.isNotEmpty) game.fixUnavailableStarters();
-              await runWithLoading(context, 'Uchrashuv simulyatsiya qilinmoqda…', () => game.simulateUserFixture(f));
+              if (!_lineupReady(context, game)) return;
+              await runWithProgress(
+                context,
+                tr('Uchrashuv simulyatsiya qilinmoqda…'),
+                (report) => game.simulateUserFixtureAsync(f, onProgress: report),
+              );
               if (!context.mounted) return;
               Navigator.push(
                 context,
@@ -371,6 +402,217 @@ class DashboardScreen extends StatelessWidget {
             icon: const Icon(Icons.fast_forward_rounded, size: 18),
             label: Text(tr('Tezkor natija')),
           ),
+        ],
+      ),
+    );
+  }
+
+  /// Job offers (after success) or the list of clubs after a sack.
+  Widget _jobOffers(BuildContext context, GameState game) => AppCard(
+    color: game.life.sacked ? const Color(0xFFFFF4F2) : AppColors.surface,
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(game.life.sacked ? Icons.gavel_rounded : Icons.work_outline_rounded, color: game.life.sacked ? AppColors.live : AppColors.primary),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(game.life.sacked ? tr('Siz ishdan bo‘shatildingiz') : tr('Ish takliflari'), style: AppText.h3),
+            ),
+            if (!game.life.sacked) TextButton(onPressed: game.declineJobOffers, child: Text(tr('Rad etish'))),
+          ],
+        ),
+        Text(
+          trf('Menejer reytingi: {0} · {1}', [game.managerProfile.reputation.round(), game.managerProfile.reputationLevel]),
+          style: AppText.caption,
+        ),
+        const SizedBox(height: 6),
+        for (final id in game.life.jobOffers)
+          if (game.jobOfferInfo(id) case final o?)
+            Builder(
+              builder: (context) {
+                final league = InitialDatabase.info(o.$4);
+                final local = game.getClubById(id);
+                final here = o.$4 == game.leagueId;
+                return ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: local != null
+                      ? ClubCrestWidget(config: local.crestConfig, size: 36)
+                      : Text(league.flag.isEmpty ? '🏟️' : league.flag, style: const TextStyle(fontSize: 28)),
+                  title: Text(o.$2, style: AppText.bodyStrong),
+                  subtitle: Text(
+                    [
+                      '${league.name} · ${tr(league.country)}',
+                      trf('Obro‘ {0}', [o.$3]),
+                      if (!here) tr('Yangi ligada mavsum boshidan boshlanadi'),
+                    ].join(' · '),
+                    style: AppText.caption,
+                  ),
+                  trailing: FilledButton(
+                    onPressed: () => _acceptJob(context, game, id),
+                    child: Text(tr('Qabul qilish')),
+                  ),
+                );
+              },
+            ),
+      ],
+    ),
+  );
+
+  Future<void> _acceptJob(BuildContext context, GameState game, String id) async {
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+    String? error;
+    try {
+      error = await game.acceptJob(id);
+    } finally {
+      if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
+    }
+    if (error != null && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+    }
+  }
+
+  /// Press conference before the next match or after the last one: the
+  /// answers move morale, fans, the board and single players.
+  Widget _pressCard(BuildContext context, GameState game, Fixture f, {bool post = false}) => AppCard(
+    child: Row(
+      children: [
+        Icon(post ? Icons.campaign_outlined : Icons.mic_none_rounded, color: AppColors.primary, size: 28),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(post ? tr('O‘yindan keyingi matbuot anjumani') : tr('Matbuot anjumani'), style: AppText.bodyStrong),
+              Text(
+                post ? tr('Jurnalistlar natija haqida so‘ramoqchi.') : tr('O‘yin oldidan jurnalistlar savollari kutmoqda.'),
+                style: AppText.caption,
+              ),
+            ],
+          ),
+        ),
+        FilledButton.tonal(onPressed: () => _runPress(context, game, f, post: post), child: Text(tr('Boshlash'))),
+      ],
+    ),
+  );
+
+  Future<void> _runPress(BuildContext context, GameState game, Fixture f, {bool post = false}) async {
+    final questions = post ? game.postPressFor(f) : game.pressFor(f);
+    if (questions == null) return;
+    final picked = <(PressQuestion, PressAnswer)>[];
+    for (final q in questions) {
+      final a = await showDialog<PressAnswer>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => SimpleDialog(
+          title: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(tr(q.outlet), style: AppText.caption.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700)),
+              const SizedBox(height: 4),
+              Text(q.question),
+            ],
+          ),
+          children: [
+            for (final a in q.answers)
+              SimpleDialogOption(
+                onPressed: () => Navigator.pop(ctx, a),
+                child: Padding(padding: const EdgeInsets.symmetric(vertical: 6), child: Text('“${a.text}”', style: AppText.body)),
+              ),
+          ],
+        ),
+      );
+      if (a == null || !context.mounted) return;
+      picked.add((q, a));
+    }
+    game.answerPress(f, picked, post: post);
+    final morale = picked.fold<int>(0, (s, e) => s + e.$2.morale);
+    final fans = picked.fold<int>(0, (s, e) => s + e.$2.fans);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(trf('Matbuot anjumani tugadi. Jamoa kayfiyati {0}{1}, muxlislar {2}{3}.', [
+            morale >= 0 ? '+' : '',
+            morale,
+            fans >= 0 ? '+' : '',
+            fans,
+          ])),
+        ),
+      );
+    }
+  }
+
+  /// Entry to facilities, training, academy, fans and the hall of fame.
+  Widget _clubLifeCard(BuildContext context, GameState game) {
+    final post = game.life.feed.firstOrNull;
+    Widget item(int tab, IconData icon, String label) => Expanded(
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: () => ClubLifeScreen.show(context, tab),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Column(
+            children: [
+              Icon(icon, color: AppColors.primary),
+              const SizedBox(height: 4),
+              Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.caption.copyWith(color: AppColors.ink)),
+            ],
+          ),
+        ),
+      ),
+    );
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SectionHeader(tr('Klub boshqaruvi'), icon: Icons.apartment_outlined),
+          Row(
+            children: [
+              item(0, Icons.stadium_outlined, tr('Inshootlar')),
+              item(1, Icons.fitness_center_outlined, tr('Mashg‘ulot')),
+              item(2, Icons.school_outlined, tr('Akademiya')),
+              item(3, Icons.forum_outlined, tr('Muxlislar')),
+              item(4, Icons.emoji_events_outlined, tr('Shon-sharaf')),
+            ],
+          ),
+          if (post != null) ...[
+            const Divider(height: 18),
+            InkWell(
+              onTap: () => ClubLifeScreen.show(context, 3),
+              child: Row(
+                children: [
+                  Icon(post.positive ? Icons.sentiment_satisfied_alt : Icons.sentiment_dissatisfied,
+                      color: post.positive ? AppColors.win : AppColors.live, size: 18),
+                  const SizedBox(width: 8),
+                  Expanded(child: Text('${post.author}: ${post.text}', maxLines: 2, overflow: TextOverflow.ellipsis, style: AppText.small)),
+                ],
+              ),
+            ),
+          ],
+          if (game.life.sponsorOffers.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            InkWell(
+              onTap: () => ClubLifeScreen.show(context, 0),
+              child: Row(
+                children: [
+                  const Icon(Icons.handshake_outlined, size: 16, color: AppColors.warning),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(tr('Homiylik takliflari kutmoqda'), style: AppText.caption.copyWith(color: AppColors.warning, fontWeight: FontWeight.w700)),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          if (game.life.focus != TrainingFocus.balanced) ...[
+            const SizedBox(height: 8),
+            Text(trf('Mashg‘ulot: {0}', [game.life.focus.label]), style: AppText.caption),
+          ],
         ],
       ),
     );
@@ -386,7 +628,7 @@ class DashboardScreen extends StatelessWidget {
         children: [
           SectionHeader(tr('Tur yakunlandi'), icon: Icons.check_circle_outline),
           Text(
-            trf('Barcha natijalar jadvalga yozildi.{0}', [nextDate != null ? ' Keyingi o‘yin kuni: ${SeasonCalendar.format(nextDate)}.' : '']),
+            trf('Barcha natijalar jadvalga yozildi.{0}', [nextDate != null ? trf(' Keyingi o‘yin kuni: {0}.', [SeasonCalendar.format(nextDate)]) : '']),
             style: AppText.small,
           ),
           const SizedBox(height: 14),
@@ -418,7 +660,7 @@ class DashboardScreen extends StatelessWidget {
           const SizedBox(height: 14),
           ClubHeading(club: champion, size: 64, caption: trf('Chempion · {0} ochko', [table.first.points])),
           const SizedBox(height: 14),
-          InfoRow(tr('Sizning o‘rningiz'), '$pos-o‘rin'),
+          InfoRow(tr('Sizning o‘rningiz'), trf('{0}-o‘rin', [pos])),
           InfoRow(
             trf('Kengash maqsadi ({0})', [game.objective.title]),
             met ? tr('Bajarildi') : tr('Bajarilmadi'),
@@ -442,6 +684,15 @@ class DashboardScreen extends StatelessWidget {
           const SizedBox(height: 12),
           SizedBox(
             width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => SeasonReviewScreen.show(context),
+              icon: const Icon(Icons.summarize_outlined),
+              label: Text(tr('Mavsum sharhi')),
+            ),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
             child: FilledButton.icon(
               onPressed: game.startNextSeason,
               icon: const Icon(Icons.autorenew_rounded),
@@ -451,6 +702,81 @@ class DashboardScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// The match starts only with the manager's own XI: injured or
+  /// suspended starters must be replaced first.
+  /// Start now, or first set a line-up and tactics for this match only.
+  Future<void> _kickOff(BuildContext context, GameState game, Fixture f) async {
+    final choice = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.play_circle_fill_rounded, color: AppColors.primary),
+              title: Text(tr('Boshlash'), style: AppText.bodyStrong),
+              subtitle: Text(tr('Asosiy tarkib va taktika bilan')),
+              onTap: () => Navigator.pop(ctx, 'start'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.edit_note_rounded, color: AppColors.primary),
+              title: Text(tr('Jamoani shu o‘yin uchun shakllantirish'), style: AppText.bodyStrong),
+              subtitle: Text(tr('Maxsus tarkib, taktika va ko‘rsatmalar – o‘yindan keyin asosiysi qaytadi')),
+              onTap: () => Navigator.pop(ctx, 'plan'),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (choice == null || !context.mounted) return;
+    if (choice == 'plan') {
+      game.beginUserMatch();
+      final start = await Navigator.push<bool>(context, MaterialPageRoute(builder: (_) => _MatchPlanScreen(fixture: f)));
+      if (start != true) {
+        game.cancelMatchPlan();
+        return;
+      }
+      if (!context.mounted) return;
+    }
+    if (!_lineupReady(context, game)) return;
+    Navigator.push(context, MaterialPageRoute<void>(builder: (_) => MatchScreen(fixture: f)));
+  }
+
+  bool _lineupReady(BuildContext context, GameState game) {
+    final out = game.unavailableStarters;
+    if (out.isEmpty) return true;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(tr('Tarkib tayyor emas')),
+        content: Text(
+          trf('Asosiy tarkibda o‘ynay olmaydigan futbolchilar bor: {0}. Ularni tarkibdan chiqaring.', [
+            out.map((p) => '${p.shortName} (${p.injury != null || p.injuryRounds > 0 ? tr('jarohat') : tr('diskvalifikatsiya')})').join(', '),
+          ]),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              game.fixUnavailableStarters();
+            },
+            child: Text(tr('Avtomatik almashtirish')),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              onNavigateToTactics();
+            },
+            child: Text(tr('Tarkibga o‘tish')),
+          ),
+        ],
+      ),
+    );
+    return false;
   }
 
   Widget _availabilityWarning(GameState game) {
@@ -576,7 +902,7 @@ class DashboardScreen extends StatelessWidget {
           InfoRow(tr('Mavsum maqsadi'), game.objective.title),
           InfoRow(
             tr('Joriy holat'),
-            '$pos-o‘rin',
+            trf('{0}-o‘rin', [pos]),
             valueColor: pos <= game.objective.targetPosition ? AppColors.win : AppColors.loss,
           ),
           MeterRow(label: tr('Kengash ishonchi'), value: conf / 100, trailing: '$conf%', color: color),
@@ -628,24 +954,29 @@ class DashboardScreen extends StatelessWidget {
     final unread = game.news.where((n) => !n.read).toList();
     int count(NewsKind k) => unread.where((n) => n.kind == k).length;
     final tiles = <Widget>[
-      if (game.offers.isNotEmpty)
-        _inboxTile(NewsKind.transfer, '${game.offers.length} ta taklif', 'Sotish takliflari kutmoqda', onNavigateToTransfers),
+      if (game.dealsNeedingAction.isNotEmpty)
+        _inboxTile(
+          NewsKind.transfer,
+          trf('{0} ta muzokara', [game.dealsNeedingAction.length]),
+          tr('Javobingiz kutilmoqda'),
+          onNavigateToTransfers,
+        ),
       if (count(NewsKind.injury) > 0)
         _inboxTile(
           NewsKind.injury,
-          '${count(NewsKind.injury)} jarohat',
+          trf('{0} jarohat', [count(NewsKind.injury)]),
           unread.firstWhere((n) => n.kind == NewsKind.injury).title,
           () => _openNews(context, game),
         ),
       if (count(NewsKind.award) > 0)
         _inboxTile(
           NewsKind.award,
-          '${count(NewsKind.award)} yangilik',
+          trf('{0} yangilik', [count(NewsKind.award)]),
           unread.firstWhere((n) => n.kind == NewsKind.award).title,
           () => _openNews(context, game),
         ),
       if (count(NewsKind.contract) > 0)
-        _inboxTile(NewsKind.contract, 'Shartnomalar', 'Muddati tugayotganlar bor', onNavigateToSquad),
+        _inboxTile(NewsKind.contract, tr('Shartnomalar'), tr('Muddati tugayotganlar bor'), onNavigateToSquad),
     ];
     if (tiles.isEmpty) return const [];
     return [
@@ -686,7 +1017,7 @@ class DashboardScreen extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title, style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: kind.color)),
+                    Text(tr(title), style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13, color: kind.color)),
                     Text(body, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.small),
                   ],
                 ),
@@ -718,4 +1049,43 @@ class DashboardScreen extends StatelessWidget {
       ],
     ),
   );
+}
+
+/// The squad screen for one match: changes here are undone after it.
+class _MatchPlanScreen extends StatelessWidget {
+  final Fixture fixture;
+  const _MatchPlanScreen({required this.fixture});
+
+  @override
+  Widget build(BuildContext context) {
+    final game = GameState();
+    final rival = game.getClubById(fixture.homeClubId == game.userClubId ? fixture.awayClubId : fixture.homeClubId);
+    return Scaffold(
+      body: TacticsScreen(
+        matchPlan: true,
+        planTitle: rival == null ? tr('O‘yin rejasi') : trf('{0} bilan o‘yin rejasi', [rival.name]),
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+          child: Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(onPressed: () => Navigator.pop(context, false), child: Text(tr('Bekor qilish'))),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 2,
+                child: FilledButton.icon(
+                  onPressed: () => Navigator.pop(context, true),
+                  icon: const Icon(Icons.play_arrow_rounded),
+                  label: Text(tr('Boshlash')),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }

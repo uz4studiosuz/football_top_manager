@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../data/initial_database.dart';
 import '../models/club.dart';
+import '../models/transfer_deal.dart';
 import '../models/player.dart';
 import '../services/game_state.dart';
 import '../ui/face_avatar.dart';
@@ -8,6 +9,7 @@ import '../ui/team_widgets.dart';
 import '../ui/widgets.dart';
 import 'widgets/player_detail_view.dart';
 import '../l10n/l10n.dart';
+import '../ui/scout_badge.dart';
 
 class TransferScreen extends StatefulWidget {
   const TransferScreen({super.key});
@@ -19,9 +21,49 @@ class _TransferScreenState extends State<TransferScreen> {
   final game = GameState();
   String query = '';
   int category = 0;
+  PlayerPosition? position; // optional exact position inside the category
+  int page = 0;
+  static const pageSize = 25;
   int league = 0; // 0 = every league of the pyramid
   String sort = 'Reyting';
   RangeValues ageRange = const RangeValues(16, 40);
+
+  /// What the club and the player think of the move, before any bid.
+  Widget _opinions(Player p, Club seller) {
+    final club = game.sellerStance(p, seller, game.userClub);
+    final mind = game.moveInterest(p, game.userClub, seller);
+    final color = mind.interest >= 60
+        ? AppColors.win
+        : mind.interest >= GameState.refuseInterest
+        ? AppColors.warning
+        : AppColors.live;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(height: 10),
+        Text(tr('Klub fikri'), style: AppText.bodyStrong),
+        if (club.reasons.isEmpty) Text(tr('Oddiy savdo: so‘ralgan narxga rozi bo‘ladi.'), style: AppText.caption),
+        for (final r in club.reasons)
+          Text('• $r', style: AppText.caption.copyWith(color: club.notForSale && r == club.reasons.last ? AppColors.live : null)),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(child: Text(tr('Futbolchining qiziqishi'), style: AppText.bodyStrong)),
+            Text('${mind.interest}%', style: AppText.bodyStrong.copyWith(color: color)),
+          ],
+        ),
+        const SizedBox(height: 4),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(value: mind.interest / 100, color: color, backgroundColor: AppColors.line, minHeight: 6),
+        ),
+        for (final r in mind.reasons) Text('• $r', style: AppText.caption),
+        if (mind.interest < GameState.refuseInterest)
+          Text(tr('Futbolchi bu klubga o‘tishni xohlamaydi: narx kelishilsa ham shartnomani rad etadi.'),
+              style: AppText.caption.copyWith(color: AppColors.live)),
+      ],
+    );
+  }
 
   Future<void> _offer(Player p, Club seller) async {
     final ask = game.askingPrice(p, seller);
@@ -37,7 +79,8 @@ class _TransferScreenState extends State<TransferScreen> {
             title: Text(tr('Transfer taklifi')),
             content: SizedBox(
               width: 380,
-              child: Column(
+              child: SingleChildScrollView(
+                child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -54,7 +97,7 @@ class _TransferScreenState extends State<TransferScreen> {
                           ],
                         ),
                       ),
-                      ValueBadge(p.ovr, size: 34),
+                      ScoutedOvr(p, size: 34),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -72,11 +115,11 @@ class _TransferScreenState extends State<TransferScreen> {
                     }),
                   ),
                   InfoRow(tr('Agent va imzo'), formatMoney(game.signingCost(p, f))),
-                  InfoRow(tr('Haftalik maosh'), formatMoney(game.offeredWage(p))),
-                  InfoRow(tr('Shartnoma'), '3 yil'),
+                  InfoRow(tr('Kutilayotgan maosh talabi'), formatMoney(game.wageDemand(p, game.userClub, seller))),
                   const Divider(),
                   InfoRow(tr('Jami xarajat'), formatMoney(f + game.signingCost(p, f))),
                   InfoRow(tr('Byudjetingiz'), game.userClub.formattedTransferBudget),
+                  _opinions(p, seller),
                   if (issue != null || message != null)
                     Padding(
                       padding: const EdgeInsets.only(top: 10),
@@ -86,6 +129,7 @@ class _TransferScreenState extends State<TransferScreen> {
                       ),
                     ),
                 ],
+                ),
               ),
             ),
             actions: [
@@ -93,23 +137,15 @@ class _TransferScreenState extends State<TransferScreen> {
               FilledButton(
                 onPressed: issue == null
                     ? () {
-                        final (result, value) = game.bidForPlayer(p, seller, f);
-                        switch (result) {
-                          case NegotiationResult.accepted:
-                            Navigator.pop(ctx);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text(trf('{0} jamoaga qo‘shildi', [p.name]))),
-                            );
-                          case NegotiationResult.countered:
-                            update(() {
-                              fee = value.toDouble();
-                              message = '${seller.shortName} qarshi taklif qildi: ${formatMoney(value)}';
-                            });
-                          case NegotiationResult.rejected:
-                            update(() => message = 'Taklif rad etildi. Klub kamida ${formatMoney(value)} kutmoqda.');
-                          case NegotiationResult.blocked:
-                            update(() => message = game.lastTransferError);
+                        final error = game.makeBid(p, seller, f);
+                        if (error != null) {
+                          update(() => message = error);
+                          return;
                         }
+                        Navigator.pop(ctx);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(trf('Taklif yuborildi: {0} keyingi turda javob beradi.', [seller.name]))),
+                        );
                       }
                     : null,
                 child: Text(tr('Taklif yuborish')),
@@ -133,7 +169,7 @@ class _TransferScreenState extends State<TransferScreen> {
           tabs: [
             Tab(text: tr('Bozor')),
             Tab(text: tr('Erkin agentlar')),
-            Tab(text: tr('Takliflar')),
+            Tab(text: game.dealsNeedingAction.isEmpty ? tr('Muzokaralar') : trf('Muzokaralar ({0})', [game.dealsNeedingAction.length])),
             Tab(text: tr('Qoidalar')),
           ],
         ),
@@ -173,15 +209,23 @@ class _TransferScreenState extends State<TransferScreen> {
   }
 
   Widget _market(BuildContext context) {
-    final cats = [null, ...PositionCategory.values.reversed];
+    // Same order as the filter labels: all, attack, midfield, defence, keepers.
+    final cats = [null, ...PositionCategory.values];
     final entries = <({Player p, Club c})>[];
     final pyramid = InitialDatabase.pyramidOf(game.leagueId);
+    // The last tab lists clubs from the countries the scouts have opened.
+    final foreign = game.world.clubs.isNotEmpty;
+    final abroadTab = pyramid.length + 1;
     final only = league == 0 || league > pyramid.length ? null : pyramid[league - 1].id;
     for (final c in game.marketClubs.where((c) => c.id != game.userClubId)) {
       if (only != null && game.leagueOfClub(c.id) != only) continue;
+      if (league == abroadTab && !game.isWorldClub(c)) continue;
       for (final p in c.squad) {
         final cat = cats[category];
-        if ((cat == null || p.mainPosition.category == cat) &&
+        final fits = position == null
+            ? (cat == null || p.mainPosition.category == cat)
+            : (p.mainPosition == position || p.altPositions.contains(position));
+        if (fits &&
             p.age >= ageRange.start &&
             p.age <= ageRange.end &&
             p.name.toLowerCase().contains(query.toLowerCase())) {
@@ -204,7 +248,10 @@ class _TransferScreenState extends State<TransferScreen> {
         _windowBanner(),
         const SizedBox(height: 12),
         TextField(
-          onChanged: (v) => setState(() => query = v),
+          onChanged: (v) => setState(() {
+            query = v;
+            page = 0;
+          }),
           decoration: InputDecoration(
             hintText: tr('Futbolchini qidirish'),
             prefixIcon: Icon(Icons.search_rounded),
@@ -212,20 +259,47 @@ class _TransferScreenState extends State<TransferScreen> {
             fillColor: AppColors.surface,
           ),
         ),
-        if (pyramid.length > 1) ...[
+        if (pyramid.length > 1 || foreign) ...[
           const SizedBox(height: 10),
           PillTabs(
-            labels: [tr('Barcha ligalar'), for (final l in pyramid) l.name],
+            labels: [
+              tr('Barcha ligalar'),
+              for (final l in pyramid) l.name,
+              if (foreign) trf('🌍 Chet el ({0})', [game.world.countries.length]),
+            ],
             index: league,
-            onChanged: (i) => setState(() => league = i),
+            onChanged: (i) => setState(() {
+              league = i;
+              page = 0;
+            }),
           ),
         ],
         const SizedBox(height: 10),
         PillTabs(
-          labels: [tr('Barchasi'), 'Hujum', 'Yarim himoya', 'Himoya', 'Darvoza'],
+          labels: [tr('Barchasi'), tr('Hujum'), tr('Yarim himoya'), tr('Himoya'), tr('Darvozabonlar')],
           index: category,
-          onChanged: (i) => setState(() => category = i),
+          onChanged: (i) => setState(() {
+            category = i;
+            position = null;
+            page = 0;
+          }),
         ),
+        if (cats[category] case final cat? when cat != PositionCategory.goalkeeper) ...[
+          const SizedBox(height: 8),
+          Builder(
+            builder: (context) {
+              final options = PlayerPosition.values.where((x) => x.category == cat).toList();
+              return PillTabs(
+                labels: [tr('Barcha pozitsiyalar'), for (final x in options) x.code],
+                index: position == null ? 0 : options.indexOf(position!) + 1,
+                onChanged: (i) => setState(() {
+                  position = i == 0 ? null : options[i - 1];
+                  page = 0;
+                }),
+              );
+            },
+          ),
+        ],
         const SizedBox(height: 6),
         Row(
           children: [
@@ -236,7 +310,10 @@ class _TransferScreenState extends State<TransferScreen> {
                 max: 40,
                 divisions: 24,
                 values: ageRange,
-                onChanged: (v) => setState(() => ageRange = v),
+                onChanged: (v) => setState(() {
+                  ageRange = v;
+                  page = 0;
+                }),
               ),
             ),
             DropdownButton<String>(
@@ -244,9 +321,12 @@ class _TransferScreenState extends State<TransferScreen> {
               underline: const SizedBox(),
               items: [
                 for (final label in ['Reyting', 'Forma', 'Salohiyat', 'Narx', 'Yosh'])
-                  DropdownMenuItem(value: label, child: Text(label, style: AppText.small)),
+                  DropdownMenuItem(value: label, child: Text(tr(label), style: AppText.small)),
               ],
-              onChanged: (v) => setState(() => sort = v!),
+              onChanged: (v) => setState(() {
+                sort = v!;
+                page = 0;
+              }),
             ),
           ],
         ),
@@ -256,16 +336,20 @@ class _TransferScreenState extends State<TransferScreen> {
               ? EmptyState(icon: Icons.search_off_rounded, text: tr('Mos futbolchi topilmadi'))
               : Column(
                   children: [
-                    for (final e in entries.take(80))
+                    for (final e in entries.skip(page * pageSize).take(pageSize))
                       PlayerTile(
                         player: e.p,
                         club: e.c,
-                        subtitle: trf('{0} · {1} yosh · salohiyat {2}', [e.c.shortName, e.p.age, e.p.potential]),
+                        subtitle: trf('{0} · {1} yosh · salohiyat {2}', [
+                          game.isWorldClub(e.c) ? '${InitialDatabase.info(game.leagueOfClub(e.c.id)).flag} ${e.c.shortName}' : e.c.shortName,
+                          e.p.age,
+                          game.isScouted(e.p) ? '${e.p.potential}' : '?',
+                        ]),
                         onTap: () => PlayerDetailView.show(context, player: e.p, club: e.c),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            ValueBadge(e.p.ovr, size: 30),
+                            ScoutedOvr(e.p, size: 30),
                             const SizedBox(width: 8),
                             FilledButton.tonal(
                               style: FilledButton.styleFrom(
@@ -281,7 +365,33 @@ class _TransferScreenState extends State<TransferScreen> {
                   ],
                 ),
         ),
+        _pager(entries.length),
       ],
+    );
+  }
+
+  /// "‹ 26–50 of 412 ›" – only one page of players is built at a time.
+  Widget _pager(int total) {
+    final pages = (total / pageSize).ceil();
+    if (pages <= 1) return const SizedBox.shrink();
+    final current = page.clamp(0, pages - 1);
+    final from = current * pageSize + 1, to = ((current + 1) * pageSize).clamp(0, total);
+    return Padding(
+      padding: const EdgeInsets.only(top: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            onPressed: current > 0 ? () => setState(() => page = current - 1) : null,
+            icon: const Icon(Icons.chevron_left_rounded),
+          ),
+          Text(trf('{0}–{1} / {2}', [from, to, total]), style: AppText.small),
+          IconButton(
+            onPressed: current < pages - 1 ? () => setState(() => page = current + 1) : null,
+            icon: const Icon(Icons.chevron_right_rounded),
+          ),
+        ],
+      ),
     );
   }
 
@@ -312,7 +422,7 @@ class _TransferScreenState extends State<TransferScreen> {
                       trailing: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          ValueBadge(p.ovr, size: 30),
+                          ScoutedOvr(p, size: 30),
                           const SizedBox(width: 8),
                           FilledButton.tonal(
                             style: FilledButton.styleFrom(minimumSize: const Size(64, 34)),
@@ -333,59 +443,218 @@ class _TransferScreenState extends State<TransferScreen> {
     ],
   );
 
-  Widget _offers(BuildContext context) => ListView(
-    padding: const EdgeInsets.all(12),
-    children: [
-      _windowBanner(),
-      const SizedBox(height: 12),
-      AppCard(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: game.offers.isEmpty
-            ? EmptyState(
-                icon: Icons.mark_email_unread_outlined,
-                text: tr('Futbolchilaringiz uchun hozircha taklif yo‘q. Ochiq transfer oynasida klublar taklif yuboradi.'),
-              )
-            : Column(
-                children: [
-                  for (final o in List.of(game.offers))
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                      child: Row(
-                        children: [
-                          ClubCrestWidget(config: o.buyer.crestConfig, size: 34),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(o.player.name, style: AppText.bodyStrong),
-                                Text(trf('{0} · {1} (baho {2})', [o.buyer.name, formatMoney(o.fee), formatMoney(o.player.marketValue)]), style: AppText.caption),
-                              ],
-                            ),
+  Widget _offers(BuildContext context) {
+    final open = [for (final d in game.deals) if (!d.stage.finished) d];
+    final closed = [for (final d in game.deals) if (d.stage.finished) d];
+    return ListView(
+      padding: const EdgeInsets.all(12),
+      children: [
+        _windowBanner(),
+        const SizedBox(height: 12),
+        if (game.deals.isEmpty)
+          AppCard(
+            child: EmptyState(
+              icon: Icons.handshake_outlined,
+              text: tr('Hozircha muzokaralar yo‘q. Bozordan futbolchiga taklif yuboring yoki o‘z futbolchingizni sotuvga qo‘ying.'),
+            ),
+          ),
+        for (final d in [...open, ...closed]) _dealCard(context, d),
+      ],
+    );
+  }
+
+  Widget _dealCard(BuildContext context, TransferDeal d) {
+    final buying = d.buyer.id == game.userClubId;
+    final other = buying ? d.seller : d.buyer;
+    final color = d.stage == DealStage.done
+        ? AppColors.win
+        : d.stage == DealStage.collapsed
+        ? AppColors.ink3
+        : d.stage.waitsForUser
+        ? AppColors.warning
+        : AppColors.primary;
+    void snack(String? text) {
+      if (text != null) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+    }
+
+    return AppCard(
+      margin: const EdgeInsets.only(bottom: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              FaceAvatar(config: d.player.face, size: 40, shirt: d.seller.primaryColor, circle: true),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(d.player.name, style: AppText.bodyStrong),
+                    Row(
+                      children: [
+                        Icon(buying ? Icons.call_received_rounded : Icons.call_made_rounded, size: 13, color: AppColors.ink3),
+                        const SizedBox(width: 4),
+                        ClubCrestWidget(config: other.crestConfig, size: 16),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            '${other.shortName} · ${formatMoney(d.fee)}',
+                            style: AppText.caption,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          IconButton(
-                            tooltip: tr('Rad etish'),
-                            onPressed: () => game.rejectOffer(o),
-                            icon: const Icon(Icons.close_rounded, color: AppColors.live),
-                          ),
-                          IconButton.filled(
-                            tooltip: tr('Qabul qilish'),
-                            onPressed: () {
-                              final ok = game.acceptOffer(o);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(content: Text(ok ? trf('{0} sotildi', [o.player.name]) : (game.lastTransferError ?? tr('Bajarilmadi')))),
-                              );
-                            },
-                            icon: const Icon(Icons.check_rounded),
-                          ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
+                child: Text(d.stage.label, style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: color)),
+              ),
+            ],
+          ),
+          if (d.note.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(d.note, style: AppText.small),
+          ],
+          if (!d.stage.finished && !d.stage.waitsForUser) ...[
+            const SizedBox(height: 4),
+            Text(
+              d.dueRound > game.currentRound ? trf('Javob: {0}-turda', [d.dueRound]) : tr('Javob keyingi turda'),
+              style: AppText.caption,
+            ),
+          ],
+          if (!d.stage.finished)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                children: [
+                  if (d.stage == DealStage.clubCountered) ...[
+                    FilledButton(
+                      onPressed: () => game.acceptCounter(d),
+                      child: Text(trf('Qabul qilish ({0})', [formatMoney(d.counterFee ?? d.fee)])),
+                    ),
+                    OutlinedButton(onPressed: () => _offer(d.player, d.seller), child: Text(tr('Yangi taklif'))),
+                  ],
+                  if (d.stage == DealStage.contractTalks)
+                    FilledButton.icon(
+                      onPressed: () => _contractDialog(d).then(snack),
+                      icon: const Icon(Icons.edit_document, size: 18),
+                      label: Text(tr('Shartnoma taklif qilish')),
+                    ),
+                  if (d.stage == DealStage.offerReceived) ...[
+                    FilledButton(onPressed: () => game.acceptDealOffer(d), child: Text(tr('Qabul qilish'))),
+                    OutlinedButton(onPressed: () => _counterDialog(d), child: Text(tr('Qarshi taklif'))),
+                  ],
+                  TextButton(
+                    style: TextButton.styleFrom(foregroundColor: AppColors.live),
+                    onPressed: () => game.cancelDeal(d),
+                    child: Text(d.stage == DealStage.offerReceived ? tr('Rad etish') : tr('Bekor qilish')),
+                  ),
                 ],
               ),
+            ),
+        ],
       ),
-    ],
-  );
+    );
+  }
+
+  /// Personal terms for a player whose fee is agreed.
+  Future<String?> _contractDialog(TransferDeal d) async {
+    final demand = game.wageDemand(d.player, d.buyer, d.seller);
+    var wage = (d.wage > 0 ? d.wage : demand).toDouble();
+    var years = d.years;
+    String? result;
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, update) => AlertDialog(
+          title: Text(trf('{0} bilan shartnoma', [d.player.shortName])),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              InfoRow(tr('Futbolchi talabi'), '${formatMoney(demand)}/${tr('hafta')}'),
+              InfoRow(tr('Bo‘sh maosh limiti'), formatMoney(game.userClub.remainingWageBudget)),
+              const SizedBox(height: 8),
+              Text(trf('Maosh: {0}/hafta', [formatMoney((wage / 1000).round() * 1000)]), style: AppText.h3),
+              Slider(
+                min: demand * 0.7,
+                max: demand * 1.4,
+                value: wage.clamp(demand * 0.7, demand * 1.4),
+                onChanged: (v) => update(() => wage = v),
+              ),
+              Text(trf('Muddat: {0} yil', [years]), style: AppText.bodyStrong),
+              Slider(
+                min: 1,
+                max: 5,
+                divisions: 4,
+                value: years.toDouble(),
+                onChanged: (v) => update(() => years = v.round()),
+              ),
+              Text(tr('Talabdan kam taklif qilsangiz, futbolchi rad etishi yoki ko‘proq so‘rashi mumkin.'), style: AppText.caption),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Bekor qilish'))),
+            FilledButton(
+              onPressed: () {
+                final error = game.offerContract(d, (wage / 1000).round() * 1000, years);
+                result = error ?? tr('Shartnoma taklifi yuborildi. Futbolchi keyingi turda javob beradi.');
+                Navigator.pop(ctx);
+              },
+              child: Text(tr('Taklif yuborish')),
+            ),
+          ],
+        ),
+      ),
+    );
+    return result;
+  }
+
+  Future<void> _counterDialog(TransferDeal d) async {
+    var fee = (d.fee * 1.2).toDouble();
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, update) => AlertDialog(
+          title: Text(tr('Qarshi taklif')),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              InfoRow(tr('Ularning taklifi'), formatMoney(d.fee)),
+              InfoRow(tr('Bozor bahosi'), formatMoney(d.player.marketValue)),
+              const SizedBox(height: 8),
+              Text(formatMoney((fee / 100000).round() * 100000), style: AppText.h3.copyWith(color: AppColors.primary)),
+              Slider(
+                min: d.fee.toDouble(),
+                max: d.fee * 2.0,
+                value: fee.clamp(d.fee.toDouble(), d.fee * 2.0),
+                onChanged: (v) => update(() => fee = v),
+              ),
+              Text(tr('Juda baland narx so‘rasangiz, xaridor muzokaradan chiqishi mumkin.'), style: AppText.caption),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: Text(tr('Bekor qilish'))),
+            FilledButton(
+              onPressed: () {
+                game.counterDealOffer(d, (fee / 100000).round() * 100000);
+                Navigator.pop(ctx);
+              },
+              child: Text(tr('Yuborish')),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _rules() => ListView(
     padding: const EdgeInsets.all(12),
@@ -396,14 +665,14 @@ class _TransferScreenState extends State<TransferScreen> {
           children: [
             SectionHeader(tr('Liga transfer reglamenti'), icon: Icons.gavel_rounded),
             for (final rule in [
-              'Yozgi oyna: 16 iyun – 1 sentabr. Qishki oyna: 1 yanvar – 2 fevral.',
-              'Ro‘yxat: ${GameState.minSquad}–${GameState.maxSquad} futbolchi. Klub kamida ikki darvozabonni saqlaydi.',
-              'O‘yin kuni zaxirasi: ${Club.matchdayBench} kishi. Har o‘yinda 5 ta almashtirish.',
-              'Maoshlar klubning haftalik limitidan oshmasligi kerak.',
-              'Narx qolgan shartnoma muddatiga bog‘liq; asosiy tarkib futbolchisi uchun klub 15% ko‘proq so‘raydi.',
-              'Taklif narxdan past bo‘lsa klub qarshi taklif qiladi yoki rad etadi.',
-              'Agent haqi: transferning 3%. Imzo bonusi: to‘rt haftalik maosh.',
-              'Mavsum oxirida shartnomasi tugagan futbolchilar klubni tark etadi.',
+              tr('Yozgi oyna: 16 iyun – 1 sentabr. Qishki oyna: 1 yanvar – 2 fevral.'),
+              trf('Ro‘yxat: {0}–{1} futbolchi. Klub kamida ikki darvozabonni saqlaydi.', [GameState.minSquad, GameState.maxSquad]),
+              trf('O‘yin kuni zaxirasi: {0} kishi. Har o‘yinda 5 ta almashtirish.', [Club.matchdayBench]),
+              tr('Maoshlar klubning haftalik limitidan oshmasligi kerak.'),
+              tr('Narx qolgan shartnoma muddatiga bog‘liq; asosiy tarkib futbolchisi uchun klub 15% ko‘proq so‘raydi.'),
+              tr('Taklif narxdan past bo‘lsa klub qarshi taklif qiladi yoki rad etadi.'),
+              tr('Agent haqi: transferning 3%. Imzo bonusi: to‘rt haftalik maosh.'),
+              tr('Mavsum oxirida shartnomasi tugagan futbolchilar klubni tark etadi.'),
             ])
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),

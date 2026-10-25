@@ -1,0 +1,3 @@
+# World leagues edited by hand (ids such as it1 = Serie A, es1 = LaLiga).
+# tool/world_data.py leaves these files in assets/data/world untouched.
+# One id per line; text after # is ignored.

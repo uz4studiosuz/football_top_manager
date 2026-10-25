@@ -9,6 +9,9 @@ import '../ui/widgets.dart';
 import 'main_navigation_screen.dart';
 import '../models/manager_profile.dart';
 import '../l10n/l10n.dart';
+import '../ui/league_picker.dart';
+import '../services/coin_wallet.dart';
+import '../ui/coin.dart';
 
 /// Foydalanuvchi o'z jamoasini noldan yaratish ekrani
 class CustomClubCreatorScreen extends StatefulWidget {
@@ -80,6 +83,10 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
   );
 
   void _createAndStart() {
+    if (!CoinWallet().canAfford(CoinWallet.customClubCost)) {
+      showCoinInfo(context);
+      return;
+    }
     final name = _nameController.text.trim();
     final shortName = _shortNameController.text.trim();
     final stadium = _stadiumController.text.trim();
@@ -89,6 +96,7 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
       );
       return;
     }
+    CoinWallet().spend(CoinWallet.customClubCost);
     GameState().startCareerWithCustomClub(
       name: name,
       shortName: shortName,
@@ -130,45 +138,8 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SectionHeader(tr('Qaysi ligada o‘ynaysiz?'), icon: Icons.emoji_events_outlined),
-          for (final l in InitialDatabase.leagues)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: Material(
-                color: l.id == _league ? AppColors.primarySoft : AppColors.surfaceAlt,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(color: l.id == _league ? AppColors.primary : AppColors.line, width: l.id == _league ? 2 : 1),
-                ),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () => setState(() => _league = l.id),
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: Row(
-                      children: [
-                        Icon(
-                          l.id == _league ? Icons.radio_button_checked : Icons.radio_button_unchecked,
-                          color: l.id == _league ? AppColors.primary : AppColors.ink3,
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(l.name, style: AppText.bodyStrong),
-                              Text(
-                                trf('{0} klub · {1} tur', [InitialDatabase.getClubs(l.id).length, (InitialDatabase.getClubs(l.id).length - 1) * 2]),
-                                style: AppText.caption,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ),
+          LeaguePicker(selected: _league, onChanged: (id) => setState(() => _league = id)),
+          const SizedBox(height: 10),
           Text(
             trf('Klubingiz {0} o‘rnini egallaydi · {1} tur.', [clubs.first.name, rounds]),
             style: AppText.small,
@@ -181,7 +152,9 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: Text(tr('Yangi Jamoa Yaratish'))),
-    body: SingleChildScrollView(
+    body: PageWidth(
+      maxWidth: 900,
+      child: SingleChildScrollView(
       padding: const EdgeInsets.all(12),
       child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -313,9 +286,9 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SectionHeader(tr('5. Klub ranglari')),
-              _colorRow('Asosiy rang', _primary, (c) => setState(() => _primary = c)),
-              _colorRow('Ikkilamchi rang', _secondary, (c) => setState(() => _secondary = c)),
-              _colorRow('Hoshiya rangi', _trim, (c) => setState(() => _trim = c)),
+              _colorRow(tr('Asosiy rang'), _primary, (c) => setState(() => _primary = c)),
+              _colorRow(tr('Ikkilamchi rang'), _secondary, (c) => setState(() => _secondary = c)),
+              _colorRow(tr('Hoshiya rangi'), _trim, (c) => setState(() => _trim = c)),
             ],
           ),
         ),
@@ -406,14 +379,34 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
         const SizedBox(height: 16),
         SizedBox(
           height: 52,
-          child: FilledButton.icon(
-            onPressed: _createAndStart,
-            icon: const Icon(Icons.rocket_launch_rounded),
-            label: FittedBox(child: Text(tr('KLUBNI YARATISH VA BOSHLASH'))),
+          child: ValueListenableBuilder<int>(
+            valueListenable: CoinWallet().balance,
+            builder: (context, coins, _) {
+              final ok = coins >= CoinWallet.customClubCost;
+              return FilledButton(
+                onPressed: _createAndStart,
+                style: ok ? null : FilledButton.styleFrom(backgroundColor: AppColors.ink3),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Flexible(
+                      child: FittedBox(child: Text(ok ? tr('KLUBNI YARATISH VA BOSHLASH') : tr('TANGA YETARLI EMAS'))),
+                    ),
+                    const SizedBox(width: 10),
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(3, 3, 9, 3),
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                      child: const CoinAmount(CoinWallet.customClubCost, size: 18),
+                    ),
+                  ],
+                ),
+              );
+            },
           ),
         ),
         const SizedBox(height: 20),
       ],
+    ),
     ),
     ),
   );
@@ -466,7 +459,7 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: AppText.small),
+        Text(tr(title), style: AppText.small),
         const SizedBox(height: 8),
         SizedBox(
           height: 36,

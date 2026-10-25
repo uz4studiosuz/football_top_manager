@@ -57,7 +57,8 @@
         "hair": 0,
         "cut": 0,
         "beardStyle": 2
-      }
+      },
+      "playingStyle": "attackingGoalkeeper"
     },
     {
       "id": "epl_ars_kepa",
@@ -214,7 +215,8 @@
         "hair": 0,
         "cut": 4,
         "beardStyle": 2
-      }
+      },
+      "playingStyle": "buildUp"
     },
     {
       "id": "epl_ars_gabriel",
@@ -272,7 +274,8 @@
         "hair": 0,
         "cut": 4,
         "beardStyle": 3
-      }
+      },
+      "playingStyle": "extraFrontman"
     },
     {
       "id": "epl_ars_jtimber",
@@ -330,7 +333,8 @@
         "hair": 0,
         "cut": 6,
         "beardStyle": 0
-      }
+      },
+      "playingStyle": "defensiveFullBack"
     },
     {
       "id": "epl_ars_rcalafiori",
@@ -388,7 +392,8 @@
         "hair": 1,
         "cut": 8,
         "beardStyle": 3
-      }
+      },
+      "playingStyle": "attackingFullBack"
     },
     {
       "id": "epl_ars_phincapié",
@@ -556,7 +561,8 @@
         "hair": 2,
         "cut": 0,
         "beardStyle": 3
-      }
+      },
+      "playingStyle": "defensiveFullBack"
     },
     {
       "id": "epl_ars_mlewisskelly",
@@ -608,7 +614,8 @@
         "weeklyWage": 123000,
         "releaseClause": 0
       },
-      "marketValue": 34000000
+      "marketValue": 34000000,
+      "playingStyle": "attackingFullBack"
     },
     {
       "id": "epl_ars_drice",
@@ -666,7 +673,8 @@
         "hair": 1,
         "cut": 0,
         "beardStyle": 1
-      }
+      },
+      "playingStyle": "boxToBox"
     },
     {
       "id": "epl_ars_mzubimendi",
@@ -724,7 +732,8 @@
         "hair": 0,
         "cut": 13,
         "beardStyle": 0
-      }
+      },
+      "playingStyle": "anchorMan"
     },
     {
       "id": "epl_ars_mødegaard",
@@ -782,7 +791,8 @@
         "hair": 2,
         "cut": 1,
         "beardStyle": 1
-      }
+      },
+      "playingStyle": "creativePlaymaker"
     },
     {
       "id": "epl_ars_mmerino",
@@ -840,7 +850,8 @@
         "hair": 1,
         "cut": 1,
         "beardStyle": 2
-      }
+      },
+      "playingStyle": "holePlayer"
     },
     {
       "id": "epl_ars_cnørgaard",
@@ -950,7 +961,8 @@
         "hair": 0,
         "cut": 4,
         "beardStyle": 1
-      }
+      },
+      "playingStyle": "creativePlaymaker"
     },
     {
       "id": "epl_ars_bsaka",
@@ -1008,7 +1020,8 @@
         "hair": 0,
         "cut": 4,
         "beardStyle": 0
-      }
+      },
+      "playingStyle": "prolificWinger"
     },
     {
       "id": "epl_ars_nmadueke",
@@ -1060,7 +1073,8 @@
         "weeklyWage": 170000,
         "releaseClause": 0
       },
-      "marketValue": 45000000
+      "marketValue": 45000000,
+      "playingStyle": "roamingFlank"
     },
     {
       "id": "epl_ars_gmartinelli",
@@ -1118,7 +1132,8 @@
         "hair": 1,
         "cut": 3,
         "beardStyle": 0
-      }
+      },
+      "playingStyle": "prolificWinger"
     },
     {
       "id": "epl_ars_ltrossard",
@@ -1170,7 +1185,8 @@
         "weeklyWage": 170000,
         "releaseClause": 0
       },
-      "marketValue": 24000000
+      "marketValue": 24000000,
+      "playingStyle": "roamingFlank"
     },
     {
       "id": "epl_ars_vgyökeres",
@@ -1228,7 +1244,8 @@
         "hair": 1,
         "cut": 12,
         "beardStyle": 2
-      }
+      },
+      "playingStyle": "goalPoacher"
     },
     {
       "id": "epl_ars_khavertz",
@@ -1286,7 +1303,8 @@
         "hair": 2,
         "cut": 13,
         "beardStyle": 1
-      }
+      },
+      "playingStyle": "deepLyingForward"
     },
     {
       "id": "epl_ars_gjesus",
@@ -1338,7 +1356,8 @@
         "weeklyWage": 84000,
         "releaseClause": 0
       },
-      "marketValue": 12500000
+      "marketValue": 12500000,
+      "playingStyle": "dummyRunner"
     },
     {
       "id": "epl_avl_emartínez",
@@ -1396,7 +1415,8 @@
         "hair": 0,
         "cut": 15,
         "beardStyle": 2
-      }
+      },
+      "playingStyle": "defensiveGoalkeeper"
     },
     {
       "id": "epl_avl_mbizot",
@@ -1553,7 +1573,8 @@
         "hair": 0,
         "cut": 4,
         "beardStyle": 1
-      }
+      },
+      "playingStyle": "buildUp"
     },
     {
       "id": "epl_avl_ptorres",
@@ -1611,7 +1632,8 @@
         "hair": 1,
         "cut": 1,
         "beardStyle": 1
-      }
+      },
+      "playingStyle": "buildUp"
     },
     {
       "id": "epl_avl_tmings",
@@ -1663,7 +1685,8 @@
         "weeklyWage": 133000,
         "releaseClause": 0
       },
-      "marketValue": 11500000
+      "marketValue": 11500000,
+      "playingStyle": "destroyer"
     },
     {
       "id": "epl_avl_vlindelöf",
@@ -1767,7 +1790,8 @@
         "weeklyWage": 164000,
         "releaseClause": 0
       },
-      "marketValue": 31500000
+      "marketValue": 31500000,
+      "playingStyle": "attackingFullBack"
     },
     {
       "id": "epl_avl_ldigne",
@@ -1819,7 +1843,8 @@
         "weeklyWage": 133000,
         "releaseClause": 0
       },
-      "marketValue": 11500000
+      "marketValue": 11500000,
+      "playingStyle": "crossSpecialist"
     },
     {
       "id": "epl_avl_imaatsen",
@@ -1981,7 +2006,8 @@
         "hair": 0,
         "cut": 4,
         "beardStyle": 2
-      }
+      },
+      "playingStyle": "destroyer"
     },
     {
       "id": "epl_avl_aonana",
@@ -2097,7 +2123,8 @@
         "hair": 1,
         "cut": 0,
         "beardStyle": 2
-      }
+      },
+      "playingStyle": "orchestrator"
     },
     {
       "id": "epl_avl_jmcginn",
@@ -2149,7 +2176,8 @@
         "weeklyWage": 181000,
         "releaseClause": 0
       },
-      "marketValue": 27000000
+      "marketValue": 27000000,
+      "playingStyle": "boxToBox"
     },
     {
       "id": "epl_avl_rbarkley",
@@ -2310,7 +2338,8 @@
         "hair": 0,
         "cut": 3,
         "beardStyle": 0
-      }
+      },
+      "playingStyle": "holePlayer"
     },
     {
       "id": "epl_avl_jsancho",
@@ -2362,7 +2391,8 @@
         "weeklyWage": 148000,
         "releaseClause": 0
       },
-      "marketValue": 33000000
+      "marketValue": 33000000,
+      "playingStyle": "roamingFlank"
     },
     {
       "id": "epl_avl_ebuendía",
@@ -2472,7 +2502,8 @@
         "hair": 0,
         "cut": 4,
         "beardStyle": 2
-      }
+      },
+      "playingStyle": "advancedStriker"
     },
     {
       "id": "epl_avl_helliott",
@@ -7804,7 +7835,8 @@
         "weeklyWage": 168000,
         "releaseClause": 0
       },
-      "marketValue": 31500000
+      "marketValue": 31500000,
+      "playingStyle": "attackingGoalkeeper"
     },
     {
       "id": "epl_che_fjørgensen",
@@ -7965,7 +7997,8 @@
         "hair": 1,
         "cut": 0,
         "beardStyle": 0
-      }
+      },
+      "playingStyle": "buildUp"
     },
     {
       "id": "epl_che_wfofana",
@@ -8017,7 +8050,8 @@
         "weeklyWage": 168000,
         "releaseClause": 0
       },
-      "marketValue": 38000000
+      "marketValue": 38000000,
+      "playingStyle": "destroyer"
     },
     {
       "id": "epl_che_tchalobah",
@@ -8069,7 +8103,8 @@
         "weeklyWage": 168000,
         "releaseClause": 0
       },
-      "marketValue": 38000000
+      "marketValue": 38000000,
+      "playingStyle": "buildUp"
     },
     {
       "id": "epl_che_tadarabioyo",
@@ -8283,7 +8318,8 @@
         "hair": 0,
         "cut": 4,
         "beardStyle": 2
-      }
+      },
+      "playingStyle": "attackingFullBack"
     },
     {
       "id": "epl_che_mgusto",
@@ -8335,7 +8371,8 @@
         "weeklyWage": 152000,
         "releaseClause": 0
       },
-      "marketValue": 39000000
+      "marketValue": 39000000,
+      "playingStyle": "attackingFullBack"
     },
     {
       "id": "epl_che_mcucurella",
@@ -8393,7 +8430,8 @@
         "hair": 1,
         "cut": 8,
         "beardStyle": 0
-      }
+      },
+      "playingStyle": "defensiveFullBack"
     },
     {
       "id": "epl_che_mcaicedo",
@@ -8451,7 +8489,8 @@
         "hair": 0,
         "cut": 15,
         "beardStyle": 1
-      }
+      },
+      "playingStyle": "destroyer"
     },
     {
       "id": "epl_che_efernández",
@@ -8509,7 +8548,8 @@
         "hair": 0,
         "cut": 12,
         "beardStyle": 1
-      }
+      },
+      "playingStyle": "boxToBox"
     },
     {
       "id": "epl_che_rlavia",
@@ -8561,7 +8601,8 @@
         "weeklyWage": 136000,
         "releaseClause": 0
       },
-      "marketValue": 34000000
+      "marketValue": 34000000,
+      "playingStyle": "anchorMan"
     },
     {
       "id": "epl_che_asantos",
@@ -8671,7 +8712,8 @@
         "hair": 5,
         "cut": 15,
         "beardStyle": 0
-      }
+      },
+      "playingStyle": "creativePlaymaker"
     },
     {
       "id": "epl_che_pneto",
@@ -8729,7 +8771,8 @@
         "hair": 0,
         "cut": 15,
         "beardStyle": 1
-      }
+      },
+      "playingStyle": "prolificWinger"
     },
     {
       "id": "epl_che_estêvão",
@@ -8781,7 +8824,8 @@
         "weeklyWage": 168000,
         "releaseClause": 0
       },
-      "marketValue": 52500000
+      "marketValue": 52500000,
+      "playingStyle": "prolificWinger"
     },
     {
       "id": "epl_che_jgittens",
@@ -8885,7 +8929,8 @@
         "weeklyWage": 152000,
         "releaseClause": 0
       },
-      "marketValue": 45500000
+      "marketValue": 45500000,
+      "playingStyle": "roamingFlank"
     },
     {
       "id": "epl_che_jpedro",
@@ -8943,7 +8988,8 @@
         "hair": 0,
         "cut": 15,
         "beardStyle": 0
-      }
+      },
+      "playingStyle": "holePlayer"
     },
     {
       "id": "epl_che_ldelap",
@@ -8995,7 +9041,8 @@
         "weeklyWage": 136000,
         "releaseClause": 0
       },
-      "marketValue": 34000000
+      "marketValue": 34000000,
+      "playingStyle": "targetMan"
     },
     {
       "id": "epl_che_cwiley",
@@ -14128,7 +14175,8 @@
         "hair": 1,
         "cut": 1,
         "beardStyle": 3
-      }
+      },
+      "playingStyle": "attackingGoalkeeper"
     },
     {
       "id": "epl_liv_gmamardashvili",
@@ -14290,7 +14338,8 @@
         "hair": 0,
         "cut": 15,
         "beardStyle": 2
-      }
+      },
+      "playingStyle": "buildUp"
     },
     {
       "id": "epl_liv_ikonaté",
@@ -14348,7 +14397,8 @@
         "hair": 0,
         "cut": 4,
         "beardStyle": 1
-      }
+      },
+      "playingStyle": "destroyer"
     },
     {
       "id": "epl_liv_jgomez",
@@ -14509,7 +14559,8 @@
         "hair": 0,
         "cut": 3,
         "beardStyle": 0
-      }
+      },
+      "playingStyle": "attackingFullBack"
     },
     {
       "id": "epl_liv_cbradley",
@@ -14613,7 +14664,8 @@
         "weeklyWage": 189000,
         "releaseClause": 0
       },
-      "marketValue": 51500000
+      "marketValue": 51500000,
+      "playingStyle": "attackingFullBack"
     },
     {
       "id": "epl_liv_arobertson",
@@ -14665,7 +14717,8 @@
         "weeklyWage": 189000,
         "releaseClause": 0
       },
-      "marketValue": 27000000
+      "marketValue": 27000000,
+      "playingStyle": "attackingFullBack"
     },
     {
       "id": "epl_liv_rgravenberch",
@@ -14723,7 +14776,8 @@
         "hair": 0,
         "cut": 3,
         "beardStyle": 0
-      }
+      },
+      "playingStyle": "boxToBox"
     },
     {
       "id": "epl_liv_amacallister",
@@ -14781,7 +14835,8 @@
         "hair": 1,
         "cut": 3,
         "beardStyle": 1
-      }
+      },
+      "playingStyle": "orchestrator"
     },
     {
       "id": "epl_liv_dszoboszlai",
@@ -14839,7 +14894,8 @@
         "hair": 3,
         "cut": 12,
         "beardStyle": 0
-      }
+      },
+      "playingStyle": "boxToBox"
     },
     {
       "id": "epl_liv_cjones",
@@ -14943,7 +14999,8 @@
         "weeklyWage": 110000,
         "releaseClause": 0
       },
-      "marketValue": 8400000
+      "marketValue": 8400000,
+      "playingStyle": "destroyer"
     },
     {
       "id": "epl_liv_fwirtz",
@@ -15001,7 +15058,8 @@
         "hair": 2,
         "cut": 0,
         "beardStyle": 0
-      }
+      },
+      "playingStyle": "creativePlaymaker"
     },
     {
       "id": "epl_liv_msalah",
@@ -15059,7 +15117,8 @@
         "hair": 0,
         "cut": 7,
         "beardStyle": 3
-      }
+      },
+      "playingStyle": "prolificWinger"
     },
     {
       "id": "epl_liv_cgakpo",
@@ -15117,7 +15176,8 @@
         "hair": 0,
         "cut": 15,
         "beardStyle": 0
-      }
+      },
+      "playingStyle": "roamingFlank"
     },
     {
       "id": "epl_liv_fchiesa",
@@ -15278,7 +15338,8 @@
         "hair": 0,
         "cut": 15,
         "beardStyle": 1
-      }
+      },
+      "playingStyle": "advancedStriker"
     },
     {
       "id": "epl_liv_hekitiké",
@@ -15336,7 +15397,8 @@
         "hair": 0,
         "cut": 3,
         "beardStyle": 0
-      }
+      },
+      "playingStyle": "dummyRunner"
     },
     {
       "id": "epl_mci_gdonnarumma",
@@ -15394,7 +15456,8 @@
         "hair": 0,
         "cut": 0,
         "beardStyle": 2
-      }
+      },
+      "playingStyle": "defensiveGoalkeeper"
     },
     {
       "id": "epl_mci_jtrafford",
@@ -15504,7 +15567,8 @@
         "hair": 0,
         "cut": 1,
         "beardStyle": 3
-      }
+      },
+      "playingStyle": "destroyer"
     },
     {
       "id": "epl_mci_jgvardiol",
@@ -15562,7 +15626,8 @@
         "hair": 1,
         "cut": 0,
         "beardStyle": 1
-      }
+      },
+      "playingStyle": "attackingFullBack"
     },
     {
       "id": "epl_mci_jstones",
@@ -15620,7 +15685,8 @@
         "hair": 1,
         "cut": 1,
         "beardStyle": 1
-      }
+      },
+      "playingStyle": "buildUp"
     },
     {
       "id": "epl_mci_akhusanov",
@@ -15685,7 +15751,8 @@
         "nose": 1,
         "mouth": 0,
         "age": 0
-      }
+      },
+      "playingStyle": "destroyer"
     },
     {
       "id": "epl_mci_naké",
@@ -15789,7 +15856,8 @@
         "weeklyWage": 172000,
         "releaseClause": 0
       },
-      "marketValue": 38000000
+      "marketValue": 38000000,
+      "playingStyle": "attackingFullBack"
     },
     {
       "id": "epl_mci_rlewis",
@@ -15841,7 +15909,8 @@
         "weeklyWage": 140000,
         "releaseClause": 0
       },
-      "marketValue": 39500000
+      "marketValue": 39500000,
+      "playingStyle": "fullBackFinisher"
     },
     {
       "id": "epl_mci_raïtnouri",
@@ -15899,7 +15968,8 @@
         "hair": 0,
         "cut": 3,
         "beardStyle": 1
-      }
+      },
+      "playingStyle": "attackingFullBack"
     },
     {
       "id": "epl_mci_rodri",
@@ -15957,7 +16027,8 @@
         "hair": 1,
         "cut": 1,
         "beardStyle": 2
-      }
+      },
+      "playingStyle": "orchestrator"
     },
     {
       "id": "epl_mci_treijnders",
@@ -16015,7 +16086,8 @@
         "hair": 0,
         "cut": 3,
         "beardStyle": 2
-      }
+      },
+      "playingStyle": "boxToBox"
     },
     {
       "id": "epl_mci_bsilva",
@@ -16073,7 +16145,8 @@
         "hair": 1,
         "cut": 13,
         "beardStyle": 3
-      }
+      },
+      "playingStyle": "roamingFlank"
     },
     {
       "id": "epl_mci_mkovačić",
@@ -16125,7 +16198,8 @@
         "weeklyWage": 190000,
         "releaseClause": 0
       },
-      "marketValue": 27000000
+      "marketValue": 27000000,
+      "playingStyle": "boxToBox"
     },
     {
       "id": "epl_mci_ngonzález",
@@ -16177,7 +16251,8 @@
         "weeklyWage": 156000,
         "releaseClause": 0
       },
-      "marketValue": 39000000
+      "marketValue": 39000000,
+      "playingStyle": "anchorMan"
     },
     {
       "id": "epl_mci_rcherki",
@@ -16235,7 +16310,8 @@
         "hair": 0,
         "cut": 3,
         "beardStyle": 0
-      }
+      },
+      "playingStyle": "creativePlaymaker"
     },
     {
       "id": "epl_mci_pfoden",
@@ -16293,7 +16369,8 @@
         "hair": 1,
         "cut": 4,
         "beardStyle": 1
-      }
+      },
+      "playingStyle": "holePlayer"
     },
     {
       "id": "epl_mci_jdoku",
@@ -16351,7 +16428,8 @@
         "hair": 0,
         "cut": 4,
         "beardStyle": 0
-      }
+      },
+      "playingStyle": "roamingFlank"
     },
     {
       "id": "epl_mci_savinho",
@@ -16403,7 +16481,8 @@
         "weeklyWage": 172000,
         "releaseClause": 0
       },
-      "marketValue": 52500000
+      "marketValue": 52500000,
+      "playingStyle": "prolificWinger"
     },
     {
       "id": "epl_mci_ehaaland",
@@ -16461,7 +16540,8 @@
         "hair": 3,
         "cut": 9,
         "beardStyle": 0
-      }
+      },
+      "playingStyle": "goalPoacher"
     },
     {
       "id": "epl_mci_omarmoush",
@@ -16519,7 +16599,8 @@
         "hair": 0,
         "cut": 3,
         "beardStyle": 2
-      }
+      },
+      "playingStyle": "advancedStriker"
     },
     {
       "id": "epl_mci_asemenyo",
@@ -16577,7 +16658,8 @@
         "hair": 0,
         "cut": 4,
         "beardStyle": 1
-      }
+      },
+      "playingStyle": "prolificWinger"
     },
     {
       "id": "epl_mci_mguehi",
@@ -16635,7 +16717,8 @@
         "hair": 0,
         "cut": 4,
         "beardStyle": 0
-      }
+      },
+      "playingStyle": "buildUp"
     },
     {
       "id": "epl_mci_snypan",
@@ -16896,7 +16979,8 @@
         "hair": 3,
         "cut": 0,
         "beardStyle": 0
-      }
+      },
+      "playingStyle": "buildUp"
     },
     {
       "id": "epl_mun_lyoro",
@@ -16948,7 +17032,8 @@
         "weeklyWage": 153000,
         "releaseClause": 0
       },
-      "marketValue": 45500000
+      "marketValue": 45500000,
+      "playingStyle": "buildUp"
     },
     {
       "id": "epl_mun_lmartínez",
@@ -17006,7 +17091,8 @@
         "hair": 0,
         "cut": 9,
         "beardStyle": 3
-      }
+      },
+      "playingStyle": "destroyer"
     },
     {
       "id": "epl_mun_hmaguire",
@@ -17058,7 +17144,8 @@
         "weeklyWage": 122000,
         "releaseClause": 0
       },
-      "marketValue": 9800000
+      "marketValue": 9800000,
+      "playingStyle": "extraFrontman"
     },
     {
       "id": "epl_mun_aheaven",
@@ -17213,7 +17300,8 @@
         "weeklyWage": 153000,
         "releaseClause": 0
       },
-      "marketValue": 33000000
+      "marketValue": 33000000,
+      "playingStyle": "attackingFullBack"
     },
     {
       "id": "epl_mun_lshaw",
@@ -17265,7 +17353,8 @@
         "weeklyWage": 137000,
         "releaseClause": 0
       },
-      "marketValue": 18000000
+      "marketValue": 18000000,
+      "playingStyle": "attackingFullBack"
     },
     {
       "id": "epl_mun_pdorgu",
@@ -17375,7 +17464,8 @@
         "hair": 1,
         "cut": 1,
         "beardStyle": 2
-      }
+      },
+      "playingStyle": "creativePlaymaker"
     },
     {
       "id": "epl_mun_casemiro",
@@ -17427,7 +17517,8 @@
         "weeklyWage": 153000,
         "releaseClause": 0
       },
-      "marketValue": 13000000
+      "marketValue": 13000000,
+      "playingStyle": "destroyer"
     },
     {
       "id": "epl_mun_mugarte",
@@ -17479,7 +17570,8 @@
         "weeklyWage": 137000,
         "releaseClause": 0
       },
-      "marketValue": 34000000
+      "marketValue": 34000000,
+      "playingStyle": "anchorMan"
     },
     {
       "id": "epl_mun_kmainoo",
@@ -17531,7 +17623,8 @@
         "weeklyWage": 153000,
         "releaseClause": 0
       },
-      "marketValue": 45500000
+      "marketValue": 45500000,
+      "playingStyle": "boxToBox"
     },
     {
       "id": "epl_mun_mmount",
@@ -17641,7 +17734,8 @@
         "hair": 0,
         "cut": 4,
         "beardStyle": 2
-      }
+      },
+      "playingStyle": "prolificWinger"
     },
     {
       "id": "epl_mun_mcunha",
@@ -17699,7 +17793,8 @@
         "hair": 0,
         "cut": 15,
         "beardStyle": 1
-      }
+      },
+      "playingStyle": "holePlayer"
     },
     {
       "id": "epl_mun_amad",
@@ -17751,7 +17846,8 @@
         "weeklyWage": 169000,
         "releaseClause": 0
       },
-      "marketValue": 45000000
+      "marketValue": 45000000,
+      "playingStyle": "roamingFlank"
     },
     {
       "id": "epl_mun_bšeško",
@@ -17803,7 +17899,8 @@
         "weeklyWage": 169000,
         "releaseClause": 0
       },
-      "marketValue": 45000000
+      "marketValue": 45000000,
+      "playingStyle": "targetMan"
     },
     {
       "id": "epl_mun_jzirkzee",
@@ -17960,7 +18057,8 @@
         "hair": 1,
         "cut": 0,
         "beardStyle": 1
-      }
+      },
+      "playingStyle": "defensiveGoalkeeper"
     },
     {
       "id": "epl_new_aramsdale",
@@ -18122,7 +18220,8 @@
         "hair": 2,
         "cut": 1,
         "beardStyle": 2
-      }
+      },
+      "playingStyle": "buildUp"
     },
     {
       "id": "epl_new_fschär",
@@ -18174,7 +18273,8 @@
         "weeklyWage": 150000,
         "releaseClause": 0
       },
-      "marketValue": 13000000
+      "marketValue": 13000000,
+      "playingStyle": "extraFrontman"
     },
     {
       "id": "epl_new_dburn",
@@ -18226,7 +18326,8 @@
         "weeklyWage": 135000,
         "releaseClause": 0
       },
-      "marketValue": 11500000
+      "marketValue": 11500000,
+      "playingStyle": "defensiveFullBack"
     },
     {
       "id": "epl_new_mthiaw",
@@ -18377,7 +18478,8 @@
         "weeklyWage": 120000,
         "releaseClause": 0
       },
-      "marketValue": 5100000
+      "marketValue": 5100000,
+      "playingStyle": "crossSpecialist"
     },
     {
       "id": "epl_new_tlivramento",
@@ -18429,7 +18531,8 @@
         "weeklyWage": 166000,
         "releaseClause": 0
       },
-      "marketValue": 45000000
+      "marketValue": 45000000,
+      "playingStyle": "attackingFullBack"
     },
     {
       "id": "epl_new_lhall",
@@ -18539,7 +18642,8 @@
         "hair": 0,
         "cut": 15,
         "beardStyle": 3
-      }
+      },
+      "playingStyle": "orchestrator"
     },
     {
       "id": "epl_new_stonali",
@@ -18597,7 +18701,8 @@
         "hair": 1,
         "cut": 8,
         "beardStyle": 1
-      }
+      },
+      "playingStyle": "boxToBox"
     },
     {
       "id": "epl_new_joelinton",
@@ -18649,7 +18754,8 @@
         "weeklyWage": 183000,
         "releaseClause": 0
       },
-      "marketValue": 36500000
+      "marketValue": 36500000,
+      "playingStyle": "destroyer"
     },
     {
       "id": "epl_new_jramsey",
@@ -18863,7 +18969,8 @@
         "hair": 1,
         "cut": 15,
         "beardStyle": 0
-      }
+      },
+      "playingStyle": "prolificWinger"
     },
     {
       "id": "epl_new_hbarnes",
@@ -18915,7 +19022,8 @@
         "weeklyWage": 135000,
         "releaseClause": 0
       },
-      "marketValue": 24000000
+      "marketValue": 24000000,
+      "playingStyle": "roamingFlank"
     },
     {
       "id": "epl_new_jmurphy",
@@ -18967,7 +19075,8 @@
         "weeklyWage": 120000,
         "releaseClause": 0
       },
-      "marketValue": 15500000
+      "marketValue": 15500000,
+      "playingStyle": "crossSpecialist"
     },
     {
       "id": "epl_new_aelanga",
@@ -19077,7 +19186,8 @@
         "hair": 2,
         "cut": 1,
         "beardStyle": 0
-      }
+      },
+      "playingStyle": "targetMan"
     },
     {
       "id": "epl_new_ywissa",
@@ -19129,7 +19239,8 @@
         "weeklyWage": 166000,
         "releaseClause": 0
       },
-      "marketValue": 31500000
+      "marketValue": 31500000,
+      "playingStyle": "advancedStriker"
     },
     {
       "id": "epl_new_ekrafth",
@@ -21878,7 +21989,8 @@
         "hair": 1,
         "cut": 1,
         "beardStyle": 2
-      }
+      },
+      "playingStyle": "defensiveGoalkeeper"
     },
     {
       "id": "epl_tot_akinský",
@@ -22039,7 +22151,8 @@
         "hair": 0,
         "cut": 15,
         "beardStyle": 2
-      }
+      },
+      "playingStyle": "destroyer"
     },
     {
       "id": "epl_tot_mvandeven",
@@ -22092,7 +22205,8 @@
         "hair": 3,
         "cut": 0,
         "beardStyle": 0
-      }
+      },
+      "playingStyle": "buildUp"
     },
     {
       "id": "epl_tot_rdrăgușin",
@@ -22254,7 +22368,8 @@
         "hair": 0,
         "cut": 0,
         "beardStyle": 2
-      }
+      },
+      "playingStyle": "attackingFullBack"
     },
     {
       "id": "epl_tot_dspence",
@@ -22358,7 +22473,8 @@
         "weeklyWage": 151000,
         "releaseClause": 0
       },
-      "marketValue": 39000000
+      "marketValue": 39000000,
+      "playingStyle": "attackingFullBack"
     },
     {
       "id": "epl_tot_bdavies",
@@ -22468,7 +22584,8 @@
         "hair": 0,
         "cut": 0,
         "beardStyle": 3
-      }
+      },
+      "playingStyle": "destroyer"
     },
     {
       "id": "epl_tot_rbentancur",
@@ -22520,7 +22637,8 @@
         "weeklyWage": 151000,
         "releaseClause": 0
       },
-      "marketValue": 27500000
+      "marketValue": 27500000,
+      "playingStyle": "boxToBox"
     },
     {
       "id": "epl_tot_psarr",
@@ -22572,7 +22690,8 @@
         "weeklyWage": 151000,
         "releaseClause": 0
       },
-      "marketValue": 39000000
+      "marketValue": 39000000,
+      "playingStyle": "boxToBox"
     },
     {
       "id": "epl_tot_ybissouma",
@@ -22624,7 +22743,8 @@
         "weeklyWage": 107000,
         "releaseClause": 0
       },
-      "marketValue": 17500000
+      "marketValue": 17500000,
+      "playingStyle": "anchorMan"
     },
     {
       "id": "epl_tot_agray",
@@ -22786,7 +22906,8 @@
         "hair": 0,
         "cut": 3,
         "beardStyle": 0
-      }
+      },
+      "playingStyle": "holePlayer"
     },
     {
       "id": "epl_tot_jmaddison",
@@ -22838,7 +22959,8 @@
         "weeklyWage": 184000,
         "releaseClause": 0
       },
-      "marketValue": 36500000
+      "marketValue": 36500000,
+      "playingStyle": "creativePlaymaker"
     },
     {
       "id": "epl_tot_mkudus",
@@ -22896,7 +23018,8 @@
         "hair": 0,
         "cut": 15,
         "beardStyle": 2
-      }
+      },
+      "playingStyle": "roamingFlank"
     },
     {
       "id": "epl_tot_mtel",
@@ -23000,7 +23123,8 @@
         "weeklyWage": 121000,
         "releaseClause": 0
       },
-      "marketValue": 20500000
+      "marketValue": 20500000,
+      "playingStyle": "advancedStriker"
     },
     {
       "id": "epl_tot_dsolanke",
@@ -23052,7 +23176,8 @@
         "weeklyWage": 184000,
         "releaseClause": 0
       },
-      "marketValue": 36500000
+      "marketValue": 36500000,
+      "playingStyle": "deepLyingForward"
     },
     {
       "id": "epl_tot_cgallagher",
@@ -23208,7 +23333,8 @@
         "weeklyWage": 94000,
         "releaseClause": 0
       },
-      "marketValue": 17500000
+      "marketValue": 17500000,
+      "playingStyle": "roamingFlank"
     },
     {
       "id": "epl_tot_wodobert",

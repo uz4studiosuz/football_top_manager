@@ -3,12 +3,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:football_top_manager/main.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:football_top_manager/services/coin_wallet.dart';
 
 void main() {
   setUpAll(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
     await InitialDatabase.load();
-    SharedPreferences.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues({'ftm27_lang': 'uz'});
   });
   testWidgets('App starts at Onboarding screen and allows selecting club', (
     WidgetTester tester,
@@ -21,6 +22,11 @@ void main() {
     });
 
     await tester.pumpWidget(const FootballTopManagerApp());
+    await tester.pumpAndSettle();
+
+    // First launch: the welcome coin bonus is shown once.
+    expect(find.text('Xush kelibsiz!'), findsOneWidget);
+    await tester.tap(find.text('Boshladik'));
     await tester.pumpAndSettle();
 
     // Check Onboarding Screen elements
@@ -40,7 +46,10 @@ void main() {
     await tester.tap(selectClubBtn);
     await tester.pumpAndSettle();
 
-    // Verify ClubSelectionScreen loaded
+    // Clubs are listed strongest first: pick Real Madrid's tile.
+    await tester.ensureVisible(find.text('RMA'));
+    await tester.tap(find.text('RMA'));
+    await tester.pumpAndSettle();
     expect(find.text('Real Madrid'), findsWidgets);
 
     // Select Real Madrid
@@ -65,7 +74,8 @@ void main() {
     expect(find.text('Turnir jadvali'), findsOneWidget);
 
     // Player leaderboards live in the third tab.
-    await tester.tap(find.text('Futbolchilar'));
+    // A notification banner may cover the tab bar: switch tabs directly.
+    DefaultTabController.of(tester.element(find.text('Turnir jadvali'))).animateTo(2);
     await tester.pumpAndSettle();
 
     expect(find.text('To\'purarlar'), findsOneWidget);
@@ -75,6 +85,8 @@ void main() {
   testWidgets('Can navigate to Custom Club Creator from Onboarding screen', (
     WidgetTester tester,
   ) async {
+    // The first test spent coins on Real Madrid; top up for the custom club.
+    CoinWallet().reward(CoinWallet.customClubCost);
     tester.view.physicalSize = const Size(800, 1600);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(() {

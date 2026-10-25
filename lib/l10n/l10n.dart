@@ -29,7 +29,10 @@ class L10n {
     for (final l in [AppLang.en, AppLang.ru]) {
       if (_catalogs.containsKey(l)) continue;
       try {
-        final raw = jsonDecode(await rootBundle.loadString('assets/l10n/${l.name}.json')) as Map;
+        // Decoded here rather than with loadString, which hands large files
+        // to a background isolate.
+        final bytes = await rootBundle.load('assets/l10n/${l.name}.json');
+        final raw = jsonDecode(utf8.decode(bytes.buffer.asUint8List())) as Map;
         _catalogs[l] = raw.map((k, v) => MapEntry(k as String, v as String));
       } catch (_) {
         _catalogs[l] = {};

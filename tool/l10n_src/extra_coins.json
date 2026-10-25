@@ -1,0 +1,22 @@
+{
+ "Boshladik": ["Let's go", "Поехали"],
+ "FTM tangalari": ["FTM Coins", "Монеты FTM"],
+ "Hujum yo‘nalishi": ["Attacking direction", "Направление атаки"],
+ "Issiqlik xaritasi": ["Heatmap", "Тепловая карта"],
+ "Kengash maqsadi bajarildi": ["Board objective met", "Цель правления выполнена"],
+ "Klub OVR 70 dan past": ["Club OVR below 70", "Клуб с OVR ниже 70"],
+ "Klub OVR 70–74": ["Club OVR 70–74", "Клуб с OVR 70–74"],
+ "Klub OVR 75–79": ["Club OVR 75–79", "Клуб с OVR 75–79"],
+ "Klub OVR 80–84": ["Club OVR 80–84", "Клуб с OVR 80–84"],
+ "Klub OVR 85+": ["Club OVR 85+", "Клуб с OVR 85+"],
+ "Narxlar": ["Prices", "Цены"],
+ "Qanday topiladi": ["How to earn", "Как заработать"],
+ "Sizga {0} FTM tanga sovg‘a qilindi. Tangalar mavjud klubni boshqarish yoki o‘z klubingizni yaratish uchun sarflanadi, g‘alabalar, chempionlik va ko‘tarilish uchun esa qaytib keladi.": [
+  "You have received {0} FTM Coins as a gift. Spend them to take over an existing club or found your own; earn them back with wins, titles and promotions.",
+  "Вам подарено {0} монет FTM. Тратьте их, чтобы возглавить существующий клуб или создать свой; победы, титулы и повышения в классе возвращают монеты."
+ ],
+ "TANGA YETARLI EMAS": ["NOT ENOUGH COINS", "НЕДОСТАТОЧНО МОНЕТ"],
+ "Xush kelibsiz!": ["Welcome!", "Добро пожаловать!"],
+ "Yangi klub yaratish": ["Create a new club", "Создание нового клуба"],
+ "Yuqori ligaga ko‘tarilish": ["Promotion to a higher league", "Повышение в классе"]
+}

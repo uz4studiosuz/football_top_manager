@@ -7,8 +7,10 @@ import '../services/season_calendar.dart';
 import '../ui/face_avatar.dart';
 import '../ui/match_widgets.dart';
 import '../ui/shot_widgets.dart';
+import '../ui/heatmap.dart';
 import '../ui/widgets.dart';
 import 'widgets/player_detail_view.dart';
+import 'player_match_screen.dart';
 import '../l10n/l10n.dart';
 
 /// Post-match page for any played fixture (SofaScore event page layout).
@@ -31,7 +33,7 @@ class _MatchReportScreenState extends State<MatchReportScreen> {
       length: 4,
       child: Scaffold(
         appBar: AppBar(
-          title: Text(trf('{0} · {1}-tur', [GameState().leagueName, f.round]), style: AppText.h3),
+          title: Text(GameState().fixtureTitle(f), style: AppText.h3),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(178),
             child: Column(
@@ -45,7 +47,7 @@ class _MatchReportScreenState extends State<MatchReportScreen> {
                   events: f.events,
                   caption: f.date == null
                       ? null
-                      : '${SeasonCalendar.format(f.date!, year: true)}${f.attendance > 0 ? ' · ${f.attendance} muxlis' : ''}',
+                      : '${SeasonCalendar.format(f.date!, year: true)}${f.attendance > 0 ? trf(' · {0} muxlis', [f.attendance]) : ''}',
                 ),
                 TabBar(
                   isScrollable: true,
@@ -61,7 +63,12 @@ class _MatchReportScreenState extends State<MatchReportScreen> {
             ),
           ),
         ),
-        body: TabBarView(
+        // Desktop: keep the report at a readable width.
+        body: Align(
+          alignment: Alignment.topCenter,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 1100),
+            child: TabBarView(
           children: [
             ListView(
               padding: const EdgeInsets.all(12),
@@ -74,6 +81,8 @@ class _MatchReportScreenState extends State<MatchReportScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         SectionHeader(tr('Hujum momenti'), icon: Icons.insights_outlined),
+                        Text(tr('Ustunlar xavfli hujum bosimini ko‘rsatadi (to‘p nazorati emas): yuqorida uy egasi, pastda mehmon.'), style: AppText.caption),
+                        const SizedBox(height: 6),
                         MomentumChart(
                           values: f.momentum,
                           events: f.events,
@@ -159,6 +168,8 @@ class _MatchReportScreenState extends State<MatchReportScreen> {
             ),
           ],
         ),
+          ),
+        ),
       ),
     );
   }
@@ -239,7 +250,30 @@ class _MatchReportScreenState extends State<MatchReportScreen> {
     club: club,
     line: f.playerStats[p.id],
     rating: f.ratings[p.id],
-    onOpenProfile: () => PlayerDetailView.show(context, player: p, club: club),
+    heat: decodeHeat(f.heat[p.id]),
+    onOpenProfile: () => PlayerDetailView.show(context, player: p, club: club).then((_) {
+      if (mounted) setState(() {}); // a portrait may have been edited
+    }),
+    onOpenDetails: () {
+      final game = GameState();
+      PlayerMatchScreen.show(
+        context,
+        PlayerMatchData(
+          home: game.getClubById(f.homeClubId)!,
+          away: game.getClubById(f.awayClubId)!,
+          homeScore: f.homeScore ?? 0,
+          awayScore: f.awayScore ?? 0,
+          events: f.events,
+          shots: f.shots,
+          momentum: f.momentum,
+          lines: f.playerStats,
+          ratings: f.ratings,
+          heatFor: (id) => decodeHeat(f.heat[id]),
+        ),
+        p,
+        club,
+      );
+    },
   );
 }
 
@@ -314,7 +348,7 @@ class MatchHeader extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    if (live) ...[const LiveDot(), const SizedBox(width: 5)],
+                    if (live) ...[LiveDot(), const SizedBox(width: 5)],
                     Text(
                       status,
                       style: TextStyle(

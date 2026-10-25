@@ -59,8 +59,13 @@ class ManagerProfile {
   FaceConfig face;
   final Map<ManagerPhilosophy, int> proficiency;
   final Map<ManagerPhilosophy, int> experience;
+
+  /// Standing in the football world (1–99), earned by results against
+  /// expectations; clubs of a similar reputation offer jobs.
+  double reputation;
   static const xpPerLevel = 8;
   ManagerProfile({
+    this.reputation = 30,
     required this.name,
     this.avatarId = 'custom',
     this.nationality = 'O‘zbekiston',
@@ -111,6 +116,7 @@ class ManagerProfile {
     'face': face.toMap(),
     'proficiency': {for (final e in proficiency.entries) e.key.name: e.value},
     'experience': {for (final e in experience.entries) e.key.name: e.value},
+    'rep': double.parse(reputation.toStringAsFixed(2)),
   };
 
   factory ManagerProfile.fromMap(Map<String, dynamic> m) {
@@ -134,8 +140,18 @@ class ManagerProfile {
       face: FaceConfig.fromMap(Map<String, dynamic>.from(m['face'] ?? {})),
       proficiency: read(m['proficiency']),
       experience: read(m['experience']),
+      reputation: (m['rep'] as num? ?? 30).toDouble(),
     );
   }
+
+  /// Where the manager stands, from local to world class.
+  String get reputationLevel => switch (reputation) {
+    < 25 => tr('Mahalliy daraja'),
+    < 45 => tr('Milliy daraja'),
+    < 65 => tr('Xalqaro daraja'),
+    < 82 => tr('Jahon darajasi'),
+    _ => tr('Afsonaviy murabbiy'),
+  };
   int ratingFor(TeamPlaystyle style) =>
       proficiency[ManagerPhilosophy.forStyle(style)] ?? 70;
   double get winRate => matchesManaged > 0 ? wins / matchesManaged * 100 : 0;
@@ -173,5 +189,6 @@ class ManagerProfile {
     face: face ?? this.face,
     proficiency: proficiency,
     experience: experience,
+    reputation: reputation,
   );
 }

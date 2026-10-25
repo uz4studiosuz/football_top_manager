@@ -59,7 +59,9 @@ class OpponentSquadSheet extends StatelessWidget {
             ),
           ),
         ),
-        body: TabBarView(
+        body: PageWidth(
+      maxWidth: 960,
+      child: TabBarView(
           children: [
             ListView(
               padding: const EdgeInsets.all(12),
@@ -73,9 +75,9 @@ class OpponentSquadSheet extends StatelessWidget {
                         ('Match OVR', user.teamOVR, rival.teamOVR),
                         ('Hujum', user.attackRating, rival.attackRating),
                         ('Yarim himoya', user.midfieldRating, rival.midfieldRating),
-                        ('Himoya va GK', user.defenseRating, rival.defenseRating),
+                        (tr('Himoya va GK'), user.defenseRating, rival.defenseRating),
                         ('Tarkib chuqurligi', user.squadDepthRating, rival.squadDepthRating),
-                        ('O‘rtacha tezlik', average(user, (p) => p.stats.pace).round(), average(rival, (p) => p.stats.pace).round()),
+                        (tr('O‘rtacha tezlik'), average(user, (p) => p.stats.pace).round(), average(rival, (p) => p.stats.pace).round()),
                         ('Jismoniy tayyorlik', average(user, (p) => p.currentStamina).round(), average(rival, (p) => p.currentStamina).round()),
                       ])
                         StatCompareRow(
@@ -102,7 +104,7 @@ class OpponentSquadSheet extends StatelessWidget {
                       _report(Icons.psychology_outlined, 'Raqib rejasi', rival.tactics.playstyle.displayName, rival.tactics.playstyle.description),
                       _report(
                         Icons.shield_outlined,
-                        'Pressing va himoya',
+                        tr('Pressing va himoya'),
                         'Chiziq ${rival.tactics.defensiveLine}/5 · pressing ${rival.tactics.pressing}/5',
                         rival.tactics.counterPress
                             ? tr('Yo‘qotishdan keyin bosim qiladi. Tez, xavfsiz pas uchun sheriklarni yaqin tuting.')
@@ -118,7 +120,7 @@ class OpponentSquadSheet extends StatelessWidget {
                       if (rival.squad.any((p) => !p.isAvailable))
                         _report(
                           Icons.local_hospital_outlined,
-                          'O‘ynay olmaydiganlar',
+                          tr('O‘ynay olmaydiganlar'),
                           rival.squad.where((p) => !p.isAvailable).map((p) => p.shortName).join(', '),
                           'Jarohat yoki diskvalifikatsiya sababli.',
                         ),
@@ -206,6 +208,7 @@ class OpponentSquadSheet extends StatelessWidget {
             ),
           ],
         ),
+    ),
       ),
     );
   }
@@ -223,9 +226,9 @@ class OpponentSquadSheet extends StatelessWidget {
             children: [
               Text(label.toUpperCase(), style: AppText.overline),
               const SizedBox(height: 2),
-              Text(title, style: AppText.bodyStrong),
+              Text(tr(title), style: AppText.bodyStrong),
               const SizedBox(height: 2),
-              Text(text, style: AppText.small.copyWith(height: 1.4)),
+              Text(tr(text), style: AppText.small.copyWith(height: 1.4)),
             ],
           ),
         ),

@@ -70,7 +70,7 @@ class FixtureTile extends StatelessWidget {
               child: Column(
                 children: [
                   Text(
-                    d == null ? '${fixture.round}-tur' : SeasonCalendar.short(d),
+                    d == null ? trf('{0}-tur', [fixture.round]) : SeasonCalendar.short(d),
                     style: AppText.caption,
                   ),
                   const SizedBox(height: 3),
@@ -165,17 +165,18 @@ class StandingsTable extends StatelessWidget {
     final info = InitialDatabase.info(league ?? game.leagueId);
     if (info.tier > 1) {
       return [
-        (_green, 'Avtomatik ko‘tarilish'),
-        if (info.hasPlayoff) (_orange, 'Pley-off (${info.playoffFrom}–${info.playoffTo})'),
-        if (info.relegate > 0) (_red, 'Quyi ligaga tushish'),
+        (_green, tr('Avtomatik ko‘tarilish')),
+        if (info.hasPlayoff) (_orange, trf('Pley-off ({0}–{1})', [info.playoffFrom, info.playoffTo])),
+        if (info.relegate > 0) (_red, tr('Quyi ligaga tushish')),
       ];
     }
     final big = (league == null || league == game.leagueId ? game.clubCount : 20) > 10;
+    // Generic names: the real continental competitions are trademarks.
     return [
-      (_blue, 'Chempion'),
-      (_green, 'Chempionlar ligasi'),
-      (_orange, 'Yevropa ligasi'),
-      if (big) (_teal, 'Konferensiya ligasi'),
+      (_blue, tr('Chempion')),
+      (_green, tr('Kontinental kubok')),
+      (_orange, tr('Ikkinchi kontinental kubok')),
+      if (big) (_teal, tr('Kontinental saralash')),
       (_red, big ? tr('Quyi ligaga tushish') : tr('Quyi liga xavfi')),
     ];
   }
@@ -216,11 +217,11 @@ class StandingsTable extends StatelessWidget {
             children: [
               cell('#', 28, style: head),
               Expanded(child: Text(tr('Jamoa'), style: head)),
-              cell('O', 26, style: head),
+              cell(tr('O'), 26, style: head),
               if (full) ...[
-                cell('G', 24, style: head),
-                cell('D', 24, style: head),
-                cell('M', 24, style: head),
+                cell(tr('G'), 24, style: head),
+                cell(tr('D'), 24, style: head),
+                cell(tr('M'), 24, style: head),
                 cell(tr('To‘plar'), 50, style: head),
               ],
               cell('±', 32, style: head),

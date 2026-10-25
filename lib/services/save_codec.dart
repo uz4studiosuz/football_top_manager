@@ -41,6 +41,8 @@ abstract final class SaveCodec {
       'rn': p.seasonRated,
       'rr': p.recentRatings,
       'h': p.history,
+      'tf': p.transfers,
+      'car': p.careerSeasons,
       'gr': double.parse(p.growth.toStringAsFixed(3)),
     }..removeWhere((k, v) => v == null || v == 0 || (v is List && v.isEmpty) || (k == 'st' && v == 100));
     return {
@@ -122,6 +124,8 @@ abstract final class SaveCodec {
     p.seasonRated = rt['rn'] ?? 0;
     p.recentRatings.addAll([for (final v in (rt['rr'] as List? ?? [])) (v as num).toDouble()]);
     p.history.addAll([for (final v in (rt['h'] as List? ?? [])) v as String]);
+    p.transfers.addAll([for (final v in (rt['tf'] as List? ?? [])) v as String]);
+    p.careerSeasons.addAll([for (final v in (rt['car'] as List? ?? [])) v as String]);
     p.growth = (rt['gr'] as num? ?? 0).toDouble();
     return p;
   }
@@ -295,6 +299,7 @@ abstract final class SaveCodec {
         'mo': f.momentum.map((v) => v.round()).toList(),
       },
       if (shots && f.shots.isNotEmpty) 'sh': f.shots.map((s) => s.toMap()).toList(),
+      if (full && f.heat.isNotEmpty) 'hm': f.heat,
       if (f.motmId != null) 'motm': f.motmId,
     },
   };
@@ -368,6 +373,7 @@ abstract final class SaveCodec {
     f.momentum = [for (final v in (m['mo'] as List? ?? [])) (v as num).toDouble()];
     f.motmId = m['motm'];
     f.shots = [for (final s in (m['sh'] as List? ?? [])) ShotRecord.fromMap(Map<String, dynamic>.from(s))];
+    f.heat = Map<String, String>.from(m['hm'] ?? {});
     return f;
   }
 

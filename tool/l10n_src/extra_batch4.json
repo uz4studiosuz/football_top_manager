@@ -1,0 +1,202 @@
+{
+ "Asosiy tarkib o‘yinchisi": [
+  "Regular starter",
+  "Игрок основы"
+ ],
+ "Asosiy tarkib va taktika bilan": [
+  "With the regular line-up and tactics",
+  "С основным составом и тактикой"
+ ],
+ "Asosiy tarkibda o‘ynashi aniq": [
+  "Sure to start",
+  "Гарантированное место в основе"
+ ],
+ "Bu pozitsiyada o‘rinbosar yo‘q": [
+  "No replacement in this position",
+  "Нет замены на этой позиции"
+ ],
+ "Bu tarkib va taktika faqat shu o‘yin uchun: o‘yindan keyin asosiy tarkib qaytadi.": [
+  "This line-up and tactics are for this match only: the regular line-up returns afterwards.",
+  "Этот состав и тактика только на этот матч: после него вернётся основной состав."
+ ],
+ "Dunyo ligasini ochish ({0})": [
+  "Open a world league ({0})",
+  "Открыть лигу мира ({0})"
+ ],
+ "Faqat shu o‘yin uchun: tanlangan raqib qayerga borsa, unga yopishib yuradi.": [
+  "This match only: he sticks to the chosen opponent wherever he goes.",
+  "Только на этот матч: опекает выбранного соперника везде, куда бы тот ни пошёл."
+ ],
+ "Futbolchi bu klubga o‘tishni xohlamaydi: narx kelishilsa ham shartnomani rad etadi.": [
+  "The player does not want this move: he will reject the contract even if the fee is agreed.",
+  "Игрок не хочет переходить: откажется от контракта, даже если клубы договорятся."
+ ],
+ "Futbolchining qiziqishi": [
+  "Player's interest",
+  "Интерес игрока"
+ ],
+ "Hozirgi klubida baxtsiz": [
+  "Unhappy at his club",
+  "Недоволен в своём клубе"
+ ],
+ "Jamoani shu o‘yin uchun shakllantirish": [
+  "Set up the team for this match",
+  "Подготовить команду на этот матч"
+ ],
+ "Jamoaning asosiy o‘yinchisi": [
+  "The team's key player",
+  "Ключевой игрок команды"
+ ],
+ "Kattaroq klub – qiziqadi": [
+  "Bigger club – interested",
+  "Клуб крупнее – интересно"
+ ],
+ "Kichikroq klubga o‘tishni istamaydi": [
+  "Doesn't want to join a smaller club",
+  "Не хочет в клуб поменьше"
+ ],
+ "Klub fikri": [
+  "Club's view",
+  "Позиция клуба"
+ ],
+ "Klub iste’dodni qadrlaydi": [
+  "The club values the talent",
+  "Клуб ценит талант"
+ ],
+ "Klubda o‘ynamayapti – sotishga tayyor": [
+  "Not playing – ready to sell",
+  "Не играет – готовы продать"
+ ],
+ "Klubga pul kerak": [
+  "The club needs money",
+  "Клубу нужны деньги"
+ ],
+ "Klubiga sodiq": [
+  "Loyal to his club",
+  "Предан клубу"
+ ],
+ "Kuchliroq liga": [
+  "Stronger league",
+  "Лига сильнее"
+ ],
+ "Liga yoki davlat": [
+  "League or country",
+  "Лига или страна"
+ ],
+ "Maxsus tarkib, taktika va ko‘rsatmalar – o‘yindan keyin asosiysi qaytadi": [
+  "Special line-up, tactics and instructions – the regular ones return afterwards",
+  "Особый состав, тактика и указания – после матча вернутся основные"
+ ],
+ "Oddiy savdo: so‘ralgan narxga rozi bo‘ladi.": [
+  "Ordinary sale: accepts the asking price.",
+  "Обычная продажа: согласны на запрошенную цену."
+ ],
+ "O‘yin rejasi": [
+  "Match plan",
+  "План на матч"
+ ],
+ "O‘yin vaqti kam bo‘lishidan xavotirda": [
+  "Worried about playing time",
+  "Боится мало играть"
+ ],
+ "Raqib klubga sotish qimmatroq": [
+  "Selling to a rival costs more",
+  "Продажа сопернику дороже"
+ ],
+ "Shaxsiy qo‘riqlash (man marking) · {0}": [
+  "Man marking · {0}",
+  "Персональная опека · {0}"
+ ],
+ "Sotilmaydi: faqat juda katta taklif yoki kompensatsiya summasi": [
+  "Not for sale: only a huge offer or the release clause",
+  "Не продаётся: только огромное предложение или отступные"
+ ],
+ "Yaqinda klubga kelgan": [
+  "Joined recently",
+  "Недавно пришёл в клуб"
+ ],
+ "Yoshi katta: maosh muhimroq": [
+  "Older: wages matter more",
+  "Возраст: зарплата важнее"
+ ],
+ "Yo‘q – zonali himoya": [
+  "None – zonal marking",
+  "Нет – зонная защита"
+ ],
+ "Zaifroq liga – kam qiziqadi": [
+  "Weaker league – less interested",
+  "Лига слабее – меньше интереса"
+ ],
+ "{0} bilan o‘yin rejasi": [
+  "Match plan vs {0}",
+  "План на матч с {0}"
+ ],
+ "{0} klub": [
+  "{0} clubs",
+  "{0} клубов"
+ ],
+ "{0} ta liga": [
+  "{0} leagues",
+  "{0} лиг"
+ ],
+ "{0} {1}ga o‘tishni xohlamaydi: {2}.": [
+  "{0} does not want to join {1}: {2}.",
+  "{0} не хочет переходить в {1}: {2}."
+ ],
+ "{0}′ · {1} – penalti takrori": [
+  "{0}′ · {1} – penalty replay",
+  "{0}′ · {1} – повтор пенальти"
+ ],
+ "bajarildi": [
+  "achieved",
+  "выполнена"
+ ],
+ "bajarilmadi": [
+  "not achieved",
+  "не выполнена"
+ ],
+ "Tizza zarbasi": [
+  "Knee knock",
+  "Ушиб колена"
+ ],
+ "Boldir mushagi": [
+  "Calf strain",
+  "Травма икроножной мышцы"
+ ],
+ "Yelka chiqishi": [
+  "Dislocated shoulder",
+  "Вывих плеча"
+ ],
+ "Tibbiyot markazi": [
+  "Medical centre",
+  "Медицинский центр"
+ ],
+ "Taktik yordamchi": [
+  "Tactical assistant",
+  "Ассистент по тактике"
+ ],
+ "Fitnes murabbiyi": [
+  "Fitness coach",
+  "Тренер по физподготовке"
+ ],
+ "Jismoniy holat": [
+  "Fitness",
+  "Физическая форма"
+ ],
+ "Bosh skaut": [
+  "Chief scout",
+  "Главный скаут"
+ ],
+ "O": [
+  "P",
+  "И"
+ ],
+ "Transfer oynasi ochiq · {0} gacha": [
+  "Transfer window open · until {0}",
+  "Трансферное окно открыто · до {0}"
+ ],
+ "o‘ynay olmaydi": [
+  "unavailable",
+  "не может играть"
+ ]
+}

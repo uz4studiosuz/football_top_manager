@@ -65,6 +65,23 @@ enum PreferredFoot {
 }
 
 /// Canonical eFootball-style attributes, each bounded to 40–100.
+/// A player's character: how he reacts to playing time, contracts,
+/// training and the dressing room.
+enum Personality {
+  balanced('Muvozanatli', 'Oddiy talablar, barqaror kayfiyat.'),
+  professional('Professional', 'Mashg‘ulotda tez o‘sadi, kayfiyati kam tushadi.'),
+  ambitious('Shuhratparast', 'Ko‘p o‘ynashni va katta maoshni xohlaydi; o‘ynamasa ketishni so‘raydi.'),
+  loyal('Sadoqatli', 'Klubga sodiq, shartnomaga tez rozi bo‘ladi.'),
+  leader('Yetakchi', 'Maydonda bo‘lsa butun jamoa kayfiyati ko‘tariladi.'),
+  temperamental('Jahldor', 'Ko‘proq kartochka oladi, kayfiyati tez o‘zgaradi.'),
+  lazy('Dangasa', 'Mashg‘ulotda sekin o‘sadi.');
+
+  const Personality(this._label, this._hint);
+  final String _label, _hint;
+  String get label => tr(_label);
+  String get hint => tr(_hint);
+}
+
 @immutable
 class PlayerStats {
   final int attackingAwareness;
@@ -423,7 +440,8 @@ enum PlayerInstruction {
   holdWidth('Qanotni ushlash', 'Yon chiziq bo‘ylab kenglik yaratadi', true),
   playmaker('Pas markazi', 'To‘pga ochilib sheriklarni bog‘laydi', true),
   counterTarget('Counter Target', 'Himoyaga qaytmaydi, qarshi hujumni kutadi', false),
-  manMarking('Man Marking', 'Raqibning eng xavfli o‘yinchisini shaxsan qo‘riqlaydi', false),
+  pressing('Faol pressing', 'To‘p egasiga birinchi bo‘lib boradi: ko‘proq to‘p qaytarish, lekin tez charchaydi', false),
+  trackBack('Himoyaga qaytish', 'Hujumchi yoki vinger to‘p yo‘qotilganda himoyaga yordamga qaytadi', false),
   tightMarking('Tight Marking', 'Yaqin masofadan bosim: ko‘proq Olib qo‘yish va qoidabuzarlik', false),
   deepLine('Deep Line', 'Himoyada chuqurroq turib, orqa zonani sug‘urtalaydi', false);
 
@@ -504,6 +522,12 @@ class Player {
   int seasonRated = 0;
   final List<double> recentRatings = [];
   final List<String> history = []; // mavsumlar bo'yicha qisqa yozuvlar
+
+  /// Career moves, newest first: "season|from|to|fee|fromId|toId".
+  final List<String> transfers = [];
+
+  /// Finished seasons, newest first: "season|clubId|club|apps|goals|assists|rating".
+  final List<String> careerSeasons = [];
   Player({
     FaceConfig? face,
     this.instruction = PlayerInstruction.balanced,
@@ -609,9 +633,53 @@ class Player {
         ? 0.42
         : 0.22;
     final growth = 1 + max(0, potential - ovr) * 0.035;
-    final v = (base * ageFactor * growth).round();
-    final step = v >= 10000000 ? 500000 : 100000;
-    return max(250000, (v / step).round() * step);
+    return roundValue(base * ageFactor * growth);
+  }
+
+  /// Rounds a fee to market-style steps; weak players can be very cheap.
+  static int roundValue(num v) {
+    final step = v >= 10000000 ? 500000 : v >= 1000000 ? 100000 : 10000;
+    return max(25000, (v / step).round() * step);
+  }
+
+  /// Character, derived from the player's id (stable for a career).
+  Personality get personality {
+    final h = id.codeUnits.fold<int>(7, (a, b) => (a * 31 + b) & 0x3fffffff) % 100;
+    if (age >= 29 && h % 5 == 0) return Personality.leader;
+    return h < 34
+        ? Personality.balanced
+        : h < 50
+        ? Personality.professional
+        : h < 62
+        ? Personality.ambitious
+        : h < 74
+        ? Personality.loyal
+        : h < 82
+        ? Personality.leader
+        : h < 92
+        ? Personality.temperamental
+        : Personality.lazy;
+  }
+
+  /// [fairValue] in a league with this economy (1 = top league): smaller
+  /// leagues pay far less for the same ability, and keepers cost less.
+  int fairValueIn(double economy) => roundValue(
+    fairValue * pow(economy.clamp(0.05, 1.0), 0.55) * (mainPosition.isGoalkeeper ? 0.6 : 1),
+  );
+
+  /// Market value today: ability, age and potential set the level, and the
+  /// season's ratings and goals move it up or down.
+  int get fairValue {
+    final apps = seasonRated;
+    var form = 1.0;
+    final avg = averageRating;
+    if (avg != null && apps > 0) {
+      form += ((avg - 6.7) * 0.32).clamp(-0.3, 0.4) * min(1.0, apps / 8);
+    }
+    if (mainPosition.isAttacker || mainPosition == PlayerPosition.amf) {
+      form += min(0.25, seasonGoals * 0.012 + seasonAssists * 0.006);
+    }
+    return roundValue(valuation(ovr, age, potential) * form);
   }
   Map<String, dynamic> toMap() => {
     'face': face.toMap(),
@@ -643,9 +711,9 @@ class Player {
             ...FaceConfig.forPlayer(m['id'], m['nationality'], m['age']).toMap(),
             ...Map<String, dynamic>.from(m['face']),
           }),
-    instruction: PlayerInstruction.values.byName(
-      m['instruction'] ?? 'balanced',
-    ),
+    // "manMarking" was retired: old saves get the closest instruction.
+    instruction: PlayerInstruction.values.asNameMap()[m['instruction']] ??
+        (m['instruction'] == 'manMarking' ? PlayerInstruction.tightMarking : PlayerInstruction.balanced),
     id: m['id'],
     name: m['name'],
     shortName: m['shortName'],
