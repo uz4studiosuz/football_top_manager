@@ -156,12 +156,27 @@ class _MatchReportScreenState extends State<MatchReportScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                _lineup(team == 0 ? h : a, team == 0 ? f.homeLineup : f.awayLineup, f, team == 0 ? colors.$1 : colors.$2),
+                if ((team == 0 ? f.homeLineup : f.awayLineup).isEmpty)
+                  EmptyState(
+                    icon: Icons.groups_outlined,
+                    text: tr('Bu o‘yin tarkibi saqlanmagan: to‘liq ma’lumot faqat sizning o‘yinlaringiz uchun saqlanadi.'),
+                  )
+                else
+                  _lineup(team == 0 ? h : a, team == 0 ? f.homeLineup : f.awayLineup, f, team == 0 ? colors.$1 : colors.$2),
               ],
             ),
             ListView(
               padding: const EdgeInsets.symmetric(vertical: 8),
               children: [
+                if (!f.events.any((e) => e.type == MatchEventType.info || e.type == MatchEventType.kickoff))
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                    child: Text(
+                      tr('To‘liq izohlar faqat oxirgi o‘yinlaringiz uchun saqlanadi; bu yerda asosiy voqealar.'),
+                      style: AppText.caption,
+                    ),
+                  ),
+                if (f.events.isEmpty) EmptyState(icon: Icons.chat_bubble_outline, text: tr('Bu o‘yin uchun izohlar yo‘q.')),
                 for (final e in f.events.reversed)
                   CommentaryTile(event: e, homeColor: colors.$1, awayColor: colors.$2),
               ],

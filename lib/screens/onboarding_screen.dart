@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import '../models/manager_profile.dart';
 import '../ui/face_avatar.dart';
@@ -9,6 +10,9 @@ import '../ui/language_picker.dart';
 import '../data/countries.dart';
 import '../services/coin_wallet.dart';
 import '../ui/coin.dart';
+import '../ui/flag.dart';
+import '../services/name_gen.dart';
+import 'save_slots_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -17,10 +21,12 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  final _name = TextEditingController(text: tr('Azizbek Rahimov'));
+  final _name = TextEditingController(text: NameGen.person(Random()));
   final _form = GlobalKey<FormState>();
   int step = 0, age = 35;
-  String nationality = 'O‘zbekiston';
+
+  /// Chosen by the player: no country is preselected.
+  String? nationality;
   FaceConfig face = const FaceConfig();
   ManagerPhilosophy philosophy = ManagerPhilosophy.possession;
   static const countries = countryFlags;
@@ -55,7 +61,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   ManagerProfile profile() => ManagerProfile(
     name: _name.text.trim(),
-    nationality: nationality,
+    nationality: nationality!,
     countryFlag: countries[nationality]!,
     age: age,
     face: face,
@@ -70,7 +76,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(
-      actions: const [LanguageButton()],
+      actions: [
+        // Saved careers stay reachable (e.g. when coins run short here).
+        IconButton(
+          tooltip: tr('Karyeralarim'),
+          icon: const Icon(Icons.folder_open_rounded),
+          onPressed: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const SaveSlotsScreen())),
+        ),
+        const LanguageButton(),
+      ],
       title: Row(
         children: [
           Icon(Icons.sports_soccer, color: AppColors.primary),
@@ -142,8 +156,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 decoration: InputDecoration(
                                   labelText: tr('Ism va familiya'),
                                   prefixIcon: Icon(Icons.person_outline),
+                                  suffixIcon: IconButton(
+                                    tooltip: tr('Tasodifiy ism'),
+                                    icon: const Icon(Icons.casino_outlined),
+                                    onPressed: () => setState(() => _name.text = NameGen.person(Random())),
+                                  ),
                                 ),
-                                validator: (v) => v == null || v.trim().length < 2 ? 'Kamida ikki belgi kiriting' : null,
+                                validator: (v) => v == null || v.trim().length < 2 ? tr('Kamida ikki belgi kiriting') : null,
                               ),
                               const SizedBox(height: 16),
                               DropdownButtonFormField<String>(
@@ -153,11 +172,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   labelText: tr('Millatingiz'),
                                   prefixIcon: Icon(Icons.flag_outlined),
                                 ),
+                                hint: Text(tr('Millatni tanlang')),
+                                validator: (v) => v == null ? tr('Millatni tanlang') : null,
                                 items: [
                                   for (final country in countries.keys)
-                                    DropdownMenuItem(value: country, child: Text('${countries[country]}  ${tr(country)}')),
+                                    DropdownMenuItem(value: country, child: FlagLabel(countries[country]!, tr(country), nationality: country)),
                                 ],
-                                onChanged: (v) => setState(() => nationality = v!),
+                                onChanged: (v) => setState(() => nationality = v),
                               ),
                               const SizedBox(height: 20),
                               Row(
@@ -212,7 +233,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   ],
                                 ),
                               ),
-                              const ValueBadge(70, size: 34, filled: false),
                             ],
                           ),
                         ),
@@ -232,7 +252,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 children: [
                                   Text(_name.text, style: AppText.h2),
                                   const SizedBox(height: 4),
-                                  Text(trf('{0} {1} · {2} yosh', [countries[nationality], tr(nationality), age]), style: AppText.small),
+                                  FlagLabel(countries[nationality] ?? '', trf('{0} · {1} yosh', [tr(nationality ?? ''), age]), nationality: nationality, style: AppText.small),
                                   const SizedBox(height: 4),
                                   Text('${philosophy.title} · 70', style: AppText.small.copyWith(color: AppColors.primary)),
                                 ],
@@ -244,7 +264,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       const SizedBox(height: 14),
                       _clubChoice(
                         tr('MAVJUD TOP KLUBNI TANLASH'),
-                        tr('Super League (8 gigant) yoki dunyoning 120 dan ortiq ligasi: tarkiblar, taqvim va kengash maqsadlari.'),
+                        tr('Dunyoning 120 dan ortiq ligasi: Premier League, LaLiga, Serie A, Ligue 1 va boshqalar.'),
                         Icons.shield_outlined,
                         () => Navigator.push(
                           context,

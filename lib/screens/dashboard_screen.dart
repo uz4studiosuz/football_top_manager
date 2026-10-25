@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../ui/flag.dart';
 import '../data/initial_database.dart';
 import '../models/finance.dart';
 import '../models/club.dart';
@@ -17,7 +18,7 @@ import 'widgets/player_detail_view.dart';
 import '../l10n/l10n.dart';
 import '../ui/coin.dart';
 import '../services/club_life.dart';
-import '../services/press.dart';
+import '../ui/press_dialog.dart';
 import 'club_life_screen.dart';
 import 'season_review_screen.dart';
 import 'tactics_screen.dart';
@@ -297,16 +298,19 @@ class DashboardScreen extends StatelessWidget {
       );
     }
 
+    final cup = game.isKnockout(f);
     return AppCard(
       padding: const EdgeInsets.all(16),
+      // A cup tie is told apart at a glance: gold tint and a trophy badge.
+      color: cup ? const Color(0xFFFFF8E6) : AppColors.surface,
       child: Column(
         children: [
           Row(
             children: [
-              const Icon(Icons.sports_soccer, size: 16, color: AppColors.primary),
+              Icon(cup ? Icons.emoji_events_rounded : Icons.sports_soccer, size: 16, color: cup ? AppColors.gold : AppColors.primary),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(tr('NAVBATDAGI UCHRASHUV'), style: AppText.overline),
+                child: Text(cup ? tr('KUBOK O‘YINI') : tr('NAVBATDAGI UCHRASHUV'), style: AppText.overline.copyWith(color: cup ? AppColors.gold : null)),
               ),
               if (game.isDerby(game.getClubById(f.homeClubId)!, game.getClubById(f.awayClubId)!))
                 Container(
@@ -315,7 +319,14 @@ class DashboardScreen extends StatelessWidget {
                   decoration: BoxDecoration(color: AppColors.live, borderRadius: BorderRadius.circular(8)),
                   child: Text(tr('DERBI'), style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w900)),
                 ),
-              Text(game.isKnockout(f) ? game.fixtureTitle(f) : trf('{0}-tur', [f.round]), style: AppText.caption),
+              if (cup)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(color: AppColors.gold, borderRadius: BorderRadius.circular(8)),
+                  child: Text(game.fixtureTitle(f), style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800)),
+                )
+              else
+                Text(trf('{0}-tur', [f.round]), style: AppText.caption),
             ],
           ),
           const SizedBox(height: 18),
@@ -388,6 +399,19 @@ class DashboardScreen extends StatelessWidget {
           TextButton.icon(
             onPressed: () async {
               if (!_lineupReady(context, game)) return;
+              // Skipping the match is final: ask first.
+              final sure = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: Text(tr('Tezkor natija')),
+                  content: Text(trf('{0} bilan o‘yin kuzatilmasdan simulyatsiya qilinadi. Davom etasizmi?', [rival.name])),
+                  actions: [
+                    TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('Bekor qilish'))),
+                    FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(tr('Ha, natijani ko‘rsat'))),
+                  ],
+                ),
+              );
+              if (sure != true || !context.mounted) return;
               await runWithProgress(
                 context,
                 tr('Uchrashuv simulyatsiya qilinmoqda…'),
@@ -439,7 +463,9 @@ class DashboardScreen extends StatelessWidget {
                   contentPadding: EdgeInsets.zero,
                   leading: local != null
                       ? ClubCrestWidget(config: local.crestConfig, size: 36)
-                      : Text(league.flag.isEmpty ? '🏟️' : league.flag, style: const TextStyle(fontSize: 28)),
+                      : league.flag.isEmpty
+                      ? const Icon(Icons.stadium_outlined, size: 28)
+                      : FlagView(league.flag, nationality: league.country, height: 24),
                   title: Text(o.$2, style: AppText.bodyStrong),
                   subtitle: Text(
                     [
@@ -501,51 +527,8 @@ class DashboardScreen extends StatelessWidget {
     ),
   );
 
-  Future<void> _runPress(BuildContext context, GameState game, Fixture f, {bool post = false}) async {
-    final questions = post ? game.postPressFor(f) : game.pressFor(f);
-    if (questions == null) return;
-    final picked = <(PressQuestion, PressAnswer)>[];
-    for (final q in questions) {
-      final a = await showDialog<PressAnswer>(
-        context: context,
-        barrierDismissible: false,
-        builder: (ctx) => SimpleDialog(
-          title: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(tr(q.outlet), style: AppText.caption.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700)),
-              const SizedBox(height: 4),
-              Text(q.question),
-            ],
-          ),
-          children: [
-            for (final a in q.answers)
-              SimpleDialogOption(
-                onPressed: () => Navigator.pop(ctx, a),
-                child: Padding(padding: const EdgeInsets.symmetric(vertical: 6), child: Text('“${a.text}”', style: AppText.body)),
-              ),
-          ],
-        ),
-      );
-      if (a == null || !context.mounted) return;
-      picked.add((q, a));
-    }
-    game.answerPress(f, picked, post: post);
-    final morale = picked.fold<int>(0, (s, e) => s + e.$2.morale);
-    final fans = picked.fold<int>(0, (s, e) => s + e.$2.fans);
-    if (context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(trf('Matbuot anjumani tugadi. Jamoa kayfiyati {0}{1}, muxlislar {2}{3}.', [
-            morale >= 0 ? '+' : '',
-            morale,
-            fans >= 0 ? '+' : '',
-            fans,
-          ])),
-        ),
-      );
-    }
-  }
+  Future<void> _runPress(BuildContext context, GameState game, Fixture f, {bool post = false}) =>
+      runPressConference(context, f, post: post);
 
   /// Entry to facilities, training, academy, fans and the hall of fame.
   Widget _clubLifeCard(BuildContext context, GameState game) {

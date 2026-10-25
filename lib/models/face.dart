@@ -2,7 +2,7 @@
 /// `FaceAvatar`, so a face is a tiny serialisable record.
 class FaceConfig {
   static const skinCount = 10,
-      hairColorCount = 9,
+      hairColorCount = 13,
       cutCount = 16,
       shapeCount = 5,
       eyesCount = 5,
@@ -11,7 +11,10 @@ class FaceConfig {
       mouthCount = 4,
       browCount = 4,
       ageCount = 3,
-      beardCount = 8;
+      beardCount = 8,
+      accessoryCount = 6;
+
+  static const accessoryLabels = ['Yo‘q', 'Bosh tasmasi', 'Sirg‘a', 'Chandiq', 'Tatuirovka', 'Zanjir'];
 
   static const cutLabels = [
     'Qisqa',
@@ -50,6 +53,9 @@ class FaceConfig {
 
   final int skin, hair, cut, shape, eyes, nose, mouth, brow, age, eyeColor;
   final int beardStyle;
+
+  /// Headband, earring, scar, neck tattoo or chain (0: none).
+  final int accessory;
   final bool glasses, freckles;
   const FaceConfig({
     this.skin = 2,
@@ -63,6 +69,7 @@ class FaceConfig {
     this.age = 0,
     this.eyeColor = 0,
     this.beardStyle = 0,
+    this.accessory = 0,
     this.glasses = false,
     this.freckles = false,
   });
@@ -162,6 +169,7 @@ class FaceConfig {
     'age': age,
     'eyeColor': eyeColor,
     'beardStyle': beardStyle,
+    if (accessory != 0) 'accessory': accessory,
     'glasses': glasses,
     'freckles': freckles,
   };
@@ -182,6 +190,7 @@ class FaceConfig {
       age: v('age', ageCount, 0),
       eyeColor: v('eyeColor', eyeColorCount, 0),
       beardStyle: v('beardStyle', beardCount, legacyBeard),
+      accessory: v('accessory', accessoryCount, 0),
       glasses: m['glasses'] == true,
       freckles: m['freckles'] == true,
     );

@@ -48,7 +48,7 @@ class _DbEditorScreenState extends State<DbEditorScreen> {
   Future<void> _save() async {
     final error = await db.saveLocally();
     if (!mounted) return;
-    _snack(error ?? tr('Saqlandi. Yangi karyeralar tahrirlangan bazadan foydalanadi.'));
+    _snack(error ?? tr('Saqlandi. O‘zgarishlar joriy karyerada ham, yangi karyeralarda ham ishlaydi.'));
   }
 
   /// Every data file in one ZIP: unzip it over assets/data.

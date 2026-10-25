@@ -68,6 +68,10 @@ class FacePainter extends CustomPainter {
     Color(0xFFE8DDC6),
     Color(0xFF2A2F3C),
     Color(0xFFDADADA),
+    Color(0xFFA0522D),
+    Color(0xFFF2EAD3),
+    Color(0xFF2F5DA8),
+    Color(0xFFB3261E),
   ];
   static const eyeColors = [
     Color(0xFF5A3A22),
@@ -163,7 +167,56 @@ class FacePainter extends CustomPainter {
     if (c.freckles) _freckles(canvas, skin);
     _frontHair(canvas, hair, skin, cheek, top);
     if (c.glasses) _glasses(canvas, cheek);
+    _accessory(canvas, skin, cheek, chin, top);
     canvas.restore();
+  }
+
+  /// Headband, earring, scar, neck tattoo or chain.
+  void _accessory(Canvas canvas, Color skin, double cheek, double chin, double top) {
+    switch (c.accessory) {
+      case 1:
+        // Sweatband across the forehead, in the shirt colour.
+        canvas.drawRRect(
+          RRect.fromRectAndRadius(Rect.fromLTRB(50 - cheek - 1, top + 9, 50 + cheek + 1, top + 14.5), const Radius.circular(2)),
+          Paint()..color = shirt,
+        );
+        canvas.drawRect(
+          Rect.fromLTRB(50 - cheek - 1, top + 11, 50 + cheek + 1, top + 12),
+          Paint()..color = Colors.white.withValues(alpha: 0.7),
+        );
+      case 2:
+        canvas.drawCircle(Offset(50 - cheek - 1.5, 57), 1.6, Paint()..color = const Color(0xFFE8C46A));
+        canvas.drawCircle(Offset(50 + cheek + 1.5, 57), 1.6, Paint()..color = const Color(0xFFE8C46A));
+      case 3:
+        final scar = Paint()
+          ..color = _shade(skin, 0.3)
+          ..strokeWidth = 0.9
+          ..strokeCap = StrokeCap.round;
+        canvas.drawLine(Offset(50 + cheek * 0.42, 45), Offset(50 + cheek * 0.58, 55), scar);
+        for (final t in [0.3, 0.6]) {
+          final p = Offset.lerp(Offset(50 + cheek * 0.42, 45), Offset(50 + cheek * 0.58, 55), t)!;
+          canvas.drawLine(p + const Offset(-1.4, 0.4), p + const Offset(1.4, -0.4), scar);
+        }
+      case 4:
+        final ink = Paint()
+          ..color = const Color(0xFF2C3E50).withValues(alpha: 0.7)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 0.8;
+        final base = Offset(56, chin + 5);
+        canvas.drawArc(Rect.fromCircle(center: base, radius: 2.5), 0, pi * 1.6, false, ink);
+        canvas.drawLine(base + const Offset(-2, 3.5), base + const Offset(2.5, 3.5), ink);
+      case 5:
+        canvas.drawArc(
+          Rect.fromCenter(center: Offset(50, chin + 6), width: 22, height: 12),
+          0.2,
+          pi - 0.4,
+          false,
+          Paint()
+            ..color = const Color(0xFFE8C46A)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.3,
+        );
+    }
   }
 
   Path _headPath(double cheek, double jaw, double chin, double top) {
@@ -1110,6 +1163,7 @@ class _FaceStudioState extends State<FaceStudio> {
         _choices('age', 'Yosh chiziqlari', FaceConfig.ageCount, labels: FaceConfig.ageLabels, zoom: _browZoom),
         _toggle('glasses', tr('Ko‘zoynak')),
         _toggle('freckles', 'Sepkil'),
+        _choices('accessory', 'Aksessuar', FaceConfig.accessoryCount, labels: FaceConfig.accessoryLabels),
       ],
     ];
     return Column(

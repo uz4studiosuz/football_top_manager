@@ -33,6 +33,11 @@ void main() {
     expect(find.text('Menejer Karyerasi'), findsOneWidget);
     expect(find.text('FOOTBALL TOP MANAGER 2027'), findsOneWidget);
     expect(find.text('YANGI KLUB YARATISH'), findsNothing);
+    // The nationality has no default: pick one.
+    await tester.tap(find.text('Millatni tanlang').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Angliya').last);
+    await tester.pumpAndSettle();
     for (var step = 0; step < 3; step++) {
       await tester.tap(find.text('Davom etish'));
       await tester.pumpAndSettle();
@@ -46,14 +51,13 @@ void main() {
     await tester.tap(selectClubBtn);
     await tester.pumpAndSettle();
 
-    // Clubs are listed strongest first: pick Real Madrid's tile.
-    await tester.ensureVisible(find.text('RMA'));
-    await tester.tap(find.text('RMA'));
+    // The Premier League opens first, strongest club first: pick Arsenal.
+    await tester.ensureVisible(find.text('ARS'));
+    await tester.tap(find.text('ARS'));
     await tester.pumpAndSettle();
-    expect(find.text('Real Madrid'), findsWidgets);
+    expect(find.text('Arsenal'), findsWidgets);
 
-    // Select Real Madrid
-    final startButton = find.text('REAL MADRIDNI BOSHQARISH');
+    final startButton = find.text('ARSENALNI BOSHQARISH');
     await tester.ensureVisible(startButton);
     await tester.tap(startButton);
     await tester.pumpAndSettle();
@@ -70,7 +74,7 @@ void main() {
     await tester.tap(find.text('Jadval'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Super League Markazi'), findsOneWidget);
+    expect(find.text('Premier League Markazi'), findsOneWidget);
     expect(find.text('Turnir jadvali'), findsOneWidget);
 
     // Player leaderboards live in the third tab.
@@ -97,6 +101,11 @@ void main() {
     await tester.pumpWidget(const FootballTopManagerApp());
     await tester.pumpAndSettle();
 
+    // The nationality has no default: pick one.
+    await tester.tap(find.text('Millatni tanlang').first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Angliya').last);
+    await tester.pumpAndSettle();
     for (var step = 0; step < 3; step++) {
       await tester.tap(find.text('Davom etish'));
       await tester.pumpAndSettle();

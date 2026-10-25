@@ -483,16 +483,16 @@ class Player {
   FaceConfig face;
   PlayerInstruction instruction;
   final String id;
-  final String name;
-  final String shortName;
+  String name;
+  String shortName;
   int age;
-  final String nationality;
-  final String countryFlag;
-  final int number;
-  final PlayerPosition mainPosition;
-  final List<PlayerPosition> altPositions;
-  final PreferredFoot preferredFoot;
-  final int weakFoot; // 1 dan 5 yulduzgacha
+  String nationality;
+  String countryFlag;
+  int number;
+  PlayerPosition mainPosition;
+  List<PlayerPosition> altPositions;
+  PreferredFoot preferredFoot;
+  int weakFoot; // 1 dan 5 yulduzgacha
   PlayerStats stats;
   PlayerContract contract;
   int marketValue; // Bozor bahosi (EUR)

@@ -1,5 +1,7 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import '../../models/club.dart';
+import '../../models/manager_profile.dart';
 import '../../models/player.dart';
 import '../../services/game_state.dart';
 import '../../ui/face_avatar.dart';
@@ -37,7 +39,7 @@ class TeamTacticsView extends StatelessWidget {
                       Padding(
                         padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
                         child: Text(
-                          tr('Menejer reytingi shu uslubdagi pas aniqligi va qarorlarga bevosita ta’sir qiladi.'),
+                          tr('Menejerning shu uslubdagi tajribasi pas aniqligi va qarorlarga ta’sir qiladi.'),
                           style: AppText.caption,
                         ),
                       ),
@@ -48,10 +50,9 @@ class TeamTacticsView extends StatelessWidget {
                             leading: Icon(style.icon, color: AppColors.primary),
                             title: Text(style.displayName),
                             subtitle: Text(style.description),
-                            trailing: ValueBadge(
-                              game.managerProfile.ratingFor(style),
-                              size: 32,
-                              filled: t.playstyle == style,
+                            trailing: Text(
+                              game.managerProfile.mastery(ManagerPhilosophy.forStyle(style)),
+                              style: AppText.caption.copyWith(fontWeight: FontWeight.w700, color: AppColors.primary),
                             ),
                             onTap: () => set(t.copyWith(playstyle: style)),
                           ),
@@ -289,7 +290,11 @@ class IndividualInstructionsView extends StatelessWidget {
         if (!game.isInitialized) return const SizedBox();
         final c = game.userClub;
         final xi = c.startingXI;
-        Widget picker(String label, IconData icon, String? value, ValueChanged<String?> onChanged) => Padding(
+        // Each role lists the XI by the attribute that matters for it; the
+        // two best candidates carry a star.
+        Widget picker(String label, IconData icon, String? value, ValueChanged<String?> onChanged, int Function(Player) score) {
+          final ranked = List<Player>.of(xi)..sort((a, b) => score(b).compareTo(score(a)));
+          return Padding(
           padding: const EdgeInsets.symmetric(vertical: 6),
           child: DropdownButtonFormField<String?>(
             initialValue: xi.any((p) => p.id == value) ? value : null,
@@ -297,8 +302,22 @@ class IndividualInstructionsView extends StatelessWidget {
             decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
             items: [
               DropdownMenuItem<String?>(value: null, child: Text(tr('Avtomatik (eng yaxshisi)'))),
-              for (final p in xi)
-                DropdownMenuItem<String?>(value: p.id, child: Text('${p.shortName} · ${p.mainPosition.code}')),
+              for (var i = 0; i < ranked.length; i++)
+                DropdownMenuItem<String?>(
+                  value: ranked[i].id,
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 18,
+                        child: i < 2 ? const Icon(Icons.star_rounded, size: 16, color: AppColors.gold) : null,
+                      ),
+                      Expanded(
+                        child: Text('${ranked[i].shortName} · ${ranked[i].mainPosition.code}', maxLines: 1, overflow: TextOverflow.ellipsis),
+                      ),
+                      ValueBadge(score(ranked[i]), size: 24),
+                    ],
+                  ),
+                ),
             ],
             onChanged: (v) {
               onChanged(v);
@@ -306,6 +325,7 @@ class IndividualInstructionsView extends StatelessWidget {
             },
           ),
         );
+        }
         return Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 760),
@@ -317,10 +337,17 @@ class IndividualInstructionsView extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       SectionHeader(tr('Kapitan va standart vaziyatlar'), icon: Icons.flag_outlined),
-                      picker(tr('Kapitan'), Icons.copyright_rounded, c.captainId, (v) => c.captainId = v),
-                      picker(tr('Burchak ijrochisi'), Icons.flag_circle_outlined, c.cornerTakerId, (v) => c.cornerTakerId = v),
-                      picker(tr('Jarima zarbasi ijrochisi'), Icons.adjust_rounded, c.freeKickTakerId, (v) => c.freeKickTakerId = v),
-                      picker(tr('Penalti ijrochisi'), Icons.radio_button_checked, c.penaltyTakerId, (v) => c.penaltyTakerId = v),
+                      picker(tr('Kapitan'), Icons.copyright_rounded, c.captainId, (v) => c.captainId = v, (p) {
+                        // Leadership: character, experience and standing in the team.
+                        final leader = p.personality == Personality.leader ? 12 : p.personality == Personality.professional ? 5 : 0;
+                        return (p.ovr * 0.6 + min(p.age, 33) + leader).round().clamp(40, 99);
+                      }),
+                      picker(tr('Burchak ijrochisi'), Icons.flag_circle_outlined, c.cornerTakerId, (v) => c.cornerTakerId = v,
+                          (p) => ((p.stats.curl + p.stats.loftedPass + p.stats.setPieceTaking) / 3).round()),
+                      picker(tr('Jarima zarbasi ijrochisi'), Icons.adjust_rounded, c.freeKickTakerId, (v) => c.freeKickTakerId = v,
+                          (p) => ((p.stats.setPieceTaking * 2 + p.stats.curl + p.stats.kickingPower) / 4).round()),
+                      picker(tr('Penalti ijrochisi'), Icons.radio_button_checked, c.penaltyTakerId, (v) => c.penaltyTakerId = v,
+                          (p) => ((p.stats.setPieceTaking + p.stats.finishing * 2 + p.stats.kickingPower) / 4).round()),
                     ],
                   ),
                 ),

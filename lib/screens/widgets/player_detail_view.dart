@@ -1,4 +1,5 @@
 import 'dart:math';
+import '../../ui/flag.dart';
 import 'package:flutter/material.dart';
 import '../../models/player.dart';
 import '../../models/club.dart';
@@ -143,9 +144,11 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
                 children: [
                   PositionChip(p.mainPosition.code, fontSize: 11),
                   const SizedBox(width: 6),
+                  FlagView(p.countryFlag, nationality: p.nationality, height: 12),
+                  const SizedBox(width: 6),
                   Flexible(
                     child: Text(
-                      '${p.countryFlag} #${p.number} · ${p.playingStyle.title}',
+                      '#${p.number} · ${p.playingStyle.title}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: AppText.caption,

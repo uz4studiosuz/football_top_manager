@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import '../data/initial_database.dart';
 import '../models/player.dart';
+import 'game_state.dart';
 import 'zip_writer.dart';
 
 /// Editable copy of the data files behind the /editor page. Works on the
@@ -343,6 +344,8 @@ class DbEditor extends ChangeNotifier {
   Future<String?> saveLocally() async {
     final error = await InitialDatabase.saveOverrides({for (final f in dirty) f: _docs[f]!});
     if (error != null) return error;
+    // The running career picks the edits up too (names, crests, stats…).
+    GameState().applyDatabaseEdits(InitialDatabase.lastChanges);
     dirty.clear();
     notifyListeners();
     return null;

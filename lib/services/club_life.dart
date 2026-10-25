@@ -103,6 +103,10 @@ class ClubLife {
   final Map<Facility, int> building = {};
   TrainingFocus focus = TrainingFocus.balanced;
 
+  /// Up to three attributes the whole squad works on (empty: the focus
+  /// picks them).
+  final List<String> teamAttributes = [];
+
   /// Individual training: player id → attribute key or `style:<name>`.
   final Map<String, String> targets = {};
   final Map<String, double> progress = {};
@@ -185,6 +189,7 @@ class ClubLife {
     }
     building.clear();
     focus = TrainingFocus.balanced;
+    teamAttributes.clear();
     targets.clear();
     progress.clear();
     feed.clear();
@@ -411,6 +416,7 @@ class ClubLife {
     'lv': {for (final e in levels.entries) e.key.name: e.value},
     'bd': {for (final e in building.entries) e.key.name: e.value},
     'fo': focus.name,
+    if (teamAttributes.isNotEmpty) 'ta': teamAttributes,
     'tg': targets,
     'pr': {for (final e in progress.entries) e.key: double.parse(e.value.toStringAsFixed(3))},
     'fd': feed.map((p) => p.toMap()).toList(),
@@ -447,6 +453,7 @@ class ClubLife {
       if (facility[k] != null) building[facility[k]!] = v as int;
     });
     focus = TrainingFocus.values.asNameMap()[m['fo']] ?? TrainingFocus.balanced;
+    teamAttributes.addAll(List<String>.from(m['ta'] ?? const []));
     targets.addAll(Map<String, String>.from(m['tg'] ?? {}));
     (m['pr'] as Map? ?? {}).forEach((k, v) => progress[k as String] = (v as num).toDouble());
     feed.addAll([for (final p in (m['fd'] as List? ?? [])) FanPost.fromMap(Map<String, dynamic>.from(p))]);

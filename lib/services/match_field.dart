@@ -364,6 +364,15 @@ class MatchField {
     PlayingStyle.classicNo10,
     PlayingStyle.deepLyingForward,
   };
+  /// Database skills (traits) as small, specific edges in the engine: a
+  /// "Shooting" player strikes cleaner, a "Tackling" one wins more duels…
+  static const _shooting = {'Zarba'}, _aerial = {'Havo o‘yini', 'Bosh bilan o‘yin'};
+  static const _setPiece = {'Jarima zarbalari'}, _passing = {'Paslar', 'Ijodkorlik', 'O‘yinni o‘qish'};
+  static const _ballSkill = {'Dribling', 'Texnika', 'To‘p nazorati', 'Chaqqonlik'};
+  static const _defending = {'Otbor', 'Qo‘riqlash', 'Oldindan sezish', 'Joy tanlash'};
+  static const _keeping = {'Refleks', 'Ushlash'}, _strength = {'Kuch', 'Gavdali'};
+  static bool _has(Player p, Set<String> skills) => p.traits.any(skills.contains);
+
   List<Player> get homeXI => _homeXI;
   List<Player> get awayXI => _awayXI;
   void _refreshLineups() {
@@ -638,7 +647,8 @@ class MatchField {
           PlayerInstruction.anchoring || PlayerInstruction.stayBack => -0.04,
           _ => 0.0,
         };
-        if (random.nextDouble() < (rate + extra) * (1.4 - p.stats.stamina / 170) * (club == home ? homeFitness : awayFitness)) {
+        final endurance = p.traits.contains('Chidamlilik') ? 0.85 : 1.0;
+        if (random.nextDouble() < (rate + extra) * (1.4 - p.stats.stamina / 170) * endurance * (club == home ? homeFitness : awayFitness)) {
           p.currentStamina = max(20, p.currentStamina - 1);
         }
       }
@@ -908,6 +918,7 @@ class MatchField {
           (progress > 0.84 && (ball.dy - 0.5).abs() < 0.29 ? -0.15 : 0) +
           (derby ? 0.03 : 0) +
           (defender.personality == Personality.temperamental ? 0.02 : 0) +
+          (defender.traits.contains('Agressivlik') ? 0.015 : 0) +
           (defender.stats.aggression - 40) / 800 -
           (defender.stats.tackling - 70) / 700 +
           (_opponent.tactics.pressing - 3) * 0.006 +
@@ -931,6 +942,9 @@ class MatchField {
                       : 0) +
                   // His own marker knows the carrier's moves.
                   (marks[defender.id] == carrier.id ? 0.05 : 0) +
+                  (_has(defender, _defending) ? 0.025 : 0) -
+                  (_has(carrier, _ballSkill) ? 0.025 : 0) +
+                  (_has(defender, _strength) && !_has(carrier, _strength) ? 0.015 : 0) +
                   (defender.stats.tackling +
                           defender.stats.defensiveEngagement -
                           carrier.stats.tightPossession -
@@ -1123,7 +1137,7 @@ class MatchField {
       final pressureMod = (_opponent.tactics.pressing - 3) * 0.015;
       final ok =
           random.nextDouble() <
-          (0.84 + (p.stats.lowPass + _lvl - 75) / 160 - pressureMod).clamp(0.6, 0.97);
+          (0.84 + (p.stats.lowPass + _lvl - 75) / 160 - pressureMod + (_has(p, _passing) ? 0.015 : 0)).clamp(0.6, 0.97);
       _att.passes++;
       _line(p)
         ..passes += 1
@@ -1592,7 +1606,12 @@ class MatchField {
       _Kind.penalty =>
         shooter.stats.setPieceTaking * 0.4 + shooter.stats.finishing * 0.6,
       _ => _openPlayStrike(shooter, _meters(ball, Offset(isHome ? 1.0 : 0.0, 0.5))),
-    };
+    } +
+        switch (effectiveKind) {
+          _Kind.header => _has(shooter, _aerial) ? 3.0 : 0.0,
+          _Kind.freeKick => _has(shooter, _setPiece) ? 4.0 : 0.0,
+          _ => _has(shooter, _shooting) ? 3.0 : 0.0,
+        };
     final goalPoint = Offset(isHome ? 1.0 : 0.0, 0.5);
     final distance = _meters(ball, goalPoint);
     var xg = switch (effectiveKind) {
@@ -1644,7 +1663,7 @@ class MatchField {
     // chance he takes away: a 90+ keeper turns big chances into saves.
     final gkFactor = keeper == null
         ? 2.4
-        : (1 - (_keeperSkill(keeper, distance, effectiveKind) + _gkLvl - 75) / 46).clamp(0.38, 1.65) *
+        : (1 - (_keeperSkill(keeper, distance, effectiveKind) + _gkLvl + (_has(keeper, _keeping) ? 2 : 0) - 75) / 46).clamp(0.38, 1.65) *
               (keeper.playingStyle == PlayingStyle.defensiveGoalkeeper && distance < 14 ? 0.95 : 1);
     // From range only real strikers of the ball hurt the keeper.
     final skill = (1.24 + (strike - 75) / (distance > 18 ? 30 : 48)).clamp(0.3, 1.9);
@@ -1960,12 +1979,17 @@ class MatchField {
         (attacker.playingStyle == PlayingStyle.extraFrontman &&
                 f.kind == _Kind.corner
             ? 6
-            : 0);
+            : 0) +
+        // Height and aerial skill win headers.
+        ((attacker.height ?? 182) - 182) * 0.25 +
+        (_has(attacker, _aerial) ? 4 : 0);
     final def = defender.stats.heading * 0.45 +
         defender.stats.jumping * 0.3 +
         defender.stats.defensiveAwareness * 0.25 +
         random.nextDouble() * 30 +
         4 +
+        ((defender.height ?? 182) - 182) * 0.25 +
+        (_has(defender, _aerial) ? 4 : 0) +
         // A packed, organised box at set pieces favours the defenders.
         (f.kind == _Kind.corner ? 9 : 0);
     if (!keeperClaims && atk > def) {

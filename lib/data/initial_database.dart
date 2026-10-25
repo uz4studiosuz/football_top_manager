@@ -112,6 +112,10 @@ class InitialDatabase {
     return _applyPatch(_expand(await readBundled(file)), doc);
   }
 
+  /// Clubs and players changed by the last save, as (list, bundled, edited);
+  /// the running career copies the edited fields from them.
+  static final List<(String, Map<String, dynamic>?, Map<String, dynamic>)> lastChanges = [];
+
   /// Lists whose entries carry an `id`: edits are stored per entry.
   static const _patchedLists = ['clubs', 'players', 'leagues'];
 
@@ -131,6 +135,15 @@ class InitialDatabase {
       if (_patchedLists.contains(e.key) && e.value is List && was is List) {
         final old = {for (final x in was) (x as Map)['id']: jsonEncode(x)};
         final now = {for (final x in e.value as List) (x as Map)['id']};
+        if (e.key != 'leagues') {
+          final before = {for (final x in was) (x as Map)['id']: x};
+          for (final x in e.value as List) {
+            final id = (x as Map)['id'];
+            if (old[id] != jsonEncode(x)) {
+              lastChanges.add((e.key, before[id] == null ? null : Map<String, dynamic>.from(before[id] as Map), Map<String, dynamic>.from(x)));
+            }
+          }
+        }
         patch[e.key] = {
           'set': [for (final x in e.value as List) if (old[(x as Map)['id']] != jsonEncode(x)) x],
           'del': [for (final id in old.keys) if (!now.contains(id)) id],
@@ -204,6 +217,7 @@ class InitialDatabase {
   /// Saves edited files (as patches) and reloads the database for the next
   /// career. Returns an error message when the device would not store them.
   static Future<String?> saveOverrides(Map<String, Map<String, dynamic>> files) async {
+    lastChanges.clear();
     final next = <String, String>{};
     // Older saves kept whole files: they shrink to patches too.
     for (final e in overrides.entries) {

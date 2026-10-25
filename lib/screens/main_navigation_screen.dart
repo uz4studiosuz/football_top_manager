@@ -1,13 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../models/finance.dart';
 import '../services/game_state.dart';
 import '../ui/widgets.dart';
 import 'dashboard_screen.dart';
-import 'finance_screen.dart';
+import 'club_life_screen.dart';
+import 'market_finance_screen.dart';
 import 'tactics_screen.dart';
 import 'standings_screen.dart';
-import 'transfer_screen.dart';
 import '../l10n/l10n.dart';
 import '../services/coin_wallet.dart';
 import '../ui/coin.dart';
@@ -20,20 +21,21 @@ class MainNavigationScreen extends StatefulWidget {
 
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   int _index = 0;
-  static List<String> get labels => [tr('Boshqaruv'), tr('Jamoa'), tr('Jadval'), tr('Transfer'), tr('Moliya')];
+  // Transfers live with finances; club management has its own tab.
+  static List<String> get labels => [tr('Boshqaruv'), tr('Jamoa'), tr('Jadval'), tr('Klub'), tr('Bozor')];
   static const icons = [
     Icons.home_outlined,
     Icons.groups_outlined,
     Icons.emoji_events_outlined,
+    Icons.apartment_outlined,
     Icons.swap_horiz_rounded,
-    Icons.account_balance_outlined,
   ];
   static const activeIcons = [
     Icons.home_rounded,
     Icons.groups_rounded,
     Icons.emoji_events_rounded,
+    Icons.apartment_rounded,
     Icons.swap_horiz_rounded,
-    Icons.account_balance_rounded,
   ];
 
   void _go(int i) => setState(() => _index = i);
@@ -89,9 +91,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     n.read = true;
     _dismiss();
     _go(switch (n.kind) {
-      NewsKind.transfer || NewsKind.window => 3,
+      NewsKind.transfer || NewsKind.window || NewsKind.finance => 4,
       NewsKind.injury || NewsKind.award || NewsKind.contract => 1,
-      NewsKind.finance => 4,
       _ => 0,
     });
   }
@@ -107,12 +108,12 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         onNavigateToSquad: () => _go(1),
         onNavigateToFinance: () => _go(4),
         onNavigateToTable: () => _go(2),
-        onNavigateToTransfers: () => _go(3),
+        onNavigateToTransfers: () => _go(4),
       ),
       const TacticsScreen(),
       const StandingsScreen(),
-      const TransferScreen(),
-      const FinanceScreen(),
+      const ClubLifeScreen(),
+      const MarketFinanceScreen(),
     ];
     final alert = _alert;
     final body = Stack(
@@ -142,7 +143,29 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           ),
       ],
     );
-    return Scaffold(
+    return PopScope(
+      canPop: false,
+      // Android back on the main screen asks before leaving the game.
+      onPopInvokedWithResult: (didPop, _) async {
+        if (didPop) return;
+        if (_index != 0) {
+          _go(0);
+          return;
+        }
+        final leave = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text(tr('O‘yindan chiqasizmi?')),
+            content: Text(tr('Karyera avtomatik saqlangan.')),
+            actions: [
+              TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('Yo‘q, qolaman'))),
+              FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(tr('Chiqish'))),
+            ],
+          ),
+        );
+        if (leave == true) SystemNavigator.pop();
+      },
+      child: Scaffold(
       body: SafeArea(
         bottom: false,
         child: Row(
@@ -216,6 +239,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 ),
               ),
             ),
+    ),
     );
   }
 }

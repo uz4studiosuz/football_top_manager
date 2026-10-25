@@ -38,6 +38,7 @@ dependencies:
   file_picker: ^13.2.0
   image_picker: ^1.2.4
   web: ^1.1.1
+  flutter_svg: ^2.3.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -64,6 +65,7 @@ flutter:
     - assets/data/world/
     - assets/l10n/
     - assets/fonts/LICENSE.txt
+    - assets/flags/
   fonts:
     - family: Roboto
       fonts:

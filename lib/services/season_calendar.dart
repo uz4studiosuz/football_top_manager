@@ -97,9 +97,12 @@ class SeasonCalendar {
 
   DateTime get seasonEnd => dateOfRound(rounds).add(const Duration(days: 14));
   DateTime get summerOpen => DateTime(year, 6, 16);
-  DateTime get summerClose => DateTime(year, 9, 1, 23, 59);
+
+  /// The game has no pre-season, so the summer window runs into September
+  /// (about five rounds) and the winter one to mid-February.
+  DateTime get summerClose => DateTime(year, 9, 20, 23, 59);
   DateTime get winterOpen => DateTime(year + 1, 1, 1);
-  DateTime get winterClose => DateTime(year + 1, 2, 2, 23, 59);
+  DateTime get winterClose => DateTime(year + 1, 2, 10, 23, 59);
 
   bool windowOpenOn(DateTime d) =>
       (!d.isBefore(summerOpen) && !d.isAfter(summerClose)) ||

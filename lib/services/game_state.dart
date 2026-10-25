@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import '../data/initial_database.dart';
@@ -8,6 +9,7 @@ import '../models/manager_profile.dart';
 import '../models/finance.dart';
 import '../models/face.dart';
 import 'match_field.dart';
+import 'name_gen.dart';
 import 'press.dart';
 import 'world.dart';
 import 'save_codec.dart';
@@ -198,9 +200,21 @@ class GameState extends ChangeNotifier {
 
   List<LeagueStanding> get sortedStandings => sortStandings(_standingsMap.values);
 
-  int positionOf(String clubId) =>
-      sortedStandings.indexWhere((s) => s.clubId == clubId) + 1;
-  LeagueStanding standingOf(String clubId) => _standingsMap[clubId]!;
+  /// Table position in the club's own league (pyramid divisions too).
+  int positionOf(String clubId) {
+    if (_standingsMap.containsKey(clubId)) return sortedStandings.indexWhere((s) => s.clubId == clubId) + 1;
+    for (final d in divisions.values) {
+      if (d.table.containsKey(clubId)) return sortStandings(d.table.values).indexWhere((s) => s.clubId == clubId) + 1;
+    }
+    return 0;
+  }
+
+  /// A club's standing; clubs outside the career's tables get an empty one
+  /// (a lower division used to crash the rival screen).
+  LeagueStanding standingOf(String clubId) =>
+      _standingsMap[clubId] ??
+      divisions.values.map((d) => d.table[clubId]).nonNulls.firstOrNull ??
+      LeagueStanding(clubId: clubId);
 
   List<PlayerLeaderboardEntry> _board(
     bool Function(Player) include,
@@ -249,8 +263,14 @@ class GameState extends ChangeNotifier {
   List<Fixture> get currentRoundFixtures =>
       _fixtures.where((f) => f.round == _currentRound).toList();
 
-  List<Fixture> fixturesOf(String clubId) =>
-      _fixtures.where((f) => f.involves(clubId)).toList();
+  List<Fixture> fixturesOf(String clubId) {
+    final own = _fixtures.where((f) => f.involves(clubId)).toList();
+    if (own.isNotEmpty) return own;
+    for (final d in divisions.values) {
+      if (d.table.containsKey(clubId)) return d.fixtures.where((f) => f.involves(clubId)).toList();
+    }
+    return own;
+  }
 
   Fixture? get lastUserResult => _fixtures
       .where((f) => f.isPlayed && f.involves(_userClubId ?? ''))
@@ -753,6 +773,59 @@ class GameState extends ChangeNotifier {
   /// rival player he follows. Cleared after the match.
   final Map<String, String> manMarks = {};
 
+  /// Database-editor changes reach the running career (same ids): only the
+  /// fields that were edited are copied, so form, age, morale and squads
+  /// stay as the career made them.
+  void applyDatabaseEdits(List<(String, Map<String, dynamic>?, Map<String, dynamic>)> changes) {
+    if (!_isInitialized) return;
+    bool changed(Map<String, dynamic>? before, Map<String, dynamic> after, String key) =>
+        after.containsKey(key) && (before == null || jsonEncode(before[key]) != jsonEncode(after[key]));
+    for (final (kind, before, after) in changes) {
+      if (kind == 'clubs') {
+        final c = getClubById(after['id'] as String);
+        if (c == null) continue;
+        if (changed(before, after, 'name')) c.name = after['name'];
+        if (changed(before, after, 'shortName')) c.shortName = after['shortName'];
+        if (changed(before, after, 'primaryColor')) c.primaryColor = Color(after['primaryColor']);
+        if (changed(before, after, 'secondaryColor')) c.secondaryColor = Color(after['secondaryColor']);
+        if (changed(before, after, 'accentColor')) c.accentColor = Color(after['accentColor']);
+        if (changed(before, after, 'stadiumName')) c.stadiumName = after['stadiumName'];
+        if (changed(before, after, 'stadiumCapacity')) c.stadiumCapacity = after['stadiumCapacity'];
+        if (changed(before, after, 'city')) c.city = after['city'] ?? '';
+        if (changed(before, after, 'nickname')) c.nickname = after['nickname'] ?? '';
+        if (changed(before, after, 'reputation')) c.reputation = after['reputation'];
+        if (changed(before, after, 'managerName')) c.managerName = after['managerName'] ?? '';
+        if (changed(before, after, 'crest')) c.crestConfig = ClubCrestConfig.fromMap(after['crest'] as Map);
+      } else if (kind == 'players') {
+        final p = findPlayerById(after['id'] as String);
+        if (p == null) continue;
+        if (changed(before, after, 'name')) p.name = after['name'];
+        if (changed(before, after, 'shortName')) p.shortName = after['shortName'];
+        if (changed(before, after, 'age')) p.age = after['age'];
+        if (changed(before, after, 'nationality')) p.nationality = after['nationality'];
+        if (changed(before, after, 'countryFlag')) p.countryFlag = after['countryFlag'];
+        if (changed(before, after, 'number')) p.number = after['number'];
+        if (changed(before, after, 'mainPosition')) p.mainPosition = PlayerPosition.fromCode(after['mainPosition']);
+        if (changed(before, after, 'altPositions')) {
+          p.altPositions = [for (final x in after['altPositions'] as List) PlayerPosition.fromCode(x)];
+        }
+        if (changed(before, after, 'preferredFoot')) p.preferredFoot = PreferredFoot.values.byName(after['preferredFoot']);
+        if (changed(before, after, 'weakFoot')) p.weakFoot = after['weakFoot'];
+        if (changed(before, after, 'stats')) p.stats = PlayerStats.fromMap(Map<String, dynamic>.from(after['stats'] as Map));
+        if (changed(before, after, 'potential')) p.potential = after['potential'];
+        if (changed(before, after, 'height')) p.height = after['height'];
+        if (changed(before, after, 'traits')) p.traits = List<String>.from(after['traits'] ?? const []);
+        if (changed(before, after, 'face')) {
+          p.face = FaceConfig.fromMap({...p.face.toMap(), ...Map<String, dynamic>.from(after['face'] as Map)});
+        }
+        if (changed(before, after, 'playingStyle')) {
+          p.playingStyle = PlayingStyle.values.asNameMap()[after['playingStyle']] ?? p.playingStyle;
+        }
+      }
+    }
+    notifyListeners();
+  }
+
   /// The club the user plays next (cup and Super Cup first).
   Club? get upcomingRival {
     final f = pendingSuperCup ?? pendingCupFixture ?? nextUserFixture;
@@ -1058,8 +1131,8 @@ class GameState extends ChangeNotifier {
     if (m.gainExperience(style, xp) > 0) {
       _news(
         NewsKind.board,
-        trf('Menejer reytingi oshdi: {0}', [style.title]),
-        trf('{0} – {1} uslubi {2} ga ko‘tarildi. Bu uslubda jamoa aniqroq pas beradi va to‘g‘ri qaror qabul qiladi.', [m.name, style.title, m.proficiency[style]]),
+        trf('Uslub tajribasi oshdi: {0}', [style.title]),
+        trf('{0}ning {1} uslubidagi tajribasi o‘sdi ({2}). Jamoa bu uslubda aniqroq pas beradi va to‘g‘ri qaror qabul qiladi.', [m.name, style.title, m.mastery(style)]),
       );
     }
     final opp = getClubById(f.homeClubId == _userClubId ? f.awayClubId : f.homeClubId)!;
@@ -1162,7 +1235,7 @@ class GameState extends ChangeNotifier {
             .clamp(30, 100);
       }
       if (entry.key == motm) p.seasonMotm++;
-      if (rating != null) _inSeasonGrowth(p, rating, line.minutes);
+      if (rating != null) _inSeasonGrowth(p, rating, line.minutes, line);
       final isHome = homeClub.squad.contains(p);
       final conceded = isHome ? f.awayScore! : f.homeScore!;
       if (p.mainPosition.isGoalkeeper && line.started && line.minutes >= 60 && conceded == 0) {
@@ -1200,32 +1273,80 @@ class GameState extends ChangeNotifier {
     f.attendance = _attendance(h);
   }
 
-  /// Good performances (and youth) slowly raise attributes during the season.
-  void _inSeasonGrowth(Player p, double rating, double minutes) {
+  /// Good performances (and youth) slowly raise attributes during the
+  /// season: the attributes the player actually used in the match grow
+  /// (goals → finishing, passes → passing, tackles → tackling…), one or two
+  /// points at a time, so the overall climbs gradually.
+  void _inSeasonGrowth(Player p, double rating, double minutes, [PlayerMatchStats? line]) {
     if (minutes < 30) return;
-    final youth = p.age <= 21 ? 0.12 : p.age <= 24 ? 0.06 : p.age >= 31 ? -0.04 : 0.0;
+    final youth = p.age <= 21 ? 0.08 : p.age <= 24 ? 0.04 : p.age >= 31 ? -0.04 : 0.0;
     final boost = userClub.squad.contains(p) ? life.growthFactor : 1.0;
-    p.growth += ((rating - 6.6) * 0.18 * (minutes / 90) + youth) * (youth > 0 || rating > 6.6 ? boost : 1);
+    p.growth += ((rating - 6.7) * 0.11 * (minutes / 90) + youth) * (youth > 0 || rating > 6.7 ? boost : 1);
     if (p.growth < 1 || p.ovr >= p.potential) {
       if (p.growth < -1) p.growth = -1;
       return;
     }
     p.growth -= 1;
     final before = p.ovr;
-    final weights = _keyAttributes(p.mainPosition);
     final m = p.stats.toMap().map((k, v) => MapEntry(k, v as int));
-    for (final k in weights) {
+    final picks = _grownAttributes(p, line, Random(_salt(p.id.hashCode + _currentRound)));
+    for (final k in picks) {
       m[k] = (m[k]! + 1).clamp(40, 99);
     }
     p.stats = PlayerStats.fromMap(m);
     p.marketValue = Player.valuation(p.ovr, p.age, p.potential);
-    if (p.ovr > before && userClub.squad.contains(p)) {
+    if (userClub.squad.contains(p) && (p.ovr > before || rating >= 8)) {
       _news(
         NewsKind.award,
-        trf('{0} rivojlandi: OVR {1} → {2}', [p.shortName, before, p.ovr]),
-        trf('Yaxshi o‘yinlar va mashg‘ulotlar natijasi. Bozor bahosi: {0}.', [_m(p.marketValue)]),
+        p.ovr > before ? trf('{0} rivojlandi: OVR {1} → {2}', [p.shortName, before, p.ovr]) : trf('{0} rivojlanmoqda', [p.shortName]),
+        trf('O‘sgan atributlar: {0}. Bozor bahosi: {1}.', [picks.map((k) => tr(PlayerStats.labels[k] ?? k)).join(', '), _m(p.marketValue)]),
       );
     }
+  }
+
+  /// One or two attributes to raise, weighted by what the player did in the
+  /// match; his position's key attributes when the match says little.
+  List<String> _grownAttributes(Player p, PlayerMatchStats? l, Random rnd) {
+    final w = <String, double>{};
+    void add(String k, double v) {
+      if (v > 0) w[k] = (w[k] ?? 0) + v;
+    }
+    if (l != null) {
+      add('finishing', l.goals * 3 + l.shotsOnTarget * 1.0);
+      add('attackingAwareness', l.goals * 2 + l.shots * 0.5);
+      add('kickingPower', l.shotsOnTarget * 0.5);
+      add('lowPass', l.assists * 2 + l.keyPasses * 1.2 + l.passesCompleted * 0.04);
+      add('loftedPass', l.assists * 1 + l.crosses * 0.6);
+      add('dribbling', l.dribblesWon * 1.2);
+      add('ballControl', l.dribblesWon * 0.7 + l.touches * 0.02);
+      add('tightPossession', l.dribblesWon * 0.5);
+      add('tackling', l.tackles * 1.4);
+      add('defensiveAwareness', l.interceptions * 1.3 + l.clearances * 0.5 + l.blocks * 0.8);
+      add('defensiveEngagement', l.tackles * 0.6 + l.interceptions * 0.5);
+      add('physicalContact', l.duelsWon * 0.4);
+      add('gkReflexes', l.saves * 1.2);
+      add('gkCatching', l.saves * 0.6);
+      add('gkParrying', l.saves * 0.5 + l.penaltiesSaved * 3);
+      add('gkAwareness', l.minutes >= 60 && l.goalsConceded == 0 && p.mainPosition.isGoalkeeper ? 2 : 0);
+    }
+    // Keepers grow keeper skills, outfield players outfield ones.
+    w.removeWhere((k, _) => k.startsWith('gk') != p.mainPosition.isGoalkeeper);
+    if (w.isEmpty) {
+      for (final k in _keyAttributes(p.mainPosition)) {
+        w[k] = 1;
+      }
+    }
+    String draw() {
+      var x = rnd.nextDouble() * w.values.fold(0.0, (a, b) => a + b);
+      for (final e in w.entries) {
+        x -= e.value;
+        if (x <= 0) return e.key;
+      }
+      return w.keys.last;
+    }
+    final first = draw();
+    w.remove(first);
+    return [first, if (w.isNotEmpty && rnd.nextBool()) draw()];
   }
 
   static List<String> _keyAttributes(PlayerPosition pos) => switch (pos) {
@@ -2770,6 +2891,16 @@ class GameState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// The team plan's attributes: the three chosen, else the focus's first three.
+  List<String> get teamTrainingAttributes =>
+      life.teamAttributes.isNotEmpty ? life.teamAttributes : (_focusAttributes[life.focus] ?? const []).take(3).toList();
+
+  /// Adds or removes an attribute of the team plan (three at most).
+  void toggleTeamAttribute(String key) {
+    if (!life.teamAttributes.remove(key) && life.teamAttributes.length < 3) life.teamAttributes.add(key);
+    notifyListeners();
+  }
+
   /// Sets (or clears with null) a player's individual training target: an
   /// attribute key or `style:<PlayingStyle name>`.
   void setTrainingTarget(Player p, String? target) {
@@ -2805,7 +2936,8 @@ class GameState extends ChangeNotifier {
       _news(NewsKind.board, trf('{0} tayyor', [f.label]), detail, alert: true);
     }
     final rnd = Random(_salt(_currentRound * 7919));
-    final focusKeys = _focusAttributes[life.focus];
+    final plan = teamTrainingAttributes;
+    final focusKeys = plan.isEmpty ? null : plan;
     for (final p in c.squad) {
       if (life.focus == TrainingFocus.fitness) p.currentStamina = min(100, p.currentStamina + 5);
       final rate = (p.age <= 21 ? 0.42 : p.age <= 24 ? 0.3 : p.age <= 28 ? 0.18 : p.age <= 31 ? 0.1 : 0.05) *
@@ -3554,11 +3686,10 @@ class GameState extends ChangeNotifier {
       final idx = entry.key;
       final d = entry.value;
       final pool = InitialDatabase.randomPool(random);
-      final first = pool['firstNames'] as List;
-      final last = pool['lastNames'] as List;
+      // A brand-new club's squad carries invented names.
       String name;
       do {
-        name = '${first[random.nextInt(first.length)]} ${last[random.nextInt(last.length)]}';
+        name = NameGen.person(random);
       } while (!used.add(name));
       // A brand-new club starts with an honest, average squad (≈64–73).
       final targetOvr = ((d['ovr'] as int) - 8 + random.nextInt(5) - 2).clamp(58, 74);
@@ -3595,8 +3726,7 @@ class GameState extends ChangeNotifier {
       for (var i = 0; i < picked.length; i++)
         () {
           final pool = InitialDatabase.randomPool(random);
-          final first = pool['firstNames'] as List, last = pool['lastNames'] as List;
-          final name = '${first[random.nextInt(first.length)]} ${last[random.nextInt(last.length)]}';
+          final name = NameGen.person(random);
           final pos = PlayerPosition.fromCode(picked[i]);
           final ovr = 85 + random.nextInt(4);
           final age = 23 + random.nextInt(7);
