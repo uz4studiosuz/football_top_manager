@@ -1,0 +1,278 @@
+{
+ "Bayroqcha": [
+  "Pennant",
+  "Вымпел"
+ ],
+ "Bosh bilan o‘yin": [
+  "Heading",
+  "Игра головой"
+ ],
+ "Bosh tasmasi": [
+  "Headband",
+  "Повязка"
+ ],
+ "Boshlang‘ich": [
+  "Beginner",
+  "Новичок"
+ ],
+ "Bu o‘yin tarkibi saqlanmagan: to‘liq ma’lumot faqat sizning o‘yinlaringiz uchun saqlanadi.": [
+  "Line-ups for this match were not saved: full details are kept only for your own matches.",
+  "Составы этого матча не сохранены: полные данные хранятся только для ваших матчей."
+ ],
+ "Bu o‘yin uchun izohlar yo‘q.": [
+  "No commentary for this match.",
+  "Для этого матча нет комментариев."
+ ],
+ "Butun jamoa shu atributlar ustida ishlaydi.": [
+  "The whole squad works on these attributes.",
+  "Вся команда работает над этими атрибутами."
+ ],
+ "Chandiq": [
+  "Scar",
+  "Шрам"
+ ],
+ "Chaqmoq": [
+  "Lightning",
+  "Молния"
+ ],
+ "Chidamlilik {0}%": [
+  "Stamina {0}%",
+  "Выносливость {0}%"
+ ],
+ "Chiqish": [
+  "Exit",
+  "Выйти"
+ ],
+ "Da": [
+  "Da",
+  "Da"
+ ],
+ "Ga": [
+  "Ga",
+  "Ga"
+ ],
+ "Ni": [
+  "Ni",
+  "Ni"
+ ],
+ "Va": [
+  "Va",
+  "Va"
+ ],
+ "Dafna gulchambari": [
+  "Laurel wreath",
+  "Лавровый венок"
+ ],
+ "Dunyoning 120 dan ortiq ligasi: Premier League, LaLiga, Serie A, Ligue 1 va boshqalar.": [
+  "More than 120 leagues worldwide: Premier League, LaLiga, Serie A, Ligue 1 and more.",
+  "Более 120 лиг мира: Премьер-лига, Ла Лига, Серия A, Лига 1 и другие."
+ ],
+ "Ha, natijani ko‘rsat": [
+  "Yes, show the result",
+  "Да, показать результат"
+ ],
+ "Havo o‘yini": [
+  "Aerial ability",
+  "Игра в воздухе"
+ ],
+ "Jamoa rejasi: atributlar ({0}/3)": [
+  "Team plan: attributes ({0}/3)",
+  "План команды: атрибуты ({0}/3)"
+ ],
+ "KUBOK O‘YINI": [
+  "CUP MATCH",
+  "КУБКОВЫЙ МАТЧ"
+ ],
+ "Karyera avtomatik saqlangan.": [
+  "Your career is saved automatically.",
+  "Карьера сохраняется автоматически."
+ ],
+ "Karyeralarim": [
+  "My careers",
+  "Мои карьеры"
+ ],
+ "Katakli": [
+  "Checks",
+  "Клетка"
+ ],
+ "Langar": [
+  "Anchor",
+  "Якорь"
+ ],
+ "Menejerning shu uslubdagi tajribasi pas aniqligi va qarorlarga ta’sir qiladi.": [
+  "The manager's experience in this style affects passing accuracy and decisions.",
+  "Опыт менеджера в этом стиле влияет на точность передач и решения."
+ ],
+ "Millatni tanlang": [
+  "Choose a nationality",
+  "Выберите гражданство"
+ ],
+ "Nurlar": [
+  "Rays",
+  "Лучи"
+ ],
+ "Oldindan sezish": [
+  "Anticipation",
+  "Предвидение"
+ ],
+ "Olmos": [
+  "Diamond",
+  "Ромб"
+ ],
+ "Olmos tosh": [
+  "Gem",
+  "Самоцвет"
+ ],
+ "Olov": [
+  "Flame",
+  "Пламя"
+ ],
+ "Olti burchak": [
+  "Hexagon",
+  "Шестиугольник"
+ ],
+ "O‘sgan atributlar: {0}. Bozor bahosi: {1}.": [
+  "Improved attributes: {0}. Market value: {1}.",
+  "Выросли атрибуты: {0}. Рыночная стоимость: {1}."
+ ],
+ "O‘yin uslublari": [
+  "Playing styles",
+  "Игровые стили"
+ ],
+ "O‘yinni o‘qish": [
+  "Game reading",
+  "Чтение игры"
+ ],
+ "Pas {0}/{1}": [
+  "Passes {0}/{1}",
+  "Пасы {0}/{1}"
+ ],
+ "Qaysi uslubda ko‘p o‘ynasangiz, o‘shanda tajribangiz o‘sadi: jamoa aniqroq pas beradi va to‘g‘ri qaror qabul qiladi.": [
+  "The more you play a style, the more experience you gain in it: the team passes more accurately and makes better decisions.",
+  "Чем чаще вы играете в стиле, тем больше опыта в нём: команда точнее пасует и принимает лучшие решения."
+ ],
+ "Qilichlar": [
+  "Swords",
+  "Мечи"
+ ],
+ "Qo‘riqlash": [
+  "Marking",
+  "Опека"
+ ],
+ "Qurilma xotirasi to‘la: {0}": [
+  "Device storage is full: {0}",
+  "Память устройства заполнена: {0}"
+ ],
+ "Qurilma xotirasiga yozib bo‘lmadi.": [
+  "Could not write to device storage.",
+  "Не удалось записать в память устройства."
+ ],
+ "Quyosh": [
+  "Sun",
+  "Солнце"
+ ],
+ "Ramka": [
+  "Frame",
+  "Рамка"
+ ],
+ "Saqlandi. O‘zgarishlar joriy karyerada ham, yangi karyeralarda ham ishlaydi.": [
+  "Saved. The changes apply to the current career and to new ones.",
+  "Сохранено. Изменения действуют и в текущей, и в новых карьерах."
+ ],
+ "Sirg‘a": [
+  "Earring",
+  "Серьга"
+ ],
+ "Stadion sig‘imi: {0} muxlis. Klub hayoti → Inshootlar bo‘limida kengaytirasiz.": [
+  "Stadium capacity: {0} fans. Expand it later in Club life → Facilities.",
+  "Вместимость стадиона: {0} зрителей. Расширить можно в разделе Клуб → Инфраструктура."
+ ],
+ "Tanlanmagan: yo‘nalish bo‘yicha avtomatik – {0}.": [
+  "None chosen: picked by the focus – {0}.",
+  "Не выбрано: по направлению автоматически – {0}."
+ ],
+ "Tasodifiy ism": [
+  "Random name",
+  "Случайное имя"
+ ],
+ "Tasodifiy nom": [
+  "Random name",
+  "Случайное название"
+ ],
+ "Tatuirovka": [
+  "Tattoo",
+  "Тату"
+ ],
+ "Tog‘": [
+  "Mountain",
+  "Гора"
+ ],
+ "To‘liq izohlar faqat oxirgi o‘yinlaringiz uchun saqlanadi; bu yerda asosiy voqealar.": [
+  "Full commentary is kept only for your latest matches; here are the key events.",
+  "Полный комментарий хранится только для ваших последних матчей; здесь ключевые события."
+ ],
+ "Uslub tajribasi oshdi: {0}": [
+  "Style experience up: {0}",
+  "Опыт в стиле вырос: {0}"
+ ],
+ "Usta": [
+  "Expert",
+  "Мастер"
+ ],
+ "Ustoz": [
+  "Master",
+  "Гуру"
+ ],
+ "Xoch": [
+  "Cross",
+  "Крест"
+ ],
+ "Yarim oy": [
+  "Crescent",
+  "Полумесяц"
+ ],
+ "Zanjir": [
+  "Chain",
+  "Цепочка"
+ ],
+ "{0} bilan o‘yin kuzatilmasdan simulyatsiya qilinadi. Davom etasizmi?": [
+  "The match against {0} will be simulated without watching. Continue?",
+  "Матч с {0} будет просчитан без просмотра. Продолжить?"
+ ],
+ "{0} rivojlanmoqda": [
+  "{0} is improving",
+  "{0} прогрессирует"
+ ],
+ "{0} · {1} yosh": [
+  "{0} · {1} years",
+  "{0} · {1} лет"
+ ],
+ "{0}ning {1} uslubidagi tajribasi o‘sdi ({2}). Jamoa bu uslubda aniqroq pas beradi va to‘g‘ri qaror qabul qiladi.": [
+  "{0}'s experience in {1} has grown ({2}). The team passes more accurately and decides better in this style.",
+  "Опыт {0} в стиле {1} вырос ({2}). Команда в этом стиле точнее пасует и лучше принимает решения."
+ ],
+ "Klub": [
+  "Club",
+  "Клуб"
+ ],
+ "Bozor": [
+  "Market",
+  "Рынок"
+ ],
+ "Aksessuar": [
+  "Accessory",
+  "Аксессуар"
+ ],
+ "Kamida ikki belgi kiriting": [
+  "Enter at least two characters",
+  "Введите не менее двух символов"
+ ],
+ "O‘yindan chiqasizmi?": [
+  "Exit the game?",
+  "Выйти из игры?"
+ ],
+ "Yo‘q, qolaman": [
+  "No, stay",
+  "Нет, остаться"
+ ]
+}

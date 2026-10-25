@@ -63,7 +63,7 @@ class ManagerProfile {
   /// Standing in the football world (1–99), earned by results against
   /// expectations; clubs of a similar reputation offer jobs.
   double reputation;
-  static const xpPerLevel = 8;
+  static const xpPerLevel = 20;
   ManagerProfile({
     this.reputation = 30,
     required this.name,
@@ -152,6 +152,15 @@ class ManagerProfile {
     < 82 => tr('Jahon darajasi'),
     _ => tr('Afsonaviy murabbiy'),
   };
+  /// How well the manager knows a style, in words (the number behind it
+  /// still drives the match engine but is not shown).
+  String mastery(ManagerPhilosophy p) => switch (proficiency[p] ?? 70) {
+    < 74 => tr('Boshlang‘ich'),
+    < 79 => tr('Tajribali'),
+    < 86 => tr('Usta'),
+    _ => tr('Ustoz'),
+  };
+
   int ratingFor(TeamPlaystyle style) =>
       proficiency[ManagerPhilosophy.forStyle(style)] ?? 70;
   double get winRate => matchesManaged > 0 ? wins / matchesManaged * 100 : 0;

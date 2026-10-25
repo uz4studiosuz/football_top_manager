@@ -7,6 +7,7 @@ import '../ui/league_picker.dart';
 import '../ui/widgets.dart';
 import 'custom_club_creator_screen.dart';
 import 'main_navigation_screen.dart';
+import 'save_slots_screen.dart';
 import '../models/manager_profile.dart';
 import '../l10n/l10n.dart';
 import '../services/coin_wallet.dart';
@@ -21,7 +22,7 @@ class ClubSelectionScreen extends StatefulWidget {
 }
 
 class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
-  String _league = 'super';
+  String _league = 'epl';
   late List<Club> _clubs = _load(_league);
 
   /// Clubs strongest first, with each club's real best XI picked.
@@ -97,7 +98,14 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(tr('Klubni tanlang')),
-        actions: [InkWell(borderRadius: BorderRadius.circular(20), onTap: () => showCoinInfo(context), child: const CoinBalance())],
+        actions: [
+          IconButton(
+            tooltip: tr('Karyeralarim'),
+            icon: const Icon(Icons.folder_open_rounded),
+            onPressed: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const SaveSlotsScreen())),
+          ),
+          InkWell(borderRadius: BorderRadius.circular(20), onTap: () => showCoinInfo(context), child: const CoinBalance()),
+        ],
       ),
       body: PageWidth(
       maxWidth: 1100,

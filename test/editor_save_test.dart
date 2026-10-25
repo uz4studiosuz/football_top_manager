@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:football_top_manager/data/initial_database.dart';
+import 'package:football_top_manager/services/game_state.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
@@ -30,6 +31,32 @@ void main() {
     final p = (again['players'] as List).cast<Map<String, dynamic>>().firstWhere((x) => x['id'] == player['id']);
     expect((p['stats'] as Map)['finishing'], 99);
     expect(jsonDecode(stored)['world/it1.json'], isNotNull);
+    await InitialDatabase.clearOverrides();
+  });
+
+  test('Edits saved during a career change that career too', () async {
+    SharedPreferences.setMockInitialValues({});
+    await InitialDatabase.load();
+    await InitialDatabase.ensurePyramid('es1');
+    final game = GameState();
+    final club = InitialDatabase.getClubs('es1').firstWhere((c) => c.name == 'Real Madrid');
+    game.startCareerWithExistingClub(club, league: 'es1');
+    game.simulateUserFixture(game.nextUserFixture!);
+    final doc = await InitialDatabase.readFile('world/es1.json');
+    final barca = (doc['clubs'] as List).cast<Map<String, dynamic>>().firstWhere((c) => c['name'] == 'Barcelona');
+    barca['name'] = 'FC Barcelona';
+    (barca['crest'] as Map)['monogram'] = 'FCB';
+    final mine = (doc['players'] as List).cast<Map<String, dynamic>>().firstWhere((p) => p['id'] == game.userClub.squad.first.id);
+    (mine['stats'] as Map)['finishing'] = 99;
+    final goalsBefore = game.userClub.squad.first.seasonGoals;
+
+    expect(await InitialDatabase.saveOverrides({'world/es1.json': doc}), isNull);
+    game.applyDatabaseEdits(InitialDatabase.lastChanges);
+    final career = game.getClubById(barca['id'] as String)!;
+    expect(career.name, 'FC Barcelona');
+    expect(career.crestConfig.monogram, 'FCB');
+    expect(game.userClub.squad.first.stats.finishing, 99);
+    expect(game.userClub.squad.first.seasonGoals, goalsBefore, reason: 'season numbers stay');
     await InitialDatabase.clearOverrides();
   });
 }

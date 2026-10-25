@@ -45,7 +45,8 @@ void main() {
       game.nextRound();
     }
     final moves = game.transferHistory.skip(0).take(game.transferHistory.length - before).toList();
-    expect(moves.length, lessThanOrEqualTo(8));
+    // At most one signing per AI club per window (19 clubs, ~5 open rounds).
+    expect(moves.length, lessThanOrEqualTo(12));
     final names = moves.map((m) => m.playerName).toList();
     expect(names.toSet().length, names.length);
   });

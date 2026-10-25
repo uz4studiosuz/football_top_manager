@@ -27,6 +27,7 @@ Future<void> main() async {
   // The bundled font's licence joins the packages' on the licences page.
   LicenseRegistry.addLicense(() async* {
     yield LicenseEntryWithLineBreaks(['Roboto'], await rootBundle.loadString('assets/fonts/LICENSE.txt'));
+    yield LicenseEntryWithLineBreaks(['flag-icons'], await rootBundle.loadString('assets/flags/LICENSE'));
   });
   runApp(const FootballTopManagerApp());
 }

@@ -1,4 +1,5 @@
 import '../data/initial_database.dart';
+import 'flag.dart';
 import 'package:flutter/material.dart';
 import '../models/club.dart';
 import '../models/league.dart';
@@ -392,7 +393,7 @@ class PlayerTile extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 6),
-                      Text(p.countryFlag, style: const TextStyle(fontSize: 12)),
+                      FlagView(p.countryFlag, nationality: p.nationality, height: 11),
                     ],
                   ),
                   const SizedBox(height: 3),

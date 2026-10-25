@@ -6,6 +6,7 @@ import '../services/club_life.dart';
 import '../services/world.dart';
 import '../services/game_state.dart';
 import '../ui/face_avatar.dart';
+import '../ui/flag.dart';
 import '../ui/widgets.dart';
 import '../l10n/l10n.dart';
 import 'widgets/player_detail_view.dart';
@@ -271,6 +272,32 @@ class _Training extends StatelessWidget {
                   ),
               ],
             ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        SectionHeader(trf('Jamoa rejasi: atributlar ({0}/3)', [life.teamAttributes.length]), icon: Icons.checklist_rounded),
+        Text(
+          life.teamAttributes.isEmpty
+              ? trf('Tanlanmagan: yo‘nalish bo‘yicha avtomatik – {0}.', [game.teamTrainingAttributes.map((k) => tr(PlayerStats.labels[k] ?? k)).join(', ')])
+              : tr('Butun jamoa shu atributlar ustida ishlaydi.'),
+          style: AppText.caption,
+        ),
+        const SizedBox(height: 6),
+        AppCard(
+          child: Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final k in PlayerStats.labels.keys.where((k) => !k.startsWith('gk')))
+                FilterChip(
+                  label: Text(tr(PlayerStats.labels[k]!), style: const TextStyle(fontSize: 12)),
+                  selected: life.teamAttributes.contains(k),
+                  onSelected: life.teamAttributes.contains(k) || life.teamAttributes.length < 3
+                      ? (_) => game.toggleTeamAttribute(k)
+                      : null,
+                  visualDensity: VisualDensity.compact,
+                ),
+            ],
           ),
         ),
         const SizedBox(height: 12),
@@ -784,7 +811,7 @@ class _Scouts extends StatelessWidget {
                     children: [
                       for (final c in shown)
                         ListTile(
-                          leading: Text(_flagOf(c), style: const TextStyle(fontSize: 24)),
+                          leading: FlagView(_flagOf(c), nationality: c, height: 20),
                           title: Text(tr(c)),
                           subtitle: Text(
                             WorldMarket.leaguesOf(c, const {}).map((l) => l.name).take(3).join(' · '),
@@ -846,7 +873,7 @@ class _Scouts extends StatelessWidget {
                 ListTile(
                   dense: true,
                   contentPadding: EdgeInsets.zero,
-                  leading: Text(_flagOf(e.key), style: const TextStyle(fontSize: 22)),
+                  leading: FlagView(_flagOf(e.key), nationality: e.key, height: 18),
                   title: Text(tr(e.key), style: AppText.bodyStrong),
                   subtitle: Text(trf('Hisobot {0}-turda', [e.value]), style: AppText.caption),
                   trailing: const Icon(Icons.hourglass_top_rounded),
@@ -859,7 +886,7 @@ class _Scouts extends StatelessWidget {
                   runSpacing: 6,
                   children: [
                     for (final c in world.countries.toList()..sort())
-                      Chip(label: Text('${_flagOf(c)} ${tr(c)}'), visualDensity: VisualDensity.compact),
+                      Chip(label: FlagLabel(_flagOf(c), tr(c), nationality: c), visualDensity: VisualDensity.compact),
                   ],
                 ),
                 const SizedBox(height: 6),

@@ -12,7 +12,10 @@ enum CrestShape {
   roundel('Halqa'),
   pointed('Uchli'),
   heater('Qalqon'),
-  badge('Nishon');
+  badge('Nishon'),
+  hexagon('Olti burchak'),
+  diamond('Olmos'),
+  pennant('Bayroqcha');
 
   const CrestShape(this._label);
   final String _label;
@@ -30,7 +33,11 @@ enum CrestPattern {
   lozenges('Romblar'),
   chevron('Burchak'),
   rings('Halqalar'),
-  splitCross('Xoch va chiziq');
+  splitCross('Xoch va chiziq'),
+  cross('Xoch'),
+  checks('Katakli'),
+  rays('Nurlar'),
+  frame('Ramka');
 
   const CrestPattern(this._label);
   final String _label;
@@ -49,7 +56,15 @@ enum CrestEmblem {
   trident('Sanchqi'),
   tree('Daraxt'),
   hammers('Bolg‘alar'),
-  wolf('Bo‘ri');
+  wolf('Bo‘ri'),
+  anchor('Langar'),
+  bolt('Chaqmoq'),
+  sun('Quyosh'),
+  crescent('Yarim oy'),
+  swords('Qilichlar'),
+  flame('Olov'),
+  mountain('Tog‘'),
+  gem('Olmos tosh');
 
   const CrestEmblem(this._label);
   final String _label;
@@ -69,6 +84,9 @@ class ClubCrestConfig {
   final bool crown;
   final String? ringText;
   final Color? ringColor;
+
+  /// A laurel wreath around the badge.
+  final bool laurel;
   const ClubCrestConfig({
     required this.shape,
     required this.pattern,
@@ -81,6 +99,7 @@ class ClubCrestConfig {
     this.crown = false,
     this.ringText,
     this.ringColor,
+    this.laurel = false,
   });
 
   ClubCrestConfig copyWith({
@@ -95,6 +114,7 @@ class ClubCrestConfig {
     bool? crown,
     String? ringText,
     Color? ringColor,
+    bool? laurel,
   }) => ClubCrestConfig(
     shape: shape ?? this.shape,
     pattern: pattern ?? this.pattern,
@@ -107,6 +127,7 @@ class ClubCrestConfig {
     crown: crown ?? this.crown,
     ringText: ringText ?? this.ringText,
     ringColor: ringColor ?? this.ringColor,
+    laurel: laurel ?? this.laurel,
   );
 
   Map<String, dynamic> toMap() => {
@@ -121,6 +142,7 @@ class ClubCrestConfig {
     'crown': crown,
     'ringText': ?ringText,
     'ringColor': ?ringColor?.toARGB32(),
+    if (laurel) 'laurel': true,
   };
 
   factory ClubCrestConfig.fromMap(Map m) => ClubCrestConfig(
@@ -137,6 +159,7 @@ class ClubCrestConfig {
     crown: m['crown'] == true,
     ringText: m['ringText'],
     ringColor: m['ringColor'] == null ? null : Color(m['ringColor']),
+    laurel: m['laurel'] == true,
   );
 
   @override
@@ -168,11 +191,9 @@ class ClubCrestPainter extends CustomPainter {
       hasTop ? s * 0.84 : s,
       s - top - (hasTop ? s * 0.0 : 0),
     );
-    final square = Rect.fromCenter(
-      center: body.center,
-      width: min(body.width, body.height),
-      height: min(body.width, body.height),
-    );
+    final side = min(body.width, body.height) * (config.laurel ? 0.82 : 1);
+    final square = Rect.fromCenter(center: body.center, width: side, height: side);
+    if (config.laurel) _drawLaurel(canvas, square);
     if (config.crown) _drawCrown(canvas, s, square);
     if (config.stars > 0 && !config.crown) _drawStars(canvas, s, square);
     final outline = _shapePath(config.shape, square);
@@ -268,6 +289,24 @@ class ClubCrestPainter extends CustomPainter {
         path.addRRect(
           RRect.fromRectAndRadius(r.deflate(w * 0.06), Radius.circular(w * 0.2)),
         );
+      case CrestShape.hexagon:
+        path.addPath(_polygon(r.center, w * 0.48, 6, -pi / 2), Offset.zero);
+      case CrestShape.diamond:
+        path
+          ..moveTo(p(0.5, 0.01).dx, p(0.5, 0.01).dy)
+          ..lineTo(p(0.97, 0.5).dx, p(0.97, 0.5).dy)
+          ..lineTo(p(0.5, 0.99).dx, p(0.5, 0.99).dy)
+          ..lineTo(p(0.03, 0.5).dx, p(0.03, 0.5).dy)
+          ..close();
+      case CrestShape.pennant:
+        // A banner hanging from a bar, with a swallow-tail notch.
+        path
+          ..moveTo(p(0.1, 0.04).dx, p(0.1, 0.04).dy)
+          ..lineTo(p(0.9, 0.04).dx, p(0.9, 0.04).dy)
+          ..lineTo(p(0.9, 0.98).dx, p(0.9, 0.98).dy)
+          ..lineTo(p(0.5, 0.8).dx, p(0.5, 0.8).dy)
+          ..lineTo(p(0.1, 0.98).dx, p(0.1, 0.98).dy)
+          ..close();
     }
     return path;
   }
@@ -363,6 +402,36 @@ class ClubCrestPainter extends CustomPainter {
         canvas.drawRect(
           Rect.fromLTRB(x, mid - h * 0.055, x + w, mid + h * 0.075),
           Paint()..color = config.trimColor,
+        );
+      case CrestPattern.cross:
+        canvas.drawRect(Rect.fromLTWH(x + w * 0.4, y, w * 0.2, h), paint);
+        canvas.drawRect(Rect.fromLTWH(x, y + h * 0.36, w, h * 0.2), paint);
+      case CrestPattern.checks:
+        const n = 6;
+        for (var i = 0; i < n; i++) {
+          for (var j = 0; j < n; j++) {
+            if ((i + j).isOdd) canvas.drawRect(Rect.fromLTWH(x + w / n * i, y + h / n * j, w / n, h / n), paint);
+          }
+        }
+      case CrestPattern.rays:
+        for (var i = 0; i < 16; i += 2) {
+          final a1 = i * pi / 8, a2 = (i + 1) * pi / 8;
+          canvas.drawPath(
+            Path()
+              ..moveTo(r.center.dx, r.center.dy)
+              ..lineTo(r.center.dx + cos(a1) * w, r.center.dy + sin(a1) * w)
+              ..lineTo(r.center.dx + cos(a2) * w, r.center.dy + sin(a2) * w)
+              ..close(),
+            paint,
+          );
+        }
+      case CrestPattern.frame:
+        canvas.drawRect(
+          r.deflate(w * 0.13),
+          Paint()
+            ..color = config.secondaryColor
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = w * 0.08,
         );
     }
   }
@@ -567,7 +636,173 @@ class ClubCrestPainter extends CustomPainter {
         _hammers(canvas, r, color);
       case CrestEmblem.wolf:
         _wolf(canvas, r, color);
+      case CrestEmblem.anchor:
+        _anchor(canvas, r, color);
+      case CrestEmblem.bolt:
+        _bolt(canvas, r, color);
+      case CrestEmblem.sun:
+        _sun(canvas, r, color);
+      case CrestEmblem.crescent:
+        _crescent(canvas, r, color);
+      case CrestEmblem.swords:
+        _swords(canvas, r, color);
+      case CrestEmblem.flame:
+        _flame(canvas, r, color);
+      case CrestEmblem.mountain:
+        _mountain(canvas, r, color);
+      case CrestEmblem.gem:
+        _gem(canvas, r, color);
     }
+  }
+
+  // ------------------------------------------------------- more emblems
+  void _anchor(Canvas canvas, Rect r, Color color) {
+    final w = r.width, c = r.center;
+    final stroke = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * 0.08
+      ..strokeCap = StrokeCap.round;
+    canvas.drawCircle(c - Offset(0, w * 0.32), w * 0.08, stroke);
+    canvas.drawLine(c - Offset(0, w * 0.24), c + Offset(0, w * 0.36), stroke);
+    canvas.drawLine(c - Offset(w * 0.18, w * 0.12), c + Offset(w * 0.18, -w * 0.12), stroke);
+    canvas.drawArc(Rect.fromCenter(center: c + Offset(0, w * 0.06), width: w * 0.66, height: w * 0.62), 0.25, pi - 0.5, false, stroke);
+  }
+
+  void _bolt(Canvas canvas, Rect r, Color color) {
+    final w = r.width, h = r.height, x = r.left, y = r.top;
+    canvas.drawPath(
+      Path()
+        ..moveTo(x + w * 0.58, y + h * 0.04)
+        ..lineTo(x + w * 0.24, y + h * 0.56)
+        ..lineTo(x + w * 0.46, y + h * 0.56)
+        ..lineTo(x + w * 0.38, y + h * 0.96)
+        ..lineTo(x + w * 0.76, y + h * 0.42)
+        ..lineTo(x + w * 0.54, y + h * 0.42)
+        ..close(),
+      Paint()..color = color,
+    );
+  }
+
+  void _sun(Canvas canvas, Rect r, Color color) {
+    final w = r.width, c = r.center;
+    final paint = Paint()..color = color;
+    canvas.drawCircle(c, w * 0.2, paint);
+    for (var i = 0; i < 12; i++) {
+      final a = i * pi / 6;
+      canvas.drawPath(
+        Path()
+          ..moveTo(c.dx + cos(a - 0.12) * w * 0.26, c.dy + sin(a - 0.12) * w * 0.26)
+          ..lineTo(c.dx + cos(a) * w * 0.44, c.dy + sin(a) * w * 0.44)
+          ..lineTo(c.dx + cos(a + 0.12) * w * 0.26, c.dy + sin(a + 0.12) * w * 0.26)
+          ..close(),
+        paint,
+      );
+    }
+  }
+
+  void _crescent(Canvas canvas, Rect r, Color color) {
+    final w = r.width, c = r.center;
+    final outer = Path()..addOval(Rect.fromCircle(center: c - Offset(w * 0.06, 0), radius: w * 0.36));
+    final cut = Path()..addOval(Rect.fromCircle(center: c + Offset(w * 0.08, -w * 0.04), radius: w * 0.3));
+    canvas.drawPath(Path.combine(PathOperation.difference, outer, cut), Paint()..color = color);
+    canvas.drawPath(_star(c + Offset(w * 0.22, -w * 0.02), w * 0.11, w * 0.05), Paint()..color = color);
+  }
+
+  void _swords(Canvas canvas, Rect r, Color color) {
+    final w = r.width, c = r.center;
+    final blade = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * 0.07
+      ..strokeCap = StrokeCap.round;
+    for (final dir in [1.0, -1.0]) {
+      final tip = c + Offset(dir * w * 0.36, -w * 0.38);
+      final hilt = c + Offset(-dir * w * 0.26, w * 0.28);
+      canvas.drawLine(tip, hilt, blade);
+      final guard = hilt + Offset(dir * w * 0.06, -w * 0.06);
+      canvas.drawLine(guard + Offset(-w * 0.1, -w * 0.1 * dir * -1), guard + Offset(w * 0.1, w * 0.1 * dir * -1), blade);
+    }
+  }
+
+  void _flame(Canvas canvas, Rect r, Color color) {
+    final w = r.width, h = r.height, x = r.left, y = r.top;
+    canvas.drawPath(
+      Path()
+        ..moveTo(x + w * 0.5, y + h * 0.02)
+        ..cubicTo(x + w * 0.62, y + h * 0.3, x + w * 0.86, y + h * 0.42, x + w * 0.8, y + h * 0.7)
+        ..cubicTo(x + w * 0.76, y + h * 0.9, x + w * 0.6, y + h * 0.98, x + w * 0.5, y + h * 0.98)
+        ..cubicTo(x + w * 0.3, y + h * 0.98, x + w * 0.18, y + h * 0.84, x + w * 0.2, y + h * 0.64)
+        ..cubicTo(x + w * 0.22, y + h * 0.46, x + w * 0.34, y + h * 0.4, x + w * 0.36, y + h * 0.24)
+        ..cubicTo(x + w * 0.44, y + h * 0.36, x + w * 0.44, y + h * 0.46, x + w * 0.42, y + h * 0.52)
+        ..cubicTo(x + w * 0.56, y + h * 0.44, x + w * 0.56, y + h * 0.22, x + w * 0.5, y + h * 0.02)
+        ..close(),
+      Paint()..color = color,
+    );
+  }
+
+  void _mountain(Canvas canvas, Rect r, Color color) {
+    final w = r.width, h = r.height, x = r.left, y = r.top;
+    canvas.drawPath(
+      Path()
+        ..moveTo(x + w * 0.02, y + h * 0.86)
+        ..lineTo(x + w * 0.36, y + h * 0.26)
+        ..lineTo(x + w * 0.52, y + h * 0.52)
+        ..lineTo(x + w * 0.66, y + h * 0.36)
+        ..lineTo(x + w * 0.98, y + h * 0.86)
+        ..close(),
+      Paint()..color = color,
+    );
+    // Snow caps in the badge colour.
+    canvas.drawPath(
+      Path()
+        ..moveTo(x + w * 0.27, y + h * 0.42)
+        ..lineTo(x + w * 0.36, y + h * 0.26)
+        ..lineTo(x + w * 0.45, y + h * 0.42)
+        ..lineTo(x + w * 0.36, y + h * 0.38)
+        ..close(),
+      Paint()..color = config.primaryColor,
+    );
+  }
+
+  void _gem(Canvas canvas, Rect r, Color color) {
+    final w = r.width, h = r.height, x = r.left, y = r.top;
+    final paint = Paint()..color = color;
+    canvas.drawPath(
+      Path()
+        ..moveTo(x + w * 0.22, y + h * 0.24)
+        ..lineTo(x + w * 0.78, y + h * 0.24)
+        ..lineTo(x + w * 0.94, y + h * 0.42)
+        ..lineTo(x + w * 0.5, y + h * 0.92)
+        ..lineTo(x + w * 0.06, y + h * 0.42)
+        ..close(),
+      paint,
+    );
+    final facet = Paint()
+      ..color = config.primaryColor.withValues(alpha: 0.6)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = w * 0.025;
+    canvas.drawLine(Offset(x + w * 0.06, y + h * 0.42), Offset(x + w * 0.94, y + h * 0.42), facet);
+    canvas.drawLine(Offset(x + w * 0.36, y + h * 0.24), Offset(x + w * 0.5, y + h * 0.92), facet);
+    canvas.drawLine(Offset(x + w * 0.64, y + h * 0.24), Offset(x + w * 0.5, y + h * 0.92), facet);
+  }
+
+  /// Two laurel branches around the badge, tied at the bottom.
+  void _drawLaurel(Canvas canvas, Rect body) {
+    final c = body.center, rad = body.width * 0.6;
+    final leaf = Paint()..color = config.trimColor;
+    for (final side in [-1.0, 1.0]) {
+      for (var i = 0; i < 8; i++) {
+        final a = pi / 2 + side * (0.35 + i * 0.3);
+        final at = c + Offset(cos(a), sin(a)) * rad;
+        canvas.save();
+        canvas.translate(at.dx, at.dy);
+        canvas.rotate(a + side * 0.9);
+        canvas.drawOval(Rect.fromCenter(center: Offset.zero, width: body.width * 0.09, height: body.width * 0.04), leaf);
+        canvas.restore();
+      }
+    }
+    canvas.drawCircle(c + Offset(0, rad * 0.98), body.width * 0.035, leaf);
   }
 
   void _monogram(Canvas canvas, Rect r, {required Color color}) {

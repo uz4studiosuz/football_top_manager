@@ -17,6 +17,7 @@ import 'widgets/player_detail_view.dart';
 import 'player_match_screen.dart';
 import 'shootout_screen.dart';
 import '../ui/goal_replay.dart';
+import '../ui/press_dialog.dart';
 import '../services/cup.dart';
 import '../services/lineup_solver.dart';
 import 'tactics_screen.dart';
@@ -89,6 +90,107 @@ class _MatchScreenState extends State<MatchScreen> {
     }
   }
   final Set<String> _orders = {};
+
+  /// A player tapped on the pitch: highlighted, with a card for a while.
+  String? _pickedId;
+  Timer? _pickTimer;
+
+  void _pickAt(Offset at, Size size) {
+    final r = FootballPitchPainter.field(size, const EdgeInsets.all(6));
+    String? best;
+    var bestD = double.infinity;
+    for (final (xi, pts) in [(_field.homeXI, _field.homePositions), (_field.awayXI, _field.awayPositions)]) {
+      for (var i = 0; i < min(xi.length, pts.length); i++) {
+        if (_field.dismissed.contains(xi[i].id)) continue;
+        final c = Offset(r.left + pts[i].dx * r.width, r.top + pts[i].dy * r.height);
+        final d = (c - at).distance;
+        if (d < bestD) {
+          bestD = d;
+          best = xi[i].id;
+        }
+      }
+    }
+    if (best == null || bestD > max(22.0, size.height * 0.09)) return;
+    _pickTimer?.cancel();
+    setState(() => _pickedId = best);
+    _pickTimer = Timer(const Duration(seconds: 4), () {
+      if (mounted) setState(() => _pickedId = null);
+    });
+  }
+
+  Widget _pickedCard() {
+    final id = _pickedId!;
+    final home = _home.playerById(id) != null;
+    final p = (home ? _home : _away).playerById(id);
+    if (p == null) return const SizedBox();
+    final line = _field.lines[id];
+    final rating = _field.ratingFor(id);
+    return Container(
+      padding: const EdgeInsets.fromLTRB(8, 6, 12, 6),
+      decoration: BoxDecoration(color: Colors.black.withValues(alpha: 0.78), borderRadius: BorderRadius.circular(12)),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CircleAvatar(
+            radius: 14,
+            backgroundColor: home ? teamColors(_home, _away).$1 : teamColors(_home, _away).$2,
+            child: Text('${p.number}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w800)),
+          ),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('${p.shortName} · ${p.mainPosition.code} · ${p.ovr}',
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 12)),
+                Text(
+                  [
+                    if (rating != null) '★ ${rating.toStringAsFixed(1)}',
+                    trf('Chidamlilik {0}%', [p.currentStamina]),
+                    if (line != null && line.goals > 0) trf('{0} gol', [line.goals]),
+                    if (line != null && line.passes > 0) trf('Pas {0}/{1}', [line.passesCompleted, line.passes]),
+                  ].join(' · '),
+                  style: const TextStyle(color: Colors.white70, fontSize: 11),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Orders already set in the pre-match tactics show as selected; the base
+  /// they toggle against is the same tactics with those settings neutral.
+  void _ordersFromTactics() {
+    final t = _user.tactics;
+    const neutral = TeamTactics();
+    var base = t;
+    if (t.attackingArea == AttackingArea.wide && t.width >= 4) {
+      _orders.add('wings');
+      base = base.copyWith(attackingArea: neutral.attackingArea, width: neutral.width);
+    } else if (t.attackingArea == AttackingArea.centre && t.width <= 2) {
+      _orders.add('centre');
+      base = base.copyWith(attackingArea: neutral.attackingArea, width: neutral.width);
+    }
+    if (t.buildUp == BuildUpStyle.long) {
+      _orders.add('long');
+      base = base.copyWith(buildUp: neutral.buildUp);
+    }
+    if (t.pressing >= 5 && t.counterPress) {
+      _orders.add('press');
+      base = base.copyWith(pressing: neutral.pressing, counterPress: neutral.counterPress);
+    }
+    if (t.timeWasting) {
+      _orders.add('slow');
+      base = base.copyWith(tempo: neutral.tempo, timeWasting: false);
+    } else if (t.tempo >= 5) {
+      _orders.add('fast');
+      base = base.copyWith(tempo: neutral.tempo);
+    }
+    _baseTactics = base;
+  }
 
   void _toggleOrder(String order) {
     setState(() {
@@ -269,6 +371,7 @@ class _MatchScreenState extends State<MatchScreen> {
     _field.marks = _game.manMarks;
     _field.derby = _game.isDerby(_home, _away);
     _baseTactics = _user.tactics;
+    _ordersFromTactics();
     _feed.addAll(_field.takeEvents().reversed);
     _clock.start();
     _timer = Timer.periodic(const Duration(milliseconds: 33), (_) => _tick());
@@ -283,6 +386,7 @@ class _MatchScreenState extends State<MatchScreen> {
   @override
   void dispose() {
     _timer.cancel();
+    _pickTimer?.cancel();
     super.dispose();
   }
 
@@ -597,21 +701,15 @@ class _MatchScreenState extends State<MatchScreen> {
                 _controls(),
               ],
             );
-            final tabs = Column(
-              children: [
-                Container(
-                  color: AppColors.surface,
-                  child: TabBar(
-                    tabs: [
-                      Tab(text: tr('Jonli')),
-                      Tab(text: tr('Statistika')),
-                      Tab(text: tr('Tarkiblar')),
-                      Tab(text: tr('Izohlar')),
-                    ],
-                  ),
-                ),
-                Expanded(
-                  child: TabBarView(
+            final tabBar = TabBar(
+              tabs: [
+                Tab(text: tr('Jonli')),
+                Tab(text: tr('Statistika')),
+                Tab(text: tr('Tarkiblar')),
+                Tab(text: tr('Izohlar')),
+              ],
+            );
+            final tabViews = TabBarView(
                     children: [
                       _liveTab(colors),
                       ListView(
@@ -650,8 +748,11 @@ class _MatchScreenState extends State<MatchScreen> {
                         ),
                       ),
                     ],
-                  ),
-                ),
+                  );
+            final tabs = Column(
+              children: [
+                Container(color: AppColors.surface, child: tabBar),
+                Expanded(child: tabViews),
               ],
             );
             if (wide) {
@@ -664,7 +765,15 @@ class _MatchScreenState extends State<MatchScreen> {
                 ],
               );
             }
-            return Column(children: [pitchArea, Expanded(child: tabs)]);
+            // Phones: the pitch scrolls away when reading the tabs (which stay
+            // pinned), so live stats and commentary get the whole screen.
+            return NestedScrollView(
+              headerSliverBuilder: (context, _) => [
+                SliverToBoxAdapter(child: pitchArea),
+                SliverPersistentHeader(pinned: true, delegate: _PinnedTabs(tabBar)),
+              ],
+              body: tabViews,
+            );
           },
         ),
       ),
@@ -741,14 +850,20 @@ class _MatchScreenState extends State<MatchScreen> {
         child: Stack(
           children: [
             Positioned.fill(
-              child: CustomPaint(
-                painter: MatchPitchPainter(
-                  field: _field,
-                  homeColor: colors.$1,
-                  awayColor: colors.$2,
+              child: GestureDetector(
+                onTapUp: (d) => _pickAt(d.localPosition, Size(w, h)),
+                child: CustomPaint(
+                  painter: MatchPitchPainter(
+                    field: _field,
+                    homeColor: colors.$1,
+                    awayColor: colors.$2,
+                    selectedId: _pickedId,
+                  ),
                 ),
               ),
             ),
+            if (_pickedId != null)
+              Positioned(left: 8, right: 8, bottom: 8, child: Center(child: _pickedCard())),
             Positioned(
               left: 10,
               top: 8,
@@ -949,8 +1064,10 @@ class _MatchScreenState extends State<MatchScreen> {
               label: Text(tr('Penaltilar seriyasi')),
             )
           else if (ft)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 10,
+              runSpacing: 8,
               children: [
                 OutlinedButton(
                   style: OutlinedButton.styleFrom(foregroundColor: Colors.white, minimumSize: const Size(0, 38)),
@@ -960,7 +1077,17 @@ class _MatchScreenState extends State<MatchScreen> {
                   ),
                   child: Text(tr('Hisobot')),
                 ),
-                const SizedBox(width: 10),
+                // The post-match press conference, right after the whistle.
+                if (_saved && _game.postPressFixture?.id == widget.fixture.id)
+                  OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(foregroundColor: Colors.white, minimumSize: const Size(0, 38)),
+                    onPressed: () async {
+                      await runPressConference(context, widget.fixture, post: true);
+                      if (mounted) setState(() {});
+                    },
+                    icon: const Icon(Icons.campaign_outlined, size: 18),
+                    label: Text(tr('Matbuot anjumani')),
+                  ),
                 FilledButton(
                   style: FilledButton.styleFrom(minimumSize: const Size(0, 38)),
                   onPressed: () => Navigator.of(context).pop(),
@@ -1294,7 +1421,10 @@ class _SubstitutionSheetState extends State<_SubstitutionSheet> {
 class MatchPitchPainter extends CustomPainter {
   final MatchField field;
   final Color homeColor, awayColor;
-  MatchPitchPainter({required this.field, required this.homeColor, required this.awayColor});
+
+  /// The tapped player: ringed, with his number shown at any size.
+  final String? selectedId;
+  MatchPitchPainter({required this.field, required this.homeColor, required this.awayColor, this.selectedId});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1320,6 +1450,10 @@ class MatchPitchPainter extends CustomPainter {
         if (field.dismissed.contains(p.id)) continue;
         final c = at(pts[i]);
         final carrier = field.ballCarrier == p;
+        final picked = p.id == selectedId;
+        if (picked) {
+          canvas.drawCircle(c, radius + 4, Paint()..color = Colors.white.withValues(alpha: 0.35));
+        }
         canvas.drawCircle(c + const Offset(0, 1.5), radius, Paint()..color = Colors.black.withValues(alpha: 0.25));
         canvas.drawCircle(c, radius, Paint()..color = i == 0 ? Color.lerp(color, Colors.black, 0.25)! : color);
         canvas.drawCircle(
@@ -1330,7 +1464,7 @@ class MatchPitchPainter extends CustomPainter {
             ..style = PaintingStyle.stroke
             ..strokeWidth = carrier ? 2.4 : 1.3,
         );
-        if (showNumbers) {
+        if (showNumbers || picked) {
           final tp = TextPainter(
             text: TextSpan(
               text: '${p.number}',
@@ -1370,4 +1504,19 @@ class MatchPitchPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant MatchPitchPainter oldDelegate) => true;
+}
+
+/// The match tabs, pinned under the pitch while the page scrolls.
+class _PinnedTabs extends SliverPersistentHeaderDelegate {
+  final TabBar bar;
+  const _PinnedTabs(this.bar);
+  @override
+  double get minExtent => bar.preferredSize.height;
+  @override
+  double get maxExtent => bar.preferredSize.height;
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) =>
+      Material(color: AppColors.surface, elevation: overlapsContent ? 2 : 0, child: bar);
+  @override
+  bool shouldRebuild(covariant _PinnedTabs old) => old.bar != bar;
 }

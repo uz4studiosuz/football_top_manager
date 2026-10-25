@@ -170,10 +170,10 @@ void main() {
   test('Full season keeps ownership unique and all clubs play 14 matches', () {
     for (var round = 1; round <= 14; round++) {
       expect(game.currentRound, round);
-      // Summer window until 1 Sep (rounds 1–2), winter in January (9–10).
+      // Summer window until 20 Sep (rounds 1–3), winter to 10 Feb (9–10).
       expect(
         game.isTransferWindowOpen,
-        round <= 2 || round == 9 || round == 10,
+        round <= 3 || round == 9 || round == 10,
       );
       final fixture = game.nextUserFixture!;
       game.finishMatch(
@@ -276,7 +276,7 @@ void main() {
   });
 
   test('Free agents can be signed outside the transfer window', () {
-    for (var r = 1; r <= 2; r++) {
+    for (var r = 1; r <= 3; r++) {
       game.finishMatch(fixture: game.nextUserFixture!, homeScore: 0, awayScore: 0, events: []);
       game.nextRound();
     }

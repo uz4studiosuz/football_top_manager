@@ -1,4 +1,5 @@
 import 'dart:math';
+import '../ui/flag.dart';
 import 'package:flutter/material.dart';
 import '../models/club.dart';
 import '../models/league.dart';
@@ -187,7 +188,7 @@ class _PlayerMatchScreenState extends State<PlayerMatchScreen> {
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   PositionChip(_player.mainPosition.code),
-                  Text('${_player.countryFlag} ${tr(_player.nationality)} · #${_player.number}', style: AppText.caption),
+                  FlagLabel(_player.countryFlag, '${tr(_player.nationality)} · #${_player.number}', nationality: _player.nationality, style: AppText.caption),
                   Text(_player.playingStyle.title, style: AppText.caption.copyWith(color: AppColors.primary)),
                 ],
               ),

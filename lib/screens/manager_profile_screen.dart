@@ -1,4 +1,5 @@
 import 'onboarding_screen.dart';
+import '../ui/flag.dart';
 import 'package:flutter/material.dart';
 import '../services/game_state.dart';
 import '../models/club.dart';
@@ -88,7 +89,7 @@ class _ManagerProfileScreenState extends State<ManagerProfileScreen> {
                 const SizedBox(height: 12),
                 Text(m.name, style: AppText.h1),
                 const SizedBox(height: 4),
-                Text(trf('{0} {1} · {2} yosh', [m.countryFlag, tr(m.nationality), m.age]), style: AppText.small),
+                FlagLabel(m.countryFlag, trf('{0} · {1} yosh', [tr(m.nationality), m.age]), nationality: m.nationality, style: AppText.small),
                 if (club != null) ...[
                   const SizedBox(height: 8),
                   Row(
@@ -174,9 +175,9 @@ class _ManagerProfileScreenState extends State<ManagerProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SectionHeader(tr('Falsafa reytinglari'), icon: Icons.psychology_outlined),
+                SectionHeader(tr('O‘yin uslublari'), icon: Icons.psychology_outlined),
                 Text(
-                  tr('Har besh uchrashuvda amaldagi uslub +1 ga o‘sadi. Reyting pas aniqligi va jamoa qarorlariga ta’sir qiladi.'),
+                  tr('Qaysi uslubda ko‘p o‘ynasangiz, o‘shanda tajribangiz o‘sadi: jamoa aniqroq pas beradi va to‘g‘ri qaror qabul qiladi.'),
                   style: AppText.caption,
                 ),
                 const SizedBox(height: 8),
@@ -206,7 +207,7 @@ class _ManagerProfileScreenState extends State<ManagerProfileScreen> {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        ValueBadge(m.proficiency[p]!, size: 32),
+                        Text(m.mastery(p), style: AppText.caption.copyWith(fontWeight: FontWeight.w700, color: AppColors.primary)),
                       ],
                     ),
                   ),

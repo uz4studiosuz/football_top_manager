@@ -12,30 +12,49 @@ import '../l10n/l10n.dart';
 import '../ui/league_picker.dart';
 import '../services/coin_wallet.dart';
 import '../ui/coin.dart';
+import '../services/name_gen.dart';
 
 /// Foydalanuvchi o'z jamoasini noldan yaratish ekrani
 class CustomClubCreatorScreen extends StatefulWidget {
   final ManagerProfile? managerProfile;
   final String league;
-  const CustomClubCreatorScreen({super.key, this.managerProfile, this.league = 'super'});
+  const CustomClubCreatorScreen({super.key, this.managerProfile, this.league = 'epl'});
   @override
   State<CustomClubCreatorScreen> createState() => _CustomClubCreatorScreenState();
 }
 
 class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
-  final _nameController = TextEditingController(text: tr('Toshkent Stars'));
-  final _shortNameController = TextEditingController(text: 'TKS');
-  final _stadiumController = TextEditingController(text: tr('Milliy Arena'));
-  int _stadiumCapacity = 45000;
+  late final _nameController = TextEditingController(text: NameGen.club(_rnd));
+  late final _shortNameController = TextEditingController(text: _abbr(_nameController.text));
+  late final _stadiumController = TextEditingController(text: NameGen.stadium(_rnd, _nameController.text));
+  final _rnd = Random();
+
+  /// A new club starts in a modest ground; upgrades come later in Club life.
+  static const _stadiumCapacity = 18000;
+
+  static String _abbr(String name) {
+    final words = name.split(' ').where((w) => w.length > 2 && w != 'FC').toList();
+    final base = words.isEmpty ? name : words.first;
+    return base.replaceAll(RegExp('[^A-Za-z]'), '').toUpperCase().padRight(3, 'X').substring(0, 3);
+  }
+
+  void _randomName() => setState(() {
+    _nameController.text = NameGen.club(_rnd);
+    _shortNameController.text = _abbr(_nameController.text);
+    _monogram = _shortNameController.text.substring(0, 2);
+  });
+
+  void _randomStadium() => setState(() => _stadiumController.text = NameGen.stadium(_rnd, _nameController.text));
   CrestShape _shape = CrestShape.modernShield;
   CrestPattern _pattern = CrestPattern.verticalStripes;
   CrestEmblem _emblem = CrestEmblem.monogram;
   bool _crown = false;
+  bool _laurel = false;
   int _stars = 1;
   Color _primary = const Color(0xFF374DF5);
   Color _secondary = const Color(0xFF0F172A);
   Color _trim = const Color(0xFFF2C14E);
-  String _monogram = 'TS';
+  late String _monogram = _shortNameController.text.substring(0, 2);
   late String _league = widget.league;
   late List<Player> _candidates = GameState.starCandidates();
   int _star = 0;
@@ -78,6 +97,7 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
     stars: _stars,
     emblem: _emblem,
     crown: _crown,
+    laurel: _laurel,
     ringText: _nameController.text.toUpperCase(),
     ringColor: _secondary,
   );
@@ -120,6 +140,7 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
       _pattern = CrestPattern.values[r.nextInt(CrestPattern.values.length)];
       _emblem = CrestEmblem.values[r.nextInt(CrestEmblem.values.length)];
       _crown = r.nextInt(5) == 0;
+      _laurel = r.nextInt(4) == 0;
       _stars = r.nextInt(4);
       final colors = List<Color>.of(_colors)..shuffle(r);
       _primary = colors[0];
@@ -186,7 +207,11 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
               SectionHeader(tr('1. Jamoa Ma\'lumotlari')),
               TextField(
                 controller: _nameController,
-                decoration: InputDecoration(labelText: tr('Klub nomi'), prefixIcon: Icon(Icons.shield_outlined)),
+                decoration: InputDecoration(
+                  labelText: tr('Klub nomi'),
+                  prefixIcon: Icon(Icons.shield_outlined),
+                  suffixIcon: IconButton(tooltip: tr('Tasodifiy nom'), icon: const Icon(Icons.casino_outlined), onPressed: _randomName),
+                ),
                 onChanged: (val) => setState(() {
                   if (val.length >= 2 && _monogram.length <= 2) _monogram = val.substring(0, 2).toUpperCase();
                 }),
@@ -206,20 +231,20 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
                   Expanded(
                     child: TextField(
                       controller: _stadiumController,
-                      decoration: InputDecoration(labelText: tr('Stadion'), prefixIcon: Icon(Icons.stadium_outlined)),
+                      decoration: InputDecoration(
+                        labelText: tr('Stadion'),
+                        prefixIcon: Icon(Icons.stadium_outlined),
+                        suffixIcon: IconButton(tooltip: tr('Tasodifiy nom'), icon: const Icon(Icons.casino_outlined), onPressed: _randomStadium),
+                      ),
                       onChanged: (_) => setState(() {}),
                     ),
                   ),
                 ],
               ),
               const SizedBox(height: 12),
-              Text(trf('Stadion sig‘imi: {0} 000 muxlis', [(_stadiumCapacity / 1000).toStringAsFixed(0)]), style: AppText.small),
-              Slider(
-                value: _stadiumCapacity.toDouble(),
-                min: 25000,
-                max: 90000,
-                divisions: 13,
-                onChanged: (val) => setState(() => _stadiumCapacity = val.round()),
+              Text(
+                trf('Stadion sig‘imi: {0} muxlis. Klub hayoti → Inshootlar bo‘limida kengaytirasiz.', ['${_stadiumCapacity ~/ 1000} 000']),
+                style: AppText.small,
               ),
             ],
           ),
@@ -260,6 +285,12 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
                 title: Text(tr('Toj')),
                 value: _crown,
                 onChanged: (v) => setState(() => _crown = v),
+              ),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(tr('Dafna gulchambari')),
+                value: _laurel,
+                onChanged: (v) => setState(() => _laurel = v),
               ),
               Row(
                 children: [

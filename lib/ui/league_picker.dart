@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'flag.dart';
 import '../data/initial_database.dart';
 import '../l10n/l10n.dart';
 import '../models/crest.dart';
@@ -10,6 +11,9 @@ class LeaguePicker extends StatelessWidget {
   final String selected;
   final ValueChanged<String> onChanged;
   const LeaguePicker({super.key, required this.selected, required this.onChanged});
+
+  /// Premier League, LaLiga, Serie A, Ligue 1.
+  static const featured = ['epl', 'es1', 'it1', 'fr1'];
 
   // Copying a league's data is costly: summaries are computed once.
   static final Map<String, ({int count, int strength, List<ClubCrestConfig> crests})> _summary = {};
@@ -50,9 +54,11 @@ class LeaguePicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // The big four up front; every other league sits in "All leagues".
     final shown = [
-      for (final l in InitialDatabase.leagues)
-        if (!l.lazy || l.id == selected) l,
+      for (final id in featured)
+        if (InitialDatabase.leagues.any((l) => l.id == id)) InitialDatabase.info(id),
+      if (!featured.contains(selected) && InitialDatabase.leagues.any((l) => l.id == selected)) InitialDatabase.info(selected),
     ];
     return SizedBox(
       height: 150,
@@ -113,7 +119,7 @@ class LeaguePicker extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          if (info.crests.isEmpty && l.flag.isNotEmpty) Text(l.flag, style: const TextStyle(fontSize: 20)),
+                          if (info.crests.isEmpty && l.flag.isNotEmpty) FlagView(l.flag, nationality: l.country, height: 18),
                           for (final crest in info.crests)
                             Padding(
                               padding: const EdgeInsets.only(right: 4),
@@ -163,7 +169,8 @@ Future<String?> pickLeague(BuildContext context, {String? selected, Iterable<Lea
       showDragHandle: true,
       builder: (ctx) => FractionallySizedBox(
         heightFactor: 0.85,
-        child: _LeagueBrowser(selected: selected, leagues: (only ?? InitialDatabase.leagues).toList()),
+        // The invented Super League is no longer offered for new careers.
+        child: _LeagueBrowser(selected: selected, leagues: (only ?? InitialDatabase.leagues.where((l) => l.id != 'super')).toList()),
       ),
     );
 
@@ -212,8 +219,10 @@ class _LeagueBrowserState extends State<_LeagueBrowser> {
               for (final c in countries) ...[
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                  child: Text(
-                    '${byCountry[c]!.first.flag} $c'.trim(),
+                  child: FlagLabel(
+                    byCountry[c]!.first.flag,
+                    c,
+                    nationality: byCountry[c]!.first.country,
                     style: AppText.caption.copyWith(fontWeight: FontWeight.w700),
                   ),
                 ),

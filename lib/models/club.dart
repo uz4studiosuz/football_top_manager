@@ -490,15 +490,15 @@ class TeamTactics {
 class Club {
   static const matchdayBench = 9;
   final String id;
-  final String name;
-  final String shortName;
-  final Color primaryColor;
-  final Color secondaryColor;
-  final Color accentColor;
-  final String stadiumName;
+  String name;
+  String shortName;
+  Color primaryColor;
+  Color secondaryColor;
+  Color accentColor;
+  String stadiumName;
   int stadiumCapacity; // grows with stadium upgrades
-  final String city;
-  final String nickname;
+  String city;
+  String nickname;
   final int founded;
   int reputation; // 1–100: tijorat daromadi, kutilmalar
   int transferBudget; // EUR
@@ -508,7 +508,7 @@ class Club {
   String? captainId, cornerTakerId, freeKickTakerId, penaltyTakerId;
   String managerName;
   TeamTactics tactics;
-  final ClubCrestConfig crestConfig;
+  ClubCrestConfig crestConfig;
   List<Player> squad;
   List<String> startingLineupIds;
   List<String> benchIds; // O‘yin kuni zaxirasi (≤ 9)
