@@ -955,6 +955,9 @@ class MatchField {
                   // Attackers in the final third are harder to dispossess.
                   (progress > 0.62 ? 0.07 : 0))
               .clamp(0.08, 0.6) *
+          // An injured player hardly wins a duel, and loses the ball easily.
+          (_injuredOnPitch.contains(defender.id) ? 0.4 : 1) *
+          (_injuredOnPitch.contains(carrier.id) ? 1.8 : 1) *
           _ownHalfCover(!homePossession) *
           (_onCounter(homePossession) ? 0.55 : 1);
       if (random.nextDouble() < chance) {
@@ -1426,13 +1429,25 @@ class MatchField {
                     : 0) +
                 (lofted && passer.aiStyles.contains(AiStyle.longBallExpert)
                     ? 0.05
-                    : 0))
-            .clamp(0.55, 0.98);
+                    : 0) -
+                (_injuredOnPitch.contains(passer.id) ? 0.18 : 0))
+            .clamp(_injuredOnPitch.contains(passer.id) ? 0.4 : 0.55, 0.98);
     final deep = (homePossession ? 1 - ball.dx : ball.dx) > 0.67;
     final accurate = random.nextDouble() < accuracy + (deep && !lofted ? 0.06 : 0);
+    // Passes lead the receiver into his run (into space ahead of him), not
+    // to his feet: longer for quick players and forward balls, shorter when
+    // a defender guards that space.
+    var lead = Offset.zero;
+    if (!_setPieceDelivery) {
+      final dir = homePossession ? 1.0 : -1.0;
+      final run = (0.022 + (receiver.stats.speed - 60) / 2600).clamp(0.012, 0.045) * (forward > 0.04 ? 1.0 : 0.35);
+      lead = Offset(dir * run, (0.5 - point.dy) * 0.04);
+      if (_nearestDistance(_rivals, point + lead, _opponent).$2 < 0.045) lead = lead * 0.4;
+    }
+    final aim = _bound(point + lead);
     final end = accurate
-        ? point
-        : point +
+        ? aim
+        : aim +
               Offset(
                 deep
                     ? random.nextDouble() * 0.12 * (homePossession ? 1 : -1)
@@ -3033,7 +3048,7 @@ class MatchField {
           (hasBall && i == owner
               ? (p.aiStyles.contains(AiStyle.speedingBullet) ? 0.95 : 0.86)
               : 1) *
-          (injured ? 0.7 : 1) *
+          (injured ? 0.45 : 1) *
           (_beaten.containsKey(p.id) ? 0.3 : 1) *
           (_regroup > 0 && _flight?.kind != _Kind.corner ? 1.3 : 1) *
           // (a brisk jog back to shape, not a sprint faster than anyone can run)

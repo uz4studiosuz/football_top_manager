@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'club_screen.dart';
 import '../data/initial_database.dart';
 import '../models/club.dart';
 import '../services/game_state.dart';
@@ -28,7 +29,7 @@ class _StandingsScreenState extends State<StandingsScreen> {
   Widget build(BuildContext context) {
     final game = GameState();
     return DefaultTabController(
-      length: 4,
+      length: 5,
       child: Scaffold(
         appBar: AppBar(
           title: Text(trf('{0} Markazi', [game.leagueName])),
@@ -40,6 +41,7 @@ class _StandingsScreenState extends State<StandingsScreen> {
               Tab(text: tr('Turlar')),
               Tab(text: tr('Futbolchilar')),
               Tab(text: tr('Kubok')),
+              Tab(text: tr('Kalendar')),
             ],
           ),
         ),
@@ -58,6 +60,7 @@ class _StandingsScreenState extends State<StandingsScreen> {
                 _rounds(context, game),
                 _leaders(context, game),
                 _cup(context, game),
+                const CalendarView(),
               ],
             );
           },
@@ -99,7 +102,7 @@ class _StandingsScreenState extends State<StandingsScreen> {
         for (var r = cup.rounds.length - 1; r >= 0; r--) ...[
           const SizedBox(height: 12),
           SectionHeader(
-            trf('{0} · {1}-turdan keyin', [Cup.stageName(r, cup.totalRounds), cup.schedule[r]]),
+            trf('{0} · {1}', [Cup.stageName(r, cup.totalRounds), GameState().roundDate(cup.schedule[r])]),
             icon: Icons.account_tree_outlined,
           ),
           AppCard(

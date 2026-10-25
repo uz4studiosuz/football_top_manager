@@ -103,9 +103,29 @@ class ClubLife {
   final Map<Facility, int> building = {};
   TrainingFocus focus = TrainingFocus.balanced;
 
-  /// Up to three attributes the whole squad works on (empty: the focus
-  /// picks them).
-  final List<String> teamAttributes = [];
+  /// The team plan per line ('att', 'mid', 'def', 'gk'): up to three
+  /// attributes each; a line without a plan trains its positions' key
+  /// attributes.
+  final Map<String, List<String>> teamPlan = {};
+
+  /// Attributes worth training for each line, in display order.
+  static const lineAttributes = <String, List<String>>{
+    'att': ['finishing', 'attackingAwareness', 'heading', 'kickingPower', 'curl', 'ballControl', 'dribbling',
+      'tightPossession', 'speed', 'acceleration', 'lowPass', 'balance'],
+    'mid': ['lowPass', 'loftedPass', 'ballControl', 'tightPossession', 'dribbling', 'attackingAwareness',
+      'defensiveAwareness', 'defensiveEngagement', 'tackling', 'stamina', 'curl', 'setPieceTaking', 'kickingPower'],
+    'def': ['defensiveAwareness', 'defensiveEngagement', 'tackling', 'aggression', 'heading', 'jumping',
+      'physicalContact', 'speed', 'acceleration', 'stamina', 'loftedPass', 'lowPass'],
+    'gk': ['gkAwareness', 'gkCatching', 'gkParrying', 'gkReflexes', 'gkReach', 'loftedPass'],
+  };
+
+  /// The line a player trains with.
+  static String lineOf(Player p) => switch (p.mainPosition.category) {
+    PositionCategory.goalkeeper => 'gk',
+    PositionCategory.defense => 'def',
+    PositionCategory.midfield => 'mid',
+    _ => 'att',
+  };
 
   /// Individual training: player id → attribute key or `style:<name>`.
   final Map<String, String> targets = {};
@@ -189,7 +209,7 @@ class ClubLife {
     }
     building.clear();
     focus = TrainingFocus.balanced;
-    teamAttributes.clear();
+    teamPlan.clear();
     targets.clear();
     progress.clear();
     feed.clear();
@@ -416,7 +436,7 @@ class ClubLife {
     'lv': {for (final e in levels.entries) e.key.name: e.value},
     'bd': {for (final e in building.entries) e.key.name: e.value},
     'fo': focus.name,
-    if (teamAttributes.isNotEmpty) 'ta': teamAttributes,
+    if (teamPlan.isNotEmpty) 'tp': teamPlan,
     'tg': targets,
     'pr': {for (final e in progress.entries) e.key: double.parse(e.value.toStringAsFixed(3))},
     'fd': feed.map((p) => p.toMap()).toList(),
@@ -453,7 +473,7 @@ class ClubLife {
       if (facility[k] != null) building[facility[k]!] = v as int;
     });
     focus = TrainingFocus.values.asNameMap()[m['fo']] ?? TrainingFocus.balanced;
-    teamAttributes.addAll(List<String>.from(m['ta'] ?? const []));
+    (m['tp'] as Map? ?? {}).forEach((k, v) => teamPlan[k as String] = List<String>.from(v as List));
     targets.addAll(Map<String, String>.from(m['tg'] ?? {}));
     (m['pr'] as Map? ?? {}).forEach((k, v) => progress[k as String] = (v as num).toDouble());
     feed.addAll([for (final p in (m['fd'] as List? ?? [])) FanPost.fromMap(Map<String, dynamic>.from(p))]);
