@@ -600,4 +600,19 @@ void main() {
       expect(cb.defensiveAwareness, greaterThan(cb.finishing + 20));
     }
   });
+
+  test('A lineup that lost players is repaired before kick-off instead of crashing', () {
+    final a = game.allClubs[0], b = game.allClubs[1];
+    game.autoPickLineup(a);
+    game.autoPickLineup(b);
+    // Two starters vanish from the squad (sold, retired) while still listed.
+    for (final i in [3, 8]) {
+      final id = a.startingLineupIds[i];
+      a.squad.removeWhere((p) => p.id == id);
+    }
+    final f = MatchField(a, b, seed: 2)..simulateToEnd();
+    expect(a.startingLineupIds.length, 11);
+    expect(a.startingLineupIds.every((id) => a.playerById(id) != null), isTrue);
+    expect(f.isFinished, isTrue);
+  });
 }

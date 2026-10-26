@@ -140,12 +140,17 @@ class _ShootoutScreenState extends State<ShootoutScreen> {
           title: Text(tr('Penaltilar seriyasi'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 18)),
           actions: [
             if (!_done)
-              TextButton(
+              IconButton(
+                tooltip: tr('Tezlashtirish'),
                 onPressed: () => setState(() => _fast = true),
-                child: Text(tr('Tezlashtirish'), style: const TextStyle(color: Colors.white)),
+                icon: const Icon(Icons.fast_forward_rounded, color: Colors.white),
               ),
             if (!_done)
-              TextButton(onPressed: _skip, child: Text(tr('Natijaga o‘tish'), style: const TextStyle(color: Colors.white))),
+              IconButton(
+                tooltip: tr('Natijaga o‘tish'),
+                onPressed: _skip,
+                icon: const Icon(Icons.skip_next_rounded, color: Colors.white),
+              ),
           ],
         ),
         body: SafeArea(
