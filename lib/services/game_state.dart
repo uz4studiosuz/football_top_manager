@@ -1908,9 +1908,13 @@ class GameState extends ChangeNotifier {
   int signingCost(Player p, [int? fee]) =>
       ((fee ?? transferFee(p)) * 0.03).round() + offeredWage(p) * 4;
 
-  String? transferIssue(Player player, Club seller, Club buyer, [int? fee]) {
+  String? transferIssue(Player player, Club seller, Club buyer, [int? fee]) => _issue(player, seller, buyer, fee, true);
+
+  /// [window] false: a deal begun while the window was open may complete
+  /// after it closed.
+  String? _issue(Player player, Club seller, Club buyer, int? fee, bool window) {
     final price = fee ?? transferFee(player);
-    if (!isTransferWindowOpen) {
+    if (window && !isTransferWindowOpen) {
       return trf('Transfer oynasi yopiq. {0}.', [transferWindowLabel]);
     }
     if (seller.id == buyer.id ||
@@ -2056,7 +2060,7 @@ class GameState extends ChangeNotifier {
         fee: fee,
         stage: DealStage.clubReview,
         dueRound: _currentRound + 1,
-        note: tr('Taklif yuborildi. Klub keyingi turda javob beradi.'),
+        note: trf('Taklif yuborildi. Klub {0} da javob beradi.', [roundDate(_currentRound + 1)]),
       ));
     }
     notifyListeners();
@@ -2132,7 +2136,7 @@ class GameState extends ChangeNotifier {
       ..counterFee = fee
       ..stage = DealStage.buyerReview
       ..dueRound = _currentRound + 1
-      ..note = trf('Siz {0} so‘radingiz. Xaridor keyingi turda javob beradi.', [_m(fee)]);
+      ..note = trf('Siz {0} so‘radingiz. Xaridor {1} da javob beradi.', [_m(fee), roundDate(_currentRound + 1)]);
     notifyListeners();
   }
 
@@ -2165,10 +2169,8 @@ class GameState extends ChangeNotifier {
         _news(NewsKind.transfer, trf('{0}: muzokara tugadi', [p.name]), why, alert: true);
       }
 
-      if (!isTransferWindowOpen) {
-        collapse(tr('Transfer oynasi yopildi – muzokara bekor bo‘ldi.'));
-        continue;
-      }
+      // Talks that began while the window was open run their course even if
+      // it closes meanwhile (only new bids need an open window).
       if (!d.seller.squad.contains(p)) {
         collapse(tr('Futbolchi endi bu klubda emas.'));
         continue;
@@ -2202,7 +2204,7 @@ class GameState extends ChangeNotifier {
             continue;
           }
           if (d.wage >= demand) {
-            final issue = transferIssue(p, d.seller, d.buyer, d.fee);
+            final issue = _issue(p, d.seller, d.buyer, d.fee, false);
             if (issue != null) {
               collapse(issue);
               continue;
@@ -2246,7 +2248,7 @@ class GameState extends ChangeNotifier {
             collapse(trf('{0} muzokaradan chiqdi.', [d.buyer.name]));
           }
         case DealStage.medical:
-          final issue = transferIssue(p, d.seller, d.buyer, d.fee);
+          final issue = _issue(p, d.seller, d.buyer, d.fee, false);
           // The player decides too: keen players sign, unwilling ones refuse.
           final keen = moveInterest(p, d.buyer, d.seller).interest;
           if (issue == null && rnd.nextDouble() < (0.25 + keen / 100).clamp(0.1, 0.97)) {
@@ -2352,8 +2354,12 @@ class GameState extends ChangeNotifier {
     final ai = _allClubs.where((c) => c.id != _userClubId).toList();
     final random = Random(_salt(_currentRound * 7919 + calendar.year));
     ai.shuffle(random);
-    for (final buyer in ai) {
-      if (_aiWindowBuyers.contains(buyer.id) || random.nextDouble() > 0.09) continue;
+    // Clubs of other leagues (once loaded) buy from us and sell to us too.
+    final abroad = world.loadedClubs.toList()..shuffle(random);
+    final foreignIds = {for (final c in abroad) c.id};
+    for (final buyer in [...ai, ...abroad.take(12)]) {
+      final foreign = foreignIds.contains(buyer.id);
+      if (_aiWindowBuyers.contains(buyer.id) || random.nextDouble() > (foreign ? 0.12 : 0.09)) continue;
       // Strengthen the weakest line of the XI.
       final weakest = [
         PositionCategory.defense,
@@ -2372,7 +2378,10 @@ class GameState extends ChangeNotifier {
       if (starters.isEmpty) continue;
       final weakestStarter = starters.reduce(min);
       final candidates = <({Player player, Club seller})>[];
-      for (final seller in ai.where((c) => c.id != buyer.id)) {
+      final sellers = foreign ? ai : [...ai.where((c) => c.id != buyer.id), ...abroad.take(40)];
+      for (final seller in sellers) {
+        // Foreign sellers are asked less often, and only for real quality.
+        if (!foreign && foreignIds.contains(seller.id) && random.nextDouble() > 0.5) continue;
         for (final p in [...seller.bench, ...seller.reserves]) {
           if (p.mainPosition.category == line &&
               p.ovr > weakestStarter &&
@@ -3000,7 +3009,7 @@ class GameState extends ChangeNotifier {
     _post(c, trf('{0}: {1}-bosqich qurilishi', [f.label, level + 1]), -cost, category: FinanceCategory.operations);
     life.building[f] = _currentRound + ClubLife.buildRounds(f, level);
     _news(NewsKind.board, trf('{0}: qurilish boshlandi', [f.label]),
-        trf('{0}-bosqich {1} turdan keyin ishga tushadi. Narxi {2}.', [level + 1, ClubLife.buildRounds(f, level), _m(cost)]));
+        trf('{0}-bosqich {1} da ishga tushadi. Narxi {2}.', [level + 1, roundDate(_currentRound + ClubLife.buildRounds(f, level)), _m(cost)]));
     notifyListeners();
     return null;
   }
@@ -3809,32 +3818,100 @@ class GameState extends ChangeNotifier {
     }
   }
 
-  static PlayerStats _statsFor(PlayerPosition pos, int target, Random random) {
-    int value(int bias) => (target + bias + random.nextInt(9) - 4).clamp(40, 99);
-    final attributes = {for (final key in PlayerStats.labels.keys) key: value(-2)};
-    void boost(List<String> keys, int bias) {
-      for (final k in keys) {
-        attributes[k] = value(bias);
-      }
-    }
+  /// How far each attribute sits from the player's level, by position: a
+  /// keeper is poor with his feet, a striker poor at tackling, a full-back
+  /// quick and tireless. Anything not listed sits ten below.
+  static const _profiles = <PlayerPosition, Map<String, int>>{
+    PlayerPosition.gk: {
+      'gkAwareness': 5, 'gkCatching': 5, 'gkParrying': 5, 'gkReflexes': 5, 'gkReach': 5,
+      'kickingPower': 0, 'lowPass': -22, 'loftedPass': -14, 'ballControl': -24, 'tightPossession': -30,
+      'attackingAwareness': -42, 'dribbling': -38, 'finishing': -44, 'heading': -32, 'setPieceTaking': -32,
+      'curl': -36, 'defensiveAwareness': -22, 'defensiveEngagement': -26, 'tackling': -42, 'aggression': -22,
+      'speed': -24, 'acceleration': -22, 'jumping': -8, 'physicalContact': -10, 'balance': -16, 'stamina': -14,
+    },
+    PlayerPosition.cb: {
+      'defensiveAwareness': 6, 'defensiveEngagement': 4, 'tackling': 5, 'heading': 5, 'aggression': 2,
+      'physicalContact': 5, 'jumping': 4, 'attackingAwareness': -24, 'ballControl': -10, 'dribbling': -24,
+      'tightPossession': -18, 'lowPass': -8, 'loftedPass': -10, 'finishing': -30, 'setPieceTaking': -24,
+      'curl': -28, 'speed': -6, 'acceleration': -8, 'kickingPower': -4, 'balance': -2, 'stamina': -2,
+    },
+    PlayerPosition.lb: _fullBack,
+    PlayerPosition.rb: _fullBack,
+    PlayerPosition.dmf: {
+      'defensiveAwareness': 4, 'defensiveEngagement': 5, 'tackling': 4, 'aggression': 2, 'lowPass': 2,
+      'loftedPass': -2, 'ballControl': 0, 'tightPossession': 0, 'physicalContact': 2, 'stamina': 5,
+      'attackingAwareness': -14, 'dribbling': -12, 'finishing': -18, 'heading': -2, 'curl': -12,
+      'setPieceTaking': -8, 'speed': -6, 'acceleration': -6, 'kickingPower': -2, 'jumping': -6, 'balance': -4,
+    },
+    PlayerPosition.cmf: {
+      'lowPass': 5, 'loftedPass': 2, 'ballControl': 3, 'tightPossession': 2, 'stamina': 5,
+      'defensiveEngagement': 0, 'defensiveAwareness': -4, 'tackling': -6, 'aggression': -6,
+      'attackingAwareness': -4, 'dribbling': -2, 'finishing': -10, 'heading': -10, 'setPieceTaking': -4,
+      'curl': -4, 'speed': -4, 'acceleration': -4, 'physicalContact': -4, 'jumping': -10, 'balance': -2, 'kickingPower': -2,
+    },
+    PlayerPosition.amf: {
+      'attackingAwareness': 4, 'ballControl': 5, 'dribbling': 4, 'tightPossession': 3, 'lowPass': 5,
+      'loftedPass': 2, 'finishing': 0, 'curl': 0, 'setPieceTaking': 0, 'defensiveAwareness': -24,
+      'defensiveEngagement': -16, 'tackling': -28, 'aggression': -16, 'heading': -16, 'jumping': -16,
+      'physicalContact': -12, 'speed': -2, 'acceleration': 0, 'kickingPower': -2, 'stamina': -2, 'balance': 0,
+    },
+    PlayerPosition.lmf: _winger,
+    PlayerPosition.rmf: _winger,
+    PlayerPosition.lwf: _forwardWinger,
+    PlayerPosition.rwf: _forwardWinger,
+    PlayerPosition.ss: {
+      'attackingAwareness': 5, 'ballControl': 4, 'dribbling': 4, 'finishing': 3, 'tightPossession': 2,
+      'lowPass': 0, 'loftedPass': -6, 'speed': 1, 'acceleration': 2, 'defensiveAwareness': -28,
+      'tackling': -32, 'defensiveEngagement': -24, 'aggression': -12, 'heading': -10, 'physicalContact': -6,
+      'curl': -2, 'setPieceTaking': -6, 'kickingPower': 0, 'jumping': -10, 'stamina': -2, 'balance': 0,
+    },
+    PlayerPosition.cf: {
+      'finishing': 6, 'attackingAwareness': 5, 'heading': 3, 'physicalContact': 2, 'jumping': 0,
+      'ballControl': 2, 'kickingPower': 2, 'dribbling': -2, 'tightPossession': -2, 'lowPass': -8,
+      'loftedPass': -14, 'curl': -6, 'setPieceTaking': -8, 'defensiveAwareness': -30, 'tackling': -34,
+      'defensiveEngagement': -24, 'aggression': -6, 'speed': 0, 'acceleration': 0, 'stamina': -4, 'balance': -2,
+    },
+  };
+  static const _fullBack = <String, int>{
+    'defensiveAwareness': 1, 'defensiveEngagement': 3, 'tackling': 2, 'speed': 4, 'acceleration': 3, 'stamina': 6,
+    'lowPass': 0, 'loftedPass': -2, 'curl': -8, 'attackingAwareness': -10, 'ballControl': -2, 'dribbling': -4,
+    'tightPossession': -8, 'finishing': -24, 'heading': -10, 'physicalContact': -4, 'jumping': -10,
+    'aggression': -2, 'setPieceTaking': -14, 'kickingPower': -6, 'balance': 0,
+  };
+  static const _winger = <String, int>{
+    'speed': 5, 'acceleration': 5, 'dribbling': 5, 'ballControl': 3, 'loftedPass': 2, 'curl': 2, 'lowPass': 0,
+    'attackingAwareness': 0, 'finishing': -6, 'defensiveAwareness': -16, 'tackling': -18, 'defensiveEngagement': -6,
+    'aggression': -10, 'heading': -18, 'jumping': -14, 'physicalContact': -10, 'stamina': 2,
+    'tightPossession': 0, 'setPieceTaking': -4, 'kickingPower': -4, 'balance': 1,
+  };
+  static const _forwardWinger = <String, int>{
+    'speed': 6, 'acceleration': 6, 'dribbling': 6, 'ballControl': 4, 'finishing': 2, 'attackingAwareness': 4,
+    'curl': 3, 'lowPass': -2, 'loftedPass': -6, 'defensiveAwareness': -28, 'tackling': -32,
+    'defensiveEngagement': -22, 'aggression': -14, 'heading': -16, 'jumping': -14, 'physicalContact': -10,
+    'stamina': -2, 'tightPossession': 0, 'setPieceTaking': -6, 'kickingPower': -2, 'balance': 1,
+  };
 
-    if (pos.isAttacker) {
-      boost(['finishing', 'attackingAwareness', 'dribbling', 'speed', 'acceleration', 'ballControl'], 4);
-      boost(['defensiveAwareness', 'defensiveEngagement', 'tackling'], -26);
-    } else if (pos.isMidfielder) {
-      boost(['lowPass', 'loftedPass', 'ballControl', 'tightPossession', 'stamina'], 4);
-      boost(['finishing'], -8);
-    } else if (pos.isDefender) {
-      boost(['defensiveAwareness', 'defensiveEngagement', 'tackling', 'heading', 'physicalContact'], 5);
-      boost(['finishing', 'dribbling'], -20);
+  /// Attributes for a player of [target] level in [pos]: shaped by the
+  /// position's profile, then lifted or lowered so his OVR there is right.
+  static PlayerStats _statsFor(PlayerPosition pos, int target, Random random) {
+    final profile = _profiles[pos] ?? const <String, int>{};
+    const keeperKeys = ['gkAwareness', 'gkCatching', 'gkParrying', 'gkReflexes', 'gkReach'];
+    final noise = {for (final k in PlayerStats.labels.keys) k: random.nextInt(7) - 3};
+    PlayerStats build(int shift) => PlayerStats.fromMap({
+      for (final key in PlayerStats.labels.keys)
+        key: !pos.isGoalkeeper && keeperKeys.contains(key)
+            ? 40
+            : (target + shift + (profile[key] ?? -10) + noise[key]!).clamp(40, 99),
+    });
+    var shift = 0;
+    var stats = build(shift);
+    for (var i = 0; i < 4; i++) {
+      final delta = target - Player.rawOvr(stats, pos);
+      if (delta == 0) break;
+      shift += delta;
+      stats = build(shift);
     }
-    for (final key in ['gkAwareness', 'gkCatching', 'gkParrying', 'gkReflexes', 'gkReach']) {
-      attributes[key] = pos.isGoalkeeper ? value(5) : 40;
-    }
-    if (pos.isGoalkeeper) {
-      boost(['finishing', 'dribbling', 'speed', 'tackling', 'heading'], -28);
-    }
-    return PlayerStats.fromMap(attributes);
+    return stats;
   }
 
   // ------------------------------------------------------- custom squad
@@ -3851,8 +3928,8 @@ class GameState extends ChangeNotifier {
       do {
         name = NameGen.person(random);
       } while (!used.add(name));
-      // A brand-new club starts with an honest, average squad (≈64–73).
-      final targetOvr = ((d['ovr'] as int) - 8 + random.nextInt(5) - 2).clamp(58, 74);
+      // A brand-new club starts with an honest, modest squad (never above 70).
+      final targetOvr = ((d['ovr'] as int) - 10 + random.nextInt(5) - 2).clamp(54, 70);
       final pos = PlayerPosition.fromCode(d['pos'] as String);
       final age = 19 + random.nextInt(14);
       return Player(
@@ -3888,7 +3965,7 @@ class GameState extends ChangeNotifier {
           final pool = InitialDatabase.randomPool(random);
           final name = NameGen.person(random);
           final pos = PlayerPosition.fromCode(picked[i]);
-          final ovr = 85 + random.nextInt(4);
+          final ovr = 80 + random.nextInt(4);
           final age = 23 + random.nextInt(7);
           return Player(
             id: 'star_$i',
@@ -3960,6 +4037,32 @@ class GameState extends ChangeNotifier {
     return {for (final f in mine.skip(max(0, mine.length - 3))) f.id};
   }
 
+  /// Full commentary is kept for the user's last twelve matches and for
+  /// every match of the last two rounds (any club): saves must still fit
+  /// browser storage.
+  Set<String> get _commentaryFixtures {
+    final played = _fixtures.where((f) => f.isPlayed).toList();
+    final mine = played.where((f) => f.involves(_userClubId ?? '')).toList();
+    return {
+      for (final f in mine.skip(max(0, mine.length - 12))) f.id,
+      for (final f in played) if (f.round >= _currentRound - 1) f.id,
+    };
+  }
+
+  List<Map<String, dynamic>> _saveFixtures() {
+    final talk = _commentaryFixtures, maps = _recentUserFixtures;
+    return [
+      for (final f in _fixtures)
+        SaveCodec.fixture(
+          f,
+          shots: f.involves(_userClubId ?? ''),
+          full: f.involves(_userClubId ?? ''),
+          commentary: talk.contains(f.id),
+          actions: maps.contains(f.id),
+        ),
+    ];
+  }
+
   // ------------------------------------------------------------ save/load
   static const saveVersion = 1;
 
@@ -3979,16 +4082,7 @@ class GameState extends ChangeNotifier {
     // Full detail (shots, lines, momentum) only for the user's matches and
     // commentary only for the last three of them: saves must fit browser
     // storage over a 46-round season.
-    'fixtures': [
-      for (final f in _fixtures)
-        SaveCodec.fixture(
-          f,
-          shots: f.involves(_userClubId ?? ''),
-          full: f.involves(_userClubId ?? ''),
-          commentary: _recentUserFixtures.contains(f.id),
-          actions: _recentUserFixtures.contains(f.id),
-        ),
-    ],
+    'fixtures': _saveFixtures(),
     'ledger': [
       for (final e in ledger)
         if (e.clubId == _userClubId) SaveCodec.entry(e),

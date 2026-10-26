@@ -190,7 +190,7 @@ class _Facilities extends StatelessWidget {
                             ? trf('Qurilmoqda · {0} kuni tayyor', [GameState().roundDate(life.building[f]!)])
                             : life.level(f) >= Facility.maxLevel
                             ? tr('Eng yuqori daraja')
-                            : trf('Keyingi bosqich: {0} · {1} tur · obro‘ {2}+', [formatMoney(game.facilityCost(f)), ClubLife.buildRounds(f, life.level(f)), ClubLife.reputationNeeded(life.level(f) + 1)]),
+                            : trf('Keyingi bosqich: {0} · tayyor: {1} · obro‘ {2}+', [formatMoney(game.facilityCost(f)), game.roundDate(game.currentRound + ClubLife.buildRounds(f, life.level(f))), ClubLife.reputationNeeded(life.level(f) + 1)]),
                         style: AppText.caption.copyWith(fontWeight: FontWeight.w600),
                       ),
                     ),
@@ -880,11 +880,112 @@ class ScoutsView extends StatelessWidget {
       );
     }
   }
+  static final _reportPage = ValueNotifier<int>(0), _resultPage = ValueNotifier<int>(0);
+  static const _reportsPerPage = 2, _resultsPerPage = 8;
+
+  Widget _pager(ValueNotifier<int> page, int total, int perPage) {
+    final pages = (total / perPage).ceil();
+    if (pages <= 1) return const SizedBox.shrink();
+    return ValueListenableBuilder<int>(
+      valueListenable: page,
+      builder: (context, value, _) {
+        final p = value.clamp(0, pages - 1);
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            IconButton(onPressed: p > 0 ? () => page.value = p - 1 : null, icon: const Icon(Icons.chevron_left_rounded)),
+            Text('${p + 1} / $pages', style: AppText.caption),
+            IconButton(onPressed: p < pages - 1 ? () => page.value = p + 1 : null, icon: const Icon(Icons.chevron_right_rounded)),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Picks a nation for the youth search from a searchable list.
+  Future<void> _youthSearch(BuildContext context, List<String> nations) async {
+    final game = GameState();
+    var query = '';
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (ctx) => FractionallySizedBox(
+        heightFactor: 0.85,
+        child: StatefulBuilder(
+          builder: (ctx, update) {
+            final shown = [for (final n in nations) if (query.isEmpty || tr(n).toLowerCase().contains(query.toLowerCase())) n];
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  child: TextField(
+                    decoration: InputDecoration(prefixIcon: const Icon(Icons.search), hintText: tr('Davlat'), border: const OutlineInputBorder(), isDense: true),
+                    onChanged: (v) => update(() => query = v.trim()),
+                  ),
+                ),
+                Expanded(
+                  child: ListView(
+                    children: [
+                      for (final n in shown)
+                        ListTile(
+                          leading: FlagView(countryFlags[n] ?? '🏳️', nationality: n, height: 18),
+                          title: Text(tr(n)),
+                          onTap: () => Navigator.pop(ctx, n),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+    if (picked == null || !context.mounted) return;
+    final error = game.startYouthMission(picked);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error ?? tr('Skautlar yo‘lga chiqdi.'))));
+  }
+
+  Widget _reportCard(BuildContext context, GameState game, ScoutReport r) => AppCard(
+    padding: const EdgeInsets.fromLTRB(0, 12, 0, 6),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            children: [
+              FlagView(_flagOf(r.country), nationality: r.country, height: 16),
+              const SizedBox(width: 8),
+              Expanded(child: Text(trf('Skaut hisoboti: {0}', [tr(r.country)]), style: AppText.bodyStrong)),
+              Text(SeasonCalendar.format(r.date, year: true), style: AppText.caption),
+            ],
+          ),
+        ),
+        for (final id in r.playerIds)
+          if (game.findPlayerById(id) case final p?)
+            if (game.clubOfPlayer(p) case final club?)
+              PlayerTile(
+                player: p,
+                club: club,
+                subtitle: trf('{0} · {1} yosh · salohiyat {2}', [club.shortName, p.age, p.potential]),
+                onTap: () => PlayerDetailView.show(context, player: p, club: club),
+              ),
+      ],
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     final game = GameState(), life = game.life;
     final nations = {for (final p in InitialDatabase.namePools) p['nationality'] as String}.toList()..sort();
     final world = game.world;
+    final found = [
+      for (final id in life.scouted.toList().reversed)
+        if (game.findPlayerById(id) case final p?)
+          if (!game.userClub.squad.contains(p)) p,
+    ];
     return ListView(
       padding: const EdgeInsets.all(12),
       children: [
@@ -910,19 +1011,6 @@ class ScoutsView extends StatelessWidget {
                   subtitle: Text(trf('Hisobot: {0}', [game.roundDate(e.value)]), style: AppText.caption),
                   trailing: const Icon(Icons.hourglass_top_rounded),
                 ),
-              if (world.countries.isNotEmpty) ...[
-                Text(tr('O‘rganilgan davlatlar'), style: AppText.caption.copyWith(fontWeight: FontWeight.w700)),
-                const SizedBox(height: 6),
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: [
-                    for (final c in world.countries.toList()..sort())
-                      Chip(label: FlagLabel(_flagOf(c), tr(c), nationality: c), visualDensity: VisualDensity.compact),
-                  ],
-                ),
-                const SizedBox(height: 6),
-              ],
               Align(
                 alignment: Alignment.centerRight,
                 child: FilledButton.icon(
@@ -931,64 +1019,28 @@ class ScoutsView extends StatelessWidget {
                   label: Text(tr('Skaut yuborish')),
                 ),
               ),
-            ],
-          ),
-        ),
-        for (final r in world.reports) ...[
-          const SizedBox(height: 10),
-          AppCard(
-            padding: const EdgeInsets.fromLTRB(0, 12, 0, 6),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
+              if (world.countries.isNotEmpty)
+                Theme(
+                  data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                  child: ExpansionTile(
+                    tilePadding: EdgeInsets.zero,
+                    childrenPadding: EdgeInsets.zero,
+                    dense: true,
+                    title: Text(trf('O‘rganilgan davlatlar ({0})', [world.countries.length]), style: AppText.caption.copyWith(fontWeight: FontWeight.w700)),
                     children: [
-                      FlagView(_flagOf(r.country), nationality: r.country, height: 16),
-                      const SizedBox(width: 8),
-                      Expanded(child: Text(trf('Skaut hisoboti: {0}', [tr(r.country)]), style: AppText.bodyStrong)),
-                      Text(SeasonCalendar.format(r.date, year: true), style: AppText.caption),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: [
+                            for (final c in world.countries.toList()..sort())
+                              Chip(label: FlagLabel(_flagOf(c), tr(c), nationality: c), visualDensity: VisualDensity.compact),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
-                ),
-                for (final id in r.playerIds)
-                  if (game.findPlayerById(id) case final p?)
-                    if (game.clubOfPlayer(p) case final club?)
-                      PlayerTile(
-                        player: p,
-                        club: club,
-                        subtitle: trf('{0} · {1} yosh · salohiyat {2}', [club.shortName, p.age, p.potential]),
-                        onTap: () => PlayerDetailView.show(context, player: p, club: club),
-                      ),
-              ],
-            ),
-          ),
-        ],
-        const SizedBox(height: 10),
-        AppCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SectionHeader(tr('Yosh iste’dodlarni qidirish'), icon: Icons.travel_explore_outlined),
-              Text(tr('Davlatni tanlang: 3 turdan keyin skautlar 2–3 yosh futbolchini topadi (ba’zan ⭐ wonderkid).'), style: AppText.small),
-              const SizedBox(height: 10),
-              if (life.youthMission != null)
-                Text(trf('Qidiruv: {0} · {1} kuni tugaydi', [tr(life.youthMission!), game.roundDate(life.youthMissionDue)]), style: AppText.bodyStrong)
-              else
-                Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: [
-                    for (final n in nations)
-                      ActionChip(
-                        label: Text(tr(n)),
-                        onPressed: () {
-                          final error = game.startYouthMission(n);
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error ?? tr('Skautlar yo‘lga chiqdi.'))));
-                        },
-                      ),
-                  ],
                 ),
             ],
           ),
@@ -1013,47 +1065,91 @@ class ScoutsView extends StatelessWidget {
             ],
           ),
         ),
-        // What the scouts have brought back: individual reports and the
-        // youngsters found on search trips.
-        Builder(builder: (context) {
-          final found = [
-            for (final id in life.scouted.toList().reversed)
-              if (game.findPlayerById(id) case final p?)
-                if (!game.userClub.squad.contains(p)) p,
-          ].take(15).toList();
-          if (found.isEmpty) return const SizedBox.shrink();
-          return Padding(
-            padding: const EdgeInsets.only(top: 10),
-            child: AppCard(
-              padding: const EdgeInsets.fromLTRB(0, 12, 0, 6),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: SectionHeader(tr('Skaut natijalari'), icon: Icons.fact_check_outlined),
+        const SizedBox(height: 10),
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SectionHeader(tr('Yosh iste’dodlarni qidirish'), icon: Icons.travel_explore_outlined),
+              Text(tr('Davlatni tanlang: bir necha haftadan keyin skautlar 2–3 yosh futbolchini topadi (ba’zan ⭐ wonderkid).'), style: AppText.small),
+              const SizedBox(height: 10),
+              if (life.youthMission != null)
+                Text(trf('Qidiruv: {0} · {1} kuni tugaydi', [tr(life.youthMission!), game.roundDate(life.youthMissionDue)]), style: AppText.bodyStrong)
+              else
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: OutlinedButton.icon(
+                    onPressed: () => _youthSearch(context, nations),
+                    icon: const Icon(Icons.flag_outlined, size: 18),
+                    label: Text(tr('Davlatni tanlash')),
                   ),
-                  for (final p in found)
-                    ListTile(
-                      dense: true,
-                      leading: FaceAvatar(config: p.face, size: 36, circle: true),
-                      title: Text(p.name, style: AppText.bodyStrong),
-                      subtitle: Text(
-                        trf('{0} · {1} yosh · OVR {2} · salohiyat {3}', [
-                          game.clubOfPlayer(p)?.shortName ?? tr('Erkin agent'),
-                          p.age,
-                          p.ovr,
-                          p.potential,
-                        ]),
-                        style: AppText.caption,
-                      ),
-                      onTap: () => PlayerDetailView.show(context, player: p, club: game.clubOfPlayer(p)),
-                    ),
+                ),
+            ],
+          ),
+        ),
+        if (world.reports.isNotEmpty) ...[
+          const SizedBox(height: 14),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Text(trf('Skaut hisobotlari ({0})', [world.reports.length]), style: AppText.h3),
+          ),
+          const SizedBox(height: 6),
+          ValueListenableBuilder<int>(
+            valueListenable: _reportPage,
+            builder: (context, value, _) {
+              final pages = (world.reports.length / _reportsPerPage).ceil();
+              final p = value.clamp(0, pages - 1);
+              return Column(
+                children: [
+                  for (final r in world.reports.skip(p * _reportsPerPage).take(_reportsPerPage)) ...[
+                    _reportCard(context, game, r),
+                    const SizedBox(height: 10),
+                  ],
                 ],
-              ),
+              );
+            },
+          ),
+          _pager(_reportPage, world.reports.length, _reportsPerPage),
+        ],
+        if (found.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Text(trf('Skaut natijalari ({0})', [found.length]), style: AppText.h3),
+          ),
+          const SizedBox(height: 6),
+          AppCard(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: ValueListenableBuilder<int>(
+              valueListenable: _resultPage,
+              builder: (context, value, _) {
+                final pages = (found.length / _resultsPerPage).ceil();
+                final p = value.clamp(0, pages - 1);
+                return Column(
+                  children: [
+                    for (final player in found.skip(p * _resultsPerPage).take(_resultsPerPage))
+                      ListTile(
+                        dense: true,
+                        leading: FaceAvatar(config: player.face, size: 36, circle: true),
+                        title: Text(player.name, style: AppText.bodyStrong),
+                        subtitle: Text(
+                          trf('{0} · {1} yosh · OVR {2} · salohiyat {3}', [
+                            game.clubOfPlayer(player)?.shortName ?? tr('Erkin agent'),
+                            player.age,
+                            player.ovr,
+                            player.potential,
+                          ]),
+                          style: AppText.caption,
+                        ),
+                        onTap: () => PlayerDetailView.show(context, player: player, club: game.clubOfPlayer(player)),
+                      ),
+                  ],
+                );
+              },
             ),
-          );
-        }),
+          ),
+          _pager(_resultPage, found.length, _resultsPerPage),
+        ],
       ],
     );
   }

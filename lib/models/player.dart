@@ -761,7 +761,10 @@ class Player {
   // OVR (Overall) HISOBLASH ALGORITMI (PRD 3.4)
   // ===========================================================================
   /// O'yinchining berilgan pozitsiyadagi asosiy raw OVR balli
-  int calculateRawOVR(PlayerPosition pos) {
+  int calculateRawOVR(PlayerPosition pos) => rawOvr(stats, pos);
+
+  /// The same figure for any set of attributes.
+  static int rawOvr(PlayerStats stats, PlayerPosition pos) {
     final weights = switch (pos) {
       PlayerPosition.cf => {
         'finishing': 0.27,

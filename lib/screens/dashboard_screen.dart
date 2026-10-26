@@ -89,6 +89,15 @@ class DashboardScreen extends StatelessWidget {
                 child: const CoinBalance(),
               ),
               IconButton(
+                tooltip: tr('Matbuot anjumani'),
+                onPressed: () => _pressEntry(context, game),
+                icon: Badge(
+                  isLabelVisible: _pressPending(game),
+                  smallSize: 9,
+                  child: const Icon(Icons.mic_none_rounded),
+                ),
+              ),
+              IconButton(
                 tooltip: tr('Yangiliklar'),
                 onPressed: () => Navigator.push(
                   context,
@@ -164,14 +173,6 @@ class DashboardScreen extends StatelessWidget {
                       if (game.seasonFinished)
                         _seasonEnd(context, game)
                       else if (next != null) ...[
-                        if (game.postPressFixture case final last?) ...[
-                          _pressCard(context, game, last, post: true),
-                          const SizedBox(height: 12),
-                        ],
-                        if (!game.life.pressDone.contains(next.id)) ...[
-                          _pressCard(context, game, next),
-                          const SizedBox(height: 12),
-                        ],
                         _matchCard(context, game, club, next),
                       ] else
                         _roundDone(context, game),
@@ -503,29 +504,51 @@ class DashboardScreen extends StatelessWidget {
     }
   }
 
-  /// Press conference before the next match or after the last one: the
-  /// answers move morale, fans, the board and single players.
-  Widget _pressCard(BuildContext context, GameState game, Fixture f, {bool post = false}) => AppCard(
-    child: Row(
-      children: [
-        Icon(post ? Icons.campaign_outlined : Icons.mic_none_rounded, color: AppColors.primary, size: 28),
-        const SizedBox(width: 12),
-        Expanded(
+  /// Press conferences wait behind the microphone in the top bar (a dot
+  /// shows when one is due): the answers move morale, fans, the board and
+  /// single players.
+  bool _pressPending(GameState game) {
+    final next = game.pendingSuperCup ?? game.nextUserFixture ?? game.pendingCupFixture;
+    return game.postPressFixture != null || (next != null && !game.seasonFinished && !game.life.pressDone.contains(next.id));
+  }
+
+  Future<void> _pressEntry(BuildContext context, GameState game) async {
+    final last = game.postPressFixture;
+    final next = game.pendingSuperCup ?? game.nextUserFixture ?? game.pendingCupFixture;
+    final upcoming = next != null && !game.seasonFinished && !game.life.pressDone.contains(next.id) ? next : null;
+    if (last == null && upcoming == null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Hozircha matbuot anjumani yo‘q.'))));
+      return;
+    }
+    if (last != null && upcoming != null) {
+      final post = await showModalBottomSheet<bool>(
+        context: context,
+        showDragHandle: true,
+        builder: (ctx) => SafeArea(
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Text(post ? tr('O‘yindan keyingi matbuot anjumani') : tr('Matbuot anjumani'), style: AppText.bodyStrong),
-              Text(
-                post ? tr('Jurnalistlar natija haqida so‘ramoqchi.') : tr('O‘yin oldidan jurnalistlar savollari kutmoqda.'),
-                style: AppText.caption,
+              ListTile(
+                leading: const Icon(Icons.campaign_outlined),
+                title: Text(tr('O‘yindan keyingi matbuot anjumani')),
+                subtitle: Text(tr('Jurnalistlar natija haqida so‘ramoqchi.')),
+                onTap: () => Navigator.pop(ctx, true),
+              ),
+              ListTile(
+                leading: const Icon(Icons.mic_none_rounded),
+                title: Text(tr('Matbuot anjumani')),
+                subtitle: Text(tr('O‘yin oldidan jurnalistlar savollari kutmoqda.')),
+                onTap: () => Navigator.pop(ctx, false),
               ),
             ],
           ),
         ),
-        FilledButton.tonal(onPressed: () => _runPress(context, game, f, post: post), child: Text(tr('Boshlash'))),
-      ],
-    ),
-  );
+      );
+      if (post == null || !context.mounted) return;
+      return _runPress(context, game, post ? last : upcoming, post: post);
+    }
+    return _runPress(context, game, (last ?? upcoming)!, post: last != null);
+  }
 
   Future<void> _runPress(BuildContext context, GameState game, Fixture f, {bool post = false}) =>
       runPressConference(context, f, post: post);

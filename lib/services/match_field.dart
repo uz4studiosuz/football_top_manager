@@ -404,7 +404,9 @@ class MatchField {
     if (fit == 0 && form.abs() < 0.5) return p.stats;
     final m = p.stats.toMap();
     for (final k in _technical) {
-      m[k] = ((m[k] as int) - fit - form).round();
+      // Good finishers stay accurate when tired (the stat guide's note).
+      final tired = k == 'finishing' && (m[k] as int) >= 80 ? form * 0.4 : form;
+      m[k] = ((m[k] as int) - fit - tired).round();
     }
     for (final k in _keeperKeys) {
       m[k] = ((m[k] as int) - form).round();
