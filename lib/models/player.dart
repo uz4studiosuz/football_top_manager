@@ -451,6 +451,28 @@ enum PlayerInstruction {
   final String _description;
   String get description => tr(_description);
   final bool offence;
+
+  /// Positions each instruction makes sense for: a striker is never told to
+  /// "hold the back line" and a centre-back never to "stay wide".
+  static const _fits = <PlayerInstruction, Set<PlayerPosition>>{
+    makeRuns: {PlayerPosition.lb, PlayerPosition.rb, PlayerPosition.dmf, PlayerPosition.cmf, PlayerPosition.amf, PlayerPosition.lmf, PlayerPosition.rmf, PlayerPosition.lwf, PlayerPosition.rwf, PlayerPosition.ss, PlayerPosition.cf},
+    stayBack: {PlayerPosition.lb, PlayerPosition.rb, PlayerPosition.dmf, PlayerPosition.cmf, PlayerPosition.amf, PlayerPosition.lmf, PlayerPosition.rmf},
+    anchoring: {PlayerPosition.cb, PlayerPosition.dmf, PlayerPosition.cmf},
+    holdWidth: {PlayerPosition.lb, PlayerPosition.rb, PlayerPosition.lmf, PlayerPosition.rmf, PlayerPosition.lwf, PlayerPosition.rwf},
+    playmaker: {PlayerPosition.dmf, PlayerPosition.cmf, PlayerPosition.amf, PlayerPosition.lmf, PlayerPosition.rmf, PlayerPosition.ss},
+    counterTarget: {PlayerPosition.lwf, PlayerPosition.rwf, PlayerPosition.ss, PlayerPosition.cf},
+    pressing: {PlayerPosition.dmf, PlayerPosition.cmf, PlayerPosition.amf, PlayerPosition.lmf, PlayerPosition.rmf, PlayerPosition.lwf, PlayerPosition.rwf, PlayerPosition.ss, PlayerPosition.cf},
+    trackBack: {PlayerPosition.amf, PlayerPosition.lmf, PlayerPosition.rmf, PlayerPosition.lwf, PlayerPosition.rwf, PlayerPosition.ss, PlayerPosition.cf},
+    tightMarking: {PlayerPosition.cb, PlayerPosition.lb, PlayerPosition.rb, PlayerPosition.dmf, PlayerPosition.cmf},
+    deepLine: {PlayerPosition.cb, PlayerPosition.lb, PlayerPosition.rb, PlayerPosition.dmf},
+  };
+
+  bool suits(PlayerPosition pos) => this == balanced || (_fits[this]?.contains(pos) ?? false);
+
+  /// The instructions offered for [pos] ([keep] stays listed so an existing
+  /// choice never disappears from its own dropdown).
+  static List<PlayerInstruction> forPosition(PlayerPosition pos, {PlayerInstruction? keep}) =>
+      [for (final i in values) if (i.suits(pos) || i == keep) i];
 }
 
 /// How well a player suits a position.

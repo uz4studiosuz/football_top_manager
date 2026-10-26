@@ -532,4 +532,33 @@ void main() {
     }
     expect(swapped, greaterThan(normal * 2));
   });
+
+  test('A player added to my club in the editor joins the running squad; a removed one leaves', () {
+    final c = game.userClub;
+    final template = c.squad.first.toMap();
+    final added = {...template, 'id': 'editor_new_1', 'name': 'Editor Player'};
+    final ids = [...c.squad.map((p) => p.id), 'editor_new_1'];
+    final before = Map<String, dynamic>.from({'id': c.id, 'squadIds': c.squad.map((p) => p.id).toList()});
+    game.applyDatabaseEdits([
+      ('players', null, added),
+      ('clubs', before, {'id': c.id, 'squadIds': ids}),
+    ]);
+    expect(c.playerById('editor_new_1')?.name, 'Editor Player');
+    final gone = c.squad.last.id;
+    game.applyDatabaseEdits([
+      ('clubs', {'id': c.id, 'squadIds': ids}, {'id': c.id, 'squadIds': [...ids]..remove(gone)}),
+    ]);
+    expect(c.playerById(gone), isNull);
+    expect(c.startingLineupIds.every((id) => c.playerById(id) != null), isTrue);
+  });
+
+  test('Individual instructions follow the position', () {
+    expect(PlayerInstruction.forPosition(PlayerPosition.gk), [PlayerInstruction.balanced]);
+    final cb = PlayerInstruction.forPosition(PlayerPosition.cb);
+    expect(cb, contains(PlayerInstruction.deepLine));
+    expect(cb, isNot(contains(PlayerInstruction.counterTarget)));
+    final cf = PlayerInstruction.forPosition(PlayerPosition.cf);
+    expect(cf, contains(PlayerInstruction.counterTarget));
+    expect(cf, isNot(contains(PlayerInstruction.deepLine)));
+  });
 }

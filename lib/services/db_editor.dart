@@ -14,7 +14,7 @@ class DbEditor extends ChangeNotifier {
 
   /// Every manifest entry; world leagues join [leagues] once opened.
   List<Map<String, dynamic>> _manifestLeagues = [];
-  List<Map<String, dynamic>> get closedLeagues => [for (final l in _manifestLeagues) if (!leagues.contains(l)) l];
+  List<Map<String, dynamic>> get closedLeagues => [for (final l in _manifestLeagues) if (l['id'] != 'super' && !leagues.contains(l)) l];
   final Map<String, Map<String, dynamic>> _docs = {}; // file → document
   final Set<String> dirty = {};
   bool loaded = false;
@@ -30,6 +30,7 @@ class DbEditor extends ChangeNotifier {
     leagues = [];
     for (final l in _manifestLeagues) {
       // World leagues are big: they open on request (or when already edited).
+      if (l['id'] == 'super') continue; // the creator's league, not for editing here
       if (l['lazy'] == true && !InitialDatabase.overrides.containsKey(l['clubsFile'])) continue;
       await _open(l);
     }

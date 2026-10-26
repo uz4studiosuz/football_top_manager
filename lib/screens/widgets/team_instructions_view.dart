@@ -438,7 +438,10 @@ class _InstructionRow extends StatelessWidget {
               isExpanded: true,
               underline: const SizedBox(),
               items: [
-                for (final i in PlayerInstruction.values)
+                for (final i in PlayerInstruction.forPosition(
+                  club.startingLineupIds.contains(player.id) ? club.slotPosition(club.startingLineupIds.indexOf(player.id)) : player.mainPosition,
+                  keep: player.instruction,
+                ))
                   DropdownMenuItem(
                     value: i,
                     child: Text(i.label, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12.5)),

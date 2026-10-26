@@ -823,7 +823,46 @@ class GameState extends ChangeNotifier {
         }
       }
     }
+    _syncEditedSquads(changes);
     notifyListeners();
+  }
+
+  /// Players added to, moved between or removed from clubs in the editor
+  /// join, change or leave the running squads too.
+  void _syncEditedSquads(List<(String, Map<String, dynamic>?, Map<String, dynamic>)> changes) {
+    final fresh = <String, Player>{};
+    for (final (kind, before, after) in changes) {
+      if (kind != 'players' || before != null || findPlayerById(after['id'] as String) != null) continue;
+      try {
+        fresh[after['id'] as String] = Player.fromMap(after);
+      } catch (_) {}
+    }
+    for (final (kind, before, after) in changes) {
+      if (kind != 'clubs' || !after.containsKey('squadIds')) continue;
+      final c = getClubById(after['id'] as String);
+      if (c == null) continue;
+      final ids = [for (final x in after['squadIds'] as List) '$x'];
+      if (before != null && jsonEncode(before['squadIds']) == jsonEncode(ids)) continue;
+      c.squad.removeWhere((p) => !ids.contains(p.id));
+      for (final id in ids) {
+        if (c.playerById(id) != null) continue;
+        var p = fresh[id];
+        if (p == null) {
+          p = findPlayerById(id);
+          if (p == null) continue;
+          for (final o in marketClubs) {
+            o.squad.remove(p);
+            o.startingLineupIds.remove(id);
+            o.benchIds.remove(id);
+          }
+          freeAgents.remove(p);
+        }
+        c.squad.add(p);
+      }
+      c.startingLineupIds.removeWhere((id) => c.playerById(id) == null);
+      c.benchIds.removeWhere((id) => c.playerById(id) == null);
+      if (c.startingLineupIds.length < 11) autoPickLineup(c);
+    }
   }
 
   /// The club the user plays next (cup and Super Cup first).
@@ -2212,7 +2251,22 @@ class GameState extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Other leagues' clubs load quietly in the background, one country per
+  /// window, so offers from abroad can come even before any scouting.
+  void _warmForeignMarket() {
+    if (world.loadedLeagueCount >= 6 || world.missions.isNotEmpty) return;
+    final pyramid = _pyramidIds(leagueId);
+    final candidates = [
+      for (final l in InitialDatabase.leagues)
+        if (l.country.isNotEmpty && l.tier == 1 && !pyramid.contains(l.id) && world.leaguesLoaded(l.country, pyramid) == false) l.country,
+    ];
+    if (candidates.isEmpty) return;
+    final country = candidates[Random().nextInt(candidates.length)];
+    world.loadCountry(country, pyramid, _prepareWorldClub).catchError((_) {});
+  }
+
   void _generateOffers() {
+    _warmForeignMarket();
     final rnd = Random(_salt(_currentRound * 131 + calendar.year));
     if (userClub.squad.length <= minSquad) return;
     final targets = List<Player>.of(userClub.squad)
@@ -2225,9 +2279,16 @@ class GameState extends ChangeNotifier {
     ];
     for (final p in picks) {
       if (dealFor(p) != null || (movedThisSeason(p) && !transferListed.contains(p.id)) || squadLeaveIssue(p) != null) continue;
-      final buyers = _allClubs
+      var buyers = _allClubs
           .where((c) => c.id != _userClubId && c.transferBudget > p.marketValue)
           .toList();
+      // Clubs of other leagues bid too (a third of the offers when loaded),
+      // for players good enough to be noticed abroad.
+      final abroad = [
+        for (final c in world.loadedClubs)
+          if (c.transferBudget > p.marketValue * 1.1 && c.squad.length < maxSquad && c.teamOVR <= p.ovr + 8) c,
+      ];
+      if (abroad.isNotEmpty && (buyers.isEmpty || rnd.nextDouble() < 0.4)) buyers = abroad;
       if (buyers.isEmpty) continue;
       final buyer = buyers[rnd.nextInt(buyers.length)];
       final listed = transferListed.contains(p.id);
@@ -2901,13 +2962,17 @@ class GameState extends ChangeNotifier {
     final level = life.level(f);
     if (level >= Facility.maxLevel) return tr('Eng yuqori darajaga yetgan.');
     if (life.building.containsKey(f)) return tr('Qurilish allaqachon ketmoqda.');
+    if (life.building.isNotEmpty) return tr('Bir vaqtda faqat bitta qurilish olib borish mumkin.');
+    if (c.reputation < ClubLife.reputationNeeded(level + 1)) {
+      return trf('Klub obro‘si yetarli emas: {0}-bosqich uchun kamida {1} kerak.', [level + 1, ClubLife.reputationNeeded(level + 1)]);
+    }
     if (f == Facility.stadium && c.stadiumCapacity >= 80000) return tr('Stadion maksimal sig‘imda.');
     final cost = ClubLife.upgradeCost(f, level, _economyOf(c));
     if (c.transferBudget < cost) return tr('Byudjet yetarli emas.');
     _post(c, trf('{0}: {1}-bosqich qurilishi', [f.label, level + 1]), -cost, category: FinanceCategory.operations);
-    life.building[f] = _currentRound + ClubLife.buildRounds(f);
+    life.building[f] = _currentRound + ClubLife.buildRounds(f, level);
     _news(NewsKind.board, trf('{0}: qurilish boshlandi', [f.label]),
-        trf('{0}-bosqich {1} turdan keyin ishga tushadi. Narxi {2}.', [level + 1, ClubLife.buildRounds(f), _m(cost)]));
+        trf('{0}-bosqich {1} turdan keyin ishga tushadi. Narxi {2}.', [level + 1, ClubLife.buildRounds(f, level), _m(cost)]));
     notifyListeners();
     return null;
   }
@@ -3295,8 +3360,20 @@ class GameState extends ChangeNotifier {
   /// Hires (or promotes to) [level]; a signing fee of six weeks' wages.
   String? setStaff(StaffRole r, int level) {
     final c = userClub;
-    final fee = level > life.staffLevel(r) ? staffWage(r, level) * 6 : 0;
+    final promoting = level > life.staffLevel(r);
+    if (promoting) {
+      if (c.reputation < ClubLife.reputationNeeded(level)) {
+        return trf('Klub obro‘si yetarli emas: {0}-daraja uchun kamida {1} kerak.', [level, ClubLife.reputationNeeded(level)]);
+      }
+      final last = life.lastStaffHire;
+      if (last != null) {
+        final next = last.add(const Duration(days: ClubLife.staffCooldownDays));
+        if (currentDate.isBefore(next)) return trf('Yangi mutaxassisni {0} dan keyin yollash mumkin.', [SeasonCalendar.format(next, year: true)]);
+      }
+    }
+    final fee = promoting ? staffWage(r, level) * 12 : 0;
     if (c.transferBudget < fee) return tr('Byudjet yetarli emas.');
+    if (promoting) life.lastStaffHire = currentDate;
     if (fee > 0) _post(c, trf('{0}: shartnoma bonusi', [r.label]), -fee, category: FinanceCategory.operations);
     life.staff[r] = level;
     notifyListeners();
@@ -3426,6 +3503,8 @@ class GameState extends ChangeNotifier {
     final c = userClub;
     final wages = StaffRole.values.fold<int>(0, (a, r) => a + staffWage(r, life.staffLevel(r)));
     if (wages > 0) _post(c, tr('Murabbiylar shtabi maoshi'), -wages, category: FinanceCategory.operations);
+    final upkeep = Facility.values.fold<int>(0, (a, f) => a + ClubLife.upkeep(f, life.level(f), _economyOf(c)));
+    if (upkeep > 0) _post(c, tr('Inshootlar xarajati'), -upkeep, category: FinanceCategory.operations);
     final fitness = life.staffLevel(StaffRole.fitness);
     if (fitness > 0) {
       for (final p in c.squad) {

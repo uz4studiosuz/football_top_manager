@@ -9,6 +9,7 @@ import '../models/crest.dart';
 import 'club_form_screen.dart';
 import '../services/db_editor.dart';
 import '../ui/face_avatar.dart';
+import '../ui/flag.dart';
 import '../ui/face_from_photo.dart';
 import '../ui/league_picker.dart';
 import '../ui/widgets.dart';
@@ -235,7 +236,7 @@ class _DbEditorScreenState extends State<DbEditorScreen> {
             dense: true,
             leading: const Icon(Icons.shield_outlined, size: 20),
             title: Text(name),
-            subtitle: Text('${InitialDatabase.info(league).flag} ${InitialDatabase.info(league).name}'),
+            subtitle: FlagLabel(InitialDatabase.info(league).flag, InitialDatabase.info(league).name, style: AppText.caption),
             onTap: () async {
               await db.openLeague(league);
               if (!mounted) return;
@@ -606,8 +607,30 @@ class _PlayerFormState extends State<_PlayerForm> {
         return Wrap(spacing: 8, runSpacing: 8, children: [for (final c in children) SizedBox(width: w, child: c)]);
       },
     );
+    return Stack(
+      children: [
+        Positioned.fill(child: _formList(preview, positions, alt, wrap)),
+        // Always in reach while editing, instead of at the end of a long form.
+        Positioned(
+          right: 16,
+          bottom: 16,
+          child: AnimatedScale(
+            scale: _changed ? 1 : 0,
+            duration: const Duration(milliseconds: 150),
+            child: FloatingActionButton.extended(
+              onPressed: _changed ? _apply : null,
+              icon: const Icon(Icons.check_rounded),
+              label: Text(tr('O‘zgarishlarni qo‘llash')),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _formList(Player? preview, List<String> positions, Set<String> alt, Widget Function(List<Widget>) wrap) {
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 96),
       children: [
         Row(
           children: [
@@ -655,7 +678,7 @@ class _PlayerFormState extends State<_PlayerForm> {
             isExpanded: true,
             decoration: InputDecoration(labelText: tr('Millati'), isDense: true, border: const OutlineInputBorder()),
             items: [
-              for (final e in countryFlags.entries) DropdownMenuItem(value: e.key, child: Text('${e.value} ${tr(e.key)}')),
+              for (final e in countryFlags.entries) DropdownMenuItem(value: e.key, child: FlagLabel(e.value, tr(e.key), nationality: e.key)),
               DropdownMenuItem(value: '', child: Text(tr('Boshqa (qo‘lda yozish)'))),
             ],
             onChanged: (v) => setState(() {
@@ -669,6 +692,7 @@ class _PlayerFormState extends State<_PlayerForm> {
           ),
           if (_customNation) _field(_nation, tr('Millati (o‘z nomi)')),
           if (_customNation) _field(_flag, tr('Bayroq (emoji)')),
+          if (_customNation && _flag.text.isNotEmpty) Align(alignment: Alignment.centerLeft, child: FlagView(_flag.text, height: 28)),
           _field(_value, tr('Bozor bahosi (EUR)'), number: true),
           _stepper(tr('Yosh'), (m['age'] as num).toInt(), 15, 45, (v) => _set('age', v)),
           _stepper(tr('Raqam'), (m['number'] as num).toInt(), 1, 99, (v) => _set('number', v)),
@@ -745,12 +769,6 @@ class _PlayerFormState extends State<_PlayerForm> {
               ],
             ),
         ],
-        const SizedBox(height: 20),
-        FilledButton.icon(
-          onPressed: _changed ? _apply : null,
-          icon: const Icon(Icons.check_rounded),
-          label: Text(tr('O‘zgarishlarni qo‘llash')),
-        ),
       ],
     );
   }

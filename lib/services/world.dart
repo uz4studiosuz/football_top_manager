@@ -39,6 +39,19 @@ class WorldMarket {
     }
   }
 
+  /// Every loaded club, reported or not: foreign buyers come from here.
+  Iterable<Club> get loadedClubs sync* {
+    for (final list in _clubs.values) {
+      yield* list;
+    }
+  }
+
+  int get loadedLeagueCount => _clubs.length;
+  int _generation = 0;
+
+  bool leaguesLoaded(String country, Set<String> pyramid) =>
+      leaguesOf(country, pyramid).every((l) => _clubs.containsKey(l.id));
+
   Club? club(String id) {
     for (final list in _clubs.values) {
       for (final c in list) {
@@ -73,9 +86,12 @@ class WorldMarket {
   /// Loads [country]'s leagues (except the career's own [pyramid]); [prepare]
   /// picks each club's lineup.
   Future<void> loadCountry(String country, Set<String> pyramid, void Function(Club) prepare) async {
+    final generation = _generation;
     for (final l in leaguesOf(country, pyramid)) {
       if (_clubs.containsKey(l.id)) continue;
       await InitialDatabase.ensureLeague(l.id);
+      // The world was rebuilt (new season, new career) while this loaded.
+      if (generation != _generation || _clubs.containsKey(l.id)) return;
       final clubs = InitialDatabase.getClubs(l.id);
       _clubs[l.id] = clubs;
       _country[l.id] = country;
@@ -92,6 +108,7 @@ class WorldMarket {
   /// Rebuilds every loaded league (a new season, or a new career pyramid).
   Future<void> reload(Set<String> pyramid, void Function(Club) prepare) async {
     final wanted = {...countries, ...missions.keys};
+    _generation++;
     _clubs.clear();
     _country.clear();
     for (final c in wanted) {
@@ -100,6 +117,7 @@ class WorldMarket {
   }
 
   void reset() {
+    _generation++;
     countries.clear();
     missions.clear();
     gone.clear();
