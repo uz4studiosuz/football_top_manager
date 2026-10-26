@@ -337,7 +337,7 @@ class _CustomClubCreatorScreenState extends State<CustomClubCreatorScreen> {
                 }),
               ),
               Text(
-                tr('Tarkib o‘rtacha darajada (64–73). Bitta yulduzni o‘zingiz tanlaysiz.'),
+                tr('Tarkib oddiy darajada (54–70). Bitta yulduzni o‘zingiz tanlaysiz.'),
                 style: AppText.caption,
               ),
               const SizedBox(height: 8),

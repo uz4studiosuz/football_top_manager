@@ -32,9 +32,9 @@ class ActionMap extends StatelessWidget {
           Text(tr('Hujum yo‘nalishi'), style: AppText.caption),
           const Spacer(),
           if (arrows) ...[
-            _dot(AppColors.win),
+            _dot(const Color(0xFF5FD38A)),
             Text(' ${tr('Aniq')}   ', style: AppText.caption),
-            _dot(AppColors.live),
+            _dot(const Color(0xFFFF7A6E)),
             Text(' ${tr('Aniq emas')}', style: AppText.caption),
           ],
         ],
@@ -72,12 +72,12 @@ class _ActionPainter extends CustomPainter {
     final r = FootballPitchPainter.field(size, inset);
     Offset at(Offset o) => Offset(r.left + o.dx * r.width, r.top + o.dy * r.height);
     for (final a in actions) {
-      final color = arrows ? (a.ok ? AppColors.win : AppColors.live) : ActionMap.kindColor(a.kind);
+      final color = arrows ? (a.ok ? const Color(0xFF9CF5B5) : const Color(0xFFFF7A6E)) : ActionMap.kindColor(a.kind);
       if (arrows) {
         final from = at(a.from), to = at(a.to);
         final line = Paint()
           ..color = color.withValues(alpha: 0.9)
-          ..strokeWidth = 1.5
+          ..strokeWidth = 1.8
           ..strokeCap = StrokeCap.round;
         canvas.drawLine(from, to, line);
         final d = to - from;

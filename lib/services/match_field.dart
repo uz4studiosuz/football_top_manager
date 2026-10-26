@@ -437,7 +437,42 @@ class MatchField {
 
   List<Player> get homeXI => _homeXI;
   List<Player> get awayXI => _awayXI;
+  /// A lineup that lost players (sold, loaned, retired) is filled again slot
+  /// by slot, so the engine always has eleven on the pitch.
+  void _repairLineup(Club c) {
+    final ids = c.startingLineupIds;
+    final slots = c.tactics.formation.slots.length;
+    final broken = ids.length != slots || ids.any((id) => c.playerById(id) == null);
+    if (!broken) return;
+    final used = {for (final id in ids) if (c.playerById(id) != null) id};
+    final pool = [...c.bench, ...c.reserves, ...c.squad].where((p) => !used.contains(p.id)).toList();
+    final fixed = <String>[];
+    for (var i = 0; i < slots; i++) {
+      final existing = i < ids.length ? c.playerById(ids[i]) : null;
+      if (existing != null) {
+        fixed.add(existing.id);
+        continue;
+      }
+      final pos = c.slotPosition(i);
+      Player? best;
+      for (final p in pool) {
+        if (used.contains(p.id) || p.mainPosition.isGoalkeeper != pos.isGoalkeeper) continue;
+        if (best == null || p.getMatchOVR(pos) > best.getMatchOVR(pos)) best = p;
+      }
+      best ??= pool.where((p) => !used.contains(p.id)).firstOrNull;
+      if (best == null) break;
+      used.add(best.id);
+      c.benchIds.remove(best.id);
+      fixed.add(best.id);
+    }
+    c.startingLineupIds
+      ..clear()
+      ..addAll(fixed);
+  }
+
   void _refreshLineups() {
+    _repairLineup(home);
+    _repairLineup(away);
     final h = home.startingLineupIds.join('|'),
         a = away.startingLineupIds.join('|');
     if (h != _homeSignature) {

@@ -99,6 +99,9 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
               children: [
                 _header(c, shirt),
                 TabBar(
+                  labelPadding: const EdgeInsets.symmetric(horizontal: 6),
+                  labelStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                  unselectedLabelStyle: const TextStyle(fontSize: 13),
                   tabs: [
                     Tab(text: tr('Umumiy')),
                     Tab(text: tr('Atributlar')),
