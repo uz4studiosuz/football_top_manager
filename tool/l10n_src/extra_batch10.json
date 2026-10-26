@@ -1,0 +1,16 @@
+{
+ "Davlatni tanlang: bir necha haftadan keyin skautlar 2–3 yosh futbolchini topadi (ba’zan ⭐ wonderkid).": ["Pick a country: after a few weeks the scouts find 2–3 young players (sometimes a ⭐ wonderkid).", "Выберите страну: через несколько недель скауты найдут 2–3 молодых игроков (иногда ⭐ вундеркинда)."],
+ "Davlatni tanlash": ["Choose a country", "Выбрать страну"],
+ "Hozircha matbuot anjumani yo‘q.": ["No press conference at the moment.", "Сейчас пресс-конференций нет."],
+ "Keyingi bosqich: {0} · tayyor: {1} · obro‘ {2}+": ["Next stage: {0} · ready: {1} · reputation {2}+", "Следующий этап: {0} · готово: {1} · репутация {2}+"],
+ "O‘rganilgan davlatlar ({0})": ["Explored countries ({0})", "Изученные страны ({0})"],
+ "Salohiyat: futbolchi kelajakda yetishi mumkin bo‘lgan eng yuqori OVR. Yosh futbolchi o‘ynab, mashq qilib shunga yaqinlashadi; keksa futbolchida u hozirgi OVRga teng.": ["Potential: the highest OVR the player can reach in future. A young player gets closer to it by playing and training; for an older player it equals his current OVR.", "Потенциал: максимальный OVR, которого игрок может достичь. Молодой игрок приближается к нему, играя и тренируясь; у возрастного он равен текущему OVR."],
+ "Shartnoma taklifi yuborildi. Futbolchi {0} da javob beradi.": ["Contract offer sent. The player replies on {0}.", "Предложение контракта отправлено. Игрок ответит {0}."],
+ "Siz {0} so‘radingiz. Xaridor {1} da javob beradi.": ["You asked {0}. The buyer replies on {1}.", "Вы запросили {0}. Покупатель ответит {1}."],
+ "Skaut hisobotlari ({0})": ["Scout reports ({0})", "Отчёты скаутов ({0})"],
+ "Skaut natijalari ({0})": ["Scout results ({0})", "Результаты скаутинга ({0})"],
+ "Taklif yuborildi. Klub {0} da javob beradi.": ["Offer sent. The club replies on {0}.", "Предложение отправлено. Клуб ответит {0}."],
+ "Taklif yuborildi: {0} {1} da javob beradi.": ["Offer sent: {0} replies on {1}.", "Предложение отправлено: {0} ответит {1}."],
+ "{0}-bosqich {1} da ishga tushadi. Narxi {2}.": ["Stage {0} opens on {1}. Cost {2}.", "Этап {0} откроется {1}. Стоимость {2}."],
+ "Taklif yuborish": ["Make an offer", "Сделать предложение"]
+}

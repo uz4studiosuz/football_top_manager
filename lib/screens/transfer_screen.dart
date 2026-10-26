@@ -458,7 +458,7 @@ class _TransferScreenState extends State<TransferScreen> {
           if (!d.stage.finished && !d.stage.waitsForUser) ...[
             const SizedBox(height: 4),
             Text(
-              d.dueRound > game.currentRound ? trf('Javob: {0}', [game.roundDate(d.dueRound)]) : tr('Javob keyingi turda'),
+              d.dueRound > game.currentRound ? trf('Javob: {0}', [game.roundDate(d.dueRound)]) : trf('Javob: {0}', [game.roundDate(game.currentRound + 1)]),
               style: AppText.caption,
             ),
           ],
@@ -546,7 +546,7 @@ class _TransferScreenState extends State<TransferScreen> {
             FilledButton(
               onPressed: () {
                 final error = game.offerContract(d, (wage / 1000).round() * 1000, years);
-                result = error ?? tr('Shartnoma taklifi yuborildi. Futbolchi keyingi turda javob beradi.');
+                result = error ?? trf('Shartnoma taklifi yuborildi. Futbolchi {0} da javob beradi.', [game.roundDate(game.currentRound + 1)]);
                 Navigator.pop(ctx);
               },
               child: Text(tr('Taklif yuborish')),
@@ -775,7 +775,7 @@ Future<void> showTransferOffer(BuildContext context, Player p, Club seller) asyn
                       }
                       Navigator.pop(ctx);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text(trf('Taklif yuborildi: {0} keyingi turda javob beradi.', [seller.name]))),
+                        SnackBar(content: Text(trf('Taklif yuborildi: {0} {1} da javob beradi.', [seller.name, game.roundDate(game.currentRound + 1)]))),
                       );
                     }
                   : null,

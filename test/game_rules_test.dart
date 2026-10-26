@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:football_top_manager/services/match_field.dart';
 import 'package:football_top_manager/services/save_codec.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -583,5 +584,20 @@ void main() {
     final km = f.lines.values.where((l) => l.minutes >= 85).map((l) => l.distanceM).fold<double>(0, (x, y) => x + y) /
         f.lines.values.where((l) => l.minutes >= 85).length / 1000;
     expect(km, inInclusiveRange(6, 14));
+  });
+
+  test('Created players are shaped by position: keepers cannot score, strikers cannot tackle', () {
+    for (final target in [60, 75, 88]) {
+      final gk = GameState.statsTemplate(PlayerPosition.gk, target, 5);
+      expect(Player.rawOvr(gk, PlayerPosition.gk), closeTo(target, 2));
+      expect(gk.finishing, lessThanOrEqualTo(max(40, target - 25)));
+      expect(gk.attackingAwareness, lessThanOrEqualTo(max(40, target - 25)));
+      final cf = GameState.statsTemplate(PlayerPosition.cf, target, 5);
+      expect(Player.rawOvr(cf, PlayerPosition.cf), closeTo(target, 2));
+      expect(cf.tackling, lessThanOrEqualTo(max(40, target - 20)));
+      expect(cf.gkReflexes, 40);
+      final cb = GameState.statsTemplate(PlayerPosition.cb, target, 5);
+      expect(cb.defensiveAwareness, greaterThan(cb.finishing + 20));
+    }
   });
 }

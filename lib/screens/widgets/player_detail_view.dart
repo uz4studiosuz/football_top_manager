@@ -55,11 +55,23 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
 
   @override
   Widget build(BuildContext context) {
-    final c = club;
+    final game = GameState();
+    final c = club ?? game.clubOfPlayer(p);
     final shirt = c?.primaryColor ?? AppColors.primary;
+    final buyable = c != null && c.id != game.userClubId && game.marketClubs.any((m) => m.id == c.id);
     return DefaultTabController(
       length: 4,
       child: Scaffold(
+        // The offer button stays in reach on every tab.
+        floatingActionButton: buyable
+            ? FloatingActionButton.extended(
+                onPressed: () => showTransferOffer(context, p, c).then((_) {
+                  if (mounted) setState(() {});
+                }),
+                icon: const Icon(Icons.swap_horiz_rounded),
+                label: Text(tr('Taklif yuborish')),
+              )
+            : null,
         appBar: AppBar(
           title: Text(tr('Futbolchi profili')),
           actions: [
@@ -173,28 +185,9 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
 
   Widget _overview(Club? c) {
     final game = GameState();
-    // Another club's player can be bid for straight from his page.
-    final buyable = c != null && c.id != game.userClubId && game.marketClubs.any((m) => m.id == c.id);
     return ListView(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 88),
       children: [
-        if (buyable)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Row(
-              children: [
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: () => showTransferOffer(context, p, c).then((_) {
-                      if (mounted) setState(() {});
-                    }),
-                    icon: const Icon(Icons.swap_horiz_rounded),
-                    label: Text(trf('Transfer taklifi · {0}', [formatMoney(game.askingPrice(p, c))])),
-                  ),
-                ),
-              ],
-            ),
-          ),
         if (!p.isAvailable)
           AppCard(
             color: const Color(0xFFFFF4F2),
@@ -239,21 +232,6 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
               ),
               const SizedBox(height: 8),
               Text(p.playingStyle.description, style: AppText.small.copyWith(height: 1.4)),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  const Icon(Icons.shield_outlined, size: 16, color: AppColors.ink3),
-                  const SizedBox(width: 8),
-                  Text(tr('Himoyada:'), style: AppText.small),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      '${p.defendingStyle.title} (${p.defendingStyle.uzbek})',
-                      style: AppText.bodyStrong.copyWith(fontSize: 13),
-                    ),
-                  ),
-                ],
-              ),
               if (p.aiStyles.isNotEmpty) ...[
                 const SizedBox(height: 6),
                 Wrap(
@@ -284,6 +262,11 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
                   Expanded(child: StatTile('${p.weakFoot}/5', 'Kuchsiz oyoq')),
                   Expanded(child: StatTile('${p.potential}', 'Salohiyat', color: AppColors.attribute(p.potential))),
                 ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                tr('Salohiyat: futbolchi kelajakda yetishi mumkin bo‘lgan eng yuqori OVR. Yosh futbolchi o‘ynab, mashq qilib shunga yaqinlashadi; keksa futbolchida u hozirgi OVRga teng.'),
+                style: AppText.caption,
               ),
               const SizedBox(height: 10),
               MeterRow(

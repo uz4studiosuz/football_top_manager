@@ -293,13 +293,14 @@ abstract final class SaveCodec {
                 if (f.ratings[e.key] != null) double.parse(f.ratings[e.key]!.toStringAsFixed(1)),
               ],
         },
-      if (full) ...{
+      // Line-ups are kept for every match of every club.
+      if (f.homeLineup.isNotEmpty) ...{
         'hl': f.homeLineup,
         'al': f.awayLineup,
         'hb': f.homeBench,
         'ab': f.awayBench,
-        'mo': f.momentum.map((v) => v.round()).toList(),
       },
+      if (full) 'mo': f.momentum.map((v) => v.round()).toList(),
       if (shots && f.shots.isNotEmpty) 'sh': f.shots.map((s) => s.toMap()).toList(),
       if (full && f.heat.isNotEmpty) 'hm': f.heat,
       if (actions && f.actions.isNotEmpty) 'ac': f.actions,
