@@ -5,6 +5,7 @@ import '../models/club.dart';
 import '../models/league.dart';
 import '../models/player.dart';
 import '../ui/face_avatar.dart';
+import '../ui/action_map.dart';
 import '../ui/heatmap.dart';
 import '../ui/match_widgets.dart';
 import '../ui/shot_widgets.dart';
@@ -22,6 +23,7 @@ class PlayerMatchData {
   final Map<String, PlayerMatchStats> lines;
   final Map<String, double> ratings;
   final List<int>? Function(String id) heatFor;
+  final List<PlayerAction> Function(String id) actionsFor;
   const PlayerMatchData({
     required this.home,
     required this.away,
@@ -33,7 +35,10 @@ class PlayerMatchData {
     required this.lines,
     required this.ratings,
     required this.heatFor,
+    this.actionsFor = _noActions,
   });
+
+  static List<PlayerAction> _noActions(String id) => const [];
 
   /// Players who took part, home side first.
   List<(Player, Club)> get participants => [
@@ -290,57 +295,183 @@ class _PlayerMatchScreenState extends State<PlayerMatchScreen> {
   Widget _content((Color, Color) colors) {
     final l = _line;
     if (l == null) return EmptyState(icon: Icons.bar_chart_rounded, text: tr('Bu o‘yinda maydonga tushmadi'));
-    String pct(int a, int b) => b == 0 ? '0%' : '${(a * 100 / b).round()}%';
     return switch (_tab) {
       0 => Column(children: [_overviewLeft(), const SizedBox(height: 10), _heatCard()]),
       1 => _rowsCard(playerStatRows(_player, l)),
-      2 => Column(
-        children: [
-          _rowsCard([
-            (tr('Gollar'), '${l.goals}'),
-            ('xG', l.xg.toStringAsFixed(2)),
-            (tr('Zarbalar (nishonga)'), '${l.shots} (${l.shotsOnTarget})'),
-            (tr('Boy berilgan katta imkoniyat'), '${l.bigChancesMissed}'),
-            (tr('Ofsaydlar'), '${l.offsides}'),
-          ]),
-          const SizedBox(height: 10),
-          AppCard(
-            child: ShotMapView(
-              shots: [for (final s in d.shots) if (s.playerId == _player.id) s],
-              home: d.home,
-              away: d.away,
-              homeColor: colors.$1,
-              awayColor: colors.$2,
-            ),
-          ),
-        ],
-      ),
-      3 => _rowsCard([
-        (tr('Aniq paslar'), '${l.passesCompleted}/${l.passes} (${pct(l.passesCompleted, l.passes)})'),
-        (tr('Kalit paslar'), '${l.keyPasses}'),
-        (tr('Assistlar'), '${l.assists}'),
-        ('xA', l.xa.toStringAsFixed(2)),
-        (tr('Yaratilgan katta imkoniyat'), '${l.bigChancesCreated}'),
-        (tr('Krosslar'), '${l.crosses}'),
-      ]),
-      4 => _rowsCard([
-        (tr('Driblinglar'), '${l.dribblesWon}/${l.dribbles} (${pct(l.dribblesWon, l.dribbles)})'),
-        (tr('To‘pga tegishlar'), '${l.touches}'),
-        (tr('To‘p yo‘qotish'), '${l.possessionLost}'),
-        (tr('Qoidabuzarlikka uchragan'), '${l.fouled}'),
-        (tr('Ishlab olingan penalti'), '${l.penaltiesWon}'),
-      ]),
-      _ => _rowsCard([
-        (tr('Olib qo‘yishlar'), '${l.tackles}'),
-        (tr('Pas kesishlar'), '${l.interceptions}'),
-        (tr('Tozalashlar'), '${l.clearances}'),
-        (tr('Bloklangan zarbalar'), '${l.blocks}'),
-        (tr('Aldab o‘tilgan'), '${l.dribbledPast}'),
-        (tr('Yakkakurash (yutgan/yutqazgan)'), '${l.duelsWon}/${l.duelsLost}'),
-        (tr('Qoidabuzarlik'), '${l.fouls}'),
-        if (_player.mainPosition.isGoalkeeper) (tr('Seyvlar'), '${l.saves}'),
-      ]),
+      2 => _shotsTab(l, colors),
+      3 => _passTab(l),
+      4 => _dribbleTab(l),
+      _ => _defenceTab(l),
     };
+  }
+
+  // ---- action tabs (maps and detailed statistics) ------------------------
+
+  int _passFilter = 0, _defFilter = 0, _dribFilter = 0;
+
+  Widget _chips(List<String> labels, int selected, void Function(int) onTap) => SingleChildScrollView(
+    scrollDirection: Axis.horizontal,
+    child: Row(
+      children: [
+        for (var i = 0; i < labels.length; i++)
+          Padding(
+            padding: const EdgeInsets.only(right: 6),
+            child: ChoiceChip(label: Text(labels[i]), selected: selected == i, onSelected: (_) => onTap(i)),
+          ),
+      ],
+    ),
+  );
+
+  Widget _mapCard(Widget chips, Widget map, bool hasData) => AppCard(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        chips,
+        const SizedBox(height: 10),
+        if (hasData) map else Text(tr('Bu o‘yin uchun harakat xaritasi saqlanmagan.'), style: AppText.caption),
+      ],
+    ),
+  );
+
+  String _ratio(int ok, int total) => total == 0 ? '0' : '$ok/$total (${(ok * 100 / total).round()}%)';
+
+  Widget _shotsTab(PlayerMatchStats l, (Color, Color) colors) {
+    final mine = [for (final s in d.shots) if (s.playerId == _player.id) s];
+    final xgot = mine.fold<double>(0, (a, s) => a + s.xgot);
+    final blocked = mine.where((s) => s.outcome == 'block').length;
+    return Column(
+      children: [
+        AppCard(
+          child: ShotMapView(
+            shots: mine,
+            home: d.home,
+            away: d.away,
+            homeColor: colors.$1,
+            awayColor: colors.$2,
+          ),
+        ),
+        const SizedBox(height: 10),
+        _rowsCard([
+          (tr('Gollar'), '${l.goals}'),
+          (tr('Kutilgan gollar (xG)'), l.xg.toStringAsFixed(2)),
+          ('xGOT', xgot.toStringAsFixed(2)),
+          (tr('Umumiy zarbalar'), '${l.shots}'),
+          (tr('Darvozaga aniq yo‘llangan zarbalar'), '${l.shotsOnTarget}'),
+          (tr('To‘silgan zarbalar'), '$blocked'),
+          (tr('Nishondan tashqari'), '${max(0, l.shots - l.shotsOnTarget - blocked)}'),
+          (tr('Boy berilgan xavfli vaziyatlar'), '${l.bigChancesMissed}'),
+          (tr('Ofsaydlar'), '${l.offsides}'),
+        ]),
+      ],
+    );
+  }
+
+  Widget _passTab(PlayerMatchStats l) {
+    final all = d.actionsFor(_player.id).where((a) => a.kind == ActionKind.pass || a.kind == ActionKind.cross).toList();
+    bool long(PlayerAction a) => a.meters >= 30;
+    final shown = switch (_passFilter) {
+      1 => [for (final a in all) if (a.ok) a],
+      2 => [for (final a in all) if (!a.ok) a],
+      3 => [for (final a in all) if (long(a)) a],
+      4 => [for (final a in all) if (a.kind == ActionKind.cross) a],
+      _ => all,
+    };
+    final passes = all.where((a) => a.kind == ActionKind.pass);
+    final oppHalf = passes.where((a) => a.from.dx > 0.5), ownHalf = passes.where((a) => a.from.dx <= 0.5);
+    final longs = passes.where(long), crosses = all.where((a) => a.kind == ActionKind.cross);
+    final forward = passes.where((a) => a.to.dx - a.from.dx > 0.04);
+    int okOf(Iterable<PlayerAction> it) => it.where((a) => a.ok).length;
+    return Column(
+      children: [
+        _mapCard(
+          _chips([tr('Barcha paslar'), tr('Aniq'), tr('Aniq emas'), tr('Uzun to‘plar'), tr('Krosslar')], _passFilter, (i) => setState(() => _passFilter = i)),
+          ActionMap(actions: shown),
+          all.isNotEmpty,
+        ),
+        const SizedBox(height: 10),
+        _rowsCard([
+          (tr('Gol paslar'), '${l.assists}'),
+          (tr('Kutilgan yordamlar (xA)'), l.xa.toStringAsFixed(2)),
+          (tr('Kalit paslar'), '${l.keyPasses}'),
+          (tr('Yaratilgan katta imkoniyat'), '${l.bigChancesCreated}'),
+          (tr('Aniq paslar'), _ratio(l.passesCompleted, l.passes)),
+          if (all.isNotEmpty) ...[
+            (tr('Raqib yarim maydonida paslar (aniq)'), _ratio(okOf(oppHalf), oppHalf.length)),
+            (tr('O‘z maydonida paslar (aniq)'), _ratio(okOf(ownHalf), ownHalf.length)),
+            (tr('Oldinga paslar (aniq)'), _ratio(okOf(forward), forward.length)),
+            (tr('Uzun to‘p uzatmalar (aniq)'), _ratio(okOf(longs), longs.length)),
+          ],
+          (tr('Krosslar'), all.isNotEmpty ? _ratio(okOf(crosses), crosses.length) : '${l.crosses}'),
+        ]),
+      ],
+    );
+  }
+
+  Widget _dribbleTab(PlayerMatchStats l) {
+    final all = d.actionsFor(_player.id).where((a) => a.kind == ActionKind.dribble).toList();
+    final shown = switch (_dribFilter) {
+      1 => [for (final a in all) if (a.ok) a],
+      2 => [for (final a in all) if (!a.ok) a],
+      _ => all,
+    };
+    return Column(
+      children: [
+        _mapCard(
+          _chips([tr('Barcha driblinglar'), tr('Muvaffaqiyatli'), tr('Muvaffaqiyatsiz')], _dribFilter, (i) => setState(() => _dribFilter = i)),
+          ActionMap(actions: shown),
+          all.isNotEmpty,
+        ),
+        const SizedBox(height: 10),
+        _rowsCard([
+          (tr('Driblinglar (muvaffaqiyatli)'), _ratio(l.dribblesWon, l.dribbles)),
+          (tr('To‘pga tegishlar'), '${l.touches}'),
+          (tr('To‘p yo‘qotildi'), '${l.possessionLost}'),
+          (tr('Fol qilindi'), '${l.fouled}'),
+          (tr('Ishlab olingan penalti'), '${l.penaltiesWon}'),
+          if (l.distanceM > 0) (tr('Yugurgan masofa'), '${(l.distanceM / 1000).toStringAsFixed(1)} km'),
+          if (l.minutes > 0 && l.distanceM > 0) (tr('Daqiqasiga masofa'), '${(l.distanceM / l.minutes).round()} m'),
+        ]),
+      ],
+    );
+  }
+
+  Widget _defenceTab(PlayerMatchStats l) {
+    const kinds = [null, ActionKind.tackle, ActionKind.interception, ActionKind.clearance, ActionKind.block, ActionKind.aerial];
+    final defensive = {ActionKind.tackle, ActionKind.interception, ActionKind.clearance, ActionKind.block, ActionKind.aerial};
+    final all = d.actionsFor(_player.id).where((a) => defensive.contains(a.kind)).toList();
+    final shown = [for (final a in all) if (kinds[_defFilter] == null || a.kind == kinds[_defFilter]) a];
+    final aerial = all.where((a) => a.kind == ActionKind.aerial);
+    final aerialWon = aerial.where((a) => a.ok).length;
+    final groundTotal = max(0, l.duelsWon + l.duelsLost - aerial.length);
+    final groundWon = max(0, l.duelsWon - aerialWon);
+    return Column(
+      children: [
+        _mapCard(
+          _chips(
+            [tr('Hammasi'), tr('Olib qo‘yishlar'), tr('To‘xtatib qolishlar'), tr('Tozalashlar'), tr('Bloklar'), tr('Havodagi duellar')],
+            _defFilter,
+            (i) => setState(() => _defFilter = i),
+          ),
+          ActionMap(actions: shown, arrows: false),
+          all.isNotEmpty,
+        ),
+        const SizedBox(height: 10),
+        _rowsCard([
+          (tr('Himoyaviy harakatlar'), '${l.tackles + l.interceptions + l.clearances + l.blocks}'),
+          (tr('Olib qo‘yishlar (yutilgan)'), '${l.tackles} (${l.tackles})'),
+          (tr('To‘xtatib qolishlar'), '${l.interceptions}'),
+          (tr('Tozalashlar'), '${l.clearances}'),
+          (tr('Bloklangan zarbalar'), '${l.blocks}'),
+          (tr('Tiklanishlar'), '${l.tackles + l.interceptions}'),
+          (tr('Yer duellari (yutilgan)'), all.isEmpty ? '${l.duelsWon + l.duelsLost} (${l.duelsWon})' : '$groundTotal ($groundWon)'),
+          if (all.isNotEmpty) (tr('Havodagi duellar (yutilgan)'), '${aerial.length} ($aerialWon)'),
+          (tr('Qo‘pol ishlashlar'), '${l.fouls}'),
+          (tr('Driblingdan o‘tishgan'), '${l.dribbledPast}'),
+          if (l.errorsLeadingToShot > 0) (tr('Zarbaga olib kelgan xatolar'), '${l.errorsLeadingToShot}'),
+          if (_player.mainPosition.isGoalkeeper) (tr('Seyvlar'), '${l.saves}'),
+        ]),
+      ],
+    );
   }
 
   Widget _overviewLeft() {

@@ -3986,6 +3986,7 @@ class GameState extends ChangeNotifier {
           shots: f.involves(_userClubId ?? ''),
           full: f.involves(_userClubId ?? ''),
           commentary: _recentUserFixtures.contains(f.id),
+          actions: _recentUserFixtures.contains(f.id),
         ),
     ],
     'ledger': [

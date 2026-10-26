@@ -569,4 +569,19 @@ void main() {
     expect(p.marketValue, 123400000);
     expect(p.face.beardStyle, 3);
   });
+
+  test('Player actions survive their compact encoding and a full match records them', () {
+    const a = PlayerAction(ActionKind.pass, Offset(0.2, 0.5), Offset(0.7, 0.1), false, 33);
+    final back = PlayerAction.decodeAll(a.encode() + a.encode()).first;
+    expect(back.kind, ActionKind.pass);
+    expect(back.ok, isFalse);
+    expect(back.minute, 33);
+    expect((back.to - a.to).distance, lessThan(0.01));
+    final clubs = game.allClubs;
+    final f = MatchField(clubs[0], clubs[1], seed: 3)..simulateToEnd();
+    expect(f.actions.values.fold<int>(0, (n, l) => n + l.length), greaterThan(100));
+    final km = f.lines.values.where((l) => l.minutes >= 85).map((l) => l.distanceM).fold<double>(0, (x, y) => x + y) /
+        f.lines.values.where((l) => l.minutes >= 85).length / 1000;
+    expect(km, inInclusiveRange(6, 14));
+  });
 }

@@ -134,6 +134,15 @@ class MatchField {
   final List<MatchEvent> events = [];
   final List<ShotRecord> shots = [];
   final Map<String, PlayerMatchStats> lines = {};
+
+  /// What each player did, for his action maps (own-side view).
+  final Map<String, List<PlayerAction>> actions = {};
+
+  void _act(Player p, ActionKind kind, Offset at, {Offset? to, bool ok = true}) {
+    final isHome = _homeXI.any((x) => x.id == p.id);
+    Offset v(Offset o) => isHome ? o : Offset(1 - o.dx, 1 - o.dy);
+    (actions[p.id] ??= []).add(PlayerAction(kind, v(at), v(to ?? at), ok, displayMinute.clamp(1, 99)));
+  }
   final List<double> momentum = [];
   final Map<String, int> injuries = {}; // id → rounds out
   late final List<String> homeStartIds, awayStartIds;
@@ -1023,6 +1032,8 @@ class MatchField {
         _line(carrier)
           ..possessionLost += 1
           ..duelsLost += 1;
+        _act(defender, ActionKind.tackle, ball);
+        _act(carrier, ActionKind.lost, ball, ok: false);
         _markError(carrier, homePossession, ball);
         _duelCooldown[carrier.id] = 0.9;
         _tackleClock = -0.5;
@@ -1205,6 +1216,11 @@ class MatchField {
         _att.completedPasses++;
         _line(p).passesCompleted += 1;
       }
+      var j = 1 + random.nextInt(10);
+      if (j == i) j = j % 10 + 1;
+      final mate = _points[j];
+      _act(p, ActionKind.pass, _points[i],
+          to: ok ? mate : _bound(mate + Offset((random.nextDouble() - 0.5) * 0.12, (random.nextDouble() - 0.5) * 0.2)), ok: ok);
     }
   }
 
@@ -1605,6 +1621,8 @@ class MatchField {
     final line = _line(carrier)
       ..dribbles += 1
       ..touches += 1;
+    _act(carrier, ActionKind.dribble, ball,
+        to: _bound(ball + Offset((homePossession ? 1 : -1) * (success ? 0.07 : 0.025), (random.nextDouble() - 0.5) * 0.05)), ok: success);
     if (success) {
       line
         ..dribblesWon += 1
@@ -1630,6 +1648,8 @@ class MatchField {
       _line(d)
         ..tackles += 1
         ..duelsWon += 1;
+      _act(d, ActionKind.tackle, ball);
+      _act(carrier, ActionKind.lost, ball, ok: false);
       _def.tackles++;
       _turnover(defenderIndex);
     }
@@ -1950,6 +1970,8 @@ class MatchField {
               ..interceptions += 1
               ..touches += 1;
             _line(flight.actor).possessionLost += 1;
+            _act(p, ActionKind.interception, ball);
+            _act(flight.actor, ActionKind.pass, flight.from, to: ball, ok: false);
             _markError(flight.actor, flight.home, ball);
             (homePossession ? homeStats : awayStats).interceptions++;
             if (random.nextDouble() < 0.12) {
@@ -1983,6 +2005,7 @@ class MatchField {
       final stats = flight.home ? homeStats : awayStats;
       stats.completedPasses++;
       _line(flight.actor).passesCompleted += 1;
+      _act(flight.actor, ActionKind.pass, flight.from, to: flight.to);
       _line(_xi(_club)[owner]).touches += 1;
       _lastPasser = flight.actor.id;
       _lastPassFrom = flight.from;
@@ -2000,6 +2023,7 @@ class MatchField {
     }
     // Misplaced pass: out of play → throw-in, otherwise a loose ball.
     _line(flight.actor).possessionLost += 1;
+    _act(flight.actor, ActionKind.pass, flight.from, to: flight.to, ok: false);
     if (!_inBounds(flight.to)) {
       final spot = _bound(flight.to);
       if (spot.dy <= 0.05 || spot.dy >= 0.95) {
@@ -2076,6 +2100,9 @@ class MatchField {
         // A packed, organised box at set pieces favours the defenders.
         (f.kind == _Kind.corner ? 9 : 0);
     if (!keeperClaims && atk > def) {
+      _act(f.actor, ActionKind.cross, f.from, to: f.to);
+      _act(attacker, ActionKind.aerial, f.to);
+      _act(defender, ActionKind.aerial, f.to, ok: false);
       homePossession = f.home;
       owner = f.receiver;
       _line(attacker)
@@ -2097,6 +2124,10 @@ class MatchField {
       phase = FieldPhase.openPlay;
       return;
     }
+    _act(f.actor, ActionKind.cross, f.from, to: f.to, ok: false);
+    _act(defender, ActionKind.clearance, f.to);
+    _act(defender, ActionKind.aerial, f.to);
+    _act(attacker, ActionKind.aerial, f.to, ok: false);
     _line(defender)
       ..clearances += 1
       ..duelsWon += 1;
@@ -2244,6 +2275,7 @@ class MatchField {
       stats.blocked++;
       if (f.blocker != null) {
         _line(f.blocker!).blocks += 1;
+        _act(f.blocker!, ActionKind.block, ball);
         if (random.nextDouble() < 0.4) {
           _emit(
             MatchEventType.shot,
@@ -2626,6 +2658,7 @@ class MatchField {
     }
     _line(defender).fouls += 1;
     _line(victim).fouled += 1;
+    _act(defender, ActionKind.foul, ball);
     final spot = ball;
     final progress = homePossession ? spot.dx : 1 - spot.dx;
     final inBox = progress > 0.843 && (spot.dy - 0.5).abs() < 0.296;
@@ -3153,9 +3186,15 @@ class MatchField {
         desired,
         min(1, dt * (2 + _st(p).acceleration / 18)),
       )!;
+      final before = points[i];
       points[i] = _bound(points[i] + velocity[i] * dt);
+      final step = points[i] - before;
+      // Pitch units to metres, scaled so a full match is about 10 km.
+      _line(p).distanceM += sqrt(step.dx * step.dx * 105 * 105 + step.dy * step.dy * 68 * 68) * _distanceScale;
     }
   }
+
+  static const _distanceScale = 6.5;
 
   /// How far each role wanders from its spot (along, across the pitch).
   static const _roamRange = <PlayingStyle, (double, double)>{
@@ -3474,6 +3513,10 @@ class MatchField {
     f.momentum = List.of(momentum);
     f.shots = List.of(shots);
     f.heat = {for (final e in heat.entries) e.key: encodeHeat(e.value)}..removeWhere((k, v) => v.isEmpty);
+    f.actions = {
+      for (final e in actions.entries)
+        e.key: [for (final a in e.value.length > 400 ? e.value.sublist(e.value.length - 400) : e.value) a.encode()].join(),
+    };
     f.motmId = manOfTheMatch;
     f.homeLineup = List.of(homeStartIds);
     f.awayLineup = List.of(awayStartIds);

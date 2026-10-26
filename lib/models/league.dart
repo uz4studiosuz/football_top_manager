@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import '../l10n/l10n.dart';
 
@@ -93,6 +94,44 @@ class MatchEvent {
 
 /// Per-player match line. The rating follows SofaScore conventions: a
 /// player starts near 6.3–6.5 and every action moves it up or down.
+/// One thing a player did on the pitch, for his action maps. Positions are
+/// from his own side's view (attacking to the right).
+enum ActionKind { pass, cross, tackle, interception, clearance, block, dribble, lost, foul, aerial }
+
+class PlayerAction {
+  final ActionKind kind;
+  final Offset from, to;
+  final bool ok;
+  final int minute;
+  const PlayerAction(this.kind, this.from, this.to, this.ok, this.minute);
+
+  /// Distance of a pass or carry in metres.
+  double get meters => sqrt(pow((to.dx - from.dx) * 105, 2) + pow((to.dy - from.dy) * 68, 2)).toDouble();
+
+  static String _d(double v) => (v * 99).round().clamp(0, 99).toString().padLeft(2, '0');
+  static double _u(String s) => int.parse(s) / 99;
+
+  /// Fixed-width text, 12 characters per action.
+  String encode() => '${kind.index}${ok ? 1 : 0}${_d(from.dx)}${_d(from.dy)}${_d(to.dx)}${_d(to.dy)}${minute.clamp(0, 99).toString().padLeft(2, '0')}';
+
+  static List<PlayerAction> decodeAll(String? text) {
+    if (text == null) return const [];
+    final out = <PlayerAction>[];
+    for (var i = 0; i + 12 <= text.length; i += 12) {
+      final k = int.tryParse(text[i]);
+      if (k == null || k >= ActionKind.values.length) continue;
+      out.add(PlayerAction(
+        ActionKind.values[k],
+        Offset(_u(text.substring(i + 2, i + 4)), _u(text.substring(i + 4, i + 6))),
+        Offset(_u(text.substring(i + 6, i + 8)), _u(text.substring(i + 8, i + 10))),
+        text[i + 1] == '1',
+        int.parse(text.substring(i + 10, i + 12)),
+      ));
+    }
+    return out;
+  }
+}
+
 class PlayerMatchStats {
   final String playerId;
   final bool started;
@@ -131,6 +170,9 @@ class PlayerMatchStats {
       bigChancesCreated = 0,
       dribbledPast = 0;
   double xg = 0, xa = 0;
+
+  /// Distance run, in metres.
+  double distanceM = 0;
   bool injured = false;
   int? subOnMinute, subOffMinute;
   PlayerMatchStats(this.playerId, {this.started = true});
@@ -336,6 +378,9 @@ class Fixture {
 
   /// Encoded player heatmaps (user's matches only; see ui/heatmap.dart).
   Map<String, String> heat = {};
+
+  /// Encoded [PlayerAction]s per player (the latest user matches only).
+  Map<String, String> actions = {};
   String? motmId;
   Fixture({
     required this.id,
