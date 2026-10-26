@@ -561,4 +561,12 @@ void main() {
     expect(cf, contains(PlayerInstruction.counterTarget));
     expect(cf, isNot(contains(PlayerInstruction.deepLine)));
   });
+
+  test('Editor edits of face, value and stats reach the running player', () {
+    final p = game.userClub.squad.first;
+    final after = {...p.toMap(), 'marketValue': 123400000, 'face': {...p.face.toMap(), 'beardStyle': 3}};
+    game.applyDatabaseEdits([('players', p.toMap(), after)]);
+    expect(p.marketValue, 123400000);
+    expect(p.face.beardStyle, 3);
+  });
 }

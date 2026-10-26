@@ -85,7 +85,24 @@ class GameState extends ChangeNotifier {
 
   /// Every club the user can trade with: the pyramid plus the countries the
   /// scouts have opened.
-  List<Club> get marketClubs => [...domesticClubs, ...world.clubs];
+  List<Club> get marketClubs => [...domesticClubs, ...extraClubs, ...world.clubs];
+
+  /// Clubs added in the database editor after the career began: not in the
+  /// league's fixtures, but they trade players like any other club.
+  final List<Club> extraClubs = [];
+
+  /// Brings editor-made clubs of this career's leagues into [extraClubs].
+  void _syncNewClubs() {
+    final known = {for (final c in marketClubs) c.id};
+    for (final l in InitialDatabase.pyramidOf(leagueId)) {
+      if (!InitialDatabase.isLoaded(l.id)) continue;
+      for (final c in InitialDatabase.getClubs(l.id)) {
+        if (known.contains(c.id) || c.id == _userClubId) continue;
+        autoPickLineup(c);
+        extraClubs.add(c);
+      }
+    }
+  }
 
   /// The rest of the football world (scouted countries as a market).
   final WorldMarket world = WorldMarket();
@@ -193,6 +210,7 @@ class GameState extends ChangeNotifier {
   Club? getClubById(String id) =>
       _allClubs.where((c) => c.id == id).firstOrNull ??
       divisions.values.map((d) => d.club(id)).nonNulls.firstOrNull ??
+      extraClubs.where((c) => c.id == id).firstOrNull ??
       world.club(id);
 
   Club? clubOfPlayer(Player p) =>
@@ -518,6 +536,8 @@ class GameState extends ChangeNotifier {
     deals.clear();
     transferListed.clear();
     freeAgents.clear();
+    extraClubs.clear();
+    _editorSquads.clear();
     seasonHistory.clear();
     balanceHistory.clear();
     lastTransferError = null;
@@ -813,6 +833,8 @@ class GameState extends ChangeNotifier {
         if (changed(before, after, 'weakFoot')) p.weakFoot = after['weakFoot'];
         if (changed(before, after, 'stats')) p.stats = PlayerStats.fromMap(Map<String, dynamic>.from(after['stats'] as Map));
         if (changed(before, after, 'potential')) p.potential = after['potential'];
+        if (changed(before, after, 'marketValue')) p.marketValue = after['marketValue'];
+        if (changed(before, after, 'weakFoot')) p.weakFoot = after['weakFoot'];
         if (changed(before, after, 'height')) p.height = after['height'];
         if (changed(before, after, 'traits')) p.traits = List<String>.from(after['traits'] ?? const []);
         if (changed(before, after, 'face')) {
@@ -824,11 +846,14 @@ class GameState extends ChangeNotifier {
       }
     }
     _syncEditedSquads(changes);
+    _syncNewClubs();
     notifyListeners();
   }
 
   /// Players added to, moved between or removed from clubs in the editor
   /// join, change or leave the running squads too.
+  final Map<String, String> _editorSquads = {};
+
   void _syncEditedSquads(List<(String, Map<String, dynamic>?, Map<String, dynamic>)> changes) {
     final fresh = <String, Player>{};
     for (final (kind, before, after) in changes) {
@@ -843,6 +868,9 @@ class GameState extends ChangeNotifier {
       if (c == null) continue;
       final ids = [for (final x in after['squadIds'] as List) '$x'];
       if (before != null && jsonEncode(before['squadIds']) == jsonEncode(ids)) continue;
+      // Saved before and unchanged since: later transfers in the career stay.
+      if (_editorSquads[c.id] == jsonEncode(ids)) continue;
+      _editorSquads[c.id] = jsonEncode(ids);
       c.squad.removeWhere((p) => !ids.contains(p.id));
       for (final id in ids) {
         if (c.playerById(id) != null) continue;
@@ -4164,6 +4192,10 @@ class GameState extends ChangeNotifier {
     lastTransferError = null;
     _isInitialized = true;
     if (!prepared && (world.countries.isNotEmpty || world.missions.isNotEmpty)) refreshWorld();
+    extraClubs.clear();
+    try {
+      _syncNewClubs();
+    } catch (_) {}
     notifyListeners();
     return true;
   }
