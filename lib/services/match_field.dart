@@ -2706,7 +2706,7 @@ class MatchField {
       );
     }
     // Contact injuries.
-    if (random.nextDouble() < 0.013) _injure(victim, homePossession);
+    if (random.nextDouble() < 0.008 + max(0, 55 - victim.currentStamina) * 0.0002) _injure(victim, homePossession);
     _lastPasser = null;
     if (inBox) {
       _line(defender).penaltiesConceded += 1;
@@ -2784,13 +2784,13 @@ class MatchField {
     _injuredOnPitch.add(p.id);
     _line(p).injured = true;
     final roll = random.nextDouble();
-    injuries[p.id] = roll < 0.5
+    injuries[p.id] = roll < 0.6
         ? 1
-        : roll < 0.8
+        : roll < 0.86
         ? 2
-        : roll < 0.94
+        : roll < 0.96
         ? 3
-        : 5;
+        : 4;
     p.currentStamina = max(20, p.currentStamina - 25);
     _emit(MatchEventType.injury, _talk.say('injury', p: p.shortName), isHome, p);
   }

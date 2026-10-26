@@ -1,3 +1,4 @@
+import '../app_info.dart';
 import 'onboarding_screen.dart';
 import '../ui/flag.dart';
 import 'package:flutter/material.dart';
@@ -221,6 +222,18 @@ class _ManagerProfileScreenState extends State<ManagerProfileScreen> {
               children: [
                 SectionHeader(tr('Til'), icon: Icons.language_rounded),
                 const SingleChildScrollView(scrollDirection: Axis.horizontal, child: LanguageSelector()),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          AppCard(
+            child: Row(
+              children: [
+                const Icon(Icons.info_outline_rounded, size: 18, color: AppColors.ink3),
+                const SizedBox(width: 8),
+                Expanded(child: Text(tr('Ilova versiyasi'), style: AppText.body, maxLines: 1, overflow: TextOverflow.ellipsis)),
+                const SizedBox(width: 8),
+                Text('v$appVersion ($appBuild)', style: AppText.bodyStrong),
               ],
             ),
           ),

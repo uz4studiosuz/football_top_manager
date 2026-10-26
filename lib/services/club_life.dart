@@ -164,7 +164,19 @@ class ClubLife {
 
   /// Weekly wage of a staff member at [level].
   static int staffWage(int level, double economy) =>
-      level == 0 ? 0 : ((3000 * pow(level, 1.6) * max(0.15, economy)) / 500).round() * 500;
+      level == 0 ? 0 : ((5000 * pow(level, 1.8) * max(0.15, economy)) / 500).round() * 500;
+
+  /// Club reputation needed for a staff member or building of [level]:
+  /// a small club cannot attract a five-star coach or fund an elite campus.
+  static int reputationNeeded(int level) => const [0, 0, 45, 58, 72, 84][level.clamp(0, 5)];
+
+  /// Days between two staff promotions: a backroom team is built over time.
+  static const staffCooldownDays = 28;
+  DateTime? lastStaffHire;
+
+  /// Weekly running costs of the buildings.
+  static int upkeep(Facility f, int level, double economy) =>
+      level == 0 ? 0 : ((25000 * pow(level, 1.5) * (f == Facility.stadium ? 2 : 1) * max(0.2, economy)) / 1000).round() * 1000;
   final Set<String> wantsOut = {};
   final Map<String, int> promises = {};
 
@@ -194,11 +206,12 @@ class ClubLife {
       Facility.training => 5000000 + currentLevel * 4000000,
       Facility.academy => 5000000 + currentLevel * 3500000,
     };
-    return ((base * max(0.25, economy)) / 100000).round() * 100000;
+    // Each stage costs more than the last on top of the base price.
+    return ((base * 1.5 * (1 + currentLevel * 0.45) * max(0.25, economy)) / 100000).round() * 100000;
   }
 
   /// Rounds a construction takes.
-  static int buildRounds(Facility f) => f == Facility.stadium ? 6 : 3;
+  static int buildRounds(Facility f, [int currentLevel = 0]) => (f == Facility.stadium ? 6 : 3) + currentLevel * 2;
 
   /// Seats added by the next stadium stage.
   static int seatsAdded(int capacity) => min(80000 - capacity, max(4000, (capacity * 0.18).round()));
@@ -445,6 +458,7 @@ class ClubLife {
     'in': lastIntake,
     'br': benchRounds,
     'sf': {for (final e in staff.entries) e.key.name: e.value},
+    if (lastStaffHire != null) 'sh': lastStaffHire!.millisecondsSinceEpoch,
     'ln': loans,
     'so': sponsorOffers,
     if (sponsor != null) 'sp': sponsor,
@@ -486,6 +500,7 @@ class ClubLife {
     sponsor = m['sp'] == null ? null : Map<String, dynamic>.from(m['sp']);
     jobOffers.addAll(List<String>.from(m['jo'] ?? const []));
     sacked = m['sk'] == true;
+    lastStaffHire = m['sh'] == null ? null : DateTime.fromMillisecondsSinceEpoch(m['sh'] as int);
     final roles = StaffRole.values.asNameMap();
     (m['sf'] as Map? ?? {}).forEach((k, v) {
       if (roles[k] != null) staff[roles[k]!] = v as int;

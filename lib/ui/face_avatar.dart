@@ -99,6 +99,8 @@ class FacePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     canvas.save();
     canvas.scale(size.width / 100, size.height / 100);
+    // Fine detail (stubble) vanishes in small avatars: draw it bolder there.
+    _small = size.width < 70 ? (70 - size.width) / 40 : 0;
     final skin = skins[c.skin.clamp(0, skins.length - 1)];
     final hair = hairs[c.hair.clamp(0, hairs.length - 1)];
     final g = _geo[c.shape.clamp(0, _geo.length - 1)];
@@ -469,6 +471,7 @@ class FacePainter extends CustomPainter {
     );
   }
 
+  double _small = 0;
   static const _moustacheStyles = {2, 3, 4, 5, 7};
 
   Color _beardColor(Color hair) =>
@@ -519,7 +522,7 @@ class FacePainter extends CustomPainter {
     canvas.drawPath(
       area,
       Paint()
-        ..color = color.withValues(alpha: 0.17)
+        ..color = color.withValues(alpha: 0.17 + _small * 0.3)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 0.9),
     );
     canvas.drawOval(
@@ -530,13 +533,13 @@ class FacePainter extends CustomPainter {
     );
     canvas.save();
     canvas.clipPath(area);
-    final dot = Paint()..color = color.withValues(alpha: 0.32);
+    final dot = Paint()..color = color.withValues(alpha: (0.32 + _small * 0.4).clamp(0.0, 0.85));
     final rnd = Random(c.skin * 31 + c.shape);
     final box = area.getBounds();
     for (var i = 0; i < 150; i++) {
       canvas.drawCircle(
         Offset(box.left + rnd.nextDouble() * box.width, box.top + rnd.nextDouble() * box.height),
-        0.24,
+        0.24 + _small * 0.3,
         dot,
       );
     }

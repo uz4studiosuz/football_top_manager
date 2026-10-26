@@ -14,15 +14,17 @@ void main() {
     final budget = club.transferBudget;
     final capacity = club.stadiumCapacity;
     expect(game.upgradeFacility(Facility.stadium), isNull);
-    expect(game.upgradeFacility(Facility.medical), isNull);
     expect(club.transferBudget, lessThan(budget));
-    expect(game.upgradeFacility(Facility.medical), isNotNull, reason: 'already building');
+    expect(game.upgradeFacility(Facility.stadium), isNotNull, reason: 'already building');
+    expect(game.upgradeFacility(Facility.medical), isNotNull, reason: 'one construction at a time');
     final trainee = club.squad.firstWhere((p) => !p.mainPosition.isGoalkeeper && p.age <= 23, orElse: () => club.squad[5]);
     final before = trainee.stats.finishing;
     game.setTrainingTarget(trainee, 'finishing');
     game.setTrainingFocus(TrainingFocus.attacking);
 
     for (var round = 1; round <= 14; round++) {
+      // The stadium is done after 6 rounds; only then the next building starts.
+      if (round == 8) expect(game.upgradeFacility(Facility.medical), isNull);
       final f = game.nextUserFixture!;
       game.simulateUserFixture(f);
       if (round < 14) game.nextRound();

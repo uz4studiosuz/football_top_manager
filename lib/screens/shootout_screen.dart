@@ -6,8 +6,9 @@ import '../services/cup.dart';
 import '../ui/widgets.dart';
 import '../l10n/l10n.dart';
 
-/// Interactive penalty shootout. On the manager's kicks he picks the corner;
-/// on the opponent's he picks where the keeper dives. Returns (home, away).
+/// Penalty shootout played out by the players themselves: each taker walks
+/// up, picks his corner by skill and the keeper guesses a dive, one kick
+/// after another in a 2D goal view. Returns (home, away).
 class ShootoutScreen extends StatefulWidget {
   final Club home, away;
   final bool userHome;
@@ -36,9 +37,26 @@ class _ShootoutScreenState extends State<ShootoutScreen> {
   String? _banner;
   Alignment _ball = const Alignment(0, 0.88);
   Alignment _keeper = const Alignment(0, 0.02);
+  Alignment _kicker = const Alignment(-0.55, 1.0);
+  bool _fast = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _run());
+  }
+
+  /// Every kick in turn, after a short pause so the score can be read.
+  Future<void> _run() async {
+    await Future<void>.delayed(const Duration(milliseconds: 900));
+    while (mounted && !_done) {
+      await _kick();
+      if (!mounted) return;
+    }
+  }
 
   bool get _done => PenaltyModel.decided(_home, _away);
-  bool get _userKicks => _homeTurn == widget.userHome;
+  Club get _kickingClub => _homeTurn ? widget.home : widget.away;
   Player get _taker {
     final list = _homeTurn ? widget.homeTakers : widget.awayTakers;
     return list[(_homeTurn ? _home.length : _away.length) % list.length];
@@ -48,15 +66,25 @@ class _ShootoutScreenState extends State<ShootoutScreen> {
 
   static Alignment _zoneAlign(Zone z) => Alignment(-0.62 + z.col * 0.62, z.row == 1 ? -0.5 : 0.1);
 
-  /// Plays one kick; [userZone] is the corner (own kick) or dive (opponent's).
-  Future<void> _kick(Zone userZone) async {
+  Duration _t(int ms) => Duration(milliseconds: _fast ? ms ~/ 4 : ms);
+
+  /// Plays one kick: the taker's run-up, the strike, the keeper's dive.
+  Future<void> _kick() async {
     if (_busy || _done) return;
     final taker = _taker;
-    final shot = _userKicks ? userZone : PenaltyModel.aim(taker, _rnd);
-    final dive = _userKicks ? PenaltyModel.dive(_rnd) : userZone;
+    final shot = PenaltyModel.aim(taker, _rnd);
+    final dive = PenaltyModel.dive(_rnd);
     final result = PenaltyModel.kick(taker, _keeperNow, shot, dive, _rnd);
     setState(() {
       _busy = true;
+      _kicker = const Alignment(-0.55, 1.0);
+    });
+    await Future<void>.delayed(_t(700));
+    if (!mounted) return;
+    setState(() => _kicker = const Alignment(-0.12, 0.93));
+    await Future<void>.delayed(_t(520));
+    if (!mounted) return;
+    setState(() {
       _keeper = Alignment(_zoneAlign(dive).x * 0.9, _zoneAlign(dive).y + 0.05);
       _ball = result == 'miss'
           ? Alignment(shot.col == 1 ? 0.15 : (shot.col == 0 ? -0.98 : 0.98), shot.row == 1 ? -0.98 : 0.0)
@@ -64,8 +92,8 @@ class _ShootoutScreenState extends State<ShootoutScreen> {
           ? Alignment(_zoneAlign(dive).x * 0.9, _zoneAlign(dive).y + 0.25)
           : _zoneAlign(shot);
     });
-    await Future<void>.delayed(const Duration(milliseconds: 650));
-    if (!mounted) return;
+    await Future<void>.delayed(_t(900));
+    if (!mounted || _done) return;
     setState(() {
       (_homeTurn ? _home : _away).add(result == 'goal');
       _banner = switch (result) {
@@ -74,7 +102,7 @@ class _ShootoutScreenState extends State<ShootoutScreen> {
         _ => trf('{0} darvozadan tashqariga tepdi', [taker.shortName]),
       };
     });
-    await Future<void>.delayed(const Duration(milliseconds: 900));
+    await Future<void>.delayed(_t(1300));
     if (!mounted) return;
     setState(() {
       _banner = null;
@@ -85,8 +113,9 @@ class _ShootoutScreenState extends State<ShootoutScreen> {
     });
   }
 
-  /// Plays every remaining kick automatically.
-  void _auto() {
+  /// Plays every remaining kick at once.
+  void _skip() {
+    _fast = true;
     setState(() {
       while (!_done) {
         final taker = _taker;
@@ -110,7 +139,13 @@ class _ShootoutScreenState extends State<ShootoutScreen> {
           foregroundColor: Colors.white,
           title: Text(tr('Penaltilar seriyasi'), style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 18)),
           actions: [
-            if (!_done) TextButton(onPressed: _busy ? null : _auto, child: Text(tr('Avto'), style: const TextStyle(color: Colors.white))),
+            if (!_done)
+              TextButton(
+                onPressed: () => setState(() => _fast = true),
+                child: Text(tr('Tezlashtirish'), style: const TextStyle(color: Colors.white)),
+              ),
+            if (!_done)
+              TextButton(onPressed: _skip, child: Text(tr('Natijaga o‘tish'), style: const TextStyle(color: Colors.white))),
           ],
         ),
         body: SafeArea(
@@ -124,9 +159,7 @@ class _ShootoutScreenState extends State<ShootoutScreen> {
                   Text(
                     _done
                         ? trf('{0} penaltilarda g‘alaba qozondi!', [(winnerHome ? widget.home : widget.away).name])
-                        : _userKicks
-                        ? trf('Zarba: {0}. Burchakni tanlang', [_taker.shortName])
-                        : trf('Raqib zarbasi: {0}. Darvozabon qayerga sakraydi?', [_taker.shortName]),
+                        : trf('{0} zarba beradi: {1}', [_kickingClub.shortName, _taker.shortName]),
                     textAlign: TextAlign.center,
                     style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700),
                   ),
@@ -149,9 +182,7 @@ class _ShootoutScreenState extends State<ShootoutScreen> {
                             ),
                           )
                         : Text(
-                            _userKicks
-                                ? trf('Darvozabon: {0}', [_keeperNow.shortName])
-                                : trf('Bizning darvozabon: {0}', [_keeperNow.shortName]),
+                            trf('Darvozabon: {0}', [_keeperNow.shortName]),
                             style: const TextStyle(color: Colors.white70),
                           ),
                   ),
@@ -218,45 +249,12 @@ class _ShootoutScreenState extends State<ShootoutScreen> {
           alignment: _ball,
           child: Icon(Icons.sports_soccer, color: Colors.white, size: box.maxWidth * 0.07),
         ),
-        // Tap a zone: own kick = where to shoot, opponent's = where to dive.
-        if (!_busy && !_done)
-          Positioned(
-            left: box.maxWidth * 0.1,
-            right: box.maxWidth * 0.1,
-            top: box.maxHeight * 0.12,
-            height: box.maxHeight * 0.55,
-            child: Column(
-              children: [
-                for (final row in [1, 0])
-                  Expanded(
-                    child: Row(
-                      children: [
-                        for (final col in [0, 1, 2])
-                          Expanded(
-                            child: Padding(
-                              padding: const EdgeInsets.all(3),
-                              child: Material(
-                                color: Colors.white.withValues(alpha: 0.08),
-                                borderRadius: BorderRadius.circular(8),
-                                child: InkWell(
-                                  borderRadius: BorderRadius.circular(8),
-                                  onTap: () => _kick((col: col, row: row)),
-                                  child: Center(
-                                    child: Icon(
-                                      _userKicks ? Icons.adjust_rounded : Icons.back_hand_outlined,
-                                      color: Colors.white38,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-          ),
+        AnimatedAlign(
+          duration: _t(520),
+          curve: Curves.easeIn,
+          alignment: _kicker,
+          child: _KickerFigure(color: _kickingClub.primaryColor, number: _taker.number, width: box.maxWidth * 0.07),
+        ),
         if (_banner != null)
           Align(
             alignment: const Alignment(0, -0.9),
@@ -268,6 +266,25 @@ class _ShootoutScreenState extends State<ShootoutScreen> {
           ),
       ],
     ),
+  );
+}
+
+class _KickerFigure extends StatelessWidget {
+  final Color color;
+  final int number;
+  final double width;
+  const _KickerFigure({required this.color, required this.number, required this.width});
+  @override
+  Widget build(BuildContext context) => Container(
+    width: width * 1.5,
+    height: width * 1.5,
+    alignment: Alignment.center,
+    decoration: BoxDecoration(
+      color: color,
+      shape: BoxShape.circle,
+      border: Border.all(color: Colors.white, width: 2),
+    ),
+    child: Text('$number', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: width * 0.62)),
   );
 }
 

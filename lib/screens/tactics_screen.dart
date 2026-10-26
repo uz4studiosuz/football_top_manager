@@ -171,7 +171,10 @@ class _TacticsScreenState extends State<TacticsScreen> {
                     isExpanded: true,
                     decoration: InputDecoration(labelText: tr('Individual ko‘rsatma')),
                     items: [
-                      for (final role in PlayerInstruction.values)
+                      for (final role in PlayerInstruction.forPosition(
+                        club.startingLineupIds.contains(p.id) ? club.slotPosition(club.startingLineupIds.indexOf(p.id)) : p.mainPosition,
+                        keep: p.instruction,
+                      ))
                         DropdownMenuItem(value: role, child: Text(role.label)),
                     ],
                     onChanged: (v) {
@@ -368,8 +371,8 @@ class _TacticsScreenState extends State<TacticsScreen> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        // Wide screens show every formation; phones scroll one row
-                        // (touch or mouse drag).
+                        // One scrolling row of formations (touch or mouse drag): there are
+                        // too many to show them all at once.
                         Builder(
                           builder: (context) {
                             final chips = [
@@ -381,8 +384,7 @@ class _TacticsScreenState extends State<TacticsScreen> {
                                   onSelected: (_) => game.updateTactics(t.copyWith(formation: f)),
                                 ),
                             ];
-                            if (box.maxWidth >= 700) return Wrap(spacing: 8, runSpacing: 8, children: chips);
-                            return SingleChildScrollView(
+                                            return SingleChildScrollView(
                               scrollDirection: Axis.horizontal,
                               child: Row(
                                 children: [

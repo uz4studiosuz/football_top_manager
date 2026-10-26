@@ -190,7 +190,7 @@ class _Facilities extends StatelessWidget {
                             ? trf('Qurilmoqda · {0} kuni tayyor', [GameState().roundDate(life.building[f]!)])
                             : life.level(f) >= Facility.maxLevel
                             ? tr('Eng yuqori daraja')
-                            : trf('Keyingi bosqich: {0}', [formatMoney(game.facilityCost(f))]),
+                            : trf('Keyingi bosqich: {0} · {1} tur · obro‘ {2}+', [formatMoney(game.facilityCost(f)), ClubLife.buildRounds(f, life.level(f)), ClubLife.reputationNeeded(life.level(f) + 1)]),
                         style: AppText.caption.copyWith(fontWeight: FontWeight.w600),
                       ),
                     ),
@@ -782,7 +782,7 @@ class _Staff extends StatelessWidget {
                           final error = game.setStaff(r, life.staffLevel(r) + 1);
                           if (error != null) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
                         },
-                        child: Text(trf('{0}-daraja · {1}/hafta', [life.staffLevel(r) + 1, formatMoney(game.staffWage(r, life.staffLevel(r) + 1))])),
+                        child: Text(trf('{0}-daraja · {1}/hafta · bonus {2}', [life.staffLevel(r) + 1, formatMoney(game.staffWage(r, life.staffLevel(r) + 1)), formatMoney(game.staffWage(r, life.staffLevel(r) + 1) * 12)])),
                       ),
                   ],
                 ),
@@ -1013,6 +1013,47 @@ class ScoutsView extends StatelessWidget {
             ],
           ),
         ),
+        // What the scouts have brought back: individual reports and the
+        // youngsters found on search trips.
+        Builder(builder: (context) {
+          final found = [
+            for (final id in life.scouted.toList().reversed)
+              if (game.findPlayerById(id) case final p?)
+                if (!game.userClub.squad.contains(p)) p,
+          ].take(15).toList();
+          if (found.isEmpty) return const SizedBox.shrink();
+          return Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: AppCard(
+              padding: const EdgeInsets.fromLTRB(0, 12, 0, 6),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: SectionHeader(tr('Skaut natijalari'), icon: Icons.fact_check_outlined),
+                  ),
+                  for (final p in found)
+                    ListTile(
+                      dense: true,
+                      leading: FaceAvatar(config: p.face, size: 36, circle: true),
+                      title: Text(p.name, style: AppText.bodyStrong),
+                      subtitle: Text(
+                        trf('{0} · {1} yosh · OVR {2} · salohiyat {3}', [
+                          game.clubOfPlayer(p)?.shortName ?? tr('Erkin agent'),
+                          p.age,
+                          p.ovr,
+                          p.potential,
+                        ]),
+                        style: AppText.caption,
+                      ),
+                      onTap: () => PlayerDetailView.show(context, player: p, club: game.clubOfPlayer(p)),
+                    ),
+                ],
+              ),
+            ),
+          );
+        }),
       ],
     );
   }

@@ -75,7 +75,7 @@ class PlayerHeatmap extends StatelessWidget {
       }
     }
     const radius = 5;
-    final kernel = [for (var i = -radius; i <= radius; i++) exp(-(i * i) / (2 * 2.6 * 2.6))];
+    final kernel = [for (var i = -radius; i <= radius; i++) exp(-(i * i) / (2 * 2.2 * 2.2))];
     final ksum = kernel.reduce((a, b) => a + b);
     List<double> pass(List<double> src, bool horizontal) {
       final out = List<double>.filled(w * h, 0);
@@ -94,9 +94,11 @@ class PlayerHeatmap extends StatelessWidget {
     }
 
     final blurred = pass(pass(raw, true), false);
-    final top = blurred.fold<double>(0, max);
-    // A soft curve so lighter zones of activity stay visible next to the hot spot.
-    return top == 0 ? blurred : [for (final v in blurred) pow(v / top, 0.55).toDouble()];
+    // Scaled against what a real match produces (a full game puts roughly
+    // 15+ samples in a busy cell), not against the player's own hottest
+    // cell: a short spell then stays pale instead of glowing red.
+    final top = max(blurred.fold<double>(0, max), 14.0);
+    return [for (final v in blurred) pow(v / top, 0.75).toDouble()];
   }
 }
 
