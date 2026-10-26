@@ -196,6 +196,7 @@ abstract final class SaveCodec {
     'v': _lineValues(l),
     'xg': double.parse(l.xg.toStringAsFixed(3)),
     'xa': double.parse(l.xa.toStringAsFixed(3)),
+    if (l.distanceM > 0) 'dm': l.distanceM.round(),
     if (l.injured) 'inj': true,
     if (l.subOnMinute != null) 'on': l.subOnMinute,
     if (l.subOffMinute != null) 'off': l.subOffMinute,
@@ -206,6 +207,7 @@ abstract final class SaveCodec {
       ..minutes = (m['mn'] as num).toDouble()
       ..xg = (m['xg'] as num? ?? 0).toDouble()
       ..xa = (m['xa'] as num? ?? 0).toDouble()
+      ..distanceM = (m['dm'] as num? ?? 0).toDouble()
       ..injured = m['inj'] == true
       ..subOnMinute = m['on']
       ..subOffMinute = m['off'];
@@ -256,7 +258,7 @@ abstract final class SaveCodec {
   /// incidents, ratings and a mini line per player (minutes, goals,
   /// assists, cards) so tables, histories and reports still work.
   /// [commentary] also keeps the play-by-play text.
-  static Map<String, dynamic> fixture(Fixture f, {bool shots = true, bool full = true, bool commentary = true}) => {
+  static Map<String, dynamic> fixture(Fixture f, {bool shots = true, bool full = true, bool commentary = true, bool actions = false}) => {
     'id': f.id,
     'r': f.round,
     'h': f.homeClubId,
@@ -300,6 +302,7 @@ abstract final class SaveCodec {
       },
       if (shots && f.shots.isNotEmpty) 'sh': f.shots.map((s) => s.toMap()).toList(),
       if (full && f.heat.isNotEmpty) 'hm': f.heat,
+      if (actions && f.actions.isNotEmpty) 'ac': f.actions,
       if (f.motmId != null) 'motm': f.motmId,
     },
   };
@@ -374,6 +377,7 @@ abstract final class SaveCodec {
     f.motmId = m['motm'];
     f.shots = [for (final s in (m['sh'] as List? ?? [])) ShotRecord.fromMap(Map<String, dynamic>.from(s))];
     f.heat = Map<String, String>.from(m['hm'] ?? {});
+    f.actions = Map<String, String>.from(m['ac'] ?? {});
     return f;
   }
 

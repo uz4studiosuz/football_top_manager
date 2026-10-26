@@ -284,6 +284,7 @@ class _MatchReportScreenState extends State<MatchReportScreen> {
           lines: f.playerStats,
           ratings: f.ratings,
           heatFor: (id) => decodeHeat(f.heat[id]),
+          actionsFor: (id) => PlayerAction.decodeAll(f.actions[id]),
         ),
         p,
         club,

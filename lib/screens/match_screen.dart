@@ -850,6 +850,7 @@ class _MatchScreenState extends State<MatchScreen> {
         lines: Map.of(_field.lines),
         ratings: {for (final id in _field.lines.keys) id: ?_field.ratingFor(id)},
         heatFor: (id) => _field.heat[id],
+        actionsFor: (id) => _field.actions[id] ?? const [],
       ),
       p,
       club,
