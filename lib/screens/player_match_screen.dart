@@ -69,19 +69,21 @@ class PlayerMatchScreen extends StatefulWidget {
 class _PlayerMatchScreenState extends State<PlayerMatchScreen> {
   late Player _player = widget.player;
   late Club _club = widget.club;
-  int _tab = 0;
+  late int _tab = widget.player.mainPosition.isGoalkeeper ? 6 : 0;
+  int? _keeperShot;
   int _moment = 0;
 
   PlayerMatchData get d => widget.data;
   PlayerMatchStats? get _line => d.lines[_player.id];
 
-  static List<String> get _tabs => [
+  List<String> get _tabs => [
     tr('Umumiy'),
     tr('Statistika'),
     tr('Zarbalar'),
     tr('Paslar'),
     tr('Dribling'),
     tr('Himoya'),
+    if (_player.mainPosition.isGoalkeeper) tr('Darvozabon'),
   ];
 
   /// The player's key moments in time order.
@@ -130,10 +132,13 @@ class _PlayerMatchScreenState extends State<PlayerMatchScreen> {
     _player = p;
     _club = c;
     _moment = 0;
+  _keeperShot = null;
+    if (_tab == 6 && !p.mainPosition.isGoalkeeper) _tab = 0;
   });
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final colors = teamColors(d.home, d.away);
     final wide = MediaQuery.sizeOf(context).width >= 900;
     final moments = _moments;
@@ -279,7 +284,7 @@ class _PlayerMatchScreenState extends State<PlayerMatchScreen> {
     scrollDirection: Axis.horizontal,
     child: Row(
       children: [
-        for (var i = 0; i < _tabs.length; i++)
+        for (final i in [if (_player.mainPosition.isGoalkeeper) 6, 0, 1, 2, 3, 4, 5])
           Padding(
             padding: const EdgeInsets.only(right: 6),
             child: ChoiceChip(
@@ -301,7 +306,8 @@ class _PlayerMatchScreenState extends State<PlayerMatchScreen> {
       2 => _shotsTab(l, colors),
       3 => _passTab(l),
       4 => _dribbleTab(l),
-      _ => _defenceTab(l),
+      5 => _defenceTab(l),
+      _ => _keeperTab(l, colors),
     };
   }
 
@@ -430,6 +436,107 @@ class _PlayerMatchScreenState extends State<PlayerMatchScreen> {
           (tr('Ishlab olingan penalti'), '${l.penaltiesWon}'),
           if (l.distanceM > 0) (tr('Yugurgan masofa'), '${(l.distanceM / 1000).toStringAsFixed(1)} km'),
           if (l.minutes > 0 && l.distanceM > 0) (tr('Daqiqasiga masofa'), '${(l.distanceM / l.minutes).round()} m'),
+        ]),
+      ],
+    );
+  }
+
+  Widget _keeperTab(PlayerMatchStats l, (Color, Color) colors) {
+    final keeperHome = _club.id == d.home.id;
+    // Shots he faced on target: saved or scored.
+    final faced = [
+      for (final s in d.shots)
+        if (s.home != keeperHome &&
+            s.onTarget &&
+            s.minute >= (l.subOnMinute ?? 0) &&
+            s.minute <= (l.subOffMinute ?? 130))
+          s,
+    ];
+    final selected = _keeperShot != null && _keeperShot! < faced.length ? faced[_keeperShot!] : null;
+    final xgot = faced.fold<double>(0, (a, s) => a + s.xgot);
+    final insideBox = faced
+        .where(
+          (s) =>
+              s.outcome == 'save' &&
+              (s.home ? 1 - s.origin.dx : s.origin.dx) * 105 <= 16.5 &&
+              (s.origin.dy - 0.5).abs() * 68 <= 20.16,
+        )
+        .length;
+    final acts = d.actionsFor(_player.id);
+    final claims = acts.where((a) => a.kind == ActionKind.claim).length;
+    final punches = acts.where((a) => a.kind == ActionKind.punch).length;
+    final sweeps = acts.where((a) => a.kind == ActionKind.sweep).toList();
+    final successfulSweeps = sweeps.where((a) => a.ok).length;
+    return Column(
+      children: [
+        AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(tr('Darvozaga yo‘llangan zarbalar'), style: AppText.h3),
+              const SizedBox(height: 10),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    ChoiceChip(
+                      label: Text(tr('Barcha')),
+                      selected: selected == null,
+                      onSelected: (_) => setState(() => _keeperShot = null),
+                    ),
+                    for (var i = 0; i < faced.length; i++)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 6),
+                        child: ChoiceChip(
+                          avatar: Icon(faced[i].goal ? Icons.sports_soccer : Icons.back_hand_outlined, size: 16),
+                          label: Text("${faced[i].minute}'"),
+                          selected: _keeperShot == i,
+                          onSelected: (_) => setState(() => _keeperShot = i),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              if (selected != null) ...[
+                const SizedBox(height: 10),
+                SizedBox(
+                  height: 125,
+                  width: double.infinity,
+                  child: CustomPaint(
+                    painter: GoalMouthPainter(selected, selected.goal ? AppColors.live : AppColors.win),
+                  ),
+                ),
+                Text(
+                  'xGOT ${selected.xgot.toStringAsFixed(2)} · ${selected.goal ? tr('Gol') : tr('Seyv')} · '
+                  '${(selected.home ? d.home : d.away).playerById(selected.playerId)?.shortName ?? "—"}',
+                  style: AppText.small,
+                ),
+              ],
+              const SizedBox(height: 10),
+              ShotMapView(
+                shots: selected == null ? faced : [selected],
+                home: d.home,
+                away: d.away,
+                homeColor: colors.$1,
+                awayColor: colors.$2,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 10),
+        _rowsCard([
+          (tr('Jami saqlanganlar'), '${l.saves}'),
+          (tr('O‘tkazilgan gollar'), '${l.goalsConceded}'),
+          (tr('To‘siq qilingan gollar'), (xgot - l.goalsConceded).toStringAsFixed(2)),
+          ('xGOT', xgot.toStringAsFixed(2)),
+          (tr('Jarima maydonchasi ichidan seyvlar'), '$insideBox'),
+          if (l.penaltiesSaved > 0) (tr('Qaytarilgan penalti'), '${l.penaltiesSaved}'),
+          ...[
+            (tr('Urinishlar'), '$punches'),
+            (tr('Chiqishlar (muvaffaqiyatli)'), '${sweeps.length} ($successfulSweeps)'),
+            (tr('Havodagi egallash'), '$claims'),
+          ],
+          (tr('Aniq paslar'), _ratio(l.passesCompleted, l.passes)),
         ]),
       ],
     );
@@ -594,7 +701,7 @@ class _PlayerMatchScreenState extends State<PlayerMatchScreen> {
     final people = d.participants;
     return Container(
       height: 64,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border(top: BorderSide(color: AppColors.line)),
       ),

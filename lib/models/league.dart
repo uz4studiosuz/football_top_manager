@@ -96,7 +96,11 @@ class MatchEvent {
 /// player starts near 6.3–6.5 and every action moves it up or down.
 /// One thing a player did on the pitch, for his action maps. Positions are
 /// from his own side's view (attacking to the right).
-enum ActionKind { pass, cross, tackle, interception, clearance, block, dribble, lost, foul, aerial }
+enum ActionKind { pass, cross, tackle, interception, clearance, block, dribble, lost, foul, aerial ,
+  claim,
+  punch,
+  sweep,
+}
 
 class PlayerAction {
   final ActionKind kind;

@@ -2,6 +2,26 @@
 
 A Flutter football management game with an eight-club, 14-round career.
 
+## Version 1.3.0
+
+- Goalkeepers open on their own match tab: saves, goals conceded, xGOT,
+  goals prevented, saves inside the penalty area, high claims, punches and
+  runs out. Select a shot minute to inspect its goal-frame location and result.
+- Ground passes and crosses travel more slowly. Misplaced passes and spilled
+  saves roll freely and slow down; possession changes only when a player
+  reaches the ball. Carriers take touches and sidestep defenders after a
+  successful dribble. The 1x match clock is unchanged.
+- Match-day condition runs from A to E (C is most common), changes each
+  match week, affects technical and goalkeeper execution, and survives saving.
+  Natural attributes and OVR stay stable. The lineup button cycles through
+  Rating (default), Condition and positional OVR; live lineups use live ratings.
+- Switch the whole game's appearance from the manager profile. Dark mode
+  is saved on Android and web, independently of the career.
+
+Build Android with `flutter build apk --release`; the APK is generated at
+`build/app/outputs/flutter-apk/app-release.apk`. Web release files are in
+`build/web` (use the command below to bundle CanvasKit locally).
+
 ## Run
 
 ```sh

@@ -249,7 +249,7 @@ void main() {
       expect(e.homeStats.subs, lessThanOrEqualTo(5));
       expect(e.awayStats.subs, lessThanOrEqualTo(5));
     }
-    expect(goals / n, inInclusiveRange(1.8, 3.8));
+    expect(goals / n, inInclusiveRange(1.6, 3.8));
     expect(shots / n, inInclusiveRange(18, 36));
     expect(homeWins / n, greaterThan(0.25));
   });

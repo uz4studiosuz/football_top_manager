@@ -46,7 +46,7 @@ class _ReplayViewState extends State<_ReplayView> with SingleTickerProviderState
       children: [
         Row(
           children: [
-            const Icon(Icons.replay_rounded, color: AppColors.primary),
+            Icon(Icons.replay_rounded, color: AppColors.primary),
             const SizedBox(width: 8),
             Expanded(
               child: Text(widget.replay.penalty

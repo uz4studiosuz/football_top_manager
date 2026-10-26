@@ -99,6 +99,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final game = GameState();
     if (!game.isInitialized) return const Scaffold();
     final wide = MediaQuery.sizeOf(context).width >= 1000;
@@ -215,7 +216,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       bottomNavigationBar: wide
           ? null
           : Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: AppColors.surface,
                 border: Border(top: BorderSide(color: AppColors.line)),
               ),
@@ -257,6 +258,7 @@ class _BarItem extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final color = selected ? AppColors.primary : AppColors.ink3;
     return InkWell(
       onTap: onTap,
@@ -360,6 +362,7 @@ class AlertBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final c = item.kind.color;
     return Material(
       color: AppColors.surface,
@@ -403,7 +406,7 @@ class AlertBanner extends StatelessWidget {
               ),
               IconButton(
                 visualDensity: VisualDensity.compact,
-                icon: const Icon(Icons.close_rounded, size: 18, color: AppColors.ink3),
+                icon: Icon(Icons.close_rounded, size: 18, color: AppColors.ink3),
                 onPressed: onClose,
               ),
             ],

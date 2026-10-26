@@ -631,6 +631,7 @@ class _MatchScreenState extends State<MatchScreen> {
       MaterialPageRoute<void>(
         builder: (_) => TacticsScreen(
           onSwap: _swapInMatch,
+          ratingFor: _field.ratingFor,
           onAutoPick: _autoInMatch,
           subMarks: () => {
             for (final e in _field.lines.entries)
@@ -669,6 +670,7 @@ class _MatchScreenState extends State<MatchScreen> {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final colors = teamColors(_home, _away);
     final finished = _field.isFinished;
     return PopScope(
@@ -1295,6 +1297,7 @@ class _SubstitutionSheetState extends State<_SubstitutionSheet> {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final f = widget.field, c = widget.club;
     final used = widget.isHome ? f.homeSubsUsed : f.awaySubsUsed;
     final starters = c.startingXI.where((p) => !f.dismissed.contains(p.id)).toList();

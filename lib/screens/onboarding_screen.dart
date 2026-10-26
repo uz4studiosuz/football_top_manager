@@ -287,7 +287,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
               Container(
                 padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   color: AppColors.surface,
                   border: Border(top: BorderSide(color: AppColors.line)),
                 ),
@@ -344,7 +344,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ],
           ),
         ),
-        const Icon(Icons.chevron_right_rounded, color: AppColors.ink3),
+        Icon(Icons.chevron_right_rounded, color: AppColors.ink3),
       ],
     ),
   );

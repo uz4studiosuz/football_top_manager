@@ -19,13 +19,14 @@ class FaceAvatar extends StatelessWidget {
     super.key,
     required this.config,
     this.size = 52,
-    this.shirt = AppColors.primary,
+    this.shirt = const Color(0xFF374DF5),
     this.trim,
     this.circle = false,
     this.background = true,
   });
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final paint = CustomPaint(
       painter: FacePainter(config, shirt, trim, background: background),
     );
@@ -1139,6 +1140,7 @@ class _FaceStudioState extends State<FaceStudio> {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final sections = [
       [
         _swatches('skin', 'Teri rangi', FacePainter.skins),

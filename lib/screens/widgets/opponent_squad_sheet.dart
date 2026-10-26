@@ -25,6 +25,7 @@ class OpponentSquadSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final game = GameState(), user = game.userClub, rival = opponentClub;
     final colors = teamColors(user, rival);
     final star = List<Player>.of(rival.startingXI)..sort((a, b) => b.getMatchOVR().compareTo(a.getMatchOVR()));
@@ -43,7 +44,7 @@ class OpponentSquadSheet extends StatelessWidget {
                   child: Row(
                     children: [
                       Expanded(child: ClubHeading(club: user, size: 48, caption: trf('{0}-o‘rin · {1} o‘', [game.positionOf(user.id), userStanding.points]))),
-                      const Text('vs', style: TextStyle(fontSize: 18, color: AppColors.ink3, fontWeight: FontWeight.w600)),
+                      Text('vs', style: TextStyle(fontSize: 18, color: AppColors.ink3, fontWeight: FontWeight.w600)),
                       Expanded(child: ClubHeading(club: rival, size: 48, caption: trf('{0}-o‘rin · {1} o‘', [game.positionOf(rival.id), rivalStanding.points]))),
                     ],
                   ),

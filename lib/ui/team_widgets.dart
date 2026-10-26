@@ -23,6 +23,7 @@ class FixtureTile extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final game = GameState();
     final h = game.getClubById(fixture.homeClubId)!;
     final a = game.getClubById(fixture.awayClubId)!;
@@ -341,6 +342,7 @@ class PlayerTile extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final p = player;
     return InkWell(
       onTap: onTap,

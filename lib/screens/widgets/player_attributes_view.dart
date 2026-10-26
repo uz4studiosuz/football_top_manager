@@ -10,6 +10,7 @@ class PlayerAttributesView extends StatelessWidget {
   const PlayerAttributesView({super.key, required this.player});
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final s = player.stats, values = s.toMap();
     final keeper = player.mainPosition.isGoalkeeper;
     final summary = <(String, int)>[
@@ -86,6 +87,7 @@ class _AttributeRow extends StatelessWidget {
   const _AttributeRow(this.label, this.value);
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final c = AppColors.attribute(value);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
@@ -210,6 +212,7 @@ class _PositionRatingsViewState extends State<PositionRatingsView> {
   };
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final p = widget.player;
     return ListView(
       padding: const EdgeInsets.all(12),

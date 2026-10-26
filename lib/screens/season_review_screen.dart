@@ -18,6 +18,7 @@ class SeasonReviewScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final game = GameState(), club = game.userClub;
     final s = game.standingOf(club.id);
     final pos = game.positionOf(club.id);

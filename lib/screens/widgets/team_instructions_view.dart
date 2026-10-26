@@ -14,6 +14,7 @@ class TeamTacticsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final game = GameState();
     return ListenableBuilder(
       listenable: game,
@@ -242,6 +243,7 @@ class _Info extends StatelessWidget {
   const _Info(this.label);
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     // Callers pass either the Uzbek key or an already translated label.
     final key = _help.keys.where((k) => k == label || tr(k) == label).firstOrNull;
     if (key == null) return const SizedBox.shrink();
@@ -249,7 +251,7 @@ class _Info extends StatelessWidget {
     return IconButton(
       visualDensity: VisualDensity.compact,
       tooltip: tr('Bu nima?'),
-      icon: const Icon(Icons.info_outline_rounded, size: 18, color: AppColors.ink3),
+      icon: Icon(Icons.info_outline_rounded, size: 18, color: AppColors.ink3),
       onPressed: () => showModalBottomSheet<void>(
         context: context,
         builder: (ctx) => SafeArea(
@@ -261,7 +263,7 @@ class _Info extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.info_outline_rounded, color: AppColors.primary),
+                    Icon(Icons.info_outline_rounded, color: AppColors.primary),
                     const SizedBox(width: 8),
                     Expanded(child: Text(tr(key), style: AppText.h3)),
                   ],
@@ -283,6 +285,7 @@ class IndividualInstructionsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final game = GameState();
     return ListenableBuilder(
       listenable: game,
@@ -414,6 +417,7 @@ class _InstructionRow extends StatelessWidget {
   const _InstructionRow({required this.player, required this.club});
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final game = GameState();
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),

@@ -254,6 +254,7 @@ class IncidentTimeline extends StatelessWidget {
   const IncidentTimeline({super.key, required this.events, this.newestFirst = true, this.onGoalTap});
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     bool key(MatchEvent e) =>
         e.type.isIncident &&
         e.type != MatchEventType.halfTime &&
@@ -312,7 +313,7 @@ class _IncidentRow extends StatelessWidget {
   final void Function(MatchEvent goal)? onGoalTap;
   const _IncidentRow(this.e, [this.onGoalTap]);
   Widget _icon() => switch (e.type) {
-    MatchEventType.goal => const Icon(Icons.sports_soccer, size: 18, color: AppColors.ink),
+    MatchEventType.goal => Icon(Icons.sports_soccer, size: 18, color: AppColors.ink),
     MatchEventType.yellowCard => Container(
       width: 11,
       height: 15,
@@ -329,6 +330,7 @@ class _IncidentRow extends StatelessWidget {
   };
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final tappable = e.type == MatchEventType.goal && onGoalTap != null;
     final name = e.playerName?.split(' ').last ?? '';
     final title = switch (e.type) {
@@ -389,9 +391,9 @@ class _IncidentRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: e.isHomeTeam ? MainAxisAlignment.start : MainAxisAlignment.end,
         children: [
-          if (!e.isHomeTeam && tappable) const Icon(Icons.chevron_left_rounded, size: 16, color: AppColors.ink3),
+          if (!e.isHomeTeam && tappable) Icon(Icons.chevron_left_rounded, size: 16, color: AppColors.ink3),
           ...(e.isHomeTeam ? row : row.reversed),
-          if (e.isHomeTeam && tappable) const Icon(Icons.chevron_right_rounded, size: 16, color: AppColors.ink3),
+          if (e.isHomeTeam && tappable) Icon(Icons.chevron_right_rounded, size: 16, color: AppColors.ink3),
         ],
       ),
     );
@@ -416,6 +418,7 @@ class CommentaryTile extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final e = event;
     final key = e.type == MatchEventType.goal;
     final strong = key ||
@@ -515,6 +518,7 @@ class LineupPitch extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final slots = club.tactics.formation.slots;
     return Center(
       // Desktop: a phone-sized pitch, not one stretched across the screen.
@@ -647,7 +651,7 @@ class _LineupNode extends StatelessWidget {
                     bottom: -3,
                     child: _mark([
                       for (var i = 0; i < goals.clamp(1, 4); i++)
-                        const Icon(Icons.sports_soccer, size: 11, color: AppColors.ink),
+                        Icon(Icons.sports_soccer, size: 11, color: AppColors.ink),
                       if (goals > 4) _count(goals),
                     ]),
                   ),
@@ -693,7 +697,7 @@ Widget _mark(List<Widget> children) => Container(
 
 Widget _count(int n) => Padding(
   padding: const EdgeInsets.only(left: 1),
-  child: Text('$n', style: const TextStyle(fontSize: 8.5, fontWeight: FontWeight.w800, color: AppColors.ink)),
+  child: Text('$n', style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.w800, color: AppColors.ink)),
 );
 
 /// Player rating list for one team (SofaScore "Player statistics").
@@ -715,6 +719,7 @@ class RatingsList extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final players = ids.map(club.playerById).whereType<Player>().toList()
       ..sort((a, b) => (ratings[b.id] ?? 0).compareTo(ratings[a.id] ?? 0));
     return Column(
@@ -998,6 +1003,7 @@ class SubstitutesList extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final players = benchIds.map(club.playerById).whereType<Player>().toList();
     final used = players.where((p) => lines[p.id]?.subOnMinute != null).toList();
     final unused = players.where((p) => lines[p.id]?.subOnMinute == null).toList();
@@ -1071,6 +1077,7 @@ class LineupList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     // Substitution events carry the incoming id and the outgoing short name.
     final replacedBy = <String, String>{}; // out short name -> in short name
     final replaced = <String, String>{}; // in id -> out short name
@@ -1126,7 +1133,7 @@ class LineupList extends StatelessWidget {
                         if ((l?.goals ?? 0) > 0) ...[
                           const SizedBox(width: 4),
                           for (var i = 0; i < l!.goals; i++)
-                            const Icon(Icons.sports_soccer, size: 13, color: AppColors.ink),
+                            Icon(Icons.sports_soccer, size: 13, color: AppColors.ink),
                         ],
                         if ((l?.assists ?? 0) > 0) ...[
                           const SizedBox(width: 4),

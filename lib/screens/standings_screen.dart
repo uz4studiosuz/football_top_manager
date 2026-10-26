@@ -27,6 +27,7 @@ class _StandingsScreenState extends State<StandingsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final game = GameState();
     return DefaultTabController(
       length: 5,

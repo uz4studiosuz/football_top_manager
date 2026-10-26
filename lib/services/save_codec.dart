@@ -26,6 +26,7 @@ abstract final class SaveCodec {
     final rt = <String, dynamic>{
       'st': p.currentStamina,
       'mo': p.morale,
+      'co': p.condition.name,
       'ir': p.injuryRounds,
       'in': p.injury,
       'su': p.suspensionRounds,
@@ -109,6 +110,7 @@ abstract final class SaveCodec {
     if (rt == null) return p;
     p.currentStamina = rt['st'] ?? 100;
     p.morale = rt['mo'] ?? 85;
+    p.condition = PlayerCondition.values.asNameMap()[rt['co']] ?? PlayerCondition.c;
     p.injuryRounds = rt['ir'] ?? 0;
     p.injury = rt['in'];
     p.suspensionRounds = rt['su'] ?? 0;

@@ -27,11 +27,14 @@ class TacticsScreen extends StatefulWidget {
   /// Before kick-off: a line-up and tactics for the coming match only.
   final bool matchPlan;
 
+  final double? Function(String)? ratingFor;
+
   /// App bar title of the match-day plan ("Match plan vs …").
   final String? planTitle;
   const TacticsScreen({
     super.key,
     this.onSwap,
+    this.ratingFor,
     this.onAutoPick,
     this.subMarks,
     this.unavailable = const {},
@@ -47,6 +50,7 @@ class _TacticsScreenState extends State<TacticsScreen> {
   final _squadScroll = ScrollController();
   Timer? _dragTimer;
   Offset? _dragPointer;
+  int _display = 0; // rating, condition, positional OVR
   Player? _dragging; // shows every slot's fit while a player is dragged
 
   static Color fitColor(PositionFit f) => switch (f) {
@@ -233,7 +237,11 @@ class _TacticsScreenState extends State<TacticsScreen> {
                                       children: [
                                         Text(q.name, style: AppText.bodyStrong.copyWith(fontSize: 13)),
                                         Text(
-                                          '${q.mainPosition.code} · ${club.startingLineupIds.contains(q.id) ? tr('Asosiy') : club.benchIds.contains(q.id) ? tr('Zaxira') : tr('Rezerv')}'
+                                          '${q.mainPosition.code} · ${club.startingLineupIds.contains(q.id)
+                                              ? tr('Asosiy')
+                                              : club.benchIds.contains(q.id)
+                                              ? tr('Zaxira')
+                                              : tr('Rezerv')}'
                                           '${q.isAvailable ? '' : ' · ${tr('o‘ynay olmaydi')}'}',
                                           style: AppText.caption,
                                         ),
@@ -259,6 +267,7 @@ class _TacticsScreenState extends State<TacticsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     return ListenableBuilder(
       listenable: game,
       builder: (context, _) {
@@ -270,6 +279,12 @@ class _TacticsScreenState extends State<TacticsScreen> {
             appBar: AppBar(
               title: Text(widget.planTitle ?? tr('Jamoa')),
               actions: [
+                TextButton.icon(
+                  key: const ValueKey('lineup_display'),
+                  onPressed: () => setState(() => _display = (_display + 1) % 3),
+                  icon: const Icon(Icons.swap_vert, size: 18),
+                  label: Text([tr('Rating'), tr('Holat'), 'OVR'][_display]),
+                ),
                 if (!_inMatch)
                   IconButton(
                     tooltip: tr('Futbolchi yaratish'),
@@ -331,10 +346,12 @@ class _TacticsScreenState extends State<TacticsScreen> {
                     child: Padding(
                       padding: EdgeInsets.symmetric(horizontal: 12),
                       child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.auto_fix_high_rounded, size: 18, color: AppColors.primary),
-                          SizedBox(width: 6),
-                          Text(
+                          if (MediaQuery.sizeOf(context).width >= 480) const SizedBox(width: 6),
+                          if (MediaQuery.sizeOf(context).width >= 480)
+                            Text(
                             tr('Avto tarkib'),
                             style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600),
                           ),
@@ -492,7 +509,7 @@ class _TacticsScreenState extends State<TacticsScreen> {
           ],
         ),
         const SizedBox(height: 12),
-        if (players.isEmpty) const Text('—', style: AppText.caption),
+        if (players.isEmpty) Text('—', style: AppText.caption),
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -688,6 +705,17 @@ class _TacticsScreenState extends State<TacticsScreen> {
 
   Widget _node(Player p, PlayerPosition? pos, {bool bench = false, bool selected = false}) {
     final ovr = p.getEffectiveOVR(pos);
+    final rating = widget.ratingFor != null ? widget.ratingFor!(p.id) : p.averageRating;
+    final badge = _display == 0
+        ? (rating?.toStringAsFixed(1) ?? '—')
+        : _display == 1
+        ? p.condition.grade
+        : '$ovr';
+    final badgeColor = _display == 0
+        ? AppColors.rating(rating)
+        : _display == 1
+        ? AppColors.condition(p.condition.index)
+        : AppColors.attribute(ovr);
     final fit = pos == null ? PositionFit.natural : p.fitFor(pos);
     final club = game.userClub;
     return Container(
@@ -695,15 +723,12 @@ class _TacticsScreenState extends State<TacticsScreen> {
       width: bench ? 96 : 74,
       padding: const EdgeInsets.fromLTRB(4, 5, 4, 5),
       decoration: BoxDecoration(
-        color: selected ? AppColors.primarySoft : Colors.white,
+        color: selected ? AppColors.primarySoft : AppColors.surface,
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: selected ? AppColors.primary : (bench ? AppColors.line : Colors.white),
+          color: selected ? AppColors.primary : (bench ? AppColors.line : AppColors.surface),
           width: selected ? 2 : 1,
         ),
-        boxShadow: bench
-            ? null
-            : [BoxShadow(color: Colors.black.withValues(alpha: 0.18), blurRadius: 6, offset: const Offset(0, 2))],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -716,11 +741,11 @@ class _TacticsScreenState extends State<TacticsScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                 decoration: BoxDecoration(
-                  color: AppColors.attribute(ovr),
+                  color: badgeColor,
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
-                  '$ovr',
+                  badge,
                   style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Colors.white),
                 ),
               ),
@@ -731,7 +756,7 @@ class _TacticsScreenState extends State<TacticsScreen> {
             p.shortName,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.ink),
+            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: AppColors.ink),
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,

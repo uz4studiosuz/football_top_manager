@@ -1,0 +1,16 @@
+{
+  "Yorug‘ rejim": ["Light mode", "Светлая тема"],
+  "Qorong‘i rejim": ["Dark mode", "Тёмная тема"],
+  "Darvozaga yo‘llangan zarbalar": ["Shots faced", "Удары по воротам"],
+  "Barcha": ["All", "Все"],
+  "Jami saqlanganlar": ["Total saves", "Всего сейвов"],
+  "To‘siq qilingan gollar": ["Goals prevented", "Предотвращённые голы"],
+  "Jarima maydonchasi ichidan seyvlar": ["Saves from inside the box", "Сейвы после ударов из штрафной"],
+  "Urinishlar": ["Punches", "Игра кулаками"],
+  "Chiqishlar (muvaffaqiyatli)": ["Runs out (successful)", "Выходы (успешные)"],
+  "Havodagi egallash": ["High claims", "Перехваты навесов"],
+  "Rating": ["Rating", "Оценка"],
+  "Holat": ["Condition", "Состояние"],
+  "Har turda yangilanadi": ["Changes each match week", "Обновляется каждый тур"],
+  "Erkin to‘p uchun kurash": ["Chasing the loose ball", "Борьба за свободный мяч"]
+}

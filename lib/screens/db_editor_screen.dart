@@ -597,6 +597,7 @@ class _PlayerFormState extends State<_PlayerForm> {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final preview = _preview;
     final positions = PlayerPosition.values.map((p) => p.code).toList();
     final alt = (m['altPositions'] as List).cast<String>().toSet();

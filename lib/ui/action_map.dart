@@ -27,7 +27,7 @@ class ActionMap extends StatelessWidget {
       const SizedBox(height: 6),
       Row(
         children: [
-          const Icon(Icons.keyboard_double_arrow_right_rounded, size: 16, color: AppColors.ink3),
+          Icon(Icons.keyboard_double_arrow_right_rounded, size: 16, color: AppColors.ink3),
           const SizedBox(width: 4),
           Text(tr('Hujum yo‘nalishi'), style: AppText.caption),
           const Spacer(),

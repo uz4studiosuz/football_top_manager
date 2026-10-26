@@ -501,6 +501,31 @@ const _families = <Set<PlayerPosition>>[
 ];
 
 /// Futbolchi modeli
+/// Match-day sharpness, separate from ability, morale and fatigue.
+enum PlayerCondition {
+  a(5),
+  b(2),
+  c(-2),
+  d(-7),
+  e(-13);
+
+  final int skillShift;
+  const PlayerCondition(this.skillShift);
+  String get grade => name.toUpperCase();
+  static PlayerCondition draw(Random random) {
+    final roll = random.nextInt(100);
+    return roll < 6
+        ? a
+        : roll < 26
+        ? b
+        : roll < 76
+        ? c
+        : roll < 95
+        ? d
+        : e;
+  }
+}
+
 class Player {
   FaceConfig face;
   PlayerInstruction instruction;
@@ -527,6 +552,7 @@ class Player {
   // Real-time o'yin va mavsum holati
   int currentStamina; // 0–100
   int morale; // 0–100
+  PlayerCondition condition = PlayerCondition.c;
   int injuryRounds; // jarohat: o'tkazib yuboriladigan turlar
   String? injury;
   int suspensionRounds; // diskvalifikatsiya
@@ -894,7 +920,7 @@ class Player {
   /// Natural ability is stable; fitness and morale affect match strength only.
   int get ovr => getEffectiveOVR(mainPosition);
   int getMatchOVR([PlayerPosition? pos]) =>
-      (getEffectiveOVR(pos) *
+      ((getEffectiveOVR(pos) + condition.skillShift) *
               (0.82 + currentStamina / 100 * 0.18) *
               (0.95 + morale / 100 * 0.05))
           .round()
@@ -983,6 +1009,6 @@ class Player {
       seasonCleanSheets: seasonCleanSheets ?? this.seasonCleanSheets,
       seasonYellowCards: seasonYellowCards ?? this.seasonYellowCards,
       seasonRedCards: seasonRedCards ?? this.seasonRedCards,
-    );
+    )..condition = condition;
   }
 }

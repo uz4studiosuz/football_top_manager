@@ -1,17 +1,55 @@
 import 'package:flutter/material.dart';
 
+import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 /// Clean, SofaScore-inspired design tokens. Every screen reads colours from
 /// here so the whole game keeps one calm, data-first visual language.
+/// One application palette, rebuilt atomically when the user changes mode.
+class AppAppearance extends ValueNotifier<bool> {
+  AppAppearance._() : super(false);
+  static final instance = AppAppearance._();
+  Future<void> load() async {
+    value = (await SharedPreferences.getInstance()).getBool('darkMode') ?? false;
+    _systemBars();
+  }
+
+  Future<void> toggle() async {
+    value = !value;
+    _systemBars();
+    await (await SharedPreferences.getInstance()).setBool('darkMode', value);
+  }
+
+  void _systemBars() => SystemChrome.setSystemUIOverlayStyle(
+    SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: value ? Brightness.light : Brightness.dark,
+      systemNavigationBarColor: AppColors.surface,
+      systemNavigationBarIconBrightness: value ? Brightness.light : Brightness.dark,
+    ),
+  );
+}
+
 abstract final class AppColors {
-  static const bg = Color(0xFFEDF1F6);
-  static const surface = Color(0xFFFFFFFF);
-  static const surfaceAlt = Color(0xFFF5F7FA);
-  static const ink = Color(0xFF222226);
-  static const ink2 = Color(0xFF5B6270);
-  static const ink3 = Color(0xFF9AA1AD);
-  static const line = Color(0xFFE6E9EF);
-  static const primary = Color(0xFF374DF5);
-  static const primarySoft = Color(0xFFEBEEFE);
+  static Color get bg =>
+      AppAppearance.instance.value ? const Color(0xFF16191E) : const Color(0xFFEDF1F6);
+  static Color get surface =>
+      AppAppearance.instance.value ? const Color(0xFF24282E) : const Color(0xFFFFFFFF);
+  static Color get surfaceAlt =>
+      AppAppearance.instance.value ? const Color(0xFF1C2026) : const Color(0xFFF5F7FA);
+  static Color get ink =>
+      AppAppearance.instance.value ? const Color(0xFFECEEF1) : const Color(0xFF222226);
+  static Color get ink2 =>
+      AppAppearance.instance.value ? const Color(0xFFB5BCC7) : const Color(0xFF5B6270);
+  static Color get ink3 =>
+      AppAppearance.instance.value ? const Color(0xFF929CAA) : const Color(0xFF9AA1AD);
+  static Color get line =>
+      AppAppearance.instance.value ? const Color(0xFF383E48) : const Color(0xFFE6E9EF);
+  static Color get primary =>
+      AppAppearance.instance.value ? const Color(0xFF929EFF) : const Color(0xFF374DF5);
+  static Color get primarySoft =>
+      AppAppearance.instance.value ? const Color(0xFF303857) : const Color(0xFFEBEEFE);
+  static Color get action => AppAppearance.instance.value ? const Color(0xFF5969E5) : primary;
   static const live = Color(0xFFE5352B);
   static const win = Color(0xFF12A150);
   static const draw = Color(0xFFA1A7B3);
@@ -20,6 +58,8 @@ abstract final class AppColors {
   static const gold = Color(0xFFE2A900);
   static const pitch = Color(0xFF2E8B57);
   static const pitchDark = Color(0xFF287A4C);
+
+  static Color condition(int index) => [win, const Color(0xFF00ADC4), ink2, warning, loss][index];
 
   /// SofaScore style player-rating scale (3.0 – 10.0).
   static Color rating(double? r) {
@@ -57,38 +97,32 @@ abstract final class AppColors {
 
 abstract final class AppText {
   static const tabular = [FontFeature.tabularFigures()];
-  static const h1 = TextStyle(
+  static TextStyle get h1 => TextStyle(
     fontSize: 24,
     fontWeight: FontWeight.w700,
     color: AppColors.ink,
     letterSpacing: -0.4,
   );
-  static const h2 = TextStyle(
+  static TextStyle get h2 => TextStyle(
     fontSize: 18,
     fontWeight: FontWeight.w700,
     color: AppColors.ink,
     letterSpacing: -0.2,
   );
-  static const h3 = TextStyle(
-    fontSize: 15,
-    fontWeight: FontWeight.w700,
-    color: AppColors.ink,
-  );
-  static const body = TextStyle(fontSize: 14, color: AppColors.ink);
-  static const bodyStrong = TextStyle(
-    fontSize: 14,
-    fontWeight: FontWeight.w600,
-    color: AppColors.ink,
-  );
-  static const small = TextStyle(fontSize: 12, color: AppColors.ink2);
-  static const caption = TextStyle(fontSize: 11, color: AppColors.ink3);
-  static const overline = TextStyle(
+  static TextStyle get h3 =>
+      TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: AppColors.ink);
+  static TextStyle get body => TextStyle(fontSize: 14, color: AppColors.ink);
+  static TextStyle get bodyStrong =>
+      TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.ink);
+  static TextStyle get small => TextStyle(fontSize: 12, color: AppColors.ink2);
+  static TextStyle get caption => TextStyle(fontSize: 11, color: AppColors.ink3);
+  static TextStyle get overline => TextStyle(
     fontSize: 11,
     fontWeight: FontWeight.w700,
     color: AppColors.ink3,
     letterSpacing: 0.6,
   );
-  static const number = TextStyle(
+  static TextStyle get number => TextStyle(
     fontSize: 14,
     fontWeight: FontWeight.w700,
     color: AppColors.ink,
@@ -100,10 +134,12 @@ ThemeData buildAppTheme() {
   const radius = BorderRadius.all(Radius.circular(10));
   return ThemeData(
     useMaterial3: true,
-    brightness: Brightness.light,
+    brightness: AppAppearance.instance.value ? Brightness.dark : Brightness.light,
     fontFamily: 'Roboto',
     scaffoldBackgroundColor: AppColors.bg,
-    colorScheme: const ColorScheme.light(
+    colorScheme: ColorScheme(
+      brightness: AppAppearance.instance.value ? Brightness.dark : Brightness.light,
+      onError: Colors.white,
       primary: AppColors.primary,
       onPrimary: Colors.white,
       secondary: AppColors.primary,
@@ -139,11 +175,7 @@ ThemeData buildAppTheme() {
       labelColor: AppColors.primary,
       unselectedLabelColor: AppColors.ink2,
       indicatorSize: TabBarIndicatorSize.label,
-      labelStyle: TextStyle(
-        fontFamily: 'Roboto',
-        fontSize: 13,
-        fontWeight: FontWeight.w700,
-      ),
+      labelStyle: TextStyle(fontFamily: 'Roboto', fontSize: 13, fontWeight: FontWeight.w700),
       unselectedLabelStyle: TextStyle(
         fontFamily: 'Roboto',
         fontSize: 13,
@@ -151,51 +183,39 @@ ThemeData buildAppTheme() {
       ),
       tabAlignment: TabAlignment.fill,
     ),
-    dividerTheme: const DividerThemeData(
-      color: AppColors.line,
-      thickness: 1,
-      space: 1,
-    ),
-    cardTheme: const CardThemeData(
+    dividerTheme: DividerThemeData(color: AppColors.line, thickness: 1, space: 1),
+    cardTheme: CardThemeData(
       elevation: 0,
       color: AppColors.surface,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(borderRadius: radius),
     ),
-    dialogTheme: const DialogThemeData(
+    dialogTheme: DialogThemeData(
       elevation: 0,
       backgroundColor: AppColors.surface,
       surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(16)),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16))),
     ),
-    bottomSheetTheme: const BottomSheetThemeData(
+    bottomSheetTheme: BottomSheetThemeData(
       elevation: 0,
       backgroundColor: AppColors.surface,
       surfaceTintColor: Colors.transparent,
       showDragHandle: true,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppColors.action,
         foregroundColor: Colors.white,
         minimumSize: const Size(44, 46),
-        textStyle: TextStyle(
-          fontFamily: 'Roboto',
-          fontSize: 14,
-          fontWeight: FontWeight.w700,
-        ),
+        textStyle: TextStyle(fontFamily: 'Roboto', fontSize: 14, fontWeight: FontWeight.w700),
         shape: const RoundedRectangleBorder(borderRadius: radius),
       ),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         elevation: 0,
-        backgroundColor: AppColors.primary,
+        backgroundColor: AppColors.action,
         foregroundColor: Colors.white,
         minimumSize: const Size(44, 46),
         shape: const RoundedRectangleBorder(borderRadius: radius),
@@ -205,23 +225,15 @@ ThemeData buildAppTheme() {
       style: OutlinedButton.styleFrom(
         foregroundColor: AppColors.primary,
         minimumSize: const Size(44, 46),
-        side: const BorderSide(color: AppColors.line),
-        textStyle: TextStyle(
-          fontFamily: 'Roboto',
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-        ),
+        side: BorderSide(color: AppColors.line),
+        textStyle: TextStyle(fontFamily: 'Roboto', fontSize: 14, fontWeight: FontWeight.w600),
         shape: const RoundedRectangleBorder(borderRadius: radius),
       ),
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
         foregroundColor: AppColors.primary,
-        textStyle: TextStyle(
-          fontFamily: 'Roboto',
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-        ),
+        textStyle: TextStyle(fontFamily: 'Roboto', fontSize: 13, fontWeight: FontWeight.w600),
       ),
     ),
     chipTheme: ChipThemeData(
@@ -237,14 +249,11 @@ ThemeData buildAppTheme() {
       side: BorderSide(color: AppColors.line),
       shape: StadiumBorder(),
     ),
-    inputDecorationTheme: const InputDecorationTheme(
+    inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: AppColors.surfaceAlt,
       contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-      border: OutlineInputBorder(
-        borderRadius: radius,
-        borderSide: BorderSide.none,
-      ),
+      border: OutlineInputBorder(borderRadius: radius, borderSide: BorderSide.none),
       enabledBorder: OutlineInputBorder(
         borderRadius: radius,
         borderSide: BorderSide(color: AppColors.line),
@@ -255,7 +264,7 @@ ThemeData buildAppTheme() {
       ),
       labelStyle: TextStyle(color: AppColors.ink2),
     ),
-    sliderTheme: const SliderThemeData(
+    sliderTheme: SliderThemeData(
       activeTrackColor: AppColors.primary,
       inactiveTrackColor: AppColors.line,
       thumbColor: AppColors.primary,
@@ -269,7 +278,7 @@ ThemeData buildAppTheme() {
         (s) => s.contains(WidgetState.selected) ? AppColors.primary : null,
       ),
     ),
-    snackBarTheme: const SnackBarThemeData(
+    snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,
       backgroundColor: AppColors.ink,
       shape: RoundedRectangleBorder(borderRadius: radius),
@@ -282,13 +291,9 @@ ThemeData buildAppTheme() {
         fontWeight: FontWeight.w600,
         color: AppColors.ink,
       ),
-      subtitleTextStyle: TextStyle(
-        fontFamily: 'Roboto',
-        fontSize: 12,
-        color: AppColors.ink2,
-      ),
+      subtitleTextStyle: TextStyle(fontFamily: 'Roboto', fontSize: 12, color: AppColors.ink2),
     ),
-    progressIndicatorTheme: const ProgressIndicatorThemeData(
+    progressIndicatorTheme: ProgressIndicatorThemeData(
       color: AppColors.primary,
       linearTrackColor: AppColors.line,
     ),

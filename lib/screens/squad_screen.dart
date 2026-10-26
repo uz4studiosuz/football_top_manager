@@ -40,6 +40,7 @@ class _SquadListState extends State<SquadList> {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final game = GameState();
     return ListenableBuilder(
         listenable: game,

@@ -74,10 +74,19 @@ class _ManagerProfileScreenState extends State<ManagerProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final game = GameState(), m = game.managerProfile;
     final club = game.isInitialized ? game.userClub : null;
     return Scaffold(
-      appBar: AppBar(title: Text(tr('Menejer profili'))),
+      appBar: AppBar(title: Text(tr('Menejer profili')),
+        actions: [
+          IconButton(
+            tooltip: AppAppearance.instance.value ? tr('Yorug‘ rejim') : tr('Qorong‘i rejim'),
+            onPressed: () => AppAppearance.instance.toggle(),
+            icon: Icon(AppAppearance.instance.value ? Icons.light_mode_outlined : Icons.dark_mode_outlined),
+          ),
+        ],
+      ),
       body: PageWidth(
       maxWidth: 860,
       child: ListView(
@@ -229,7 +238,7 @@ class _ManagerProfileScreenState extends State<ManagerProfileScreen> {
           AppCard(
             child: Row(
               children: [
-                const Icon(Icons.info_outline_rounded, size: 18, color: AppColors.ink3),
+                Icon(Icons.info_outline_rounded, size: 18, color: AppColors.ink3),
                 const SizedBox(width: 8),
                 Expanded(child: Text(tr('Ilova versiyasi'), style: AppText.body, maxLines: 1, overflow: TextOverflow.ellipsis)),
                 const SizedBox(width: 8),

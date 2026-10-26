@@ -23,11 +23,16 @@ Future<void> main() async {
       systemNavigationBarIconBrightness: Brightness.dark,
     ),
   );
+  await AppAppearance.instance.load();
   SaveService.startAutoSave();
   // The bundled font's licence joins the packages' on the licences page.
   LicenseRegistry.addLicense(() async* {
-    yield LicenseEntryWithLineBreaks(['Roboto'], await rootBundle.loadString('assets/fonts/LICENSE.txt'));
-    yield LicenseEntryWithLineBreaks(['flag-icons'], await rootBundle.loadString('assets/flags/LICENSE'));
+    yield LicenseEntryWithLineBreaks([
+      'Roboto',
+    ], await rootBundle.loadString('assets/fonts/LICENSE.txt'));
+    yield LicenseEntryWithLineBreaks([
+      'flag-icons',
+    ], await rootBundle.loadString('assets/flags/LICENSE'));
   });
   runApp(const FootballTopManagerApp());
 }
@@ -36,30 +41,33 @@ class FootballTopManagerApp extends StatelessWidget {
   const FootballTopManagerApp({super.key});
   @override
   // Changing the language rebuilds the whole app (the career stays loaded).
-  Widget build(BuildContext context) => ValueListenableBuilder<AppLang>(
-    valueListenable: L10n.current,
-    builder: (context, lang, _) {
-      if (_shown != null && _shown != lang) StartupScreen.keepCareer = true;
-      _shown = lang;
-      return MaterialApp(
-        key: ValueKey(lang),
-        title: 'Football Top Manager 2027',
-        debugShowCheckedModeBanner: false,
-        theme: buildAppTheme(),
-        // Mouse and trackpad can drag-scroll lists and chip rows on the web.
-        scrollBehavior: const MaterialScrollBehavior().copyWith(
-          dragDevices: {
-            PointerDeviceKind.touch,
-            PointerDeviceKind.mouse,
-            PointerDeviceKind.trackpad,
-            PointerDeviceKind.stylus,
-          },
-        ),
-        // Creator tool: /editor (or /#/editor) opens the database editor.
-        home: _openEditor ? const EditorStartup() : const StartupScreen(),
-        routes: {'/editor': (_) => const EditorStartup()},
-      );
-    },
+  Widget build(BuildContext context) => ValueListenableBuilder<bool>(
+    valueListenable: AppAppearance.instance,
+    builder: (context, dark, _) => ValueListenableBuilder<AppLang>(
+      valueListenable: L10n.current,
+      builder: (context, lang, _) {
+        if (_shown != null && _shown != lang) StartupScreen.keepCareer = true;
+        _shown = lang;
+        return MaterialApp(
+          key: ValueKey(lang),
+          title: 'Football Top Manager 2027',
+          debugShowCheckedModeBanner: false,
+          theme: buildAppTheme(),
+          // Mouse and trackpad can drag-scroll lists and chip rows on the web.
+          scrollBehavior: const MaterialScrollBehavior().copyWith(
+            dragDevices: {
+              PointerDeviceKind.touch,
+              PointerDeviceKind.mouse,
+              PointerDeviceKind.trackpad,
+              PointerDeviceKind.stylus,
+            },
+          ),
+          // Creator tool: /editor (or /#/editor) opens the database editor.
+          home: _openEditor ? const EditorStartup() : const StartupScreen(),
+          routes: {'/editor': (_) => const EditorStartup()},
+        );
+      },
+    ),
   );
   static AppLang? _shown;
 
@@ -99,13 +107,9 @@ class _StartupScreenState extends State<StartupScreen> {
         return LoadingView(message: tr('Liga va karyera yuklanmoqda…'));
       }
       if (_askLanguage) {
-        return LanguageScreen(
-          onDone: () => setState(() => _askLanguage = false),
-        );
+        return LanguageScreen(onDone: () => setState(() => _askLanguage = false));
       }
-      return snap.data == true
-          ? const MainNavigationScreen()
-          : OnboardingScreen();
+      return snap.data == true ? const MainNavigationScreen() : OnboardingScreen();
     },
   );
 }

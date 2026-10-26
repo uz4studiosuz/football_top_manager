@@ -31,6 +31,7 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 # build papkasi ichidagi barcha narsalarni e'tiborsiz qoldirish
+/artifacts/releases/
 /build/*
 
 # Lekin build/web papkasini va uning ichidagilarni saqlab qolish

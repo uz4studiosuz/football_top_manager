@@ -55,6 +55,7 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final game = GameState();
     final c = club ?? game.clubOfPlayer(p);
     final shirt = c?.primaryColor ?? AppColors.primary;
@@ -226,7 +227,7 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
                     ),
                     child: Text(
                       p.playingStyle.title,
-                      style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.primary),
+                      style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.primary),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -279,6 +280,7 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
                 color: p.currentStamina > 75 ? AppColors.win : p.currentStamina > 55 ? AppColors.warning : AppColors.loss,
               ),
               MeterRow(label: tr('Kayfiyat'), value: p.morale / 100, trailing: '${p.morale}%'),
+              InfoRow(tr('Holat'), '${p.condition.grade} · ${tr('Har turda yangilanadi')}'),
               if (p.altPositions.isNotEmpty)
                 InfoRow(tr('Muqobil pozitsiyalar'), p.altPositions.map((e) => e.code).join(', ')),
               InfoRow(tr('Ko‘rsatma'), p.instruction.label),
@@ -317,7 +319,7 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
               Row(
                 children: [
                   Expanded(child: Text(tr('Oxirgi reytinglar'), style: AppText.small)),
-                  if (p.recentRatings.isEmpty) const Text('—', style: AppText.caption),
+                  if (p.recentRatings.isEmpty) Text('—', style: AppText.caption),
                   for (final r in p.recentRatings)
                     Padding(
                       padding: const EdgeInsets.only(left: 4),
@@ -422,7 +424,7 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
         AppCard(
           child: Column(
             children: [
-              const Icon(Icons.travel_explore_outlined, size: 40, color: AppColors.primary),
+              Icon(Icons.travel_explore_outlined, size: 40, color: AppColors.primary),
               const SizedBox(height: 10),
               Text(tr('Atributlar noma’lum'), style: AppText.h3),
               const SizedBox(height: 6),
@@ -556,7 +558,7 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
                     children: [
                       SizedBox(width: 64, child: Text(f[0], style: AppText.caption)),
                       _crest(fromId, from),
-                      const Padding(
+                      Padding(
                         padding: EdgeInsets.symmetric(horizontal: 6),
                         child: Icon(Icons.arrow_forward_rounded, size: 16, color: AppColors.ink3),
                       ),
@@ -666,7 +668,7 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
                         _subMark(l),
                       ],
                       for (var i = 0; i < l.goals; i++)
-                        const Padding(
+                        Padding(
                           padding: EdgeInsets.only(left: 4),
                           child: Icon(Icons.sports_soccer, size: 13, color: AppColors.ink),
                         ),

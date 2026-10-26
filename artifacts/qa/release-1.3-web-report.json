@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "version": {
+    "app_name": "football_top_manager",
+    "version": "1.3.0",
+    "build_number": "4",
+    "package_name": "football_top_manager"
+  },
+  "darkModePersisted": true,
+  "lineupConditionToggle": true,
+  "liveMatch": true,
+  "pageErrors": []
+}

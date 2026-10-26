@@ -80,6 +80,7 @@ class _ShotMapViewState extends State<ShotMapView> {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final visible = _visible;
     final selected = visible.contains(_selected) ? _selected : null;
     Widget chip(int i, String label) => Padding(
@@ -241,6 +242,7 @@ class ShotDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final s = shot;
     final club = s.home ? home : away;
     final assist = s.assistId == null ? null : club.playerById(s.assistId!);
@@ -322,6 +324,7 @@ class _OutcomeChip extends StatelessWidget {
   const _OutcomeChip(this.s);
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final c = switch (s.outcome) {
       'goal' => AppColors.win,
       'save' => AppColors.primary,
@@ -516,8 +519,9 @@ Future<void> showShotDetailSheet(
 /// Football boot glyph used for assists (like SofaScore's line-up marks).
 class BootIcon extends StatelessWidget {
   final double size;
-  final Color color;
-  const BootIcon({super.key, this.size = 14, this.color = AppColors.ink});
+  final Color ? _color;
+  Color get color=> _color ?? AppColors.ink;
+  const BootIcon({super.key, this.size = 14, this._color});
   @override
   Widget build(BuildContext context) =>
       CustomPaint(size: Size(size, size), painter: _BootPainter(color));

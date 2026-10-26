@@ -54,6 +54,7 @@ class LeaguePicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     // The big four up front; every other league sits in "All leagues".
     final shown = [
       for (final id in featured)
@@ -74,7 +75,7 @@ class LeaguePicker extends StatelessWidget {
                 color: AppColors.surface,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
-                  side: const BorderSide(color: AppColors.line),
+                  side: BorderSide(color: AppColors.line),
                 ),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(14),
@@ -87,7 +88,7 @@ class LeaguePicker extends StatelessWidget {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.public_rounded, color: AppColors.primary, size: 30),
+                        Icon(Icons.public_rounded, color: AppColors.primary, size: 30),
                         const SizedBox(height: 8),
                         Text(tr('Barcha ligalar'), style: AppText.bodyStrong, textAlign: TextAlign.center),
                         Text(trf('{0} ta liga', [InitialDatabase.leagues.length]), style: AppText.caption),
@@ -126,7 +127,7 @@ class LeaguePicker extends StatelessWidget {
                               child: ClubCrestWidget(config: crest, size: 22),
                             ),
                           const Spacer(),
-                          if (on) const Icon(Icons.check_circle_rounded, color: AppColors.primary, size: 20),
+                          if (on) Icon(Icons.check_circle_rounded, color: AppColors.primary, size: 20),
                         ],
                       ),
                       const SizedBox(height: 8),
@@ -187,6 +188,7 @@ class _LeagueBrowserState extends State<_LeagueBrowser> {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final q = _q.toLowerCase();
     final byCountry = <String, List<LeagueInfo>>{};
     for (final l in widget.leagues) {

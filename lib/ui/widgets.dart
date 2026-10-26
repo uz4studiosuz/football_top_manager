@@ -12,17 +12,19 @@ class AppCard extends StatelessWidget {
   final EdgeInsetsGeometry padding;
   final EdgeInsetsGeometry? margin;
   final VoidCallback? onTap;
-  final Color color;
+  final Color ? _color;
+  Color get color=> _color ?? AppColors.surface;
   const AppCard({
     super.key,
     required this.child,
     this.padding = const EdgeInsets.all(16),
     this.margin,
     this.onTap,
-    this.color = AppColors.surface,
+    this._color,
   });
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final body = Padding(padding: padding, child: child);
     return Container(
       margin: margin,
@@ -69,7 +71,7 @@ class SectionHeader extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
               child: Text(
                 action!,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: AppColors.primary,
@@ -90,6 +92,7 @@ class RatingBadge extends StatelessWidget {
   const RatingBadge(this.rating, {super.key, this.size = 13, this.star = false});
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final color = AppColors.rating(rating);
     return Container(
       padding: EdgeInsets.symmetric(
@@ -131,6 +134,7 @@ class ValueBadge extends StatelessWidget {
   const ValueBadge(this.value, {super.key, this.size = 30, this.filled = true});
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final c = AppColors.attribute(value);
     return Container(
       width: size,
@@ -160,6 +164,7 @@ class PositionChip extends StatelessWidget {
   const PositionChip(this.code, {super.key, this.fontSize = 10});
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final c = AppColors.position(code);
     return Container(
       padding: EdgeInsets.symmetric(
@@ -258,7 +263,9 @@ class StatCompareRow extends StatelessWidget {
   final String homeText, awayText;
   final double home, away;
   final bool higherIsBetter;
-  final Color homeColor, awayColor;
+  final Color ? _homeColor;
+  final Color awayColor;
+  Color get homeColor=> _homeColor ?? AppColors.primary;
   const StatCompareRow({
     super.key,
     required this.label,
@@ -267,11 +274,12 @@ class StatCompareRow extends StatelessWidget {
     required this.home,
     required this.away,
     this.higherIsBetter = true,
-    this.homeColor = AppColors.primary,
+    this._homeColor,
     this.awayColor = const Color(0xFF16A6A0),
   });
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final total = home + away;
     final hs = total <= 0 ? 0.0 : home / total;
     final as = total <= 0 ? 0.0 : away / total;
@@ -510,12 +518,13 @@ class StatTile extends StatelessWidget {
 /// Sparkline / area chart for balances and trends.
 class TrendChart extends StatelessWidget {
   final List<double> values;
-  final Color color;
+  final Color ? _color;
+  Color get color=> _color ?? AppColors.primary;
   final double height;
   const TrendChart({
     super.key,
     required this.values,
-    this.color = AppColors.primary,
+    this._color,
     this.height = 120,
   });
   @override

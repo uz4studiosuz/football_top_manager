@@ -142,6 +142,7 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final game = GameState();
     final club = game.isInitialized ? game.userClub : null;
     final shirt = club?.primaryColor ?? AppColors.primary;
@@ -182,7 +183,7 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
                         bottom: 4,
                         child: Container(
                           padding: const EdgeInsets.all(4),
-                          decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                          decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
                           child: const Icon(Icons.edit_rounded, size: 14, color: Colors.white),
                         ),
                       ),
@@ -219,7 +220,7 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
                   children: [
                     ValueBadge(ovr, size: 48),
                     const SizedBox(height: 4),
-                    const Text('OVR', style: AppText.overline),
+                    Text('OVR', style: AppText.overline),
                     const SizedBox(height: 4),
                     ValueBadge(max(potential, ovr), size: 30, filled: false),
                     Text(tr('Salohiyat'), style: AppText.caption),

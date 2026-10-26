@@ -48,7 +48,7 @@ class PlayerHeatmap extends StatelessWidget {
             Flexible(child: Text(tr('Issiqlik xaritasi'), style: AppText.bodyStrong, maxLines: 1, overflow: TextOverflow.ellipsis)),
             const SizedBox(width: 8),
             Text(tr('Hujum yo‘nalishi'), style: AppText.caption),
-            const Icon(Icons.arrow_right_alt_rounded, size: 18, color: AppColors.ink3),
+            Icon(Icons.arrow_right_alt_rounded, size: 18, color: AppColors.ink3),
           ],
         ),
         const SizedBox(height: 8),

@@ -10,6 +10,7 @@ class ScoutedOvr extends StatelessWidget {
   const ScoutedOvr(this.player, {super.key, this.size = 30});
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final (lo, hi) = GameState().ovrRange(player);
     if (lo == hi) return ValueBadge(player.ovr, size: size);
     return Container(

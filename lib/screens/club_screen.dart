@@ -43,6 +43,7 @@ class FinanceView extends StatelessWidget {
   const FinanceView({super.key});
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final game = GameState();
     return ListenableBuilder(
       listenable: game,
@@ -176,6 +177,7 @@ class _CategoryRow extends StatelessWidget {
   const _CategoryRow({required this.category, required this.amount, required this.share});
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final color = amount >= 0 ? AppColors.win : AppColors.loss;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
@@ -217,6 +219,7 @@ class _TicketCard extends StatelessWidget {
   const _TicketCard({required this.club});
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final game = GameState();
     final base = game.baseTicketPrice(club);
     final attendance = game.projectedAttendance(club);
@@ -272,6 +275,7 @@ class _CalendarViewState extends State<CalendarView> {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final game = GameState();
     return ListenableBuilder(
       listenable: game,
@@ -497,6 +501,7 @@ class _NewsViewState extends State<NewsView> {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final game = GameState();
     return ListenableBuilder(
       listenable: game,
@@ -556,7 +561,7 @@ class NewsTile extends StatelessWidget {
                       width: 7,
                       height: 7,
                       margin: const EdgeInsets.only(left: 6, top: 4),
-                      decoration: const BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
+                      decoration: BoxDecoration(color: AppColors.primary, shape: BoxShape.circle),
                     ),
                 ],
               ),
@@ -596,6 +601,7 @@ class ClubProfileView extends StatelessWidget {
   const ClubProfileView({super.key});
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final game = GameState();
     return ListenableBuilder(
       listenable: game,

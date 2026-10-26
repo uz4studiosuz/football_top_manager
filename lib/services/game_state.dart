@@ -58,6 +58,7 @@ class SeasonSummary {
 
 /// Barcha o'yin ma'lumotlari, liga taqvimi, byudjet va natijalarni boshqaruvchi State Manager
 class GameState extends ChangeNotifier {
+  final _conditionRandom = Random();
   static final GameState _instance = GameState._internal();
   factory GameState() => _instance;
   GameState._internal();
@@ -641,6 +642,7 @@ class GameState extends ChangeNotifier {
       // their real worth.
       final econ = _economyOf(c);
       for (final p in c.squad) {
+        p.condition = PlayerCondition.draw(_conditionRandom);
         if (p.ovr < 68 || econ < 1) p.marketValue = min(p.marketValue, p.fairValueIn(econ));
       }
     }
@@ -950,7 +952,7 @@ class GameState extends ChangeNotifier {
     // Strongest: positional OVR. Form: also recent ratings and freshness.
     double score(Player p, PlayerPosition pos) => byForm
         ? p.getEffectiveOVR(pos) * (0.75 + p.currentStamina / 100 * 0.25) +
-              ((p.averageRating ?? 6.6) - 6.6) * 6
+              ((p.averageRating ?? 6.6) - 6.6) * 6 + p.condition.skillShift
         : p.getEffectiveOVR(pos) * (0.86 + p.currentStamina / 100 * 0.14);
     // Optimal assignment: natural positions are strongly preferred, so the
     // best centre-back plays centre-back instead of filling a full-back gap.
@@ -1672,6 +1674,9 @@ class GameState extends ChangeNotifier {
     for (final club in _allClubs) {
       for (final p in club.squad) {
         p.currentStamina = min(100, p.currentStamina + 10 + days * 3);
+        // Draw once per match week. Most players are C; elite ability does
+        // not guarantee elite execution on every match day.
+        p.condition = PlayerCondition.draw(_conditionRandom);
       }
     }
     _processDeals();

@@ -93,6 +93,7 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final club = _club;
     final stars = List.of(club.squad)..sort((a, b) => b.ovr.compareTo(a.ovr));
     return Scaffold(
@@ -148,12 +149,12 @@ class _ClubSelectionScreenState extends State<ClubSelectionScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.add_circle_outline_rounded, size: 34, color: AppColors.primary),
+                      Icon(Icons.add_circle_outline_rounded, size: 34, color: AppColors.primary),
                       const SizedBox(height: 6),
                       Text(
                         tr('Yangi klub'),
                         textAlign: TextAlign.center,
-                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primary),
+                        style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.primary),
                       ),
                     ],
                   ),

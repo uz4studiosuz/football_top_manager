@@ -25,6 +25,7 @@ class _MatchReportScreenState extends State<MatchReportScreen> {
   int team = 0;
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final game = GameState();
     final f = widget.fixture;
     final h = game.getClubById(f.homeClubId)!, a = game.getClubById(f.awayClubId)!;
@@ -314,6 +315,7 @@ class MatchHeader extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     List<String> scorers(bool isHome) => [
       for (final e in events.where((e) => e.type == MatchEventType.goal && e.isHomeTeam == isHome))
         '${e.playerName?.split(' ').last ?? ''} ${e.minuteLabel}',
@@ -353,7 +355,7 @@ class MatchHeader extends StatelessWidget {
                 const SizedBox(height: 6),
                 Text(
                   '$homeScore - $awayScore',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 1,

@@ -90,6 +90,7 @@ class _CompareScreenState extends State<CompareScreen> {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final a = widget.first, b = _second;
     final game = GameState();
     final ga = _groups(a), gb = b == null ? null : _groups(b);
@@ -127,7 +128,7 @@ class _CompareScreenState extends State<CompareScreen> {
               child: Row(
                 children: [
                   head(a, _colors.$1),
-                  const Text('VS', style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.ink3)),
+                  Text('VS', style: TextStyle(fontWeight: FontWeight.w900, color: AppColors.ink3)),
                   if (b == null)
                     Expanded(
                       child: OutlinedButton.icon(onPressed: _pick, icon: const Icon(Icons.person_search), label: Text(tr('Tanlash'))),

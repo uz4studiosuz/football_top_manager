@@ -40,6 +40,7 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final game = GameState();
     return ListenableBuilder(
       listenable: game,
@@ -146,7 +147,7 @@ class DashboardScreen extends StatelessWidget {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.calendar_today_rounded, size: 13, color: AppColors.primary),
+                          Icon(Icons.calendar_today_rounded, size: 13, color: AppColors.primary),
                           const SizedBox(width: 6),
                           Text(
                             SeasonCalendar.format(game.currentDate),
@@ -268,7 +269,7 @@ class DashboardScreen extends StatelessWidget {
               SizedBox(
                 height: 24,
                 child: s.formGuide.isEmpty
-                    ? const Text('—', style: AppText.number)
+                    ? Text('—', style: AppText.number)
                     : FittedBox(
                         fit: BoxFit.scaleDown,
                         alignment: Alignment.centerLeft,
@@ -294,7 +295,7 @@ class DashboardScreen extends StatelessWidget {
         height: 18,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: g.isEmpty ? [const Text('—', style: AppText.caption)] : [for (final r in g) FormChip(r, size: 16)],
+          children: g.isEmpty ? [Text('—', style: AppText.caption)] : [for (final r in g) FormChip(r, size: 16)],
         ),
       );
     }
@@ -346,7 +347,7 @@ class DashboardScreen extends StatelessWidget {
                     style: AppText.h2,
                   ),
                   const SizedBox(height: 2),
-                  const Text('20:00', style: AppText.caption),
+                  Text('20:00', style: AppText.caption),
                 ],
               ),
               Expanded(child: ClubHeading(club: a, caption: trf('OVR {0} · {1}-o‘rin', [a.teamOVR, game.positionOf(a.id)]))),
@@ -364,7 +365,7 @@ class DashboardScreen extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.stadium_outlined, size: 14, color: AppColors.ink3),
+              Icon(Icons.stadium_outlined, size: 14, color: AppColors.ink3),
               const SizedBox(width: 6),
               Flexible(
                 child: Text(
@@ -722,13 +723,13 @@ class DashboardScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              leading: const Icon(Icons.play_circle_fill_rounded, color: AppColors.primary),
+              leading: Icon(Icons.play_circle_fill_rounded, color: AppColors.primary),
               title: Text(tr('Boshlash'), style: AppText.bodyStrong),
               subtitle: Text(tr('Asosiy tarkib va taktika bilan')),
               onTap: () => Navigator.pop(ctx, 'start'),
             ),
             ListTile(
-              leading: const Icon(Icons.edit_note_rounded, color: AppColors.primary),
+              leading: Icon(Icons.edit_note_rounded, color: AppColors.primary),
               title: Text(tr('Jamoani shu o‘yin uchun shakllantirish'), style: AppText.bodyStrong),
               subtitle: Text(tr('Maxsus tarkib, taktika va ko‘rsatmalar – o‘yindan keyin asosiysi qaytadi')),
               onTap: () => Navigator.pop(ctx, 'plan'),
@@ -824,7 +825,7 @@ class DashboardScreen extends StatelessWidget {
               Expanded(child: Text(tr('OXIRGI NATIJA'), style: AppText.overline)),
               FormChip(result, size: 20),
               const SizedBox(width: 4),
-              const Icon(Icons.chevron_right_rounded, color: AppColors.ink3),
+              Icon(Icons.chevron_right_rounded, color: AppColors.ink3),
             ],
           ),
           const SizedBox(height: 10),
@@ -1064,6 +1065,7 @@ class _MatchPlanScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final game = GameState();
     final rival = game.getClubById(fixture.homeClubId == game.userClubId ? fixture.awayClubId : fixture.homeClubId);
     return Scaffold(

@@ -143,6 +143,7 @@ class _ClubFormScreenState extends State<ClubFormScreen> {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.isNew ? tr('Yangi klub') : tr('Klubni tahrirlash')),

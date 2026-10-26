@@ -127,6 +127,7 @@ class _ShootoutScreenState extends State<ShootoutScreen> {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final hs = _home.where((x) => x).length, as = _away.where((x) => x).length;
     final winnerHome = hs > as;
     return PopScope(

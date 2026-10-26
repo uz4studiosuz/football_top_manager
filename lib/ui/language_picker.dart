@@ -19,7 +19,7 @@ class LanguageScreen extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Icon(Icons.sports_soccer, size: 56, color: AppColors.primary),
+                Icon(Icons.sports_soccer, size: 56, color: AppColors.primary),
                 const SizedBox(height: 12),
                 const Text(
                   'Football Top Manager 2027',
@@ -27,7 +27,7 @@ class LanguageScreen extends StatelessWidget {
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 6),
-                const Text(
+                Text(
                   'Tilni tanlang · Choose language · Выберите язык',
                   textAlign: TextAlign.center,
                   style: AppText.small,
@@ -40,7 +40,7 @@ class LanguageScreen extends StatelessWidget {
                       color: AppColors.surface,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(14),
-                        side: const BorderSide(color: AppColors.line),
+                        side: BorderSide(color: AppColors.line),
                       ),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(14),
@@ -55,7 +55,7 @@ class LanguageScreen extends StatelessWidget {
                               _LangBadge(l),
                               const SizedBox(width: 14),
                               Expanded(child: Text(l.nativeName, style: AppText.h3)),
-                              const Icon(Icons.chevron_right_rounded, color: AppColors.ink3),
+                              Icon(Icons.chevron_right_rounded, color: AppColors.ink3),
                             ],
                           ),
                         ),
@@ -117,7 +117,7 @@ class _LangBadge extends StatelessWidget {
     decoration: BoxDecoration(color: AppColors.primarySoft, borderRadius: BorderRadius.circular(8)),
     child: Text(
       lang.name.toUpperCase(),
-      style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.primary, letterSpacing: 0.5),
+      style: TextStyle(fontWeight: FontWeight.w800, color: AppColors.primary, letterSpacing: 0.5),
     ),
   );
 }

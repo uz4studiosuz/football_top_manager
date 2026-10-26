@@ -136,6 +136,7 @@ class _Facilities extends StatelessWidget {
   const _Facilities();
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final game = GameState(), life = game.life, club = game.userClub;
     return ListView(
       padding: const EdgeInsets.all(12),
@@ -143,7 +144,7 @@ class _Facilities extends StatelessWidget {
         AppCard(
           child: Row(
             children: [
-              const Icon(Icons.account_balance_wallet_outlined, color: AppColors.primary),
+              Icon(Icons.account_balance_wallet_outlined, color: AppColors.primary),
               const SizedBox(width: 10),
               Expanded(child: Text(tr('Transfer byudjeti'), style: AppText.bodyStrong)),
               Text(club.formattedTransferBudget, style: AppText.h3),
@@ -305,6 +306,7 @@ class _Training extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final game = GameState(), life = game.life;
     final squad = List.of(game.userClub.squad)..sort((a, b) => a.mainPosition.index.compareTo(b.mainPosition.index));
     return ListView(
@@ -383,6 +385,7 @@ class _Academy extends StatelessWidget {
   const _Academy();
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final game = GameState(), club = game.userClub, life = game.life;
     final youngsters = club.squad.where((p) => p.age <= 19).toList()..sort((a, b) => b.potential.compareTo(a.potential));
     return ListView(
@@ -391,7 +394,7 @@ class _Academy extends StatelessWidget {
         AppCard(
           child: Row(
             children: [
-              const Icon(Icons.school_outlined, color: AppColors.primary),
+              Icon(Icons.school_outlined, color: AppColors.primary),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -447,7 +450,7 @@ class _Academy extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         ValueBadge(p.ovr, size: 28),
-                        const Icon(Icons.arrow_right_alt, color: AppColors.ink3),
+                        Icon(Icons.arrow_right_alt, color: AppColors.ink3),
                         ValueBadge(p.potential, size: 28, filled: false),
                       ],
                     ),
@@ -465,6 +468,7 @@ class _Fans extends StatelessWidget {
   const _Fans();
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final game = GameState(), feed = game.life.feed, club = game.userClub;
     return ListView(
       padding: const EdgeInsets.all(12),
@@ -518,6 +522,7 @@ class FanPostTile extends StatelessWidget {
   const FanPostTile({super.key, required this.post});
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final (icon, color) = switch (post.kind) {
       PostKind.journalist => (Icons.newspaper_rounded, AppColors.primary),
       PostKind.player => (Icons.sports_soccer, AppColors.gold),
@@ -547,7 +552,7 @@ class FanPostTile extends StatelessWidget {
                       Flexible(child: Text(post.author, style: AppText.bodyStrong.copyWith(fontSize: 13))),
                       if (verified) ...[
                         const SizedBox(width: 3),
-                        const Icon(Icons.verified_rounded, size: 14, color: AppColors.primary),
+                        Icon(Icons.verified_rounded, size: 14, color: AppColors.primary),
                       ],
                       if (post.kind == PostKind.rivalFan) ...[
                         const SizedBox(width: 6),
@@ -564,7 +569,7 @@ class FanPostTile extends StatelessWidget {
                   const SizedBox(height: 6),
                   Row(
                     children: [
-                      const Icon(Icons.favorite_border, size: 14, color: AppColors.ink3),
+                      Icon(Icons.favorite_border, size: 14, color: AppColors.ink3),
                       const SizedBox(width: 4),
                       Text('${post.likes}', style: AppText.caption),
                     ],
@@ -583,6 +588,7 @@ class _HallOfFame extends StatelessWidget {
   const _HallOfFame();
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final game = GameState(), life = game.life;
     final scorers = life.allTimeScorers.values.toList()..sort((a, b) => b.$2.compareTo(a.$2));
     Widget row(String label, String value) => InfoRow(label, value.isEmpty ? '—' : value);
@@ -677,6 +683,7 @@ class _DressingRoom extends StatelessWidget {
   const _DressingRoom();
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final game = GameState(), life = game.life, club = game.userClub;
     final squad = List.of(club.squad)..sort((a, b) => a.morale.compareTo(b.morale));
     final avg = squad.isEmpty ? 0 : squad.map((p) => p.morale).reduce((a, b) => a + b) ~/ squad.length;
@@ -743,6 +750,7 @@ class _Staff extends StatelessWidget {
   const _Staff();
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final game = GameState(), life = game.life;
     return ListView(
       padding: const EdgeInsets.all(12),
@@ -978,6 +986,7 @@ class ScoutsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final game = GameState(), life = game.life;
     final nations = {for (final p in InitialDatabase.namePools) p['nationality'] as String}.toList()..sort();
     final world = game.world;
@@ -1175,6 +1184,7 @@ class _TeamPlanCardState extends State<_TeamPlanCard> {
 
   @override
   Widget build(BuildContext context) {
+    Theme.of(context); // Rebuild palette tokens when appearance changes.
     final game = GameState(), plan = game.life.teamPlan[_line] ?? const <String>[];
     final sample = game.userClub.squad.where((p) => ClubLife.lineOf(p) == _line).firstOrNull;
     return Column(
