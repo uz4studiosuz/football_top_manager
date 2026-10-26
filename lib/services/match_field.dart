@@ -1016,7 +1016,8 @@ class MatchField {
                           _st(defender).defensiveEngagement -
                           _st(carrier).tightPossession -
                           _st(carrier).balance) /
-                      170 -
+                      170 +
+                  (_st(defender).physicalContact - _st(carrier).physicalContact) / 700 -
                   // A target man holds the ball up against his marker.
                   (carrier.playingStyle == PlayingStyle.targetMan ? 0.05 : 0) -
                   // Attackers in the final third are harder to dispossess.
@@ -1366,7 +1367,10 @@ class MatchField {
       if (ahead > -0.03 && (r.dy - ball.dy).abs() < 0.2 + ahead * 0.8) return false;
       if ((r - ball).distance < 0.05) return false;
       // A quicker defender close behind can still get back.
-      if ((r - ball).distance < 0.1 && _st(xi[i]).speed + 4 >= _st(_xi(_club)[owner]).speed) return false;
+      if ((r - ball).distance < 0.1 &&
+          (_st(xi[i]).speed + _st(xi[i]).acceleration) / 2 + 4 >= (_st(_xi(_club)[owner]).speed + _st(_xi(_club)[owner]).acceleration) / 2) {
+        return false;
+      }
     }
     return true;
   }
@@ -1491,7 +1495,7 @@ class MatchField {
         (0.87 +
                 (skill + _lvl - 72) / 200 -
                 distance * max(0.02, distancePenalty) -
-                (pressedNow ? 0.05 - (_st(passer).ballControl - 75) / 1500 : 0) +
+                (pressedNow ? 0.05 - (_st(passer).ballControl - 75) / 1500 - (_st(passer).tightPossession - 75) / 1800 : 0) +
                 (coaching - 70) / 1500 +
                 (homePossession ? 0.006 : 0) +
                 (_is(passer, _creators) ? 0.02 : 0) +
@@ -1614,6 +1618,10 @@ class MatchField {
                         _st(d).tackling -
                         _st(d).speed) /
                     230 +
+                // Tight possession turns him away from the challenge; body
+                // strength shields the ball against the defender's.
+                (_st(carrier).tightPossession - _st(d).aggression) / 900 +
+                (_st(carrier).physicalContact - _st(d).physicalContact) / 1200 +
                 (carrier.aiStyles.contains(AiStyle.trickster) ||
                         carrier.aiStyles.contains(AiStyle.mazingRun)
                     ? 0.06
