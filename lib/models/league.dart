@@ -116,13 +116,13 @@ class PlayerAction {
   static double _u(String s) => int.parse(s) / 99;
 
   /// Fixed-width text, 12 characters per action.
-  String encode() => '${kind.index}${ok ? 1 : 0}${_d(from.dx)}${_d(from.dy)}${_d(to.dx)}${_d(to.dy)}${minute.clamp(0, 99).toString().padLeft(2, '0')}';
+  String encode() => '${kind.index.toRadixString(36)}${ok ? 1 : 0}${_d(from.dx)}${_d(from.dy)}${_d(to.dx)}${_d(to.dy)}${minute.clamp(0, 99).toString().padLeft(2, '0')}';
 
   static List<PlayerAction> decodeAll(String? text) {
     if (text == null) return const [];
     final out = <PlayerAction>[];
     for (var i = 0; i + 12 <= text.length; i += 12) {
-      final k = int.tryParse(text[i]);
+      final k = int.tryParse(text[i], radix: 36);
       if (k == null || k >= ActionKind.values.length) continue;
       out.add(PlayerAction(
         ActionKind.values[k],

@@ -28,7 +28,7 @@ android {
         // Permanent once the first build is uploaded to Google Play.
         applicationId = "uz.uz4studios.ftm27"
         minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }

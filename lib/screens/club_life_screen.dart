@@ -258,6 +258,7 @@ class _Training extends StatelessWidget {
 
   static String _targetLabel(String? t) {
     if (t == null) return tr('Jamoa rejasi');
+    if (t.startsWith('position:')) return '${tr('Yangi pozitsiya')}: ${t.substring(9)}';
     if (t.startsWith('style:')) {
       final s = PlayingStyle.values.asNameMap()[t.substring(6)];
       return trf('Uslub: {0}', [s?.title ?? '?']);
@@ -296,6 +297,12 @@ class _Training extends StatelessWidget {
               for (final s in PlayingStyle.values)
                 if (s != p.playingStyle && s.name.contains('Goalkeeper') == p.mainPosition.isGoalkeeper)
                   ListTile(dense: true, title: Text(s.title), subtitle: Text(s.description), onTap: () => Navigator.pop(ctx, 'style:${s.name}')),
+              const Divider(),
+              Padding(padding: const EdgeInsets.fromLTRB(16, 4, 16, 4), child: Text(tr('Yangi pozitsiya'), style: AppText.bodyStrong)),
+              for (final pos in PlayerPosition.values)
+                if (pos != p.mainPosition && !p.altPositions.contains(pos) && pos.isGoalkeeper == p.mainPosition.isGoalkeeper)
+                  ListTile(dense: true, title: Text(pos.code), trailing: ValueBadge(p.getEffectiveOVR(pos), size: 26),
+                    onTap: () => Navigator.pop(ctx, 'position:${pos.code}')),
             ],
           ),
         ),
@@ -355,7 +362,7 @@ class _Training extends StatelessWidget {
                       const SizedBox(width: 6),
                       Flexible(
                         child: Text(
-                          '${p.age} · ${_targetLabel(life.targets[p.id])}',
+                          '${p.age} · ${_targetLabel(life.targets[p.id])}${life.targets.containsKey(p.id) ? ' · ${trf('Taxminan {0} tur', [game.trainingWeeks(p)])}' : ''}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: AppText.caption,
@@ -367,7 +374,7 @@ class _Training extends StatelessWidget {
                       ? SizedBox(
                           width: 46,
                           child: LinearProgressIndicator(
-                            value: ((life.progress[p.id] ?? 0) / (life.targets[p.id]!.startsWith('style:') ? 4 : 1)).clamp(0.0, 1.0),
+                            value: ((life.progress[p.id] ?? 0) / (life.targets[p.id]!.startsWith('position:') ? 6 : life.targets[p.id]!.startsWith('style:') ? 4 : 1)).clamp(0.0, 1.0),
                           ),
                         )
                       : const Icon(Icons.chevron_right_rounded),
@@ -700,6 +707,15 @@ class _DressingRoom extends StatelessWidget {
             ],
           ),
         ),
+        const SizedBox(height: 10),
+        AppCard(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(tr('Jamoa uyg‘unligi'), style: AppText.bodyStrong),
+          const SizedBox(height: 4),
+          Text('${game.teamChemistry}/100 · ${tr('Birga o‘ynagan futbolchilar o‘zaro yaxshiroq tushunishadi')}', style: AppText.small),
+          for (final entry in (life.relationships.entries.toList()..sort((a, b) => b.value.compareTo(a.value))).take(3))
+            if (entry.key.split('|').length == 2 && club.playerById(entry.key.split('|')[0]) != null && club.playerById(entry.key.split('|')[1]) != null)
+              Text('${club.playerById(entry.key.split('|')[0])!.shortName} + ${club.playerById(entry.key.split('|')[1])!.shortName} · ${entry.value}', style: AppText.caption),
+        ])),
         const SizedBox(height: 10),
         AppCard(
           padding: EdgeInsets.zero,

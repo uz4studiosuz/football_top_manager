@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/player.dart';
 import '../services/game_state.dart';
 import '../ui/face_avatar.dart';
+import '../ui/flag.dart';
 import '../ui/widgets.dart';
 import 'widgets/player_detail_view.dart';
 import '../l10n/l10n.dart';
@@ -202,10 +203,10 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
                           PositionChip(position.code, fontSize: 11),
                           const SizedBox(width: 6),
                           Flexible(
-                            child: Text(
-                              trf('{0} {1} yosh · #{2}', [countries[nationality], age, number]),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                            child: FlagLabel(
+                              countries[nationality]!,
+                              trf('{0} {1} yosh · #{2}', ['', age, number]).trim(),
+                              nationality: nationality,
                               style: AppText.caption,
                             ),
                           ),
@@ -247,7 +248,8 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
                   isExpanded: true,
                   decoration: InputDecoration(labelText: tr('Millati'), prefixIcon: Icon(Icons.flag_outlined)),
                   items: [
-                    for (final c in countries.keys) DropdownMenuItem(value: c, child: Text('${countries[c]}  ${tr(c)}')),
+                    for (final c in countries.keys)
+                      DropdownMenuItem(value: c, child: FlagLabel(countries[c]!, tr(c), nationality: c)),
                   ],
                   onChanged: (v) => setState(() => nationality = v!),
                 ),

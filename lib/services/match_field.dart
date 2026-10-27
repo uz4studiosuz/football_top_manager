@@ -5,6 +5,7 @@ import '../models/player.dart';
 import '../models/league.dart';
 import 'commentary.dart';
 import '../ui/heatmap.dart' show encodeHeat, heatCols, heatRows;
+import 'automatic_tactics.dart';
 import '../l10n/l10n.dart';
 
 enum FieldPhase {
@@ -201,6 +202,9 @@ class MatchField {
   int extraFirst = 0, extraSecond = 0;
   FieldPhase phase = FieldPhase.kickoff;
   double homeAttack = 1, awayAttack = 1;
+  Map<String, dynamic>? automaticRule;
+  bool automaticRuleHome = true;
+  bool automaticRuleApplied = false;
 
   /// Training and team-talk effects: attack multiplier, the share of the
   /// opponents' chance quality allowed (lower = tighter) and stamina drain.
@@ -807,6 +811,25 @@ class MatchField {
 
   void _onMinute() {
     _eff.clear();
+    if (!automaticRuleApplied && automaticRule != null) {
+      final mine = automaticRuleHome ? home : away;
+      final theirs = automaticRuleHome ? away : home;
+      final updated = automaticTactics(automaticRule!, minute: time.floor(),
+        goalsFor: automaticRuleHome ? homeStats.goals : awayStats.goals,
+        goalsAgainst: automaticRuleHome ? awayStats.goals : homeStats.goals,
+        opponentStyle: theirs.tactics.playstyle, current: mine.tactics);
+      if (updated != null) {
+        mine.tactics = updated;
+        automaticRuleApplied = true;
+        final action = switch (automaticRule!['action'] ?? 'press') {
+          'attack' => tr('Hujum'),
+          'defend' => tr('Himoya'),
+          'wide' => tr('Qanotlar'),
+          _ => tr('Yuqori pressing'),
+        };
+        _emit(MatchEventType.info, _talk.say('tactic', t: mine.shortName, p: action), automaticRuleHome, null);
+      }
+    }
     // Fatigue.
     for (final club in [home, away]) {
       final t = club.tactics;
@@ -1692,8 +1715,12 @@ class MatchField {
         : (_st(crosser).loftedPass * 0.6 + _st(crosser).curl * 0.4);
     final accurate =
         random.nextDouble() < (0.66 + (skill + _lvl - 72) / 140).clamp(0.3, 0.92);
+    final plan = corner && _origin == 'corner' ? _club.cornerPlans[_xi(_club)[target].id] : null;
+    final run = plan != null && plan.length > 1 ? plan[1] : 'hold';
+    final runOffset = run == 'forward' ? 0.025 : run == 'back' ? -0.025 : 0.0;
+    final targetPoint = _bound(points[target] + Offset((attackHome ? 1 : -1) * runOffset, 0));
     final to = accurate
-        ? points[target]
+        ? targetPoint
         : Offset(
             points[target].dx + (random.nextDouble() - 0.5) * 0.12,
             points[target].dy + (random.nextDouble() - 0.5) * 0.3,
@@ -2749,6 +2776,20 @@ class MatchField {
         if (attacking) targets[_pendingTaker] = _takerSpot;
       default:
         return targets;
+    }
+    if (_pending == _SetPiece.corner && attacking) {
+      for (var i = 1; i < xi.length; i++) {
+        if (i == _pendingTaker || dismissed.contains(xi[i].id)) continue;
+        final plan = c.cornerPlans[xi[i].id];
+        if (plan == null || plan.isEmpty) continue;
+        final nearSide = _pendingSpot.dy < 0.5 ? 0.42 : 0.58;
+        targets[i] = switch (plan.first) {
+          'near' => Offset(gx(0.07), nearSide),
+          'far' => Offset(gx(0.07), 1 - nearSide),
+          'edge' => Offset(gx(0.18), 0.5),
+          _ => targets[i],
+        };
+      }
     }
     return targets;
   }

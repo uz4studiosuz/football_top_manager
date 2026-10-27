@@ -12,6 +12,7 @@ import '../ui/widgets.dart';
 import 'widgets/player_detail_view.dart';
 import 'player_match_screen.dart';
 import '../l10n/l10n.dart';
+import 'widgets/tactical_analysis.dart';
 
 /// Post-match page for any played fixture (SofaScore event page layout).
 class MatchReportScreen extends StatefulWidget {
@@ -127,6 +128,8 @@ class _MatchReportScreenState extends State<MatchReportScreen> {
                   homeColor: colors.$1,
                   awayColor: colors.$2,
                 ),
+                const SizedBox(height: 12),
+                TacticalAnalysis(fixture: f, home: h, away: a),
                 if (f.shots.isNotEmpty)
                   AppCard(
                     margin: const EdgeInsets.only(top: 12),

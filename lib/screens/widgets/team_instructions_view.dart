@@ -7,6 +7,7 @@ import '../../services/game_state.dart';
 import '../../ui/face_avatar.dart';
 import '../../ui/widgets.dart';
 import '../../l10n/l10n.dart';
+import 'strategy_planner.dart';
 
 /// Team tactics in eFootball terms: playstyle, attack, defence and extras.
 class TeamTacticsView extends StatelessWidget {
@@ -28,6 +29,8 @@ class TeamTacticsView extends StatelessWidget {
             child: ListView(
               padding: const EdgeInsets.all(12),
               children: [
+                const StrategyPlanner(),
+                const SizedBox(height: 12),
                 AppCard(
                   padding: const EdgeInsets.fromLTRB(0, 14, 0, 6),
                   child: Column(

@@ -1063,12 +1063,14 @@ class GameState extends ChangeNotifier {
 
   void _restoreUserLineup() {
     final xi = _preMatchXI, bench = _preMatchBench;
+    final regularTactics = preMatchTactics;
     _preMatchXI = _preMatchBench = null;
     manMarks.clear();
     preMatchTactics = null;
     preMatchInstructions = null;
     if (xi == null || bench == null) return;
     final c = userClub;
+    if (regularTactics != null) c.tactics = regularTactics;
     if (xi.length != 11 || !xi.every((id) => c.playerById(id) != null)) return;
     c.startingLineupIds
       ..clear()
@@ -3055,6 +3057,49 @@ class GameState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void setCornerPlan(Player player, String zone, String run) {
+    if (zone == 'auto') {
+      userClub.cornerPlans.remove(player.id);
+    } else {
+      userClub.cornerPlans[player.id] = [zone, run];
+    }
+    notifyListeners();
+  }
+
+  void setAutomaticRule(Map<String, dynamic> rule) {
+    life.autoRule
+      ..clear()
+      ..addAll(rule);
+    notifyListeners();
+  }
+
+  int get teamChemistry {
+    final xi = userClub.startingXI;
+    var sum = 0, count = 0;
+    for (var i = 0; i < xi.length; i++) {
+      for (var j = i + 1; j < xi.length; j++) {
+        sum += life.relationships[ClubLife.pairKey(xi[i].id, xi[j].id)] ?? 0;
+        count++;
+      }
+    }
+    return count == 0 ? 0 : (sum / count).round().clamp(0, 100);
+  }
+
+  /// Estimated development rate per match week, before the focus bonus.
+  double trainingRate(Player p) =>
+      (p.age <= 21 ? 0.42 : p.age <= 24 ? 0.3 : p.age <= 28 ? 0.18 : p.age <= 31 ? 0.1 : 0.05) *
+      life.growthFactor *
+      (p.mainPosition.isGoalkeeper ? 1 + 0.2 * life.staffLevel(StaffRole.goalkeeping) : 1) *
+      (p.personality == Personality.professional ? 1.3 : p.personality == Personality.lazy ? 0.6 : 1.0) *
+      (p.isInjured ? 0.2 : 1);
+
+  int trainingWeeks(Player p) {
+    final target = life.targets[p.id];
+    if (target == null) return 0;
+    final required = target.startsWith('position:') ? 6.0 : target.startsWith('style:') ? 4.0 : 1.0;
+    return max(1, ((required - (life.progress[p.id] ?? 0)) / max(0.01, trainingRate(p))).ceil());
+  }
+
 
   /// Weekly: constructions finish, individual and team training progress.
   void _weeklyClubLife(int days) {
@@ -3075,16 +3120,27 @@ class GameState extends ChangeNotifier {
     for (final p in c.squad) {
       final focusKeys = trainingKeysFor(p);
       if (life.focus == TrainingFocus.fitness) p.currentStamina = min(100, p.currentStamina + 5);
-      final rate = (p.age <= 21 ? 0.42 : p.age <= 24 ? 0.3 : p.age <= 28 ? 0.18 : p.age <= 31 ? 0.1 : 0.05) *
-          life.growthFactor *
-          (p.mainPosition.isGoalkeeper ? 1 + 0.2 * life.staffLevel(StaffRole.goalkeeping) : 1) *
-          switch (p.personality) {
-            Personality.professional => 1.3,
-            Personality.lazy => 0.6,
-            _ => 1.0,
-          } *
-          (p.isInjured ? 0.2 : 1);
+      final rate = trainingRate(p);
       final target = life.targets[p.id];
+      if (target != null && target.startsWith('position:')) {
+        final code = target.substring(9);
+        final position = PlayerPosition.values.where((x) => x.code == code).firstOrNull;
+        if (position == null || position.isGoalkeeper != p.mainPosition.isGoalkeeper) {
+          life.targets.remove(p.id);
+          life.progress.remove(p.id);
+          continue;
+        }
+        final v = (life.progress[p.id] ?? 0) + rate;
+        if (v >= 6) {
+          if (position != p.mainPosition && !p.altPositions.contains(position)) p.altPositions.add(position);
+          life.targets.remove(p.id);
+          life.progress.remove(p.id);
+          _news(NewsKind.award, trf('{0} yangi pozitsiyani o‘zlashtirdi', [p.shortName]), position.code);
+        } else {
+          life.progress[p.id] = v;
+        }
+        continue;
+      }
       if (target != null && target.startsWith('style:')) {
         final style = PlayingStyle.values.asNameMap()[target.substring(6)];
         if (style == null) continue;
@@ -3129,8 +3185,12 @@ class GameState extends ChangeNotifier {
 
   /// Applies the user's training focus to a match engine.
   void applyClubBoosts(MatchField f, bool userHome) {
+    if (life.autoRule['enabled'] == true) {
+      f.automaticRule = Map<String, dynamic>.from(life.autoRule);
+      f.automaticRuleHome = userHome;
+    }
     final leaders = userClub.startingXI.where((p) => p.personality == Personality.leader).length;
-    final boost = min(4, leaders * 2) + life.staffLevel(StaffRole.assistant);
+    final boost = min(4, leaders * 2) + life.staffLevel(StaffRole.assistant) + (teamChemistry / 25).floor();
     if (userHome) {
       f.homeCoaching += boost;
     } else {
@@ -3352,6 +3412,14 @@ class GameState extends ChangeNotifier {
       life.post(post);
     }
     life.recordMatch(user, rival, scored, conceded, seasonLabel, f.events);
+    final together = [for (final p in user.squad) if ((f.playerStats[p.id]?.minutes ?? 0) >= 20) p];
+    for (var i = 0; i < together.length; i++) {
+      for (var j = i + 1; j < together.length; j++) {
+        final key = ClubLife.pairKey(together[i].id, together[j].id);
+        final delta = scored > conceded ? 3 : scored == conceded ? 2 : 1;
+        life.relationships[key] = ((life.relationships[key] ?? 0) + delta).clamp(0, 100);
+      }
+    }
     for (final p in user.squad) {
       if ((f.playerStats[p.id]?.minutes ?? 0) > 0) {
         life.benchRounds.remove(p.id);

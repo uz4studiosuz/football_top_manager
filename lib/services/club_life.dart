@@ -130,6 +130,12 @@ class ClubLife {
   /// Individual training: player id → attribute key or `style:<name>`.
   final Map<String, String> targets = {};
   final Map<String, double> progress = {};
+  /// Links between players who have played together; keys are sorted IDs.
+  final Map<String, int> relationships = {};
+  /// One optional match-day instruction, evaluated by the engine.
+  final Map<String, dynamic> autoRule = {};
+
+  static String pairKey(String a, String b) => a.compareTo(b) < 0 ? '$a|$b' : '$b|$a';
   final List<FanPost> feed = [];
   final List<SeasonAwards> awards = [];
   final Set<String> pressDone = {};
@@ -225,6 +231,8 @@ class ClubLife {
     teamPlan.clear();
     targets.clear();
     progress.clear();
+    relationships.clear();
+    autoRule.clear();
     feed.clear();
     awards.clear();
     pressDone.clear();
@@ -452,6 +460,8 @@ class ClubLife {
     if (teamPlan.isNotEmpty) 'tp': teamPlan,
     'tg': targets,
     'pr': {for (final e in progress.entries) e.key: double.parse(e.value.toStringAsFixed(3))},
+    if (relationships.isNotEmpty) 'rel': Map<String, int>.from(relationships),
+    if (autoRule.isNotEmpty) 'ar': Map<String, dynamic>.from(autoRule),
     'fd': feed.map((p) => p.toMap()).toList(),
     'aw': awards.map((a) => a.toMap()).toList(),
     'pd': pressDone.toList(),
@@ -490,6 +500,8 @@ class ClubLife {
     (m['tp'] as Map? ?? {}).forEach((k, v) => teamPlan[k as String] = List<String>.from(v as List));
     targets.addAll(Map<String, String>.from(m['tg'] ?? {}));
     (m['pr'] as Map? ?? {}).forEach((k, v) => progress[k as String] = (v as num).toDouble());
+    relationships.addAll(Map<String, int>.from(m['rel'] ?? {}));
+    autoRule.addAll(Map<String, dynamic>.from(m['ar'] ?? {}));
     feed.addAll([for (final p in (m['fd'] as List? ?? [])) FanPost.fromMap(Map<String, dynamic>.from(p))]);
     awards.addAll([for (final a in (m['aw'] as List? ?? [])) SeasonAwards.fromMap(Map<String, dynamic>.from(a))]);
     pressDone.addAll(List<String>.from(m['pd'] ?? const []));

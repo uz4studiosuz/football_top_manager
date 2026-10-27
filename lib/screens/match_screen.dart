@@ -646,6 +646,9 @@ class _MatchScreenState extends State<MatchScreen> {
     );
     // Changes made in the Tactics screen become the base for live orders
     // (for this match only; the pre-match tactics return at full time).
+    _field.automaticRule = _game.life.autoRule['enabled'] == true
+        ? Map<String, dynamic>.from(_game.life.autoRule)
+        : null;
     if (_orders.isEmpty) _baseTactics = _user.tactics;
     if (mounted) setState(() => _playing = resume && !_field.isHalfTime);
   }

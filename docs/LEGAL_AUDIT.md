@@ -1,5 +1,47 @@
 # Mualliflik huquqi va Google Play qoidalari bo‘yicha tekshiruv
 
+## 2026-yil 27-oktabrdagi tekshiruv
+
+**Xulosa:** joriy ma’lumotlar bilan Play Store uchun huquqiy tozalikni
+tasdiqlab bo‘lmaydi. Litsenziyalarni ko‘rmasdan mavjud buildni tijoriy
+tarqatish tavsiya etilmaydi. Bu yakuniy yuridik xulosa emas.
+
+- `assets/data/clubs.json` va `clubs_epl.json` haqiqiy klublar, stadionlar,
+  ranglar va ularning belgilariga o‘xshashi mumkin bo‘lgan generatsiyalangan
+  gerb sozlamalarini saqlaydi. Asl logotip fayli yo‘qligi o‘xshash gerb
+  yoki savdo belgisi bo‘yicha barcha xavflarni bartaraf etmaydi.
+- `assets/data/players.json` va `players_epl.json`da haqiqiy futbolchilar
+  ismlari va ularga tegishli o‘yin ma’lumotlari mavjud. Ismning o‘zi avtomatik
+  ravishda mualliflik huquqi obyekti degani emas: foydalanish turi va mamlakatga
+  qarab shaxs, tasvir, reklama hamda boshqa huquqlar tekshirilishi kerak.
+- `tool/world_data.py`, `tool/efl_data.py`, `tool/epl_data.py` va
+  `tool/names_data.py` tashqi `2026.db`dan ma’lumot o‘qiydi. Uning egasi,
+  litsenziyasi va ishlatishga ruxsat hujjatlari ushbu tekshiruvda tasdiqlanmadi.
+  Nomlarni almashtirish yoki atributlarni ozgina o‘zgartirish ruxsatni
+  avtomatik bermaydi. Tegishli yurisdiksiyada baza huquqi ham bo‘lishi mumkin.
+- `tool/build_play.py` uydirma nomli AAB tayyorlash uchun mavjud, ammo uning
+  natijasi huquqiy jihatdan toza ekanligi tasdiqlanmagan; bazaning kelib
+  chiqishi va boshqa identifikatsiya qiluvchi elementlar baribir tekshiriladi.
+- SVG bayroqlar `assets/flags` ichidagi **flag-icons**, MIT litsenziyasi
+  bilan berilgan; `assets/flags/LICENSE` dagi mualliflik va litsenziya matni
+  tarqatiladigan nusxada saqlanishi kerak. Ayrim bayroq va emblemalardan
+  foydalanishga mahalliy cheklovlar bo‘lishi mumkin.
+- `android/key.properties` mavjud emas; hozirgi Gradle sozlamasi release’ni
+  debug kalit bilan imzolaydi. Play uchun alohida upload key va Play App
+  Signing sozlash kerak; avval tayyorlangan APK’ni Play tayyor deb hisoblamang.
+- Asosiy Android manifestida `INTERNET` ruxsati ko‘rinmadi, rasm funksiyasi
+  `image_picker` ishlatadi. Play’ga chiqariladigan **yakuniy AAB va birlashgan
+  manifest**, SDK’lar, vaqtinchalik fayllar va qurilma backup holatini tekshirib,
+  Data safety va ochiq maxfiylik siyosatini haqiqiy ishlashga mos to‘ldiring.
+
+Rasmiy manbalar: [Google Play: Intellectual Property](https://support.google.com/googleplay/android-developer/answer/9888072),
+[Impersonation](https://support.google.com/googleplay/android-developer/answer/9888374),
+[Data safety](https://support.google.com/googleplay/android-developer/answer/10787469),
+[yangi shaxsiy akkaunt testi](https://support.google.com/googleplay/android-developer/answer/14151465),
+[FIFPRO o‘yinchi huquqlari](https://www.fifpro.org/en/who-we-are/commercial),
+[Buyuk Britaniya baza huquqi qoidalari](https://www.legislation.gov.uk/uksi/1997/3032/body/made).
+Buyuk Britaniya qonuni boshqa mamlakatlarda avtomatik tatbiq etilmaydi.
+
 Tekshiruv sanasi: 2026-yil 25-oktabr. Bu huquqiy maslahat emas. Men advokat emasman. Pastdagilar kod va ma’lumotlarni ko‘rib chiqish natijasi. Ilovani chiqarishdan oldin intellektual mulk bo‘yicha yurist bilan maslahatlashing.
 
 ## Qisqa xulosa
@@ -59,7 +101,8 @@ SEGA / Sports Interactive “Football Manager” savdo belgisiga ega. “Footbal
 - Gerblar `lib/models/crest.dart` dagi umumiy shakllar (qalqon, doira, hayvon emblemalari) va ranglardan chiziladi. Haqiqiy logotip fayllari yo‘q.
 - Shrift: Roboto (Apache 2.0, `assets/fonts/LICENSE.txt`).
 - Ilova ikonkasi va banner kodda chizilgan (`tool/make_icons.py`), begona grafika yo‘q.
-- Bayroqlar Unicode emoji.
+- Bayroq SVG’lari `assets/flags` ichida; litsenziyasi MIT. Ma’lumotlardagi
+  emoji qiymatlari SVG faylini aniqlash uchun ham ishlatiladi.
 - Paketlar: `shared_preferences`, `file_picker`, `image_picker`, `web`, `cupertino_icons` — BSD yoki MIT. Flutter’ning litsenziyalar sahifasi (`showLicensePage`) ularni avtomatik ko‘rsatadi. Sozlamalarga “Litsenziyalar” tugmasini qo‘shish tavsiya etiladi.
 
 ## 6. Google Play siyosatlari bo‘yicha boshqa bandlar
