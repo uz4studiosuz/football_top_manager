@@ -59,6 +59,13 @@ abstract final class AppColors {
   static const pitch = Color(0xFF2E8B57);
   static const pitchDark = Color(0xFF287A4C);
 
+  // Tinted surfaces must retain readable text in either appearance.
+  static Color get dangerSurface => AppAppearance.instance.value ? const Color(0xFF342326) : const Color(0xFFFFF4F2);
+  static Color get successSurface => AppAppearance.instance.value ? const Color(0xFF20342B) : const Color(0xFFEFFAF3);
+  static Color get warningSurface => AppAppearance.instance.value ? const Color(0xFF393023) : const Color(0xFFFFF6EC);
+  static Color get cupSurface => AppAppearance.instance.value ? const Color(0xFF393122) : const Color(0xFFFFF8E6);
+  static Color get infoSurface => AppAppearance.instance.value ? const Color(0xFF253442) : const Color(0xFFEFF8FF);
+
   static Color condition(int index) => [win, const Color(0xFF00ADC4), ink2, warning, loss][index];
 
   /// SofaScore style player-rating scale (3.0 – 10.0).

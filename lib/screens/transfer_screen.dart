@@ -91,7 +91,7 @@ class _TransferScreenState extends State<TransferScreen> {
   Widget _windowBanner() {
     final open = game.isTransferWindowOpen;
     return AppCard(
-      color: open ? const Color(0xFFEFFAF3) : const Color(0xFFFFF6EC),
+      color: open ? AppColors.successSurface : AppColors.warningSurface,
       child: Row(
         children: [
           Icon(open ? Icons.lock_open_rounded : Icons.lock_clock_outlined, color: open ? AppColors.win : AppColors.warning),

@@ -298,7 +298,7 @@ class _PositionRatingsViewState extends State<PositionRatingsView> {
         width: 54,
         height: 42,
         decoration: BoxDecoration(
-          color: main || alt ? c : Colors.white.withValues(alpha: 0.9),
+          color: main || alt ? c : AppColors.surface,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
             width: pos == selected ? 2.5 : (main ? 2 : 1),

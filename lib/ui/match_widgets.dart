@@ -691,7 +691,7 @@ class _LineupNode extends StatelessWidget {
 
 Widget _mark(List<Widget> children) => Container(
   padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1.5),
-  decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
+  decoration: BoxDecoration(color: AppColors.surface, borderRadius: BorderRadius.circular(8)),
   child: Row(mainAxisSize: MainAxisSize.min, children: children),
 );
 

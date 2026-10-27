@@ -304,7 +304,7 @@ class DashboardScreen extends StatelessWidget {
     return AppCard(
       padding: const EdgeInsets.all(16),
       // A cup tie is told apart at a glance: gold tint and a trophy badge.
-      color: cup ? const Color(0xFFFFF8E6) : AppColors.surface,
+      color: cup ? AppColors.cupSurface : AppColors.surface,
       child: Column(
         children: [
           Row(
@@ -435,7 +435,7 @@ class DashboardScreen extends StatelessWidget {
 
   /// Job offers (after success) or the list of clubs after a sack.
   Widget _jobOffers(BuildContext context, GameState game) => AppCard(
-    color: game.life.sacked ? const Color(0xFFFFF4F2) : AppColors.surface,
+    color: game.life.sacked ? AppColors.dangerSurface : AppColors.surface,
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -789,7 +789,7 @@ class DashboardScreen extends StatelessWidget {
   Widget _availabilityWarning(GameState game) {
     final list = game.unavailableStarters;
     return AppCard(
-      color: const Color(0xFFFFF4F2),
+      color: AppColors.dangerSurface,
       child: Row(
         children: [
           const Icon(Icons.local_hospital_outlined, color: AppColors.live),

@@ -194,7 +194,7 @@ class _PlayerDetailViewState extends State<PlayerDetailView> {
       children: [
         if (!p.isAvailable)
           AppCard(
-            color: const Color(0xFFFFF4F2),
+            color: AppColors.dangerSurface,
             margin: const EdgeInsets.only(bottom: 12),
             child: Row(
               children: [

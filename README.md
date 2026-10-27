@@ -2,6 +2,9 @@
 
 A Flutter football management game with an eight-club, 14-round career.
 
+Version 1.3.1 fixes dark-mode warning surfaces and match-lineup markers,
+and places corner kicks at the correct pitch corner.
+
 ## Version 1.3.0
 
 - Goalkeepers open on their own match tab: saves, goals conceded, xGOT,

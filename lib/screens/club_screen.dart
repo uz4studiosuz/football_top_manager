@@ -343,7 +343,7 @@ class _CalendarViewState extends State<CalendarView> {
                             return Container(
                               margin: const EdgeInsets.all(2),
                               decoration: BoxDecoration(
-                                color: window ? const Color(0xFFEFF8FF) : null,
+                                color: window ? AppColors.infoSurface : null,
                                 borderRadius: BorderRadius.circular(8),
                                 border: isToday ? Border.all(color: AppColors.primary, width: 1.6) : null,
                               ),

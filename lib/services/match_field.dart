@@ -2478,11 +2478,14 @@ class MatchField {
   void _awardCorner(bool attackingHome) {
     (attackingHome ? homeStats : awayStats).corners++;
     _spike(attackingHome, 9);
-    final side = random.nextBool() ? 0.06 : 0.94;
+    // Ball lies inside the one-metre corner arc; players are kept slightly
+    // further infield by the movement bounds.
+    final topWhenCentral = random.nextBool();
+    final side = ball.dy == 0.5 ? (topWhenCentral ? 0.0 : 1.0) : (ball.dy < 0.5 ? 0.0 : 1.0);
     _setPendingRestart(
       _SetPiece.corner,
       attackingHome,
-      Offset(attackingHome ? 0.975 : 0.025, side),
+      Offset(attackingHome ? 1.0 : 0.0, side),
     );
     _emit(
       MatchEventType.corner,
@@ -2504,6 +2507,7 @@ class MatchField {
     _loose = null;
     _pendingHome = forHome;
     _pendingSpot = spot;
+    if (piece == _SetPiece.corner) ball = spot;
     homePossession = forHome;
     _pendingTaker = _takerFor(forHome ? home : away, piece);
     if (piece == _SetPiece.throwIn) {
@@ -2523,6 +2527,7 @@ class MatchField {
 
   /// Where the taker of the pending restart has to stand.
   Offset get _takerSpot => switch (_pending) {
+    _SetPiece.corner => Offset(_pendingHome ? 0.99 : 0.01, _pendingSpot.dy < 0.5 ? 0.015 : 0.985),
     _SetPiece.penalty => Offset(_pendingHome ? 1 - 11 / 105 : 11 / 105, 0.5),
     _SetPiece.goalKick => Offset(_pendingHome ? 0.055 : 0.945, 0.5),
     _SetPiece.throwIn => Offset(_pendingSpot.dx, _pendingSpot.dy < 0.5 ? 0.046 : 0.954),
@@ -2543,6 +2548,7 @@ class MatchField {
       return;
     }
     final piece = _pending;
+    final restartTakerSpot = _takerSpot;
     _pending = _SetPiece.none;
     if (piece == _SetPiece.corner || piece == _SetPiece.freeKick || piece == _SetPiece.penalty) {
       _regroup = 0.7;
@@ -2572,12 +2578,18 @@ class MatchField {
         homePossession = _pendingHome;
         final taker = _pendingTaker;
         owner = taker;
-        _points[owner] = _pendingSpot;
+        _points[owner] = restartTakerSpot;
         ball = _pendingSpot;
         _origin = 'corner';
         _originHome = homePossession;
         if (!_startCross(_xi(_club)[owner], corner: true)) {
           _lastPasser = null;
+          // A short corner is valid even when no teammate has reached the box.
+          final teammate = _nearestTeammateForCorner();
+          if (teammate != null) {
+            _setPieceDelivery = true;
+            _startPass(teammate, _xi(_club)[owner]);
+          }
         }
       case _SetPiece.freeKick:
         homePossession = _pendingHome;
@@ -2610,6 +2622,20 @@ class MatchField {
         if (_frames.length > 6) _frames.removeRange(0, _frames.length - 6);
         _startShot(_xi(_club)[owner], kind: _Kind.penalty);
     }
+  }
+
+  int? _nearestTeammateForCorner() {
+    int? best;
+    var distance = double.infinity;
+    for (var i = 1; i < 11; i++) {
+      if (i == owner || dismissed.contains(_xi(_club)[i].id)) continue;
+      final d = (_points[i] - ball).distance;
+      if (d < distance) {
+        best = i;
+        distance = d;
+      }
+    }
+    return best;
   }
 
   int _takerFor(Club club, _SetPiece piece) {
@@ -2647,7 +2673,7 @@ class MatchField {
       case _SetPiece.freeKick:
         final corner = _pending == _SetPiece.corner;
         if (attacking) {
-          targets[_pendingTaker] = _pendingSpot;
+          targets[_pendingTaker] = corner ? _takerSpot : _pendingSpot;
           final aerial = order.where((i) => i != _pendingTaker).toList()
             ..sort((a, b) => (_st(xi[b]).heading + _st(xi[b]).jumping)
                 .compareTo(_st(xi[a]).heading + _st(xi[a]).jumping));
@@ -2733,14 +2759,16 @@ class MatchField {
     for (var i = 0; i < 11; i++) {
       final t = targets[i];
       if (t == null || dismissed.contains(xi[i].id)) continue;
-      final delta = _bound(t) - points[i];
+      final cornerTaker = _pending == _SetPiece.corner && isHome == _pendingHome && i == _pendingTaker;
+      final delta = (cornerTaker ? t : _bound(t)) - points[i];
       // Restarts take real seconds: players have time to take position.
       final speed = 0.5 + _st(xi[i]).speed / 500;
       final desired = delta.distance < 0.003
           ? Offset.zero
           : delta / delta.distance * min(speed, delta.distance * 3);
       velocity[i] = Offset.lerp(velocity[i], desired, min(1, dt * 4))!;
-      points[i] = _bound(points[i] + velocity[i] * dt);
+      final next = points[i] + velocity[i] * dt;
+      points[i] = cornerTaker ? Offset(next.dx.clamp(0.0, 1.0), next.dy.clamp(0.0, 1.0)) : _bound(next);
     }
     if (_pending == _SetPiece.corner || _pending == _SetPiece.freeKick || _pending == _SetPiece.penalty) {
       ball = _pending == _SetPiece.penalty

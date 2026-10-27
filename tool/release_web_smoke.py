@@ -5,6 +5,8 @@ import re
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 
+expected_version = re.search(r'^version:\s*([\d.]+)', Path('pubspec.yaml').read_text(encoding='utf-8'), re.M).group(1)
+
 with sync_playwright() as p:
     browser = p.chromium.launch(
         executable_path=os.environ.get('CHROME_BINARY', r'C:\Program Files\Google\Chrome\Application\chrome.exe'),
@@ -36,33 +38,33 @@ with sync_playwright() as p:
         page.get_by_role('button', name=re.compile('^ARSENALNI BOSHQARISH')).evaluate('e => e.click()')
         profile = page.get_by_role('button', name=re.compile('^Menejer profili'))
         profile.wait_for()
-        page.screenshot(path='artifacts/qa/release-dashboard-light.png')
+        page.screenshot(path=f'artifacts/qa/release-{expected_version}-dashboard-light.png')
         profile.evaluate('e => e.click()')
         page.get_by_role('button', name='Qorong‘i rejim', exact=True).evaluate('e => e.click()')
         page.get_by_role('button', name='Yorug‘ rejim', exact=True).wait_for()
         page.wait_for_timeout(350)
-        page.screenshot(path='artifacts/qa/release-manager-dark.png')
+        page.screenshot(path=f'artifacts/qa/release-{expected_version}-manager-dark.png')
         assert page.evaluate("JSON.parse(localStorage.getItem('flutter.darkMode'))") is True
         page.get_by_role('button', name='Back', exact=True).evaluate('e => e.click()')
         page.get_by_text('Jamoa', exact=True).evaluate('e => e.click()')
         page.get_by_role('button', name='Rating', exact=False).first.evaluate('e => e.click()')
         page.get_by_role('button', name='Holat', exact=False).first.wait_for()
-        page.screenshot(path='artifacts/qa/release-tactics-condition.png')
+        page.screenshot(path=f'artifacts/qa/release-{expected_version}-tactics-condition.png')
         page.set_viewport_size({'width':390, 'height':844})
         page.wait_for_timeout(400)
-        page.screenshot(path='artifacts/qa/release-tactics-mobile-dark.png')
+        page.screenshot(path=f'artifacts/qa/release-{expected_version}-tactics-mobile-dark.png')
         page.get_by_text('Boshqaruv', exact=True).evaluate('e => e.click()')
         page.get_by_role('button', name='Boshlash', exact=True).evaluate('e => e.click()')
         page.get_by_text(re.compile('Asosiy tarkib va taktika bilan')).evaluate('e => e.click()')
         page.wait_for_timeout(1700)
-        page.screenshot(path='artifacts/qa/release-match-mobile-dark.png')
+        page.screenshot(path=f'artifacts/qa/release-{expected_version}-match-mobile-dark.png')
         assert not errors, errors
         version = page.request.get('http://127.0.0.1:8787/version.json').json()
-        assert version['version'] == '1.3.0', version
-        Path('artifacts/qa/release-1.3-web-report.json').write_text(
+        assert version['version'] == expected_version, version
+        Path(f'artifacts/qa/release-{expected_version}-web-report.json').write_text(
             json.dumps({'passed': True, 'version': version, 'darkModePersisted': True,
                         'lineupConditionToggle': True, 'liveMatch': True, 'pageErrors': errors}, indent=2), encoding='utf-8')
-        print('Release 1.3.0 web smoke test passed.')
+        print(f'Release {expected_version} web smoke test passed.')
     except Exception:
         Path('artifacts/qa/release-web-dom.txt').write_text(page.locator('body').inner_text(), encoding='utf-8')
         page.screenshot(path='artifacts/qa/release-web-failed.png')
