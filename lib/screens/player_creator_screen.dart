@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import '../models/player.dart';
 import '../services/game_state.dart';
+import '../services/name_gen.dart';
 import '../ui/face_avatar.dart';
 import '../ui/flag.dart';
 import '../ui/widgets.dart';
@@ -11,7 +12,8 @@ import '../data/countries.dart';
 
 /// Build a player completely from scratch and sign him to your club.
 class PlayerCreatorScreen extends StatefulWidget {
-  const PlayerCreatorScreen({super.key});
+  final Player? player;
+  const PlayerCreatorScreen({super.key, this.player});
   @override
   State<PlayerCreatorScreen> createState() => _PlayerCreatorScreenState();
 }
@@ -62,6 +64,26 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
   late FaceConfig face = const FaceConfig();
 
   @override
+  void initState() {
+    super.initState();
+    final p = widget.player;
+    if (p == null) return;
+    _name.text = p.name;
+    age = p.age;
+    nationality = countries.containsKey(p.nationality) ? p.nationality : 'O‘zbekiston';
+    number = p.number;
+    position = p.mainPosition;
+    alt.addAll(p.altPositions);
+    foot = p.preferredFoot;
+    weakFoot = p.weakFoot;
+    attrs = p.stats.toMap().map((k, v) => MapEntry(k, v as int));
+    potential = p.potential;
+    target = p.ovr;
+    face = p.face;
+    style = styleFits[p.playingStyle]?.contains(position.code) == true ? p.playingStyle : null;
+  }
+
+  @override
   void dispose() {
     _name.dispose();
     super.dispose();
@@ -92,9 +114,8 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
   );
 
   void _randomize() {
-    final pools = ['Azizbek Karimov', 'Javohir Rahimov', 'Sardor Tursunov', 'Lucas Moreau', 'Mateo Silva', 'Kenji Sato', 'Diego Herrera', 'Noah Becker'];
     setState(() {
-      _name.text = pools[_random.nextInt(pools.length)];
+      _name.text = NameGen.person(_random);
       age = 17 + _random.nextInt(16);
       nationality = countries.keys.elementAt(_random.nextInt(countries.length));
       position = PlayerPosition.values[_random.nextInt(PlayerPosition.values.length)];
@@ -114,6 +135,34 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
     final game = GameState();
     if (_name.text.trim().length < 2) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Ismni kiriting (kamida 2 belgi)'))));
+      return;
+    }
+    final existing = widget.player;
+    if (existing != null) {
+      final used = game.userClub.squad.any((p) => p.id != existing.id && p.number == number);
+      if (used) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('Bu raqam band'))));
+        return;
+      }
+      existing.name = _name.text.trim();
+      existing.shortName = NameGen.short(existing.name);
+      existing.age = age;
+      existing.nationality = nationality;
+      existing.countryFlag = countries[nationality]!;
+      existing.number = number;
+      existing.mainPosition = position;
+      existing.altPositions = alt.toList();
+      existing.preferredFoot = foot;
+      existing.weakFoot = weakFoot;
+      existing.stats = PlayerStats.fromMap(attrs);
+      existing.potential = max(potential, existing.ovr);
+      existing.face = face;
+      final profile = PlayingProfile.derive(position.code, attrs);
+      existing.playingStyle = style ?? profile.style;
+      existing.defendingStyle = profile.defending;
+      existing.aiStyles = profile.ai;
+      game.touch();
+      Navigator.pop(context);
       return;
     }
     final p = game.addCreatedPlayer(
@@ -150,10 +199,15 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
     final preview = _preview;
     final ovr = preview.ovr;
     final fits = PlayingStyle.values.where((s) => styleFits[s]!.contains(position.code)).toList();
-    final issue = game.isInitialized ? game.createdPlayerIssue() : null;
+    final issue = game.isInitialized && widget.player == null ? game.createdPlayerIssue() : null;
     return Scaffold(
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: issue == null && game.isInitialized ? _create : null,
+        icon: Icon(widget.player == null ? Icons.person_add_alt_1_rounded : Icons.save_outlined),
+        label: Text(widget.player == null ? trf('Jamoaga qo‘shish · OVR {0}', [ovr]) : tr('Saqlash')),
+      ),
       appBar: AppBar(
-        title: Text(tr('Futbolchi yaratish')),
+        title: Text(tr(widget.player == null ? 'Futbolchi yaratish' : 'Futbolchini tahrirlash')),
         actions: [
           TextButton.icon(
             onPressed: _randomize,
@@ -165,7 +219,7 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
       body: PageWidth(
       maxWidth: 900,
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 100),
         children: [
           // --------------------------------------------------- live preview
           AppCard(
@@ -239,7 +293,10 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
                 SectionHeader(tr('Shaxsiy ma’lumot'), icon: Icons.badge_outlined),
                 TextField(
                   controller: _name,
-                  decoration: InputDecoration(labelText: tr('Ism va familiya'), prefixIcon: Icon(Icons.person_outline)),
+                  decoration: InputDecoration(labelText: tr('Ism va familiya'), prefixIcon: const Icon(Icons.person_outline), suffixIcon: IconButton(
+                    tooltip: tr('Tasodifiy'), icon: const Icon(Icons.casino_outlined),
+                    onPressed: () => setState(() => _name.text = NameGen.person(_random)),
+                  )),
                   onChanged: (_) => setState(() {}),
                 ),
                 const SizedBox(height: 12),
@@ -409,14 +466,6 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
               padding: const EdgeInsets.only(bottom: 8),
               child: Text(issue, style: const TextStyle(color: AppColors.live)),
             ),
-          SizedBox(
-            height: 52,
-            child: FilledButton.icon(
-              onPressed: issue == null && game.isInitialized ? _create : null,
-              icon: const Icon(Icons.person_add_alt_1_rounded),
-              label: Text(trf('Jamoaga qo‘shish · OVR {0}', [ovr])),
-            ),
-          ),
         ],
       ),
     ),

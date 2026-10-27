@@ -190,6 +190,7 @@ class _ManagerProfileScreenState extends State<ManagerProfileScreen> {
                   tr('Qaysi uslubda ko‘p o‘ynasangiz, o‘shanda tajribangiz o‘sadi: jamoa aniqroq pas beradi va to‘g‘ri qaror qabul qiladi.'),
                   style: AppText.caption,
                 ),
+                Text(tr('Har o‘yin: 2 XP, g‘alaba +3, durang +1, gol o‘tkazmasa +1. 20 XP = 1 daraja.'), style: AppText.caption),
                 const SizedBox(height: 8),
                 for (final p in ManagerPhilosophy.values)
                   Padding(
@@ -203,6 +204,7 @@ class _ManagerProfileScreenState extends State<ManagerProfileScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(p.title, style: AppText.bodyStrong.copyWith(fontSize: 13)),
+                              Text('${m.proficiency[p]} OVR · ${m.experience[p]}/${ManagerProfile.xpPerLevel} XP', style: AppText.caption),
                               const SizedBox(height: 5),
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(3),

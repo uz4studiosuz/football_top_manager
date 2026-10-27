@@ -625,6 +625,7 @@ class Club {
   ClubCrestConfig crestConfig;
   List<Player> squad;
   List<String> startingLineupIds;
+  bool lineupPinned;
   List<String> benchIds; // O‘yin kuni zaxirasi (≤ 9)
   Club({
     required this.id,
@@ -641,6 +642,7 @@ class Club {
     required this.crestConfig,
     required this.squad,
     required this.startingLineupIds,
+    this.lineupPinned = false,
     required this.benchIds,
     this.city = '',
     this.nickname = '',
@@ -683,6 +685,7 @@ class Club {
     'crest': crestConfig.toMap(),
     'squad': squad.map((p) => p.toMap()).toList(),
     'startingLineupIds': startingLineupIds,
+    if (lineupPinned) 'lineupPinned': true,
     'benchIds': benchIds,
   };
 
@@ -717,6 +720,7 @@ class Club {
         .map((p) => Player.fromMap(Map<String, dynamic>.from(p)))
         .toList(),
     startingLineupIds: List<String>.from(m['startingLineupIds']),
+    lineupPinned: m['lineupPinned'] == true,
     benchIds: List<String>.from(m['benchIds']),
   );
 

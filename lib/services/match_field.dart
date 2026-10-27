@@ -312,7 +312,7 @@ class MatchField {
   }
   double _aiHomeMentality = 1, _aiAwayMentality = 1;
   double _hold = 0, _stoppage = 0.65, _tackleClock = 0, _minuteAcc = 0;
-  double _recycleAcc = 0, _momHome = 0, _momAway = 0;
+  double _momHome = 0, _momAway = 0;
   int _consumed = 0;
   String? _lastPasser;
   Offset? _lastPassFrom;
@@ -751,7 +751,7 @@ class MatchField {
       _advanceLoose(adt);
       return;
     }
-    _carrierDecision(adt, dt);
+    _carrierDecision(adt);
   }
 
   /// Rolls the loose ball and hands it to whoever reaches it first.
@@ -1085,7 +1085,7 @@ class MatchField {
   }
 
   // --------------------------------------------------------- carrier play
-  void _carrierDecision(double dt, double clockDt) {
+  void _carrierDecision(double dt) {
     if (dismissed.contains(_xi(_club)[owner].id)) {
       owner = _nearest(_points, ball, _club);
     }
@@ -1094,11 +1094,13 @@ class MatchField {
     // The ball is knocked ahead with each stride and pulled back in.
     final control = (_st(carrier).ballControl + _st(carrier).tightPossession) / 200;
     final touch = 0.006 + (0.018 - control * 0.01) * max(0.0, sin(time * 9 + owner));
-    ball = _bound(_points[owner] + Offset(touch * dir, 0.006 * sin(time * 5 + owner)));
+    final velocity = (homePossession ? _homeVelocity : _awayVelocity)[owner];
+    final heading = velocity.distance > 0.01 ? velocity / velocity.distance : Offset(dir, 0);
+    final sideways = Offset(-heading.dy, heading.dx);
+    ball = _bound(_points[owner] + heading * touch + sideways * (0.004 * sin(time * 5 + owner)));
     ballHeight = 0;
     _hold += dt;
     _tackleClock += dt;
-    _recycle(clockDt, carrier);
     final pressure = _nearest(_rivals, ball, _opponent, ignoreKeeper: true);
     final defender = _xi(_opponent)[pressure];
     final distance = (_rivals[pressure] - ball).distance;
@@ -1332,45 +1334,6 @@ class MatchField {
       return;
     }
     if (_hold > 2.1 && next != null) _startPass(next, carrier);
-  }
-
-  /// Short recycling passes between the visual "key" actions keep pass
-  /// totals and accuracy at broadcast-realistic levels.
-  void _recycle(double dt, Player carrier) {
-    final style = _club.tactics.playstyle;
-    final rate = switch (style) {
-          TeamPlaystyle.possession => 13.5,
-          TeamPlaystyle.longBall => 7.0,
-          TeamPlaystyle.longBallCounter => 7.5,
-          TeamPlaystyle.quickCounter => 9.2,
-          _ => 10.4,
-        } +
-        (_club.tactics.tempo - 3) * 0.6;
-    _recycleAcc += dt * rate* 1.13;
-    while (_recycleAcc >= 1) {
-      _recycleAcc -= 1;
-      final xi = _xi(_club);
-      final i = 1 + random.nextInt(10);
-      final p = xi[i];
-      if (dismissed.contains(p.id)) continue;
-      final pressureMod = (_opponent.tactics.pressing - 3) * 0.015;
-      final ok =
-          random.nextDouble() <
-          (0.84 + (_st(p).lowPass + _lvl - 75) / 160 - pressureMod + (_has(p, _passing) ? 0.015 : 0)).clamp(0.6, 0.97);
-      _att.passes++;
-      _line(p)
-        ..passes += 1
-        ..touches += 2;
-      if (ok) {
-        _att.completedPasses++;
-        _line(p).passesCompleted += 1;
-      }
-      var j = 1 + random.nextInt(10);
-      if (j == i) j = j % 10 + 1;
-      final mate = _points[j];
-      _act(p, ActionKind.pass, _points[i],
-          to: ok ? mate : _bound(mate + Offset((random.nextDouble() - 0.5) * 0.12, (random.nextDouble() - 0.5) * 0.2)), ok: ok);
-    }
   }
 
   double _meters(Offset a, Offset b) {
@@ -1645,6 +1608,7 @@ class MatchField {
                 (coaching - 70) / 1500 +
                 (homePossession ? 0.006 : 0) +
                 (_is(passer, _creators) ? 0.02 : 0) +
+                (_has(passer, _passing) ? 0.015 : 0) +
                 (_is(passer, {PlayingStyle.buildUp, PlayingStyle.orchestrator}) ? 0.025 : 0) +
                 (_club.captainId != null &&
                         _club.startingLineupIds.contains(_club.captainId) &&
@@ -1705,11 +1669,21 @@ class MatchField {
       if (progress > 0.8 && (p.dy - 0.5).abs() < 0.24) targets.add(i);
     }
     if (targets.isEmpty) return false;
-    targets.sort(
-      (a, b) => (_st(_xi(_club)[b]).heading + _st(_xi(_club)[b]).jumping)
-          .compareTo(_st(_xi(_club)[a]).heading + _st(_xi(_club)[a]).jumping),
-    );
-    final target = targets[random.nextDouble() < 0.65 ? 0 : random.nextInt(targets.length)];
+    // Pick an available runner, weighing aerial ability against space and
+    // movement. Vary the delivery rather than always finding the best header.
+    var target = targets.first;
+    var bestScore = -double.infinity;
+    for (final i in targets) {
+      final runner = _xi(_club)[i];
+      final space = _nearestDistance(_rivals, points[i], _opponent).$2;
+      final score = (_st(runner).heading + _st(runner).jumping) * 0.25 +
+          _st(runner).attackingAwareness * 0.15 +
+          min(space, 0.15) * 100 + random.nextDouble() * 28;
+      if (score > bestScore) {
+        bestScore = score;
+        target = i;
+      }
+    }
     final skill = corner
         ? (_st(crosser).setPieceTaking * 0.6 + _st(crosser).curl * 0.4)
         : (_st(crosser).loftedPass * 0.6 + _st(crosser).curl * 0.4);
@@ -1807,6 +1781,16 @@ class MatchField {
         ..possessionLost += 1
         ..duelsLost += 1;
       _markError(carrier, homePossession, ball);
+      if ((_rivals[defenderIndex] - ball).distance > 0.035) {
+        // A heavy touch is contested on the pitch; the defender does not
+        // acquire a ball several metres away by teleporting to it.
+        _act(carrier, ActionKind.lost, ball, ok: false);
+        final direction = homePossession ? 1.0 : -1.0;
+        _loose = _Loose(ball, Offset(direction * 0.12, (random.nextDouble() - 0.5) * 0.08), homePossession, carrier.id);
+        _lastPasser = null;
+        _hold = 0;
+        return;
+      }
       _line(d)
         ..tackles += 1
         ..duelsWon += 1;
@@ -2164,7 +2148,11 @@ class MatchField {
       _resolveCross(flight);
       return;
     }
-    if (flight.outcome == 'pass') {
+    final receiverPoints = flight.home ? homePositions : awayPositions;
+    final receiverClub = flight.home ? home : away;
+    final receiverReached = !dismissed.contains(_xi(receiverClub)[flight.receiver].id) &&
+        (receiverPoints[flight.receiver] - ball).distance <= 0.045;
+    if (flight.outcome == 'pass' && receiverReached) {
       homePossession = flight.home;
       owner = flight.receiver;
       final stats = flight.home ? homeStats : awayStats;
@@ -2222,30 +2210,36 @@ class MatchField {
     final defendClub = f.home ? away : home;
     final attackPts = f.home ? homePositions : awayPositions;
     final defendPts = f.home ? awayPositions : homePositions;
-    if (f.outcome != 'cross') {
-      // Overhit or wayward delivery – usually a goal kick.
-      homePossession = !f.home;
-      if (random.nextDouble() < 0.6) {
-        _setPendingRestart(_SetPiece.goalKick, !f.home, ball);
+    if (f.outcome != 'cross' || (attackPts[f.receiver] - ball).distance > 0.055) {
+      _act(f.actor, ActionKind.cross, f.from, to: f.to, ok: false);
+      if (!_inBounds(ball)) {
+        final spot = _bound(ball);
+        if (spot.dy <= 0.05 || spot.dy >= 0.95) {
+          _setPendingRestart(_SetPiece.throwIn, !f.home, spot);
+        } else {
+          _setPendingRestart(_SetPiece.goalKick, !f.home, spot);
+        }
       } else {
-        owner = _nearest(_points, ball, _club);
+        final direction = f.to - f.from;
+        final unit = direction.distance < 0.001 ? Offset.zero : direction / direction.distance;
+        _loose = _Loose(ball, unit * 0.1, f.home, f.actor.id);
         phase = FieldPhase.openPlay;
       }
       _lastPasser = null;
       return;
     }
     final attacker = _xi(attackClub)[f.receiver];
-    final di = _nearest(defendPts, attackPts[f.receiver], defendClub);
+    final di = _nearest(defendPts, ball, defendClub, ignoreKeeper: true);
     final defender = _xi(defendClub)[di];
-    final keeperClaims = di == 0 ||
-        (!dismissed.contains(_xi(defendClub)[0].id) &&
+    final defenderNearby = (defendPts[di] - ball).distance <= 0.065;
+    final keeperClaims = !dismissed.contains(_xi(defendClub)[0].id) &&
             (defendPts[0] - ball).distance < 0.05 &&
             random.nextDouble() <
                 (_st(_xi(defendClub)[0]).gkCatching * 0.45 +
                         _st(_xi(defendClub)[0]).gkReach * 0.35 +
                         _st(_xi(defendClub)[0]).gkAwareness * 0.2 -
                         40) /
-                    (_xi(defendClub)[0].defendingStyle == DefendingStyle.sweeperGk ? 95 : 120));
+                    (_xi(defendClub)[0].defendingStyle == DefendingStyle.sweeperGk ? 95 : 120);
     final atk = _st(attacker).heading * 0.5 +
         _st(attacker).jumping * 0.35 +
         _st(attacker).physicalContact * 0.15 +
@@ -2268,16 +2262,16 @@ class MatchField {
         (_has(defender, _aerial) ? 4 : 0) +
         // A packed, organised box at set pieces favours the defenders.
         (f.kind == _Kind.corner ? 9 : 0);
-    if (!keeperClaims && atk > def) {
+    if (!keeperClaims && (!defenderNearby || atk > def)) {
       _act(f.actor, ActionKind.cross, f.from, to: f.to);
       _act(attacker, ActionKind.aerial, f.to);
-      _act(defender, ActionKind.aerial, f.to, ok: false);
+      if (defenderNearby) _act(defender, ActionKind.aerial, f.to, ok: false);
       homePossession = f.home;
       owner = f.receiver;
       _line(attacker)
         ..duelsWon += 1
         ..touches += 1;
-      _line(defender).duelsLost += 1;
+      if (defenderNearby) _line(defender).duelsLost += 1;
       (f.home ? homeStats : awayStats).completedPasses++;
       _line(f.actor).passesCompleted += 1;
       _lastPasser = f.actor.id;
@@ -2290,6 +2284,7 @@ class MatchField {
     homePossession = !f.home;
     if (keeperClaims) {
       final gk = _xi(defendClub)[0];
+      _act(f.actor, ActionKind.cross, f.from, to: f.to, ok: false);
       if (random.nextDouble() < (100 - _st(gk).gkCatching) / 150) {
         _act(gk, ActionKind.punch, ball);
         _loose = _Loose(ball, Offset(f.home ? -0.18 : 0.18, (random.nextDouble() - 0.5) * 0.18), !f.home, gk.id);
@@ -2782,7 +2777,7 @@ class MatchField {
         if (i == _pendingTaker || dismissed.contains(xi[i].id)) continue;
         final plan = c.cornerPlans[xi[i].id];
         if (plan == null || plan.isEmpty) continue;
-        final nearSide = _pendingSpot.dy < 0.5 ? 0.42 : 0.58;
+        final nearSide = _pendingSpot.dy < 0.5 ? 0.34 : 0.66;
         targets[i] = switch (plan.first) {
           'near' => Offset(gx(0.07), nearSide),
           'far' => Offset(gx(0.07), 1 - nearSide),
@@ -3218,9 +3213,13 @@ class MatchField {
         }
       } else if (hasBall) {
         if (i == owner && _flight == null) {
+          final stayWide = (c.tactics.playstyle == TeamPlaystyle.outWide ||
+                  c.tactics.attackingArea == AttackingArea.wide ||
+                  p.instruction == PlayerInstruction.holdWidth) &&
+              (points[i].dy - 0.5).abs() > 0.18;
           target = Offset(
             (points[i].dx + direction * 0.2).clamp(0.08, 0.92),
-            0.5 + (points[i].dy - 0.5) * 0.62,
+            stayWide ? points[i].dy : 0.5 + (points[i].dy - 0.5) * 0.82,
           );
           final feint = _feints[p.id];
           if (feint != null && time < feint.$1) {
@@ -3383,10 +3382,13 @@ class MatchField {
         );
       }
       for (var j = 0; j < 11; j++) {
-        if (i == j) continue;
+        if (i == j || dismissed.contains(xi[j].id)) continue;
         final difference = points[i] - points[j];
-        if (difference.distance > 0.001 && difference.distance < 0.045) {
-          target += difference / difference.distance * 0.035;
+        if (difference.distance < 0.055 && !keeper && i != owner && _flight?.receiver != i) {
+          final away = difference.distance > 0.001
+              ? difference / difference.distance
+              : Offset(0, bases[i].dy <= bases[j].dy ? -1 : 1);
+          target += away * (0.055 - difference.distance) * 1.4;
         }
       }
       // Chasing a free ball takes priority over the block shape, marking,

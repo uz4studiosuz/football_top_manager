@@ -61,7 +61,7 @@ class _TransferScreenState extends State<TransferScreen> {
 
   @override
   Widget build(BuildContext context) => DefaultTabController(
-    length: 4,
+    length: 5,
     child: Scaffold(
       appBar: AppBar(
         title: Text(tr('Transfer markazi')),
@@ -72,6 +72,7 @@ class _TransferScreenState extends State<TransferScreen> {
             Tab(text: tr('Bozor')),
             Tab(text: tr('Erkin agentlar')),
             Tab(text: game.dealsNeedingAction.isEmpty ? tr('Muzokaralar') : trf('Muzokaralar ({0})', [game.dealsNeedingAction.length])),
+            Tab(text: tr('Transferlar tarixi')),
             Tab(text: tr('Qoidalar')),
           ],
         ),
@@ -81,11 +82,27 @@ class _TransferScreenState extends State<TransferScreen> {
         builder: (context, _) {
           if (!game.isInitialized) return const SizedBox();
           return TabBarView(
-            children: [_market(context), _freeAgents(context), _offers(context), _rules()],
+            children: [_market(context), _freeAgents(context), _offers(context), _history(), _rules()],
           );
         },
       ),
     ),
+  );
+
+  Widget _history() => ListView(
+    padding: const EdgeInsets.all(12),
+    children: [
+      if (game.transferHistory.isEmpty)
+        AppCard(child: EmptyState(icon: Icons.swap_horiz_rounded, text: tr('Hozircha transferlar yo‘q'))),
+      for (final record in game.transferHistory)
+        AppCard(margin: const EdgeInsets.only(bottom: 8), child: ListTile(
+          contentPadding: EdgeInsets.zero,
+          leading: const Icon(Icons.swap_horiz_rounded),
+          title: Text(record.playerName, style: AppText.bodyStrong),
+          subtitle: Text('${record.fromClub} → ${record.toClub} · ${record.round}-tur', style: AppText.caption),
+          trailing: Text(formatMoney(record.fee), style: AppText.bodyStrong),
+        )),
+    ],
   );
 
   Widget _windowBanner() {

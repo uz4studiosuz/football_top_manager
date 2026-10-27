@@ -557,6 +557,9 @@ class GameState extends ChangeNotifier {
     leagueId = league ?? InitialDatabase.leagueOf(selectedClub.id) ?? 'super';
     _allClubs = InitialDatabase.getClubs(leagueId);
     _userClubId = selectedClub.id;
+    if (managerProfile != null) {
+      userClub.tactics = userClub.tactics.copyWith(playstyle: TeamPlaystyle.values.byName(managerProfile.philosophy.name));
+    }
     _beginCareer();
   }
 
@@ -607,6 +610,9 @@ class GameState extends ChangeNotifier {
       startingLineupIds: squad.take(11).map((p) => p.id).toList(),
       benchIds: squad.skip(11).take(Club.matchdayBench).map((p) => p.id).toList(),
     );
+    if (managerProfile != null) {
+      customClub.tactics = customClub.tactics.copyWith(playstyle: TeamPlaystyle.values.byName(managerProfile.philosophy.name));
+    }
     // Lower divisions pay less: wages, budget and reputation follow suit.
     final econ = InitialDatabase.info(league).economy;
     if (econ < 1) {
@@ -637,7 +643,7 @@ class GameState extends ChangeNotifier {
     for (final c in _allClubs) {
       _ensureMatchdaySquad(c);
       // Seed files for big leagues list squads, not a tactical XI.
-      if (c.id != _userClubId || leagueId != 'super') autoPickLineup(c);
+      if (!c.lineupPinned && (c.id != _userClubId || leagueId != 'super')) autoPickLineup(c);
       // Seed values have a floor; weak players and smaller leagues start at
       // their real worth.
       final econ = _economyOf(c);
@@ -680,6 +686,9 @@ class GameState extends ChangeNotifier {
       final clubs = InitialDatabase.getClubs(l.id);
       for (final c in clubs) {
         WorldMarket.age(c, seasons, Random(c.id.hashCode ^ seasons));
+        for (final p in c.squad) {
+          p.condition = PlayerCondition.draw(_conditionRandom);
+        }
         _ensureMatchdaySquad(c);
         autoPickLineup(c);
       }
@@ -849,6 +858,26 @@ class GameState extends ChangeNotifier {
     }
     _syncEditedSquads(changes);
     _syncNewClubs();
+    for (final (kind, before, after) in changes) {
+      if (kind != 'clubs') continue;
+      final c = getClubById(after['id'] as String);
+      if (c == null) continue;
+      if (changed(before, after, 'tactics')) {
+        final name = (after['tactics'] as Map?)?['formation'];
+        final formation = FormationType.values.asNameMap()[name];
+        if (formation != null) c.tactics = c.tactics.copyWith(formation: formation);
+      }
+      if (changed(before, after, 'startingLineupIds')) {
+        final xi = List<String>.from(after['startingLineupIds'] as List);
+        if (xi.length == 11 && xi.toSet().length == 11 && xi.every((id) => c.playerById(id) != null)) {
+          c.startingLineupIds = xi;
+          c.benchIds = List<String>.from(after['benchIds'] as List).where((id) => !xi.contains(id) && c.playerById(id) != null).take(Club.matchdayBench).toList();
+        }
+      } else if (changed(before, after, 'benchIds')) {
+        c.benchIds = List<String>.from(after['benchIds'] as List).where((id) => !c.startingLineupIds.contains(id) && c.playerById(id) != null).take(Club.matchdayBench).toList();
+      }
+      if (changed(before, after, 'lineupPinned')) c.lineupPinned = after['lineupPinned'] == true;
+    }
     notifyListeners();
   }
 
@@ -946,6 +975,7 @@ class GameState extends ChangeNotifier {
   /// Picks the strongest available XI for the formation, then a balanced
   /// nine-man bench (always including a keeper).
   void autoPickLineup(Club c, {bool byForm = false}) {
+    if (c.id != _userClubId && c.lineupPinned && c.startingXI.length == 11 && c.startingXI.every((p) => p.isAvailable)) return;
     final slots = c.tactics.formation.slots;
     final pool = c.squad.where((p) => p.isAvailable).toList();
     final chosen = List<Player?>.filled(slots.length, null);
@@ -1673,7 +1703,7 @@ class GameState extends ChangeNotifier {
         .difference(calendar.dateOfRound(_currentRound))
         .inDays;
     _currentRound++;
-    for (final club in _allClubs) {
+    for (final club in marketClubs.toSet()) {
       for (final p in club.squad) {
         p.currentStamina = min(100, p.currentStamina + 10 + days * 3);
         // Draw once per match week. Most players are C; elite ability does
@@ -2478,6 +2508,30 @@ class GameState extends ChangeNotifier {
   String? createdPlayerIssue() => userClub.squad.length >= maxSquad
       ? trf('Ro‘yxat to‘la: ko‘pi bilan {0} futbolchi. Avval kimnidir soting.', [maxSquad])
       : null;
+
+  bool deleteCreatedPlayer(Player p) {
+    final club = userClub;
+    if (!p.id.startsWith('own_') || !club.squad.contains(p) || matchPlanActive || club.squad.length <= 11) return false;
+    final index = club.startingLineupIds.indexOf(p.id);
+    if (index >= 0) {
+      final replacement = club.squad.where((q) => q.id != p.id && !club.startingLineupIds.contains(q.id) &&
+          (index != 0 || q.mainPosition.isGoalkeeper)).toList();
+      if (replacement.isEmpty) return false;
+      club.startingLineupIds[index] = replacement.first.id;
+      club.benchIds.remove(replacement.first.id);
+    }
+    club.benchIds.remove(p.id);
+    club.squad.remove(p);
+    club.cornerPlans.remove(p.id);
+    if (club.captainId == p.id) club.captainId = null;
+    if (club.cornerTakerId == p.id) club.cornerTakerId = null;
+    if (club.freeKickTakerId == p.id) club.freeKickTakerId = null;
+    if (club.penaltyTakerId == p.id) club.penaltyTakerId = null;
+    life.targets.remove(p.id);
+    life.progress.remove(p.id);
+    notifyListeners();
+    return true;
+  }
 
   /// Adds a player built from scratch to the user's club. A created player
   /// costs no fee but draws a normal weekly wage from the club.
@@ -4218,6 +4272,7 @@ class GameState extends ChangeNotifier {
     autoPickLineup(c);
     final econ = _economyOf(c);
     for (final p in c.squad) {
+      p.condition = PlayerCondition.draw(_conditionRandom);
       if (p.ovr < 68 || econ < 1) p.marketValue = min(p.marketValue, p.fairValueIn(econ));
     }
   }

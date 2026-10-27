@@ -3,9 +3,9 @@ import '../ui/browser_files_stub.dart' if (dart.library.js_interop) '../ui/brows
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/player.dart';
+import '../models/club.dart';
 import '../data/initial_database.dart';
 import '../data/countries.dart';
-import '../models/crest.dart';
 import 'club_form_screen.dart';
 import '../services/db_editor.dart';
 import '../ui/face_avatar.dart';
@@ -331,11 +331,10 @@ class _DbEditorScreenState extends State<DbEditorScreen> {
         ListTile(
           title: Text('${club['name']}', style: AppText.h3),
           subtitle: Text(trf('{0} futbolchi', [squad.length])),
-          trailing: FilledButton.icon(
-            onPressed: () => _addPlayer(squad),
-            icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
-            label: Text(tr('Qo‘shish')),
-          ),
+          trailing: Wrap(spacing: 4, children: [
+            IconButton(tooltip: tr('Sxema va tarkib'), onPressed: () => _editLineup(club, squad), icon: const Icon(Icons.sports_soccer_outlined)),
+            IconButton(tooltip: tr('Qo‘shish'), onPressed: () => _addPlayer(squad), icon: const Icon(Icons.person_add_alt_1_rounded)),
+          ]),
         ),
         const Divider(height: 1),
         Expanded(
@@ -362,6 +361,60 @@ class _DbEditorScreenState extends State<DbEditorScreen> {
         ),
       ],
     );
+  }
+
+  Future<void> _editLineup(Map<String, dynamic> club, List<Map<String, dynamic>> squad) async {
+    final xi = List<String>.from(club['startingLineupIds'] as List);
+    final bench = List<String>.from(club['benchIds'] as List);
+    final tactics = Map<String, dynamic>.from(club['tactics'] as Map);
+    var formation = FormationType.values.asNameMap()[tactics['formation']] ?? FormationType.f433;
+    final saved = await showDialog<bool>(context: context, builder: (ctx) => StatefulBuilder(builder: (ctx, refresh) => AlertDialog(
+      title: Text(tr('Sxema va tarkib')),
+      content: SizedBox(width: 600, height: MediaQuery.sizeOf(ctx).height * 0.65, child: ListView(children: [
+        DropdownButtonFormField<FormationType>(
+          initialValue: formation,
+          decoration: InputDecoration(labelText: tr('Sxema')),
+          items: [for (final f in FormationType.values) DropdownMenuItem(value: f, child: Text(f.label))],
+          onChanged: (f) { if (f != null) refresh(() => formation = f); },
+        ),
+        const SizedBox(height: 12),
+        Text(tr('Asosiy tarkib'), style: AppText.bodyStrong),
+        for (var i = 0; i < xi.length; i++)
+          DropdownButtonFormField<String>(
+            key: ValueKey('lineup_$i${xi[i]}${formation.name}'),
+            initialValue: xi[i], isExpanded: true,
+            decoration: InputDecoration(labelText: formation.slots[i].defaultPosition.code),
+            items: [for (final p in squad) DropdownMenuItem(value: '${p['id']}', child: Text('${p['name']} · ${p['mainPosition']}', overflow: TextOverflow.ellipsis))],
+            onChanged: (id) { if (id == null || id == xi[i]) return; refresh(() {
+              final previous = xi[i];
+              final other = xi.indexOf(id);
+              if (other >= 0) { xi[other] = previous; } else if (bench.remove(id)) { bench.add(previous); }
+              xi[i] = id;
+            }); },
+          ),
+        const SizedBox(height: 16),
+        Text('${tr('Zaxira')} ${bench.length}/${Club.matchdayBench}', style: AppText.bodyStrong),
+        for (final p in squad.where((p) => !xi.contains(p['id'])))
+          CheckboxListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text('${p['name']}'),
+            subtitle: Text('${p['mainPosition']} · ${bench.contains(p['id']) ? tr('Zaxira') : tr('Rezerv')}'),
+            value: bench.contains(p['id']),
+            onChanged: (selected) => refresh(() {
+              if (selected == true && bench.length < Club.matchdayBench) { bench.add('${p['id']}'); }
+              if (selected == false) bench.remove(p['id']);
+            }),
+          ),
+      ])),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('Bekor'))),
+        FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(tr('Saqlash'))),
+      ],
+    )));
+    if (saved != true) return;
+    tactics['formation'] = formation.name;
+    db.updateClub({...club, 'tactics': tactics, 'startingLineupIds': xi, 'benchIds': bench, 'lineupPinned': true});
+    if (mounted) _snack(tr('O‘zgarishlar qo‘llandi. Saqlashni unutmang.'));
   }
 
   static int _ovr(Map<String, dynamic> p) {

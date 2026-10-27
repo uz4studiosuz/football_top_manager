@@ -1,0 +1,10 @@
+{
+  "Asosiy tarkib": ["Starting lineup", "Стартовый состав"],
+  "Bu raqam band": ["This shirt number is already taken", "Этот номер уже занят"],
+  "Futbolchini o‘chirish?": ["Remove this player?", "Удалить футболиста?"],
+  "Futbolchini tahrirlash": ["Edit player", "Редактировать футболиста"],
+  "Har o‘yin: 2 XP, g‘alaba +3, durang +1, gol o‘tkazmasa +1. 20 XP = 1 daraja.": ["Each match: 2 XP, win +3, draw +1, clean sheet +1. 20 XP = 1 level.", "За матч: 2 XP, победа +3, ничья +1, без пропущенных голов +1. 20 XP = 1 уровень."],
+  "Hozircha transferlar yo‘q": ["No transfers yet", "Трансферов пока нет"],
+  "O‘chirish imkoni yo‘q": ["This player cannot be removed", "Невозможно удалить футболиста"],
+  "Tahrirlash": ["Edit", "Редактировать"]
+}

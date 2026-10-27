@@ -138,6 +138,27 @@ class _SquadListState extends State<SquadList> {
                             club: club,
                             subtitle: _subtitle(club.startingLineupIds.contains(p.id), club.benchIds.contains(p.id), p),
                             onTap: () => PlayerDetailView.show(context, player: p, club: club),
+                            trailing: p.id.startsWith('own_') ? PopupMenuButton<String>(
+                              onSelected: (action) async {
+                                if (action == 'edit') {
+                                  await Navigator.push(context, MaterialPageRoute<void>(builder: (_) => PlayerCreatorScreen(player: p)));
+                                } else {
+                                  final confirmed = await showDialog<bool>(context: context, builder: (ctx) => AlertDialog(
+                                    title: Text(tr('Futbolchini o‘chirish?')),
+                                    content: Text(p.name),
+                                    actions: [TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(tr('Bekor'))),
+                                      FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(tr('O‘chirish')))],
+                                  ));
+                                  if (confirmed == true && !game.deleteCreatedPlayer(p) && context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(tr('O‘chirish imkoni yo‘q'))));
+                                  }
+                                }
+                              },
+                              itemBuilder: (_) => [
+                                PopupMenuItem(value: 'edit', child: Text(tr('Tahrirlash'))),
+                                PopupMenuItem(value: 'delete', child: Text(tr('O‘chirish'))),
+                              ],
+                            ) : null,
                           ),
                       ],
                     ),

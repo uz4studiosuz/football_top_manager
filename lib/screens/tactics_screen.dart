@@ -123,6 +123,8 @@ class _TacticsScreenState extends State<TacticsScreen> {
 
   void _menu(Player p) {
     final club = game.userClub;
+    final slot = club.startingLineupIds.indexOf(p.id);
+    final currentPosition = slot >= 0 ? club.slotPosition(slot) : p.mainPosition;
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -147,7 +149,7 @@ class _TacticsScreenState extends State<TacticsScreen> {
                             const SizedBox(height: 4),
                             Row(
                               children: [
-                                PositionChip(p.mainPosition.code),
+                                PositionChip(currentPosition.code),
                                 const SizedBox(width: 8),
                                 Text(trf('{0}% tayyor', [p.currentStamina]), style: AppText.caption),
                               ],
@@ -191,18 +193,22 @@ class _TacticsScreenState extends State<TacticsScreen> {
                   ),
                   const SizedBox(height: 6),
                   Text(p.instruction.description, style: AppText.caption),
-                  if (!p.mainPosition.isGoalkeeper && game.upcomingRival != null) ...[
+                  if (!currentPosition.isGoalkeeper && game.upcomingRival != null) ...[
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
-                      initialValue: game.manMarks[p.id] ?? '',
+                      initialValue: game.upcomingRival!.startingXI.any((r) => r.id == game.manMarks[p.id] && !game.upcomingRival!.slotPosition(game.upcomingRival!.startingLineupIds.indexOf(r.id)).isGoalkeeper) ? game.manMarks[p.id]! : '',
                       isExpanded: true,
-                      decoration: InputDecoration(
-                        labelText: trf('Shaxsiy qo‘riqlash (man marking) · {0}', [game.upcomingRival!.shortName]),
-                      ),
+                      menuMaxHeight: MediaQuery.sizeOf(context).height * 0.45,
+                      decoration: InputDecoration(labelText: trf('Shaxsiy qo‘riqlash (man marking) · {0}', [game.upcomingRival!.shortName])),
                       items: [
                         DropdownMenuItem(value: '', child: Text(tr('Yo‘q – zonali himoya'))),
-                        for (final r in game.upcomingRival!.startingXI.where((r) => !r.mainPosition.isGoalkeeper))
-                          DropdownMenuItem(value: r.id, child: Text('${r.mainPosition.code} · ${r.shortName} (${r.ovr})')),
+                        for (final r in game.upcomingRival!.startingXI.where((r) => !game.upcomingRival!.slotPosition(game.upcomingRival!.startingLineupIds.indexOf(r.id)).isGoalkeeper))
+                          DropdownMenuItem(value: r.id, child: Row(children: [
+                            PositionChip(game.upcomingRival!.slotPosition(game.upcomingRival!.startingLineupIds.indexOf(r.id)).code),
+                            const SizedBox(width: 8),
+                            Expanded(child: Text(r.shortName, overflow: TextOverflow.ellipsis)),
+                            ValueBadge(r.getEffectiveOVR(game.upcomingRival!.slotPosition(game.upcomingRival!.startingLineupIds.indexOf(r.id))), size: 26),
+                          ])),
                       ],
                       onChanged: (v) {
                         final rival = game.upcomingRival!;
@@ -237,7 +243,7 @@ class _TacticsScreenState extends State<TacticsScreen> {
                                       children: [
                                         Text(q.name, style: AppText.bodyStrong.copyWith(fontSize: 13)),
                                         Text(
-                                          '${q.mainPosition.code} · ${club.startingLineupIds.contains(q.id)
+                                          '${club.startingLineupIds.contains(q.id) ? club.slotPosition(club.startingLineupIds.indexOf(q.id)).code : q.mainPosition.code} · ${club.startingLineupIds.contains(q.id)
                                               ? tr('Asosiy')
                                               : club.benchIds.contains(q.id)
                                               ? tr('Zaxira')

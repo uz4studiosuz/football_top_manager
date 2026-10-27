@@ -57,8 +57,8 @@ class MatchScreen extends StatefulWidget {
 }
 
 class _MatchScreenState extends State<MatchScreen> {
-  /// Match minutes per real second at each speed step (1x ≈ 3 min match).
-  static const speeds = <String, double>{'1x': 0.5, '2x': 1, '4x': 2, '8x': 4};
+  /// Match minutes per real second at each speed step.
+  static const speeds = <String, double>{'0.5x': 0.5, '1x': 1, '2x': 2, '4x': 4, '8x': 8};
   final GameState _game = GameState();
   late final Club _home, _away;
   late final MatchField _field;
@@ -331,7 +331,6 @@ class _MatchScreenState extends State<MatchScreen> {
     );
     _applyMentality();
     _game.applyClubBoosts(_field, _userHome);
-    _field.slowSetPieces = true;
     _field.recordReplays = true;
     _field.marks = _game.manMarks;
     _field.derby = _game.isDerby(_home, _away);
@@ -422,7 +421,6 @@ class _MatchScreenState extends State<MatchScreen> {
   void _save() {
     if (_saved || _needsShootout) return;
     _saved = true;
-    _restorePreMatch();
     _game.finishMatch(
       fixture: widget.fixture,
       homeScore: _field.homeStats.goals,
@@ -431,6 +429,7 @@ class _MatchScreenState extends State<MatchScreen> {
       engine: _field,
       penalties: _pens,
     );
+    _restorePreMatch();
   }
 
   Future<void> _playShootout() async {
@@ -972,6 +971,7 @@ class _MatchScreenState extends State<MatchScreen> {
                 icon: Icon(_playing ? Icons.pause_rounded : Icons.play_arrow_rounded),
               ),
               const SizedBox(width: 4),
+              Expanded(child: SingleChildScrollView(scrollDirection: Axis.horizontal, child: Row(children: [
               for (final s in speeds.keys)
                 Padding(
                   padding: const EdgeInsets.only(right: 4),
@@ -983,7 +983,7 @@ class _MatchScreenState extends State<MatchScreen> {
                     onSelected: (_) => setState(() => _speed = s),
                   ),
                 ),
-              const Spacer(),
+              ]))),
               FilledButton.tonalIcon(
                 onPressed: done || _subsLeft <= 0 ? null : () => _openSubs(),
                 icon: const Icon(Icons.swap_vert_rounded, size: 18),

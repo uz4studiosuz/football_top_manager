@@ -23,13 +23,16 @@ class StrategyPlanner extends StatelessWidget {
         onChanged: (v) { if (v != null) onChange(v); },
       );
     return Column(children: [
-      AppCard(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        SectionHeader(tr('Burchak rejasi'), icon: Icons.flag_outlined),
-        Text(tr('Har futbolchi uchun joylashuv va yugurish yo‘nalishini tanlang'), style: AppText.caption),
+      AppCard(child: ExpansionTile(
+        tilePadding: EdgeInsets.zero,
+        leading: const Icon(Icons.flag_outlined),
+        title: Text(tr('Burchak rejasi'), style: AppText.bodyStrong),
+        subtitle: Text(tr('Har futbolchi uchun joylashuv va yugurish yo‘nalishini tanlang'), style: AppText.caption),
+        children: [
         for (final player in club.startingXI.where((p) => !p.mainPosition.isGoalkeeper))
           ExpansionTile(
             title: Text(player.shortName, style: AppText.bodyStrong),
-            subtitle: Text(player.mainPosition.code, style: AppText.caption),
+            subtitle: Text(club.slotPosition(club.startingLineupIds.indexOf(player.id)).code, style: AppText.caption),
             childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
             children: [
               selector(tr('Joylashuv'), club.cornerPlans[player.id]?.first ?? 'auto', {
