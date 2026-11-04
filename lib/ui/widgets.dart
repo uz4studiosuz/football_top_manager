@@ -6,6 +6,25 @@ import '../l10n/l10n.dart';
 
 export 'app_theme.dart';
 
+/// Secondary action: a soft tint with accent text, so the single solid
+/// button on a screen stays the one that matters.
+abstract final class AppTonal {
+  static ButtonStyle _style([ButtonStyle? extra]) {
+    final base = FilledButton.styleFrom(
+      elevation: 0,
+      backgroundColor: AppColors.primarySoft,
+      foregroundColor: AppColors.primary,
+    );
+    return extra == null ? base : base.merge(extra);
+  }
+
+  static Widget button({required VoidCallback? onPressed, required Widget child, ButtonStyle? style}) =>
+      FilledButton.tonal(onPressed: onPressed, style: _style(style), child: child);
+
+  static Widget icon({required VoidCallback? onPressed, required Widget icon, required Widget label, ButtonStyle? style}) =>
+      FilledButton.tonalIcon(onPressed: onPressed, style: _style(style), icon: icon, label: label);
+}
+
 /// White rounded card – the basic building block of every screen.
 class AppCard extends StatelessWidget {
   final Widget child;
@@ -26,11 +45,17 @@ class AppCard extends StatelessWidget {
   Widget build(BuildContext context) {
     Theme.of(context); // Rebuild palette tokens when appearance changes.
     final body = Padding(padding: padding, child: child);
+    // A flat panel with a hairline edge (data first, no soft blobs).
     return Container(
       margin: margin,
-      child: Material(
+      decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppColors.line),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(10),
         clipBehavior: Clip.antiAlias,
         child: onTap == null ? body : InkWell(onTap: onTap, child: body),
       ),
@@ -58,10 +83,8 @@ class SectionHeader extends StatelessWidget {
     padding: padding,
     child: Row(
       children: [
-        if (icon != null) ...[
-          Icon(icon, size: 18, color: AppColors.primary),
-          const SizedBox(width: 8),
-        ],
+        // Titles stand on their own: a decorative icon on every card header
+        // only adds noise.
         Expanded(child: Text(tr(title), style: AppText.h3)),
         if (action != null)
           InkWell(

@@ -984,7 +984,7 @@ class _MatchScreenState extends State<MatchScreen> {
                   ),
                 ),
               ]))),
-              FilledButton.tonalIcon(
+              AppTonal.icon(
                 onPressed: done || _subsLeft <= 0 ? null : () => _openSubs(),
                 icon: const Icon(Icons.swap_vert_rounded, size: 18),
                 label: Text('$_subsLeft'),

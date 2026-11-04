@@ -88,6 +88,59 @@ class GameState extends ChangeNotifier {
   /// scouts have opened.
   List<Club> get marketClubs => [...domesticClubs, ...extraClubs, ...world.clubs];
 
+  /// Where players ended up (player id → club id, '' for free agents).
+  /// Clubs are rebuilt from the data files when the manager changes league
+  /// and whenever a country loads, so without this every transfer made so
+  /// far would be forgotten: the star you bought would be back at his old
+  /// club the moment you take a job elsewhere.
+  final Map<String, String> transferLedger = {};
+  final Map<String, Player> _ledgerPool = {};
+
+  void _recordMove(Player p, Club? to) {
+    transferLedger.remove(p.id);
+    transferLedger[p.id] = to?.id ?? '';
+    _ledgerPool[p.id] = p;
+    while (transferLedger.length > 2500) {
+      transferLedger.remove(transferLedger.keys.first);
+    }
+  }
+
+  /// Puts every recorded player where the ledger says, in whatever clubs
+  /// are loaded right now (idempotent; later loads call it again).
+  void _applyLedger() {
+    if (transferLedger.isEmpty) return;
+    final clubs = marketClubs;
+    final byId = {for (final c in clubs) c.id: c};
+    final touched = <Club>{};
+    for (final c in clubs) {
+      for (final p in List.of(c.squad)) {
+        final dest = transferLedger[p.id];
+        if (dest == null || dest == c.id) continue;
+        c.squad.remove(p);
+        c.startingLineupIds.remove(p.id);
+        c.benchIds.remove(p.id);
+        _ledgerPool.putIfAbsent(p.id, () => p);
+        touched.add(c);
+      }
+    }
+    for (final e in transferLedger.entries) {
+      final dest = byId[e.value];
+      if (dest == null || dest.playerById(e.key) != null) continue;
+      final p = _ledgerPool[e.key];
+      if (p == null) continue;
+      dest.squad.add(p);
+      touched.add(dest);
+    }
+    for (final c in touched) {
+      if (c.id == _userClubId) {
+        _ensureMatchdaySquad(c);
+      } else {
+        _ensureMatchdaySquad(c);
+        autoPickLineup(c);
+      }
+    }
+  }
+
   /// Clubs added in the database editor after the career began: not in the
   /// league's fixtures, but they trade players like any other club.
   final List<Club> extraClubs = [];
@@ -297,7 +350,7 @@ class GameState extends ChangeNotifier {
 
   // ------------------------------------------------------------ careers
   void resetCareer() {
-    _resetRecords();
+    _resetRecords(); _forgetTransfers();
     _allClubs = [];
     _userClubId = null;
     _fixtures = [];
@@ -527,6 +580,12 @@ class GameState extends ChangeNotifier {
     }
   }
 
+  /// A brand-new career starts from the data files again.
+  void _forgetTransfers() {
+    transferLedger.clear();
+    _ledgerPool.clear();
+  }
+
   void _resetRecords() {
     life.reset();
     world.reset();
@@ -553,7 +612,7 @@ class GameState extends ChangeNotifier {
     String? league,
   }) {
     if (managerProfile != null) _managerProfile = managerProfile;
-    _resetRecords();
+    _resetRecords(); _forgetTransfers();
     leagueId = league ?? InitialDatabase.leagueOf(selectedClub.id) ?? 'super';
     _allClubs = InitialDatabase.getClubs(leagueId);
     _userClubId = selectedClub.id;
@@ -626,7 +685,7 @@ class GameState extends ChangeNotifier {
         ..reputation = InitialDatabase.info(league).tier == 2 ? 64 : 55
         ..ticketPrice = 30;
     }
-    _resetRecords();
+    _resetRecords(); _forgetTransfers();
     leagueId = league;
     // The new club takes the place of the league's weakest side.
     final keep = List<Club>.of(baseClubs)..sort((a, b) => b.reputation.compareTo(a.reputation));
@@ -2016,6 +2075,7 @@ class GameState extends ChangeNotifier {
     transferListed.remove(p.id);
     p.morale = 88;
     buyer.squad.add(p);
+    _recordMove(p, buyer);
     if (buyer.benchIds.length < Club.matchdayBench) buyer.benchIds.add(p.id);
     transferHistory.insert(
       0,
@@ -2329,7 +2389,7 @@ class GameState extends ChangeNotifier {
     ];
     if (candidates.isEmpty) return;
     final country = candidates[Random().nextInt(candidates.length)];
-    world.loadCountry(country, pyramid, _prepareWorldClub).catchError((_) {});
+    world.loadCountry(country, pyramid, _prepareWorldClub).then((_) => _applyLedger()).catchError((_) {});
   }
 
   void _generateOffers() {
@@ -2460,6 +2520,7 @@ class GameState extends ChangeNotifier {
     p.morale = 85;
     _post(userClub, trf('{0}: imzo bonusi', [p.shortName]), -wage * 8, category: FinanceCategory.agent);
     userClub.squad.add(p);
+    _recordMove(p, userClub);
     if (userClub.benchIds.length < Club.matchdayBench) userClub.benchIds.add(p.id);
     transferHistory.insert(
       0,
@@ -2907,6 +2968,7 @@ class GameState extends ChangeNotifier {
             _remove(club, p);
             released.add(p.shortName);
             freeAgents.add(p);
+            _recordMove(p, null);
             continue;
           }
           p.contract = p.contract.copyWith(
@@ -2932,6 +2994,7 @@ class GameState extends ChangeNotifier {
             ..sort((a, b) => a.ovr.compareTo(b.ovr));
           _remove(club, worst.first);
           freeAgents.add(worst.first);
+          _recordMove(worst.first, null);
         }
       }
       _ensureMatchdaySquad(club);
@@ -3592,6 +3655,7 @@ class GameState extends ChangeNotifier {
   Future<void> browseCountry(String country) async {
     await world.loadCountry(country, _pyramidIds(leagueId), _prepareWorldClub);
     world.countries.add(country);
+    _applyLedger();
     notifyListeners();
   }
 
@@ -3603,6 +3667,7 @@ class GameState extends ChangeNotifier {
     final cost = worldScoutCost(country);
     if (userClub.transferBudget < cost) return tr('Byudjet yetarli emas.');
     await world.loadCountry(country, _pyramidIds(leagueId), _prepareWorldClub);
+    _applyLedger();
     _post(userClub, trf('Skaut safari: {0}', [tr(country)]), -cost, category: FinanceCategory.operations);
     world.missions[country] = _currentRound + worldScoutRounds;
     _news(NewsKind.transfer, trf('Skautlar {0}ga jo‘nadi', [tr(country)]),
@@ -3836,6 +3901,12 @@ class GameState extends ChangeNotifier {
     }
   }
 
+  @visibleForTesting
+  void debugMove(Player p, Club from, Club to) => _completeTransfer(p, from, to, 1000000);
+
+  @visibleForTesting
+  Future<void> debugMoveTo(String clubId, String league) => _moveTo(clubId, league);
+
   /// Takes a job: a club of this league at once; any other league (abroad
   /// too) starts there with a fresh season.
   Future<String?> acceptJob(String id) async {
@@ -3870,6 +3941,7 @@ class GameState extends ChangeNotifier {
     }
     _userClubId = clubId;
     _beginCareer(year: year, seasons: seasons);
+    _applyLedger();
     _news(NewsKind.board, trf('Yangi ish: {0}', [userClub.name]),
         trf('{0}ni tark etib, {1} ({2}) bosh murabbiyi bo‘ldingiz.', [old, userClub.name, tr(leagueInfo.country)]),
         alert: true);
@@ -4252,6 +4324,7 @@ class GameState extends ChangeNotifier {
         },
     ],
     'moves': pendingMoves,
+    'tl': transferLedger,
     'life': life.toMap(),
     'world': world.toMap(),
     if (superCup != null) 'super': SaveCodec.fixture(superCup!, shots: true, full: true, commentary: false),
@@ -4294,6 +4367,7 @@ class GameState extends ChangeNotifier {
   Future<void> refreshWorld() async {
     world.seasons = calendar.year - firstSeason;
     await world.reload(_pyramidIds(leagueId), _prepareWorldClub);
+    _applyLedger();
     notifyListeners();
   }
 
@@ -4405,6 +4479,10 @@ class GameState extends ChangeNotifier {
     pendingMoves
       ..clear()
       ..addAll(Map<String, String>.from(m['moves'] ?? {}));
+    transferLedger
+      ..clear()
+      ..addAll(Map<String, String>.from(m['tl'] ?? {}));
+    _ledgerPool.clear();
     // Portrait hints may have improved since the save was written.
     for (final c in marketClubs) {
       for (final p in c.squad) {
@@ -4419,6 +4497,7 @@ class GameState extends ChangeNotifier {
     try {
       _syncNewClubs();
     } catch (_) {}
+    _applyLedger();
     notifyListeners();
     return true;
   }

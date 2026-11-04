@@ -303,7 +303,7 @@ class _TransferScreenState extends State<TransferScreen> {
                           children: [
                             ScoutedOvr(e.p, size: 30),
                             const SizedBox(width: 8),
-                            FilledButton.tonal(
+                            AppTonal.button(
                               style: FilledButton.styleFrom(
                                 minimumSize: const Size(64, 34),
                                 padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -376,7 +376,7 @@ class _TransferScreenState extends State<TransferScreen> {
                         children: [
                           ScoutedOvr(p, size: 30),
                           const SizedBox(width: 8),
-                          FilledButton.tonal(
+                          AppTonal.button(
                             style: FilledButton.styleFrom(minimumSize: const Size(64, 34)),
                             onPressed: () {
                               final ok = game.signFreeAgent(p);

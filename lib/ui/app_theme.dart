@@ -32,7 +32,7 @@ class AppAppearance extends ValueNotifier<bool> {
 
 abstract final class AppColors {
   static Color get bg =>
-      AppAppearance.instance.value ? const Color(0xFF16191E) : const Color(0xFFEDF1F6);
+      AppAppearance.instance.value ? const Color(0xFF16191E) : const Color(0xFFF1F3F6);
   static Color get surface =>
       AppAppearance.instance.value ? const Color(0xFF24282E) : const Color(0xFFFFFFFF);
   static Color get surfaceAlt =>
@@ -138,7 +138,7 @@ abstract final class AppText {
 }
 
 ThemeData buildAppTheme() {
-  const radius = BorderRadius.all(Radius.circular(10));
+  const radius = BorderRadius.all(Radius.circular(8));
   return ThemeData(
     useMaterial3: true,
     brightness: AppAppearance.instance.value ? Brightness.dark : Brightness.light,
@@ -195,20 +195,20 @@ ThemeData buildAppTheme() {
       elevation: 0,
       color: AppColors.surface,
       margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(borderRadius: radius),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(10)), side: BorderSide(color: AppColors.line)),
     ),
     dialogTheme: DialogThemeData(
       elevation: 0,
       backgroundColor: AppColors.surface,
       surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(16))),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(12))),
     ),
     bottomSheetTheme: BottomSheetThemeData(
       elevation: 0,
       backgroundColor: AppColors.surface,
       surfaceTintColor: Colors.transparent,
       showDragHandle: true,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(14))),
     ),
     filledButtonTheme: FilledButtonThemeData(
       style: FilledButton.styleFrom(
@@ -250,10 +250,15 @@ ThemeData buildAppTheme() {
         fontSize: 12,
         fontWeight: FontWeight.w600,
       ),
-      checkmarkColor: AppColors.primary,
+      showCheckmark: false,
       selectedColor: AppColors.primarySoft,
       backgroundColor: AppColors.surface,
-      side: BorderSide(color: AppColors.line),
+      side: WidgetStateBorderSide.resolveWith(
+        (states) => BorderSide(
+          color: states.contains(WidgetState.selected) ? AppColors.primary : AppColors.line,
+          width: states.contains(WidgetState.selected) ? 1.4 : 1,
+        ),
+      ),
       shape: StadiumBorder(),
     ),
     inputDecorationTheme: InputDecorationTheme(

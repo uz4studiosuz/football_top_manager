@@ -105,7 +105,7 @@ class _SaveSlotsScreenState extends State<SaveSlotsScreen> {
             Text(tr('Hozirgi'), style: AppText.caption.copyWith(color: AppColors.primary, fontWeight: FontWeight.w700))
           else ...[
             if (meta != null) IconButton(tooltip: tr('O‘chirish'), onPressed: () => _delete(i), icon: const Icon(Icons.delete_outline)),
-            FilledButton.tonal(
+            AppTonal.button(
               onPressed: () => _open(i, meta),
               child: Text(meta == null ? tr('Yangi karyera') : tr('Ochish')),
             ),

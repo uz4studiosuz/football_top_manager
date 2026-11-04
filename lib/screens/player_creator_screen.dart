@@ -419,7 +419,7 @@ class _PlayerCreatorScreenState extends State<PlayerCreatorScreen> {
                 _slider(tr('Daraja (taxminiy OVR)'), target, 50, 95, (v) => setState(() => target = v)),
                 SizedBox(
                   width: double.infinity,
-                  child: FilledButton.tonalIcon(
+                  child: AppTonal.icon(
                     onPressed: () => setState(() {
                       attrs = _template();
                       potential = max(potential, target);

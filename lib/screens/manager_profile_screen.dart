@@ -259,7 +259,7 @@ class _ManagerProfileScreenState extends State<ManagerProfileScreen> {
                   style: AppText.caption,
                 ),
                 const SizedBox(height: 12),
-                FilledButton.tonalIcon(
+                AppTonal.icon(
                   onPressed: () async {
                     await SaveService.save();
                     if (context.mounted) {

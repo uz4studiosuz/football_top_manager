@@ -195,7 +195,7 @@ class _Facilities extends StatelessWidget {
                         style: AppText.caption.copyWith(fontWeight: FontWeight.w600),
                       ),
                     ),
-                    FilledButton.tonal(
+                    AppTonal.button(
                       onPressed: life.building.containsKey(f) || life.level(f) >= Facility.maxLevel
                           ? null
                           : () {
@@ -246,7 +246,7 @@ Widget _sponsorCard(BuildContext context, GameState game) {
               contentPadding: EdgeInsets.zero,
               title: Text('${o['name']}', style: AppText.bodyStrong),
               subtitle: Text(terms(o), style: AppText.caption),
-              trailing: FilledButton.tonal(onPressed: () => game.signSponsor(o), child: Text(tr('Imzolash'))),
+              trailing: AppTonal.button(onPressed: () => game.signSponsor(o), child: Text(tr('Imzolash'))),
             ),
       ],
     ),
@@ -801,7 +801,7 @@ class _Staff extends StatelessWidget {
                       TextButton(onPressed: () => game.setStaff(r, 0), child: Text(tr('Bo‘shatish'))),
                     const Spacer(),
                     if (life.staffLevel(r) < 5)
-                      FilledButton.tonal(
+                      AppTonal.button(
                         onPressed: () {
                           final error = game.setStaff(r, life.staffLevel(r) + 1);
                           if (error != null) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
