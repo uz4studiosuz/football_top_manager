@@ -5,6 +5,7 @@ import '../models/league.dart';
 import '../models/player.dart';
 import '../l10n/l10n.dart';
 import 'press.dart';
+import 'training_schedule.dart';
 
 /// Club buildings the manager can upgrade (levels 0–5).
 enum Facility {
@@ -97,6 +98,7 @@ class SeasonAwards {
 /// Everything about running the club beyond the first team: facilities,
 /// training, academy, fans, press and the club's history.
 class ClubLife {
+  final training = TrainingSchedule();
   final Map<Facility, int> levels = {for (final f in Facility.values) f: 0};
 
   /// Upgrades under construction: facility → round it opens.
@@ -223,6 +225,7 @@ class ClubLife {
   static int seatsAdded(int capacity) => min(80000 - capacity, max(4000, (capacity * 0.18).round()));
 
   void reset() {
+    training.reset();
     for (final f in Facility.values) {
       levels[f] = 0;
     }
@@ -454,6 +457,7 @@ class ClubLife {
 
   // ------------------------------------------------------------ save
   Map<String, dynamic> toMap() => {
+    'schedule': training.toMap(),
     'lv': {for (final e in levels.entries) e.key.name: e.value},
     'bd': {for (final e in building.entries) e.key.name: e.value},
     'fo': focus.name,
@@ -489,6 +493,7 @@ class ClubLife {
   void restore(Map<String, dynamic>? m) {
     reset();
     if (m == null) return;
+    training.restore(m['schedule'] as Map?);
     final facility = Facility.values.asNameMap();
     (m['lv'] as Map? ?? {}).forEach((k, v) {
       if (facility[k] != null) levels[facility[k]!] = v as int;

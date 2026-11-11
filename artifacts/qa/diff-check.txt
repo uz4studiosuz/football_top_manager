@@ -1,0 +1,16 @@
+warning: in the working copy of 'build/web/assets/NOTICES', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'build/web/assets/shaders/ink_sparkle.frag', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'build/web/assets/shaders/stretch_effect.frag', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'build/web/canvaskit/canvaskit.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'build/web/canvaskit/canvaskit.js.symbols', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'build/web/canvaskit/chromium/canvaskit.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'build/web/canvaskit/chromium/canvaskit.js.symbols', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'build/web/canvaskit/skwasm.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'build/web/canvaskit/skwasm.js.symbols', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'build/web/canvaskit/skwasm_heavy.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'build/web/canvaskit/skwasm_heavy.js.symbols', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'build/web/canvaskit/wimp.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'build/web/canvaskit/wimp.js.symbols', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'build/web/flutter.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'build/web/flutter_bootstrap.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'build/web/main.dart.js', LF will be replaced by CRLF the next time Git touches it

@@ -245,7 +245,7 @@ class StandingsTable extends StatelessWidget {
               final club = game.getClubById(s.clubId)!;
               final mine = club.id == highlightClubId;
               return Material(
-                color: mine ? AppColors.primarySoft : Colors.transparent,
+                color: mine ? AppColors.primarySoft : i.isEven ? AppColors.surface : AppColors.surfaceAlt,
                 child: InkWell(
                   onTap: onTapClub == null ? null : () => onTapClub!(club),
                   child: Padding(

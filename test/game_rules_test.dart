@@ -21,21 +21,23 @@ void main() {
       InitialDatabase.getSuperLeagueClubs().first,
     ),
   );
-  test('1x minute equals one real second, and paused time is ignored', () {
+  test('Playback follows the measured video pace and ignores paused time', () {
     final c = MatchClock();
-    expect(c.advance(const Duration(milliseconds: 999)), isEmpty);
-    expect(c.advance(const Duration(milliseconds: 1)), [1]);
+    expect(MatchClock.rates.keys, ['1x', '5x', '10x']);
+    expect(c.advance(const Duration(seconds: 19)), isEmpty);
+    expect(c.minutes, closeTo(26 / 60, .000001));
     c.paused = true;
     expect(c.advance(const Duration(seconds: 5)), isEmpty);
-    expect(c.minutes, 1);
+    expect(c.minutes, closeTo(26 / 60, .000001));
     c.paused = false;
     c.speed = 5;
-    expect(c.advance(const Duration(seconds: 1)), [2, 3, 4, 5, 6]);
+    expect(c.advance(const Duration(seconds: 19)), [1, 2]);
+    expect(c.minutes, closeTo(156 / 60, .000001));
   });
   test('Clock processes every minute and clamps full time', () {
     final c = MatchClock()..speed = 5;
     expect(
-      c.advance(const Duration(seconds: 30)),
+      c.advance(const Duration(minutes: 30)),
       List.generate(90, (i) => i + 1),
     );
     expect(c.minutes, 90);

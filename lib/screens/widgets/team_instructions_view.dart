@@ -8,6 +8,7 @@ import '../../ui/face_avatar.dart';
 import '../../ui/widgets.dart';
 import '../../l10n/l10n.dart';
 import 'strategy_planner.dart';
+import '../training_screen.dart';
 
 /// Team tactics in eFootball terms: playstyle, attack, defence and extras.
 class TeamTacticsView extends StatelessWidget {
@@ -29,6 +30,8 @@ class TeamTacticsView extends StatelessWidget {
             child: ListView(
               padding: const EdgeInsets.all(12),
               children: [
+                const TacticalReadinessPanel(),
+                const SizedBox(height: 12),
                 const StrategyPlanner(),
                 const SizedBox(height: 12),
                 AppCard(
@@ -101,6 +104,8 @@ class TeamTacticsView extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       SectionHeader(tr('Himoya'), icon: Icons.shield_outlined),
+                      _slider(tr('Jismoniy kurash'), 'Ehtiyotkor', 'Yuqori', t.tacklingIntensity,
+                          (v) => set(t.copyWith(tacklingIntensity: v))),
                       _segment<DefensiveApproach>(
                         'Himoya yondashuvi',
                         DefensiveApproach.values,
@@ -134,6 +139,10 @@ class TeamTacticsView extends StatelessWidget {
                       SectionHeader(tr('O‘yin boshqaruvi'), icon: Icons.timer_outlined),
                       _switch(tr('Vaqtni cho‘zish'), tr('Oldinda bo‘lsa 75-daqiqadan keyin o‘yinni sekinlashtiradi'),
                           t.timeWasting, (v) => set(t.copyWith(timeWasting: v))),
+                      _switch(tr('Qanotlarni almashtirish'), tr('Keng hujumchilarning maydondagi qanotlari almashadi; tarkib o‘zgarmaydi.'),
+                          t.swapWings, (v) => set(t.copyWith(swapWings: v))),
+                      _switch(tr('Darvozabon standartga chiqsin'), tr('85-daqiqadan keyin hisobda ortda bo‘lsak, darvozabon burchak to‘piga boradi.'),
+                          t.keeperUpForCorners, (v) => set(t.copyWith(keeperUpForCorners: v))),
                     ],
                   ),
                 ),

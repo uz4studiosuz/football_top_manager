@@ -1,0 +1,9 @@
+00:00 +0: loading D:/Loyihalar/football_top_manager/test/match_broadcast_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: Every formation kicks off in its own half with opponents outside the circle
+00:00 +1: 19 wall seconds advance 26 match seconds, matching the video
+00:00 +2: Natural movement is continuous and completed passes reach the receiver
+00:00 +3: Camera painting and hit testing use the same coordinates
+00:00 +4: Fixed simulation ticks give the same result at different rendering rates
+00:00 +5: (tearDownAll)
+00:00 +5: All tests passed!

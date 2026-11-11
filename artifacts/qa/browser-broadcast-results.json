@@ -1,0 +1,15 @@
+{
+  "version": {
+    "app_name": "football_top_manager",
+    "version": "1.5.0",
+    "build_number": "8",
+    "package_name": "football_top_manager"
+  },
+  "frameStats": {
+    "frames": 114,
+    "seconds": 3.0258999999999996,
+    "maxFrameMs": 66.69999999999982
+  },
+  "errors": [],
+  "speedControls": "Visually checked in screenshot; exact rates covered by match_broadcast_test.dart"
+}

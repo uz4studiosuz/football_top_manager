@@ -1,0 +1,16 @@
+00:00 +0: loading D:/Loyihalar/football_top_manager/tool/calibrate_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: calibration report
+matches 160  (116 ms/match)
+breakaway shots 0.04   shots in box 69%   from 22m+ 2.47 (goals 0.12)
+by 6m: 0/26/43/21/11/0%
+goals/match 2.17  xG 2.11  shots 16.76  onTarget 6.43
+passes 113.96  accuracy 43.1%
+corners 6.21  fouls 19.89  yellows 3.24  reds 0.06
+offsides 2.67  saves 4.26  penalties 0.30  injuries 0.19  subs 7.06
+home win 46%  draw 21%
+rating avg 6.50  min 3.8  max 10.0
+errors → shot 0.90  → goal 0.13
+
+00:18 +1: (tearDownAll)
+00:18 +1: All tests passed!

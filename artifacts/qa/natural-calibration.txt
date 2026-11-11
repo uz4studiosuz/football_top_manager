@@ -1,0 +1,7 @@
+00:00 +0: loading D:/Loyihalar/football_top_manager/tool/natural_match_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: natural match calibration
+natural matches 12 (2587ms/match) goals 3.3333333333333335 xG 3.876057203056279 shots 29.75 passes 1333.5833333333333 accuracy 87.50859213897394% fouls 19.75 corners 20.333333333333332 offsides 0.0
+{assisted/right: 6.666666666666667, open/right: 1.5833333333333333, freeKick/right: 0.5833333333333334, setPiece/head: 0.9166666666666666, assisted/head: 9.25, assisted/left: 4.916666666666667, corner/head: 3.0833333333333335, corner/right: 0.9166666666666666, corner/left: 0.25, freeKick/left: 0.5, open/left: 0.6666666666666666, penalty/left: 0.16666666666666666, penalty/right: 0.16666666666666666, setPiece/right: 0.08333333333333333}
+00:31 +1: (tearDownAll)
+00:31 +1: All tests passed!

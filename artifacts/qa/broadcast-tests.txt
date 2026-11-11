@@ -1,0 +1,49 @@
+00:00 +0: loading D:/Loyihalar/football_top_manager/test/match_broadcast_test.dart
+00:00 +0: D:/Loyihalar/football_top_manager/test/match_broadcast_test.dart: (setUpAll)
+00:00 +0: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: (setUpAll)
+00:00 +0: D:/Loyihalar/football_top_manager/test/match_broadcast_test.dart: Every formation kicks off in its own half with opponents outside the circle
+00:00 +1: D:/Loyihalar/football_top_manager/test/match_broadcast_test.dart: Every formation kicks off in its own half with opponents outside the circle
+00:00 +2: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Clock processes every minute and clamps full time
+00:00 +3: D:/Loyihalar/football_top_manager/test/match_broadcast_test.dart: 19 wall seconds advance 26 match seconds, matching the video
+00:00 +4: D:/Loyihalar/football_top_manager/test/match_broadcast_test.dart: 19 wall seconds advance 26 match seconds, matching the video
+00:00 +5: D:/Loyihalar/football_top_manager/test/match_broadcast_test.dart: 19 wall seconds advance 26 match seconds, matching the video
+00:00 +6: D:/Loyihalar/football_top_manager/test/match_broadcast_test.dart: 19 wall seconds advance 26 match seconds, matching the video
+00:00 +7: D:/Loyihalar/football_top_manager/test/match_broadcast_test.dart: 19 wall seconds advance 26 match seconds, matching the video
+00:00 +8: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Result is idempotent; assists and economics are recorded once
+00:01 +9: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Result is idempotent; assists and economics are recorded once
+00:01 +10: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Result is idempotent; assists and economics are recorded once
+00:01 +11: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Next round cannot skip an unplayed round
+00:01 +12: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Fitness affects match strength without changing natural OVR
+00:01 +13: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Field keeps 22 players in bounds and moves continuously
+00:01 +14: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Full season keeps ownership unique and all clubs play 14 matches
+00:06 +15: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Full season keeps ownership unique and all clubs play 14 matches
+00:06 +16: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Full season keeps ownership unique and all clubs play 14 matches
+00:08 +17: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Full season keeps ownership unique and all clubs play 14 matches
+00:08 +18: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Full season keeps ownership unique and all clubs play 14 matches
+00:10 +19: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Full season keeps ownership unique and all clubs play 14 matches
+00:10 +20: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Full season keeps ownership unique and all clubs play 14 matches
+00:10 +21: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Full season keeps ownership unique and all clubs play 14 matches
+00:11 +22: D:/Loyihalar/football_top_manager/test/manager_refresh_test.dart: Manager screens adapt to phone, tablet, desktop and large text
+00:14 +23: D:/Loyihalar/football_top_manager/test/manager_refresh_test.dart: Manager screens adapt to phone, tablet, desktop and large text
+00:18 +24: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Realistic averages over many simulated matches
+00:20 +25: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Career survives a JSON save/restore round trip
+00:21 +26: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Free agents can be signed outside the transfer window
+00:24 +27: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Corners pack the box with attackers and markers
+00:24 +28: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Fouls and free kicks mirror each other
+00:24 +29: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: A player built from scratch joins the club and survives saving
+00:25 +30: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Premier League career: 20 clubs, 38 rounds, real dates and zones
+00:30 +31: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Auto lineup keeps players in their own positions
+00:31 +32: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Injured and suspended starters are replaced automatically
+00:31 +33: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Transfers are negotiated over rounds: bid, counter, contract, signing
+00:31 +34: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Selling: offers wait for an answer, counters and medicals take a round
+00:31 +35: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Quick result keeps the manager’s own line-up
+00:32 +36: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: The keeper slot keeps goal: an outfielder there concedes far more, the keeper on the wing does not save
+00:41 +37: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: A player added to my club in the editor joins the running squad; a removed one leaves
+00:41 +38: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Individual instructions follow the position
+00:41 +39: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Editor edits of face, value and stats reach the running player
+00:41 +40: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Player actions survive their compact encoding and a full match records them
+00:42 +41: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Created players are shaped by position: keepers cannot score, strikers cannot tackle
+00:42 +42: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: A lineup that lost players is repaired before kick-off instead of crashing
+00:42 +43: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Transfers stay made when the manager takes a job in another league
+00:43 +44: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: (tearDownAll)
+00:43 +44: All tests passed!

@@ -22,6 +22,7 @@ import '../ui/press_dialog.dart';
 import 'club_life_screen.dart';
 import 'season_review_screen.dart';
 import 'tactics_screen.dart';
+import 'training_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   final VoidCallback onNavigateToTactics;
@@ -84,12 +85,22 @@ class DashboardScreen extends StatelessWidget {
               ],
             ),
             actions: [
+              if (MediaQuery.sizeOf(context).width < 600)
+                PopupMenuButton<String>(
+                  icon: const Icon(Icons.more_horiz),
+                  onSelected: (value) { if (value == 'coins') { showCoinInfo(context); } else { _pressEntry(context, game); } },
+                  itemBuilder: (_) => [
+                    PopupMenuItem(value: 'coins', child: Text(tr('FTM tangalari'))),
+                    PopupMenuItem(value: 'press', child: Text(tr('Matbuot anjumani'))),
+                  ],
+                ),
+              if (MediaQuery.sizeOf(context).width >= 600)
               InkWell(
                 borderRadius: BorderRadius.circular(20),
                 onTap: () => showCoinInfo(context),
                 child: const CoinBalance(),
               ),
-              IconButton(
+              if (MediaQuery.sizeOf(context).width >= 600) IconButton(
                 tooltip: tr('Matbuot anjumani'),
                 onPressed: () => _pressEntry(context, game),
                 icon: Badge(
@@ -191,6 +202,12 @@ class DashboardScreen extends StatelessWidget {
                   );
                   final side = Column(
                     children: [
+                      const TacticalReadinessPanel(),
+                      const SizedBox(height: 12),
+                      AppCard(onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const TrainingScreen())),
+                        child: Row(children: [Icon(Icons.calendar_view_week, color: AppColors.teal), const SizedBox(width: 10),
+                          Expanded(child: Text(tr('Mashg‘ulot markazi'), style: AppText.bodyStrong)), const Icon(Icons.chevron_right)])),
+                      const SizedBox(height: 12),
                       _clubLifeCard(context, game),
                       const SizedBox(height: 12),
                       _boardCard(game),

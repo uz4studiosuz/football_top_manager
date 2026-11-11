@@ -101,38 +101,50 @@ void main() {
     expect(Player.fromMap(p.toMap()).instruction, PlayerInstruction.stayBack);
   });
   test('Goals occur after the physical shot flight crosses the goal line', () {
-    final clubs = InitialDatabase.getSuperLeagueClubs();
-    final field = MatchField(clubs[0], clubs[1], seed: 0);
-    var previousGoals = 0, observedGoals = 0;
-    while (!field.isFinished) {
-      if (field.isHalfTime) field.startSecondHalf();
-      field.update(1 / 60);
-      final total = field.homeStats.goals + field.awayStats.goals;
-      if (total > previousGoals) {
-        observedGoals++;
-        expect(field.phase, FieldPhase.goal);
-        expect(field.ball.dx == 0 || field.ball.dx == 1, isTrue);
-        expect(field.ball.dy, inInclusiveRange(0.44, 0.56));
-        expect(field.shots.last.goal, isTrue);
+    var totalObserved = 0;
+    // A legitimate 0–0 must not fail the flight invariant. Inspect several
+    // independent matches and validate every goal they actually produce.
+    for (var seed = 0; seed < 5; seed++) {
+      final clubs = InitialDatabase.getSuperLeagueClubs();
+      final field = MatchField(clubs[0], clubs[1], seed: seed);
+      var previousGoals = 0, observedGoals = 0;
+      while (!field.isFinished) {
+        if (field.isHalfTime) field.startSecondHalf();
+        field.update(1 / 60);
+        final total = field.homeStats.goals + field.awayStats.goals;
+        if (total > previousGoals) {
+          observedGoals++;
+          expect(field.phase, FieldPhase.goal);
+          expect(field.ball.dx == 0 || field.ball.dx == 1, isTrue);
+          expect(field.ball.dy, inInclusiveRange(0.44, 0.56));
+          expect(field.shots.last.goal, isTrue);
+        }
+        previousGoals = total;
       }
-      previousGoals = total;
+      totalObserved += observedGoals;
+      expect(
+        field.events.where((e) => e.type == MatchEventType.goal).length,
+        observedGoals,
+      );
+      expect(field.shots.where((s) => s.goal).length, observedGoals);
+      expect(
+        field.homeStats.completedPasses,
+        lessThanOrEqualTo(field.homeStats.passes),
+      );
+      expect(
+        field.awayStats.completedPasses,
+        lessThanOrEqualTo(field.awayStats.passes),
+      );
+      expect(
+        field.homeStats.onTarget,
+        lessThanOrEqualTo(field.homeStats.shots),
+      );
+      expect(
+        field.awayStats.onTarget,
+        lessThanOrEqualTo(field.awayStats.shots),
+      );
     }
-    expect(observedGoals, greaterThan(0));
-    expect(
-      field.events.where((e) => e.type == MatchEventType.goal).length,
-      observedGoals,
-    );
-    expect(field.shots.where((s) => s.goal).length, observedGoals);
-    expect(
-      field.homeStats.completedPasses,
-      lessThanOrEqualTo(field.homeStats.passes),
-    );
-    expect(
-      field.awayStats.completedPasses,
-      lessThanOrEqualTo(field.awayStats.passes),
-    );
-    expect(field.homeStats.onTarget, lessThanOrEqualTo(field.homeStats.shots));
-    expect(field.awayStats.onTarget, lessThanOrEqualTo(field.awayStats.shots));
+    expect(totalObserved, greaterThan(0));
   });
   test(
     'Aware runners and pass choices do not loop through obvious offsides',
@@ -146,7 +158,9 @@ void main() {
           field.homeStats.shots + field.awayStats.shots,
           greaterThanOrEqualTo(6),
         );
-        offsides += field.events.where((e) => e.type == MatchEventType.offside).length;
+        offsides += field.events
+            .where((e) => e.type == MatchEventType.offside)
+            .length;
       }
       // Averaged over several matches so one wild game does not decide it.
       expect(offsides / 10, lessThanOrEqualTo(7));

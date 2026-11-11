@@ -44,6 +44,17 @@ class FootballPitchPainter extends CustomPainter {
             );
       canvas.drawRect(rect, stripe);
     }
+    // Subtle cross-cut mowing pattern, kept deterministic for replay frames.
+    final cross = Paint()..color = Colors.white.withValues(alpha: .025);
+    for (var i = 0; i < 8; i += 2) {
+      canvas.drawRect(vertical
+        ? Rect.fromLTWH(r.left + r.width / 8 * i, r.top, r.width / 8, r.height)
+        : Rect.fromLTWH(r.left, r.top + r.height / 8 * i, r.width, r.height / 8), cross);
+    }
+    canvas.drawRect(Offset.zero & size, Paint()..shader = const LinearGradient(
+      begin: Alignment.topLeft, end: Alignment.bottomRight,
+      colors: [Color(0x12000000), Color(0x00FFFFFF), Color(0x20000000)],
+    ).createShader(Offset.zero & size));
     // Map pitch metres (x along length 0–105, y across width 0–68).
     Offset m(double x, double y) => vertical
         ? Offset(r.left + y / 68 * r.width, r.top + x / 105 * r.height)

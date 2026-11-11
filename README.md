@@ -2,6 +2,27 @@
 
 A Flutter football management game with an eight-club, 14-round career.
 
+## Version 1.5.0
+
+Broadcast 2D match overhaul: stadium and roof shadows, a following camera,
+player facing indicators, a smaller physical ball and interpolated movement.
+The only match speeds are 1x, 5x and 10x. The 1x rate is measured from the
+reference clip: 26 game seconds in 19 real seconds. Teams start in their own
+halves and opponents stay outside the centre circle.
+
+User matches now use fixed physical ticks, acceleration, body turning before
+passes and shots, safer passing lanes, first-touch reach, rolling loose balls
+and physical walks to restarts. Quick results use the same user-match rules.
+
+## Version 1.4.0
+
+Manager workspace refresh: responsive dark panels, desktop squad tables and
+editable tactical roles, grouped 1–20 / 1–100 player attributes, a larger 2D
+match field, and a touchline instruction panel. Weekly training now connects
+session load, recovery, attribute development and tactical understanding to
+the career and match engine. Existing saves receive compatible defaults.
+See [the implementation notes](docs/MANAGER_REFRESH.md) for mechanics and QA.
+
 Version 1.3.1 fixes dark-mode warning surfaces and match-lineup markers,
 and places corner kicks at the correct pitch corner.
 
@@ -92,13 +113,14 @@ leagues, clubs and players visually; `tool/validate_data.py` checks the data.
 
 ## Simulation
 
-`lib/services/match_field.dart` drives a 2D pitch where action time runs at
-`MatchField.tempo` relative to the clock. Calibrated averages per match
-(`flutter test tool/calibrate_test.dart`): ~3.0 goals, xG ~2.6, ~24 shots,
-~8 on target, ~830 passes at 84%, ~9 corners, ~21 fouls, ~3.6 yellows,
-~3 offsides, home win ≈45% / draw ≈26%. Keepers cannot be tackled with the
-ball and defenders avoid risky lanes in their own third, so goals come from
-build-up rather than gifts.
+`lib/services/match_field.dart` has a physical user-match mode (`realTime: true`)
+with fixed 20 Hz simulation and render interpolation. Background leagues keep
+the inexpensive compressed mode so whole pyramids can progress without waiting
+for every match to run in real time. Measure user-match distributions with
+`flutter test tool/natural_match_test.dart`; the older compressed benchmark is
+`flutter test tool/calibrate_test.dart`. Both derive statistics from played
+actions. Keepers cannot be tackled with the ball, passes account for blocked
+lanes, and players turn before delivering the ball.
 
 Players earn live SofaScore-style ratings weighted by role, including errors
 leading to a shot/goal, penalties won/conceded/saved, big chances created,

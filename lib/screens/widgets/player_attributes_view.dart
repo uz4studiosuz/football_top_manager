@@ -5,119 +5,80 @@ import '../../ui/football_pitch.dart';
 import '../../ui/widgets.dart';
 import '../../l10n/l10n.dart';
 
-class PlayerAttributesView extends StatelessWidget {
+class PlayerAttributesView extends StatefulWidget {
   final Player player;
   const PlayerAttributesView({super.key, required this.player});
   @override
-  Widget build(BuildContext context) {
-    Theme.of(context); // Rebuild palette tokens when appearance changes.
-    final s = player.stats, values = s.toMap();
-    final keeper = player.mainPosition.isGoalkeeper;
-    final summary = <(String, int)>[
-      ('TEZ', s.pace),
-      ('ZRB', s.shooting),
-      ('PAS', s.passing),
-      ('DRI', s.dribblingStat),
-      ('HIM', s.defending),
-      ('JIS', s.physicality),
-    ];
-    return ListView(
-      padding: const EdgeInsets.all(12),
-      children: [
-        AppCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              SectionHeader(tr('Atributlar xaritasi'), icon: Icons.radar_rounded),
-              Center(
-                child: SizedBox(
-                  width: 280,
-                  height: 240,
-                  child: CustomPaint(painter: _Radar(s, keeper)),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  for (final item in summary)
-                    Expanded(
-                      child: Column(
-                        children: [
-                          ValueBadge(item.$2, size: 36),
-                          const SizedBox(height: 4),
-                          Text(tr(item.$1), style: AppText.overline.copyWith(fontSize: 10)),
-                        ],
-                      ),
-                    ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 12),
-        for (final group in PlayerStats.groups.entries)
-          AppCard(
-            margin: const EdgeInsets.only(bottom: 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(child: Text(group.key, style: AppText.h3)),
-                    ValueBadge(
-                      (group.value.fold<int>(0, (a, k) => a + (values[k] as int)) / group.value.length).round(),
-                      size: 30,
-                      filled: false,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                for (final key in group.value) _AttributeRow(PlayerStats.labels[key]!, values[key] as int),
-              ],
-            ),
-          ),
-      ],
-    );
-  }
+  State<PlayerAttributesView> createState() => _PlayerAttributesViewState();
 }
 
-class _AttributeRow extends StatelessWidget {
-  final String label;
-  final int value;
-  const _AttributeRow(this.label, this.value);
+class _PlayerAttributesViewState extends State<PlayerAttributesView> {
+  bool twenty = true;
+  static const technical = ['ballControl', 'dribbling', 'tightPossession', 'lowPass', 'loftedPass', 'finishing', 'heading', 'setPieceTaking', 'curl', 'kickingPower'];
+  static const tactical = ['attackingAwareness', 'defensiveAwareness', 'defensiveEngagement', 'tackling', 'aggression'];
+  static const physical = ['speed', 'acceleration', 'jumping', 'physicalContact', 'balance', 'stamina'];
+  static const goalkeeping = ['gkAwareness', 'gkCatching', 'gkParrying', 'gkReflexes', 'gkReach'];
+
   @override
   Widget build(BuildContext context) {
-    Theme.of(context); // Rebuild palette tokens when appearance changes.
-    final c = AppColors.attribute(value);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        children: [
-          Expanded(flex: 5, child: Text(tr(label), style: AppText.small.copyWith(color: AppColors.ink))),
-          Expanded(
-            flex: 4,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(3),
-              child: LinearProgressIndicator(
-                value: value / 100,
-                minHeight: 6,
-                backgroundColor: AppColors.surfaceAlt,
-                color: c,
-              ),
-            ),
-          ),
-          SizedBox(
-            width: 36,
-            child: Text(
-              '$value',
-              textAlign: TextAlign.right,
-              style: AppText.number.copyWith(fontSize: 14, color: c),
-            ),
-          ),
-        ],
-      ),
-    );
+    final p = widget.player;
+    final values = p.stats.toMap();
+    return ListView(padding: const EdgeInsets.all(16), children: [
+      Wrap(alignment: WrapAlignment.spaceBetween, crossAxisAlignment: WrapCrossAlignment.center, runSpacing: 10, spacing: 12, children: [
+        Text(tr('Asosiy atributlar'), style: AppText.h2),
+        SegmentedButton<bool>(segments: const [ButtonSegment(value: true, label: Text('1–20')), ButtonSegment(value: false, label: Text('1–100'))],
+          selected: {twenty}, onSelectionChanged: (v) => setState(() => twenty = v.first)),
+      ]),
+      const SizedBox(height: 12),
+      AppCard(child: LayoutBuilder(builder: (context, box) => Wrap(spacing: 28, runSpacing: 14, children: [
+        _summary(tr('Hozirgi salohiyat'), '${p.ovr}', AppColors.primary),
+        _summary(tr('Potensial'), '${p.potential}', AppColors.teal),
+        _summary(tr('Holat'), '${p.currentStamina}%', p.currentStamina < 60 ? AppColors.warning : AppColors.win),
+        _summary(tr('Yosh'), '${p.age}', AppColors.ink),
+      ]))),
+      const SizedBox(height: 12),
+      Text(twenty ? tr('1–20 ko‘rinishi: asl 1–100 atributlar beshga bo‘linib yaxlitlanadi. O‘yin hisobi o‘zgarmaydi.') : tr('Asl atributlar 1–100 shkalada ko‘rsatilgan.'), style: AppText.caption),
+      const SizedBox(height: 18),
+      LayoutBuilder(builder: (context, box) {
+        final columns = box.maxWidth >= 780 ? 3 : box.maxWidth >= 510 ? 2 : 1;
+        final width = (box.maxWidth - (columns - 1) * 14) / columns;
+        return Wrap(spacing: 14, runSpacing: 14, crossAxisAlignment: WrapCrossAlignment.start, children: [
+          SizedBox(width: width, child: _table(tr('Texnik'), technical, values)),
+          SizedBox(width: width, child: _table(tr('Taktik va himoyaviy'), tactical, values)),
+          SizedBox(width: width, child: Column(children: [
+            _table(tr('Jismoniy'), physical, values),
+            const SizedBox(height: 14),
+            _table(tr('Darvozabon'), goalkeeping, values),
+          ])),
+        ]);
+      }),
+      const SizedBox(height: 18),
+      AppCard(padding: EdgeInsets.zero, child: ExpansionTile(
+        title: Text(tr('Atributlar xaritasi'), style: AppText.bodyStrong),
+        children: [SizedBox(width: 280, height: 240, child: CustomPaint(painter: _Radar(p.stats, p.mainPosition.isGoalkeeper)))],
+      )),
+      const SizedBox(height: 24),
+    ]);
   }
+
+  Widget _summary(String title, String value, Color color) => SizedBox(width: 125, child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    Text(title, style: AppText.caption), const SizedBox(height: 8), Text(value, style: AppText.h1.copyWith(color: color, fontFeatures: AppText.tabular)),
+  ]));
+
+  Widget _table(String title, List<String> keys, Map<String, dynamic> values) => AppCard(padding: EdgeInsets.zero, child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+    Padding(padding: const EdgeInsets.all(12), child: Text(title, style: AppText.h3)),
+    const Divider(),
+    for (final (index, key) in keys.indexed) Container(
+      color: index.isEven ? AppColors.surfaceAlt : AppColors.surface,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+      child: Row(children: [
+        Expanded(child: Text(tr(PlayerStats.labels[key]!), style: AppText.small.copyWith(color: AppColors.ink))),
+        const SizedBox(width: 12),
+        Text('${twenty ? ((values[key] as int) / 5).round().clamp(1, 20) : values[key]}', style: AppText.number.copyWith(
+          color: (values[key] as int) >= 80 ? AppColors.win : (values[key] as int) >= 60 ? AppColors.warning : AppColors.ink3)),
+      ]),
+    ),
+  ]));
 }
 
 class _Radar extends CustomPainter {

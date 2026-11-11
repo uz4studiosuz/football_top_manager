@@ -7,7 +7,6 @@ import '../models/league.dart';
 import '../services/game_state.dart';
 import '../services/match_field.dart';
 import '../ui/face_avatar.dart';
-import '../ui/football_pitch.dart';
 import '../ui/match_widgets.dart';
 import '../ui/shot_widgets.dart';
 import '../ui/widgets.dart';
@@ -22,6 +21,10 @@ import '../services/cup.dart';
 import '../services/lineup_solver.dart';
 import 'tactics_screen.dart';
 import '../l10n/l10n.dart';
+import '../services/touchline_orders.dart';
+import '../ui/touchline_panel.dart';
+import '../ui/stadium_pitch.dart';
+import '../services/match_clock.dart';
 
 /// O'yin davomidagi taktik kayfiyat (In-Game Mentality)
 enum InGameMentality {
@@ -56,17 +59,20 @@ class MatchScreen extends StatefulWidget {
   State<MatchScreen> createState() => _MatchScreenState();
 }
 
-class _MatchScreenState extends State<MatchScreen> {
-  /// Match minutes per real second at each speed step.
-  static const speeds = <String, double>{'0.5x': 0.5, '1x': 1, '2x': 2, '4x': 4, '8x': 8};
+class _MatchScreenState extends State<MatchScreen> with WidgetsBindingObserver {
+  /// Playback speed is calibrated against the supplied reference video.
+  static const speeds = MatchClock.rates;
   final GameState _game = GameState();
   late final Club _home, _away;
   late final MatchField _field;
   late final Timer _timer;
+  Timer? _roundTimer;
   final Stopwatch _clock = Stopwatch();
   Duration _last = Duration.zero;
   String _speed = '1x';
   bool _playing = true;
+  bool _followCamera = true;
+  double _cameraX = .5;
   bool _saved = false;
   int _lineupTab = 0;
   InGameMentality _mentality = InGameMentality.balanced;
@@ -96,13 +102,13 @@ class _MatchScreenState extends State<MatchScreen> {
   Timer? _pickTimer;
 
   void _pickAt(Offset at, Size size) {
-    final r = FootballPitchPainter.field(size, const EdgeInsets.all(6));
+    final camera = MatchCameraTransform(size, focusX: _cameraX, overview: !_followCamera);
     String? best;
     var bestD = double.infinity;
-    for (final (xi, pts) in [(_field.homeXI, _field.homePositions), (_field.awayXI, _field.awayPositions)]) {
+    for (final (xi, pts) in [(_field.homeXI, _field.renderHome), (_field.awayXI, _field.renderAway)]) {
       for (var i = 0; i < min(xi.length, pts.length); i++) {
         if (_field.dismissed.contains(xi[i].id)) continue;
-        final c = Offset(r.left + pts[i].dx * r.width, r.top + pts[i].dy * r.height);
+        final c = camera.project(pts[i]);
         final d = (c - at).distance;
         if (d < bestD) {
           bestD = d;
@@ -141,10 +147,16 @@ class _MatchScreenState extends State<MatchScreen> {
     }
     if (t.buildUp == BuildUpStyle.long) {
       _orders.add('long');
-      base = base.copyWith(buildUp: neutral.buildUp);
+      base = base.copyWith(buildUp: neutral.buildUp, playOutFromBack: neutral.playOutFromBack);
+    } else if (t.buildUp == BuildUpStyle.short && t.playOutFromBack) {
+      _orders.add('back');
+      base = base.copyWith(buildUp: neutral.buildUp, playOutFromBack: neutral.playOutFromBack);
     }
     if (t.pressing >= 5 && t.counterPress) {
       _orders.add('press');
+      base = base.copyWith(pressing: neutral.pressing, counterPress: neutral.counterPress);
+    } else if (t.pressing == 1) {
+      _orders.add('ease');
       base = base.copyWith(pressing: neutral.pressing, counterPress: neutral.counterPress);
     }
     if (t.timeWasting) {
@@ -153,44 +165,49 @@ class _MatchScreenState extends State<MatchScreen> {
     } else if (t.tempo >= 5) {
       _orders.add('fast');
       base = base.copyWith(tempo: neutral.tempo);
+    } else if (t.tempo == 2) {
+      _orders.add('patient');
+      base = base.copyWith(tempo: neutral.tempo);
     }
+    if (t.tacklingIntensity == 5) { _orders.add('physical'); base = base.copyWith(tacklingIntensity: 3); }
+    if (t.keeperUpForCorners) { _orders.add('keeper'); base = base.copyWith(keeperUpForCorners: false); }
+    if (t.swapWings) { _orders.add('swap'); base = base.copyWith(swapWings: false); }
     _baseTactics = base;
   }
 
   void _toggleOrder(String order) {
     setState(() {
-      if (!_orders.remove(order)) {
-        _orders.add(order);
-        if (order == 'wings') _orders.remove('centre');
-        if (order == 'centre') _orders.remove('wings');
-        if (order == 'slow') _orders.remove('fast');
-        if (order == 'fast') _orders.remove('slow');
-      }
-      var t = _baseTactics;
-      if (_orders.contains('wings')) t = t.copyWith(attackingArea: AttackingArea.wide, width: 5);
-      if (_orders.contains('centre')) t = t.copyWith(attackingArea: AttackingArea.centre, width: 2);
-      if (_orders.contains('long')) t = t.copyWith(buildUp: BuildUpStyle.long);
-      if (_orders.contains('press')) t = t.copyWith(pressing: 5, counterPress: true);
-      if (_orders.contains('slow')) t = t.copyWith(tempo: 1, timeWasting: true);
-      if (_orders.contains('fast')) t = t.copyWith(tempo: 5, timeWasting: false);
-      _user.tactics = t;
-      _field.announce(
-        MatchEventType.info,
-        _orders.isEmpty ? tr('Murabbiy jamoani asl taktikaga qaytardi.') : trf('Murabbiy ko‘rsatmasi: {0}.', [_orders.map(_orderLabel).join(', ')]),
-        _userHome,
-      );
+      TouchlineOrders.toggle(_orders, order);
+      _user.tactics = TouchlineOrders.apply(_baseTactics, _orders);
+      _field.announce(MatchEventType.info,
+        _orders.isEmpty ? tr('Murabbiy jamoani asl taktikaga qaytardi.') : trf('Murabbiy ko‘rsatmasi: {0}.', [_orders.map(_orderLabel).join(', ')]), _userHome);
       _drain();
     });
   }
 
-  static String _orderLabel(String o) => switch (o) {
-    'wings' => tr('Qanotdan hujum'),
-    'centre' => tr('Markazdan hujum'),
-    'long' => tr('Uzun to‘plar'),
-    'press' => tr('Yuqori pressing'),
-    'slow' => tr('Vaqtni cho‘zish'),
-    _ => tr('Tezkor o‘yin'),
-  };
+  static String _orderLabel(String id) => TouchlineOrder.byId(id)?.label ?? id;
+
+  Future<void> _openOrders() async {
+    final resume = _playing;
+    setState(() => _playing = false);
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      constraints: const BoxConstraints(maxWidth: 600),
+      builder: (context) => SafeArea(child: SizedBox(
+        height: MediaQuery.sizeOf(context).height * .82,
+        child: StatefulBuilder(builder: (context, refresh) => TouchlinePanel(
+          selected: _orders,
+          onToggle: (id) { _toggleOrder(id); refresh(() {}); },
+          onReset: () {
+            setState(() { _orders.clear(); _user.tactics = _baseTactics; });
+            refresh(() {});
+          },
+        )),
+      )),
+    );
+    if (mounted) setState(() => _playing = resume && !_field.isHalfTime && !_field.isFinished);
+  }
 
   @override
   void deactivate() {
@@ -311,6 +328,8 @@ class _MatchScreenState extends State<MatchScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    unawaited(StadiumPitch.warmUp());
     _home = _game.getClubById(widget.fixture.homeClubId)!;
     _away = _game.getClubById(widget.fixture.awayClubId)!;
     if (_home.id != _game.userClubId) _game.autoPickLineup(_home);
@@ -322,6 +341,7 @@ class _MatchScreenState extends State<MatchScreen> {
     _field = MatchField(
       _home,
       _away,
+      realTime: true,
       // Every kick-off plays out differently.
       seed: Random().nextInt(1 << 30),
       homeCoaching: _userHome ? coaching : 66 + _home.reputation ~/ 10,
@@ -338,10 +358,10 @@ class _MatchScreenState extends State<MatchScreen> {
     _ordersFromTactics();
     _feed.addAll(_field.takeEvents().reversed);
     _clock.start();
-    _timer = Timer.periodic(const Duration(milliseconds: 33), (_) => _tick());
+    _timer = Timer.periodic(const Duration(milliseconds: 16), (_) => _tick());
     // The round's other matches are played in the background meanwhile.
     if (!_game.isKnockout(widget.fixture)) {
-      Future<void>.delayed(const Duration(seconds: 2), () {
+      _roundTimer = Timer(const Duration(seconds: 2), () {
         if (mounted && !_saved) _game.presimulateRound(widget.fixture.id);
       });
     }
@@ -349,9 +369,18 @@ class _MatchScreenState extends State<MatchScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _timer.cancel();
+    _roundTimer?.cancel();
     _pickTimer?.cancel();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.hidden || state == AppLifecycleState.paused) {
+      if (mounted) setState(() => _playing = false);
+    }
   }
 
   void _applyMentality() {
@@ -377,7 +406,10 @@ class _MatchScreenState extends State<MatchScreen> {
     _last = now;
     if (!_playing || _field.isFinished || _field.isHalfTime) return;
     setState(() {
-      _field.update(delta.inMicroseconds / 1e6 * speeds[_speed]!);
+      if (!speeds.containsKey(_speed)) _speed = '1x';
+      final frameSeconds = min(1.0, delta.inMicroseconds / 1e6);
+      _field.update(frameSeconds * speeds[_speed]!);
+      _cameraX += (_field.ball.dx - _cameraX) * (1 - exp(-frameSeconds * 2.8));
       _drain();
     });
   }
@@ -648,7 +680,8 @@ class _MatchScreenState extends State<MatchScreen> {
     _field.automaticRule = _game.life.autoRule['enabled'] == true
         ? Map<String, dynamic>.from(_game.life.autoRule)
         : null;
-    if (_orders.isEmpty) _baseTactics = _user.tactics;
+    _orders.clear();
+    _ordersFromTactics();
     if (mounted) setState(() => _playing = resume && !_field.isHalfTime);
   }
 
@@ -710,7 +743,7 @@ class _MatchScreenState extends State<MatchScreen> {
             final wide = box.maxWidth >= 980;
             final pitchArea = Column(
               children: [
-                Container(
+                if (finished) Container(
                   color: AppColors.surface,
                   child: MatchHeader(
                     home: _home,
@@ -722,7 +755,8 @@ class _MatchScreenState extends State<MatchScreen> {
                     events: _field.events,
                   ),
                 ),
-                _pitch(colors, wide ? box.maxWidth * 0.58 : box.maxWidth, box.maxHeight),
+                _pitch(colors, wide ? box.maxWidth * 0.68 : box.maxWidth, box.maxHeight),
+                _onPitchStrip(colors),
                 _controls(),
               ],
             );
@@ -784,7 +818,7 @@ class _MatchScreenState extends State<MatchScreen> {
               return Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(width: box.maxWidth * 0.58, child: SingleChildScrollView(child: pitchArea)),
+                  SizedBox(width: box.maxWidth * 0.68, child: SingleChildScrollView(child: pitchArea)),
                   const VerticalDivider(width: 1),
                   Expanded(child: tabs),
                 ],
@@ -864,15 +898,15 @@ class _MatchScreenState extends State<MatchScreen> {
   Widget _pitch((Color, Color) colors, double width, double maxHeight) {
     // Keep the real pitch shape (105×68): on wide screens the height limit
     // narrows the pitch instead of stretching it.
-    final limit = maxHeight < 700 ? 190.0 : max(320.0, maxHeight * 0.5);
-    final h = ((width - 20) * 68 / 105).clamp(150.0, limit);
-    final w = min(width - 20, h * 105 / 68);
+    final follow = _followCamera;
+    final h = (follow ? min((width - 16) * 1.35, maxHeight * .7) : min((width - 16) * 100 / 125, maxHeight * .72)).clamp(160.0, 720.0);
+    final w = width - 16;
     return Container(
       height: h,
       width: w,
-      margin: EdgeInsets.fromLTRB(max(10, (width - w) / 2), 8, max(10, (width - w) / 2), 6),
+      margin: const EdgeInsets.fromLTRB(8, 8, 8, 0),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(6),
         child: Stack(
           children: [
             Positioned.fill(
@@ -884,24 +918,30 @@ class _MatchScreenState extends State<MatchScreen> {
                     homeColor: colors.$1,
                     awayColor: colors.$2,
                     selectedId: _pickedId,
+                    focusX: _cameraX,
+                    overview: !follow,
                   ),
                 ),
               ),
             ),
 
             Positioned(
-              left: 10,
+              left: 8,
               top: 8,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
                 decoration: BoxDecoration(
                   color: Colors.black.withValues(alpha: 0.35),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: Text(
-                  _field.actionLabel,
-                  style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w600),
-                ),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  _scoreCode(_home, colors.$1),
+                  Padding(padding: const EdgeInsets.symmetric(horizontal: 9), child: Text('${_field.homeStats.goals}–${_field.awayStats.goals}', style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w900, fontFeatures: AppText.tabular))),
+                  _scoreCode(_away, colors.$2),
+                  const SizedBox(width: 10),
+                  Text(_field.digitalClock, style: const TextStyle(color: Colors.white, fontFamily: 'Roboto', fontSize: 13, fontWeight: FontWeight.w700, fontFeatures: AppText.tabular)),
+                  if (!_playing && !_field.isFinished) const Padding(padding: EdgeInsets.only(left: 6), child: Icon(Icons.pause, color: Colors.white70, size: 15)),
+                ]),
               ),
             ),
             if (_field.isHalfTime || _field.isFinished)
@@ -1017,38 +1057,60 @@ class _MatchScreenState extends State<MatchScreen> {
               ],
             ),
           ),
-          const SizedBox(height: 6),
-          SizedBox(
-            height: 34,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              children: [
-                for (final (o, icon) in [
-                  ('wings', Icons.swap_horiz_rounded),
-                  ('centre', Icons.vertical_align_center_rounded),
-                  ('long', Icons.call_made_rounded),
-                  ('press', Icons.compress_rounded),
-                  ('slow', Icons.hourglass_bottom_rounded),
-                  ('fast', Icons.fast_forward_rounded),
-                ])
-                  Padding(
-                    padding: const EdgeInsets.only(right: 6),
-                    child: FilterChip(
-                      avatar: Icon(icon, size: 15),
-                      label: Text(_orderLabel(o)),
-                      selected: _orders.contains(o),
-                      showCheckmark: false,
-                      visualDensity: VisualDensity.compact,
-                      onSelected: done ? null : (_) => _toggleOrder(o),
-                    ),
-                  ),
-              ],
-            ),
+          const SizedBox(height: 8),
+          Row(children: [
+            Expanded(child: OutlinedButton.icon(
+              key: const ValueKey('touchline_orders'),
+              onPressed: done ? null : _openOrders,
+              icon: const Icon(Icons.campaign_outlined, size: 18),
+              label: Text(trf('Ko‘rsatmalar · {0}', [_orders.length])),
+            )),
+            const SizedBox(width: 8),
+            OutlinedButton.icon(onPressed: done ? null : _openTactics,
+              icon: const Icon(Icons.tune, size: 18), label: Text(tr('Taktika'))),
+            const SizedBox(width: 6),
+            IconButton(tooltip: tr('Kamera'), onPressed: () => setState(() => _followCamera = !_followCamera),
+              icon: Icon(_followCamera ? Icons.center_focus_strong : Icons.crop_free)),
+          ]),
+          if (_feed.isNotEmpty) Container(
+            width: double.infinity,
+            margin: const EdgeInsets.only(top: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+            decoration: BoxDecoration(color: AppColors.primarySoft, border: Border(left: BorderSide(color: AppColors.teal, width: 3))),
+            child: Text(_feed.first.description, maxLines: 2, overflow: TextOverflow.ellipsis, style: AppText.small.copyWith(color: AppColors.ink)),
           ),
         ],
       ),
     );
   }
+
+  Widget _scoreCode(Club club, Color color) => Tooltip(message: club.name, child: Container(
+    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+    decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2)),
+    child: Text(club.shortName.toUpperCase(), style: TextStyle(color: color.computeLuminance() > .55 ? Colors.black : Colors.white, fontSize: 12, fontWeight: FontWeight.w800)),
+  ));
+
+  Widget _onPitchStrip((Color, Color) colors) => Container(
+    height: 47,
+    color: const Color(0xFF131720),
+    child: ListView(scrollDirection: Axis.horizontal, children: [
+      for (final (club, xi, color) in [(_home, _field.homeXI, colors.$1), (_away, _field.awayXI, colors.$2)])
+        for (final (i, p) in xi.indexed)
+          if (!_field.dismissed.contains(p.id)) Tooltip(message: p.name, child: InkWell(
+            onTap: () => _showPlayer(p, club),
+            child: Container(width: 88, padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 5),
+              decoration: BoxDecoration(border: Border(left: BorderSide(color: color, width: i == 0 ? 3 : .5))),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Row(children: [Text('${p.number}', style: const TextStyle(color: Colors.white70, fontSize: 10)),
+                  const SizedBox(width: 4), Expanded(child: Text(club.slotPosition(i).code, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w700))),
+                  Text((_field.ratingFor(p.id) ?? 6.5).toStringAsFixed(1), style: const TextStyle(color: Colors.white70, fontSize: 10))]),
+                const SizedBox(height: 6),
+                LinearProgressIndicator(value: p.currentStamina / 100, minHeight: 3, color: p.currentStamina > 60 ? AppColors.teal : AppColors.warning, backgroundColor: Colors.white12),
+              ]),
+            ),
+          )),
+    ]),
+  );
 
   Widget _breakOverlay((Color, Color) colors) {
     final h = _field.homeStats, a = _field.awayStats;
@@ -1448,40 +1510,56 @@ class _SubstitutionSheetState extends State<_SubstitutionSheet> {
 class MatchPitchPainter extends CustomPainter {
   final MatchField field;
   final Color homeColor, awayColor;
+  final double focusX;
+  final bool overview;
 
   /// The tapped player: ringed, with his number shown at any size.
   final String? selectedId;
-  MatchPitchPainter({required this.field, required this.homeColor, required this.awayColor, this.selectedId});
+  MatchPitchPainter({required this.field, required this.homeColor, required this.awayColor, this.selectedId, this.focusX = .5, this.overview = true});
 
   @override
   void paint(Canvas canvas, Size size) {
-    const inset = EdgeInsets.all(6);
-    const FootballPitchPainter(vertical: false, inset: inset).paint(canvas, size);
-    final r = FootballPitchPainter.field(size, inset);
-    Offset at(Offset p) => Offset(r.left + p.dx * r.width, r.top + p.dy * r.height);
+    final camera = MatchCameraTransform(size, focusX: focusX, overview: overview);
+    StadiumPitch.paint(canvas, camera);
+    final r = Offset.zero & size;
+    Offset at(Offset p) => camera.project(p);
     // Markers stay big enough for the shirt number to be read at any size.
-    final radius = max(6.5, size.height * 0.026);
-    final from = field.flightFrom, to = field.flightTo;
-    if (from != null && to != null) {
-      final trail = Paint()
-        ..color = Colors.white.withValues(alpha: field.flightIsShot ? 0.65 : 0.35)
-        ..strokeWidth = field.flightIsShot ? 2 : 1.4
-        ..strokeCap = StrokeCap.round;
-      canvas.drawLine(at(from), at(field.ball), trail);
+    final radius = (camera.scale * 1.25).clamp(8.0, 12.0);
+    void official(Offset pos, String text) {
+      final point = at(pos);
+      canvas.drawCircle(point + const Offset(1, 2), radius, Paint()..color = Colors.black26);
+      canvas.drawCircle(point, radius, Paint()..color = const Color(0xFF121A18));
+      canvas.drawCircle(point, radius, Paint()..color = const Color(0xFFD8E2D6)..style = PaintingStyle.stroke..strokeWidth = 1);
+      final label = TextPainter(text: TextSpan(text: text, style: TextStyle(fontFamily: 'Roboto', color: Colors.white, fontSize: radius * 1.2, fontWeight: FontWeight.w800)), textDirection: TextDirection.ltr)..layout();
+      label.paint(canvas, point - Offset(label.width / 2, label.height / 2));
     }
+    official(Offset((field.ball.dx * .45 + .275).clamp(.13, .87), .43 + .07 * sin(field.time * .3)), 'R');
+    official(Offset(field.ball.dx.clamp(.05, .95), -.035), 'A');
+    official(Offset(field.ball.dx.clamp(.05, .95), 1.035), 'A');
     void team(List<Player> xi, List<Offset> pts, Color color, bool home) {
-      final text = color.computeLuminance() > 0.55 ? const Color(0xFF14181F) : Colors.white;
+      final facings = home ? field.renderHomeFacing : field.renderAwayFacing;
       for (var i = 0; i < min(xi.length, pts.length); i++) {
         final p = xi[i];
         if (field.dismissed.contains(p.id)) continue;
         final c = at(pts[i]);
         final carrier = field.ballCarrier == p;
         final picked = p.id == selectedId;
+        final facing = facings[i];
         if (picked) {
           canvas.drawCircle(c, radius + 4, Paint()..color = Colors.white.withValues(alpha: 0.35));
         }
         canvas.drawCircle(c + const Offset(0, 1.5), radius, Paint()..color = Colors.black.withValues(alpha: 0.25));
-        canvas.drawCircle(c, radius, Paint()..color = i == 0 ? Color.lerp(color, Colors.black, 0.25)! : color);
+        final markerColor = i == 0 ? (home ? const Color(0xFFDDE77B) : const Color(0xFFAFDCF2)) : color;
+        final text = markerColor.computeLuminance() > .45 ? const Color(0xFF14181F) : Colors.white;
+        canvas.drawCircle(c, radius, Paint()..color = markerColor);
+        final direction = Offset(cos(facing), sin(facing));
+        final shoulder = Offset(-direction.dy, direction.dx);
+        final nose = Path()
+          ..moveTo(c.dx + direction.dx * (radius + 4), c.dy + direction.dy * (radius + 4))
+          ..lineTo(c.dx + direction.dx * (radius - 1) + shoulder.dx * 3, c.dy + direction.dy * (radius - 1) + shoulder.dy * 3)
+          ..lineTo(c.dx + direction.dx * (radius - 1) - shoulder.dx * 3, c.dy + direction.dy * (radius - 1) - shoulder.dy * 3)
+          ..close();
+        canvas.drawPath(nose, Paint()..color = Colors.white.withValues(alpha: .9));
         canvas.drawCircle(
           c,
           radius,
@@ -1494,7 +1572,7 @@ class MatchPitchPainter extends CustomPainter {
           final tp = TextPainter(
             text: TextSpan(
               text: '${p.number}',
-              style: TextStyle(color: text, fontSize: radius * 0.95, fontWeight: FontWeight.w800, fontFamily: 'Roboto'),
+              style: TextStyle(color: text, fontSize: max(8.5, radius * 0.95), fontWeight: FontWeight.w800, fontFamily: 'Roboto'),
             ),
             textDirection: TextDirection.ltr,
           )..layout();
@@ -1503,18 +1581,28 @@ class MatchPitchPainter extends CustomPainter {
         if (field.isInjuredOnPitch(p.id)) {
           canvas.drawCircle(c + Offset(radius * 0.8, -radius * 0.8), radius * 0.38, Paint()..color = AppColors.live);
         }
+        if ((carrier || picked || p.id == field.receivingPlayerId) && size.width >= 340) {
+          final label = TextPainter(
+            text: TextSpan(text: p.shortName, style: const TextStyle(fontFamily: 'Roboto', color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600)),
+            textDirection: TextDirection.ltr,
+          )..layout(maxWidth: 100);
+          final left = (c.dx - label.width / 2).clamp(r.left + 3, r.right - label.width - 3);
+          final top = (c.dy + radius + 5).clamp(r.top, r.bottom - label.height - 3);
+          canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(left - 3, top - 2, label.width + 6, label.height + 4), const Radius.circular(3)), Paint()..color = Colors.black.withValues(alpha: .6));
+          label.paint(canvas, Offset(left, top));
+        }
       }
     }
 
-    team(field.homeXI, field.homePositions, homeColor, true);
-    team(field.awayXI, field.awayPositions, awayColor, false);
-    final b = at(field.ball);
-    final lift = field.ballHeight * radius * 1.6;
+    team(field.homeXI, field.renderHome, homeColor, true);
+    team(field.awayXI, field.renderAway, awayColor, false);
+    final b = at(field.renderBall);
+    final lift = field.renderBallHeight * camera.scale * 2.8;
     canvas.drawOval(
       Rect.fromCenter(center: b + const Offset(0, 2), width: radius * 0.9, height: radius * 0.45),
       Paint()..color = Colors.black.withValues(alpha: 0.3),
     );
-    final ballR = radius * 0.5 * (1 + field.ballHeight * 0.35);
+    final ballR = (camera.scale * .35).clamp(2.0, 4.0) * (1 + field.renderBallHeight * 0.25);
     final bc = b - Offset(0, lift);
     canvas.drawCircle(bc, ballR, Paint()..color = Colors.white);
     canvas.drawCircle(

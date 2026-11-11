@@ -494,6 +494,9 @@ class TeamTactics {
   final int compactness;
   final bool flexiblePositioning;
   final bool timeWasting;
+  final int tacklingIntensity;
+  final bool keeperUpForCorners;
+  final bool swapWings;
   const TeamTactics({
     this.formation = FormationType.f433,
     this.playstyle = TeamPlaystyle.possession,
@@ -512,6 +515,9 @@ class TeamTactics {
     this.compactness = 3,
     this.flexiblePositioning = false,
     this.timeWasting = false,
+    this.tacklingIntensity = 3,
+    this.keeperUpForCorners = false,
+    this.swapWings = false,
   });
   TeamTactics copyWith({
     FormationType? formation,
@@ -531,6 +537,9 @@ class TeamTactics {
     int? compactness,
     bool? flexiblePositioning,
     bool? timeWasting,
+    int? tacklingIntensity,
+    bool? keeperUpForCorners,
+    bool? swapWings,
   }) {
     return TeamTactics(
       formation: formation ?? this.formation,
@@ -550,6 +559,9 @@ class TeamTactics {
       compactness: compactness ?? this.compactness,
       flexiblePositioning: flexiblePositioning ?? this.flexiblePositioning,
       timeWasting: timeWasting ?? this.timeWasting,
+      tacklingIntensity: tacklingIntensity ?? this.tacklingIntensity,
+      keeperUpForCorners: keeperUpForCorners ?? this.keeperUpForCorners,
+      swapWings: swapWings ?? this.swapWings,
     );
   }
 
@@ -571,6 +583,9 @@ class TeamTactics {
     'compactness': compactness,
     'flexiblePositioning': flexiblePositioning,
     'timeWasting': timeWasting,
+    'tacklingIntensity': tacklingIntensity,
+    'keeperUpForCorners': keeperUpForCorners,
+    'swapWings': swapWings,
   };
 
   factory TeamTactics.fromMap(Map t) => TeamTactics(
@@ -595,6 +610,9 @@ class TeamTactics {
     compactness: t['compactness'] ?? 3,
     flexiblePositioning: t['flexiblePositioning'] ?? false,
     timeWasting: t['timeWasting'] ?? false,
+    tacklingIntensity: ((t['tacklingIntensity'] as num?)?.toInt() ?? 3).clamp(1, 5),
+    keeperUpForCorners: t['keeperUpForCorners'] == true,
+    swapWings: t['swapWings'] == true,
   );
 }
 

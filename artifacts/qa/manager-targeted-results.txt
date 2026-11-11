@@ -1,0 +1,12 @@
+00:00 +0: loading D:/Loyihalar/football_top_manager/test/manager_refresh_test.dart
+00:00 +0: (setUpAll)
+00:00 +0: Orders resolve conflicts, preserve unrelated tactics, and serialize
+00:00 +1: Match days override sessions; recovery and rest limit load and development
+00:00 +2: Weekly training progresses once and survives a career save
+00:01 +3: Attacking and defensive schedules develop different eligible skills
+00:01 +4: High intensity costs more stamina than taking a breather in played matches
+00:02 +5: An exposed goal cannot be saved by a keeper stranded upfield
+00:03 +6: Swapping wings changes positions while preserving player identities
+00:03 +7: Manager screens adapt to phone, tablet, desktop and large text
+00:19 +8: (tearDownAll)
+00:19 +8: All tests passed!

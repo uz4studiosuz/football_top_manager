@@ -12,6 +12,7 @@ import '../ui/flag.dart';
 import '../ui/widgets.dart';
 import '../l10n/l10n.dart';
 import 'widgets/player_detail_view.dart';
+import 'training_screen.dart';
 
 /// Running the club: a hub of cards (facilities, training, academy, fans,
 /// honours, dressing room, staff), each opening its own page.
@@ -319,6 +320,12 @@ class _Training extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(12),
       children: [
+        AppCard(
+          onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const TrainingScreen())),
+          child: Row(children: [Icon(Icons.calendar_view_week, color: AppColors.teal), const SizedBox(width: 12),
+            Expanded(child: Text(tr('Haftalik reja'), style: AppText.bodyStrong)), const Icon(Icons.chevron_right)]),
+        ),
+        const SizedBox(height: 16),
         SectionHeader(tr('Jamoaviy mashg‘ulot'), icon: Icons.fitness_center_outlined),
         AppCard(
           padding: const EdgeInsets.symmetric(vertical: 4),

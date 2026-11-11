@@ -12,6 +12,9 @@ import 'standings_screen.dart';
 import '../l10n/l10n.dart';
 import '../services/coin_wallet.dart';
 import '../ui/coin.dart';
+import '../models/club.dart';
+import '../services/season_calendar.dart';
+import 'training_screen.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   const MainNavigationScreen({super.key});
@@ -102,7 +105,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
     Theme.of(context); // Rebuild palette tokens when appearance changes.
     final game = GameState();
     if (!game.isInitialized) return const Scaffold();
-    final wide = MediaQuery.sizeOf(context).width >= 1000;
+    final wide = MediaQuery.sizeOf(context).width >= 760;
+    final desktop = MediaQuery.sizeOf(context).width >= 1200;
     final screens = [
       DashboardScreen(
         onNavigateToTactics: () => _go(1),
@@ -173,11 +177,13 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           children: [
             if (wide)
               Container(
-                width: 92,
+                width: desktop ? 224 : 92,
                 color: AppColors.surface,
                 child: Column(
                   children: [
-                    const SizedBox(height: 18),
+                    Expanded(child: ListView(children: [
+                    Column(children: [
+                    const SizedBox(height: 24),
                     Container(
                       width: 44,
                       height: 44,
@@ -188,15 +194,43 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                       child: const Icon(Icons.sports_soccer, color: Colors.white),
                     ),
                     const SizedBox(height: 6),
-                    Text(tr('FTM27'), style: AppText.overline),
+                    Text(tr('FTM27'), style: AppText.overline.copyWith(letterSpacing: 2)),
                     const SizedBox(height: 18),
+                    if (desktop) ...[
+                      ClubCrestWidget(config: game.userClub.crestConfig, size: 48),
+                      const SizedBox(height: 10),
+                      Padding(padding: const EdgeInsets.symmetric(horizontal: 16), child: Text(game.userClub.name, textAlign: TextAlign.center, style: AppText.h3)),
+                      const SizedBox(height: 6),
+                      Text(game.seasonLabel, style: AppText.caption),
+                      const SizedBox(height: 20),
+                      const Divider(),
+                      const SizedBox(height: 12),
+                    ],
+                    ]),
                     for (var i = 0; i < labels.length; i++)
                       _RailItem(
+                        expanded: desktop,
                         icon: i == _index ? activeIcons[i] : icons[i],
                         label: labels[i],
                         selected: i == _index,
                         onTap: () => _go(i),
                       ),
+                    _RailItem(
+                      expanded: desktop,
+                      icon: Icons.calendar_view_week_outlined,
+                      label: tr('Mashg‘ulot'),
+                      selected: false,
+                      onTap: () => Navigator.push(context, MaterialPageRoute<void>(builder: (_) => const TrainingScreen())),
+                    ),
+                    ])),
+                    if (desktop) Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                        Text(game.leagueName, style: AppText.overline),
+                        const SizedBox(height: 6),
+                        Text(SeasonCalendar.format(game.currentDate, year: true), style: AppText.small),
+                      ]),
+                    ),
                   ],
                 ),
               ),
@@ -205,7 +239,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
               child: Align(
                 alignment: Alignment.topCenter,
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 1180),
+                  constraints: const BoxConstraints(maxWidth: 1600),
                   child: body,
                 ),
               ),
@@ -295,11 +329,13 @@ class _BarItem extends StatelessWidget {
 }
 
 class _RailItem extends StatelessWidget {
+  final bool expanded;
   final IconData icon;
   final String label;
   final bool selected;
   final VoidCallback onTap;
   const _RailItem({
+    this.expanded = false,
     required this.icon,
     required this.label,
     required this.selected,
@@ -316,7 +352,13 @@ class _RailItem extends StatelessWidget {
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 10),
-          child: Column(
+          child: expanded ? Row(children: [
+            const SizedBox(width: 12),
+            Icon(icon, size: 21, color: selected ? AppColors.primary : AppColors.ink2),
+            const SizedBox(width: 12),
+            Expanded(child: Text(label, style: AppText.bodyStrong.copyWith(color: selected ? AppColors.primary : AppColors.ink2))),
+            if (selected) Container(width: 3, height: 22, color: AppColors.teal),
+          ]) : Column(
             children: [
               Icon(icon, color: selected ? AppColors.primary : AppColors.ink2),
               const SizedBox(height: 4),

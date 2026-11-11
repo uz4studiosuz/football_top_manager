@@ -1,0 +1,62 @@
+00:00 +0: loading D:/Loyihalar/football_top_manager/test/match_broadcast_test.dart
+00:00 +0: D:/Loyihalar/football_top_manager/test/match_broadcast_test.dart: (setUpAll)
+00:00 +0: D:/Loyihalar/football_top_manager/test/match_broadcast_test.dart: Every formation kicks off in its own half with opponents outside the circle
+00:00 +1: D:/Loyihalar/football_top_manager/test/match_broadcast_test.dart: 19 wall seconds advance 26 match seconds, matching the video
+00:00 +2: D:/Loyihalar/football_top_manager/test/match_broadcast_test.dart: Natural movement is continuous and completed passes reach the receiver
+00:00 +3: D:/Loyihalar/football_top_manager/test/match_broadcast_test.dart: Camera painting and hit testing use the same coordinates
+00:00 +4: D:/Loyihalar/football_top_manager/test/match_broadcast_test.dart: Fixed simulation ticks give the same result at different rendering rates
+00:00 +5: D:/Loyihalar/football_top_manager/test/match_broadcast_test.dart: (tearDownAll)
+00:01 +5: D:/Loyihalar/football_top_manager/test/manager_refresh_test.dart: (setUpAll)
+00:01 +5: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: (setUpAll)
+00:01 +5: D:/Loyihalar/football_top_manager/test/simulation_realism_test.dart: (setUpAll)
+00:01 +6: D:/Loyihalar/football_top_manager/test/simulation_realism_test.dart: (setUpAll)
+00:01 +7: D:/Loyihalar/football_top_manager/test/simulation_realism_test.dart: (setUpAll)
+00:01 +8: D:/Loyihalar/football_top_manager/test/simulation_realism_test.dart: (setUpAll)
+00:02 +8: D:/Loyihalar/football_top_manager/test/l10n_test.dart: (setUpAll)
+00:02 +9: D:/Loyihalar/football_top_manager/test/l10n_test.dart: (setUpAll)
+00:02 +10: D:/Loyihalar/football_top_manager/test/l10n_test.dart: (setUpAll)
+00:02 +11: D:/Loyihalar/football_top_manager/test/l10n_test.dart: (setUpAll)
+00:02 +12: D:/Loyihalar/football_top_manager/test/l10n_test.dart: (setUpAll)
+00:02 +13: D:/Loyihalar/football_top_manager/test/l10n_test.dart: (setUpAll)
+00:02 +13: D:/Loyihalar/football_top_manager/test/manager_refresh_test.dart: Weekly training progresses once and survives a career save
+00:02 +14: D:/Loyihalar/football_top_manager/test/manager_refresh_test.dart: Weekly training progresses once and survives a career save
+00:02 +15: D:/Loyihalar/football_top_manager/test/manager_refresh_test.dart: Weekly training progresses once and survives a career save
+00:02 +16: D:/Loyihalar/football_top_manager/test/manager_refresh_test.dart: Weekly training progresses once and survives a career save
+00:03 +17: D:/Loyihalar/football_top_manager/test/manager_refresh_test.dart: Weekly training progresses once and survives a career save
+00:03 +18: D:/Loyihalar/football_top_manager/test/manager_refresh_test.dart: Weekly training progresses once and survives a career save
+00:03 +19: D:/Loyihalar/football_top_manager/test/manager_refresh_test.dart: Weekly training progresses once and survives a career save
+00:03 +20: D:/Loyihalar/football_top_manager/test/manager_refresh_test.dart: Weekly training progresses once and survives a career save
+00:03 +21: D:/Loyihalar/football_top_manager/test/manager_refresh_test.dart: Weekly training progresses once and survives a career save
+00:03 +22: D:/Loyihalar/football_top_manager/test/manager_refresh_test.dart: Weekly training progresses once and survives a career save
+00:05 +22: D:/Loyihalar/football_top_manager/test/l10n_test.dart: first launch asks for a language and the app switches to it
+unhandled element <marker/>; Picture key: Svg loader
+00:05 +23: D:/Loyihalar/football_top_manager/test/manager_refresh_test.dart: Weekly training progresses once and survives a career save
+00:05 +24: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Full season keeps ownership unique and all clubs play 14 matches
+00:06 +25: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Full season keeps ownership unique and all clubs play 14 matches
+00:07 +26: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Full season keeps ownership unique and all clubs play 14 matches
+00:07 +27: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Full season keeps ownership unique and all clubs play 14 matches
+00:07 +28: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Full season keeps ownership unique and all clubs play 14 matches
+00:16 +29: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Full season keeps ownership unique and all clubs play 14 matches
+00:19 +30: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Engine-recorded match stores ratings, momentum and player lines
+00:23 +31: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Realistic averages over many simulated matches
+00:30 +32: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Career survives a JSON save/restore round trip
+00:33 +33: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Free agents can be signed outside the transfer window
+00:38 +34: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Corners pack the box with attackers and markers
+00:38 +35: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Fouls and free kicks mirror each other
+00:38 +36: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: A player built from scratch joins the club and survives saving
+00:38 +37: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Premier League career: 20 clubs, 38 rounds, real dates and zones
+00:44 +38: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Auto lineup keeps players in their own positions
+00:45 +39: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Injured and suspended starters are replaced automatically
+00:45 +40: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Transfers are negotiated over rounds: bid, counter, contract, signing
+00:45 +41: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Selling: offers wait for an answer, counters and medicals take a round
+00:45 +42: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Quick result keeps the manager’s own line-up
+00:49 +43: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: The keeper slot keeps goal: an outfielder there concedes far more, the keeper on the wing does not save
+00:58 +44: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: A player added to my club in the editor joins the running squad; a removed one leaves
+00:58 +45: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Individual instructions follow the position
+00:58 +46: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Editor edits of face, value and stats reach the running player
+00:58 +47: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Player actions survive their compact encoding and a full match records them
+00:59 +48: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Created players are shaped by position: keepers cannot score, strikers cannot tackle
+00:59 +49: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: A lineup that lost players is repaired before kick-off instead of crashing
+00:59 +50: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: Transfers stay made when the manager takes a job in another league
+01:00 +51: D:/Loyihalar/football_top_manager/test/game_rules_test.dart: (tearDownAll)
+01:01 +51: All tests passed!

@@ -10,6 +10,7 @@ import '../ui/widgets.dart';
 import 'widgets/player_detail_view.dart';
 import 'widgets/team_instructions_view.dart';
 import 'squad_screen.dart';
+import 'training_screen.dart';
 import 'player_creator_screen.dart';
 import '../l10n/l10n.dart';
 
@@ -469,12 +470,18 @@ class _TacticsScreenState extends State<TacticsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             SizedBox(
-                              width: min(620, box.maxWidth * 0.52),
+                              width: min(470, max(280, (box.maxHeight - 190) * .8)),
                               child: ListView(children: [...top, _pitch(club)]),
                             ),
                             const SizedBox(width: 16),
                             Expanded(
-                              child: ListView(controller: _squadScroll, children: [...groups, const SizedBox(height: 24)]),
+                              child: ListView(controller: _squadScroll, children: [
+                                const TacticalReadinessPanel(),
+                                const SizedBox(height: 12),
+                                _startingTable(club),
+                                const SizedBox(height: 12),
+                                ...groups, const SizedBox(height: 24),
+                              ]),
                             ),
                           ],
                         ),
@@ -534,6 +541,31 @@ class _TacticsScreenState extends State<TacticsScreen> {
       ],
     ),
   );
+
+  Widget _startingTable(Club club) => AppCard(padding: EdgeInsets.zero, child: Column(children: [
+    Padding(padding: const EdgeInsets.all(14), child: SectionHeader(tr('Asosiy tarkib'), padding: EdgeInsets.zero)),
+    for (final (i, p) in club.startingXI.indexed) Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      color: i.isEven ? AppColors.surfaceAlt : AppColors.surface,
+      child: Row(children: [
+        SizedBox(width: 25, child: Text('${p.number}', style: AppText.caption)),
+        SizedBox(width: 48, child: PositionChip(club.slotPosition(i).code)),
+        const SizedBox(width: 8),
+        Expanded(child: InkWell(onTap: () => _menu(p), child: Padding(padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Text(p.shortName, maxLines: 1, overflow: TextOverflow.ellipsis, style: AppText.bodyStrong.copyWith(fontSize: 12))))),
+        const SizedBox(width: 8),
+        SizedBox(width: 170, child: DropdownButtonHideUnderline(child: DropdownButton<PlayerInstruction>(
+          isExpanded: true, isDense: true, value: p.instruction,
+          style: AppText.small.copyWith(color: AppColors.ink, fontFamily: 'Roboto'),
+          items: [for (final role in PlayerInstruction.forPosition(club.slotPosition(i), keep: p.instruction))
+            DropdownMenuItem(value: role, child: Text(role.label, maxLines: 1, overflow: TextOverflow.ellipsis))],
+          onChanged: (v) { if (v != null) game.setPlayerInstruction(p, v); },
+        ))),
+        const SizedBox(width: 12),
+        SizedBox(width: 46, child: Text('${p.currentStamina}%', textAlign: TextAlign.right, style: AppText.number.copyWith(fontSize: 12, color: p.currentStamina > 70 ? AppColors.teal : AppColors.warning))),
+      ]),
+    ),
+  ]));
 
   Widget _pitch(Club c) => AspectRatio(
     aspectRatio: 0.8,

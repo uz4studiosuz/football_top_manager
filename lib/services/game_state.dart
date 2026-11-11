@@ -20,6 +20,7 @@ import 'season_calendar.dart';
 import 'coin_wallet.dart';
 import 'club_life.dart';
 import 'cup.dart';
+import 'training_schedule.dart';
 import '../l10n/l10n.dart';
 
 /// Yetakchi futbolchilar reytingi modeli
@@ -1609,6 +1610,7 @@ class GameState extends ChangeNotifier {
       home,
       away,
       seed: f.id.codeUnits.fold<int>(_salt(1), (a, b) => (a * 31 + b) & 0x7fffffff),
+      realTime: true,
       homeCoaching: userHome
           ? _managerProfile.ratingFor(home.tactics.playstyle)
           : 66 + home.reputation ~/ 10,
@@ -1762,9 +1764,11 @@ class GameState extends ChangeNotifier {
         .difference(calendar.dateOfRound(_currentRound))
         .inDays;
     _currentRound++;
+    final trainingWork = life.training.workload(playedOn, days, trainingMatchDates);
     for (final club in marketClubs.toSet()) {
       for (final p in club.squad) {
-        p.currentStamina = min(100, p.currentStamina + 10 + days * 3);
+        final cost = club.id == userClubId ? trainingWork.fitnessCost : 0;
+        p.currentStamina = (p.currentStamina + 10 + days * 3 - cost).clamp(0, 100);
         // Draw once per match week. Most players are C; elite ability does
         // not guarantee elite execution on every match day.
         p.condition = PlayerCondition.draw(_conditionRandom);
@@ -3145,6 +3149,24 @@ class GameState extends ChangeNotifier {
     notifyListeners();
   }
 
+  List<DateTime> get trainingMatchDates => [
+    for (final f in [...fixturesOf(userClub.id), ...cupFixtures, ?superCup])
+      if (f.involves(userClub.id) && f.date != null) f.date!,
+  ];
+
+  TacticalReadiness get tacticalReadiness => TacticalReadiness.evaluate(userClub, life.training, teamChemistry);
+
+  void setTrainingSession(int weekday, int slot, TrainingSession session) {
+    if (weekday < 0 || weekday > 6 || slot < 0 || slot > 2) return;
+    life.training.sessions[weekday * 3 + slot] = session;
+    notifyListeners();
+  }
+
+  void setTrainingIntensity(int value) {
+    life.training.intensity = value.clamp(1, 3);
+    notifyListeners();
+  }
+
   /// What a player works on in team training: his line's plan, else the
   /// key attributes of his position (attackers never drill tackling unless
   /// the plan says so).
@@ -3203,11 +3225,12 @@ class GameState extends ChangeNotifier {
   }
 
   /// Estimated development rate per match week, before the focus bonus.
-  double trainingRate(Player p) =>
+  double trainingRate(Player p, {double? development}) =>
       (p.age <= 21 ? 0.42 : p.age <= 24 ? 0.3 : p.age <= 28 ? 0.18 : p.age <= 31 ? 0.1 : 0.05) *
       life.growthFactor *
       (p.mainPosition.isGoalkeeper ? 1 + 0.2 * life.staffLevel(StaffRole.goalkeeping) : 1) *
       (p.personality == Personality.professional ? 1.3 : p.personality == Personality.lazy ? 0.6 : 1.0) *
+      (development ?? life.training.workload(currentDate, 7, trainingMatchDates).development) *
       (p.isInjured ? 0.2 : 1);
 
   int trainingWeeks(Player p) {
@@ -3221,6 +3244,8 @@ class GameState extends ChangeNotifier {
   /// Weekly: constructions finish, individual and team training progress.
   void _weeklyClubLife(int days) {
     final c = userClub;
+    final trainingWork = life.training.workload(currentDate.subtract(Duration(days: days)), days, trainingMatchDates);
+    life.training.complete(c.tactics, trainingWork);
     for (final f in List.of(life.building.keys)) {
       if (_currentRound < life.building[f]!) continue;
       life.building.remove(f);
@@ -3237,7 +3262,7 @@ class GameState extends ChangeNotifier {
     for (final p in c.squad) {
       final focusKeys = trainingKeysFor(p);
       if (life.focus == TrainingFocus.fitness) p.currentStamina = min(100, p.currentStamina + 5);
-      final rate = trainingRate(p);
+      final rate = trainingRate(p, development: trainingWork.development * days / 7);
       final target = life.targets[p.id];
       if (target != null && target.startsWith('position:')) {
         final code = target.substring(9);
@@ -3272,7 +3297,7 @@ class GameState extends ChangeNotifier {
         }
         continue;
       }
-      final key = target ?? focusKeys[rnd.nextInt(focusKeys.length)];
+      final key = target ?? trainingWork.chooseAttribute(focusKeys, rnd);
       // The weekly focus speeds up its own kind of attributes.
       final focused = switch (life.focus) {
         TrainingFocus.attacking => const {'finishing', 'attackingAwareness', 'dribbling', 'kickingPower', 'curl', 'ballControl'},
@@ -3302,6 +3327,16 @@ class GameState extends ChangeNotifier {
 
   /// Applies the user's training focus to a match engine.
   void applyClubBoosts(MatchField f, bool userHome) {
+    // Understanding improves through scheduled practice. An ambitious plan
+    // that exceeds the squad's ability reduces execution instead of granting
+    // a free attacking bonus.
+    final readiness = tacticalReadiness;
+    final execution = ((readiness.effectiveness - 55) / 15).round().clamp(-3, 3);
+    if (userHome) {
+      f.homeCoaching += execution;
+    } else {
+      f.awayCoaching += execution;
+    }
     if (life.autoRule['enabled'] == true) {
       f.automaticRule = Map<String, dynamic>.from(life.autoRule);
       f.automaticRuleHome = userHome;

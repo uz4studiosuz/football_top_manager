@@ -3,14 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Clean, SofaScore-inspired design tokens. Every screen reads colours from
-/// here so the whole game keeps one calm, data-first visual language.
+/// Manager workspace tokens: blue navigation, violet actions, teal feedback
+/// and dense neutral panels shared by mobile and desktop layouts.
 /// One application palette, rebuilt atomically when the user changes mode.
 class AppAppearance extends ValueNotifier<bool> {
-  AppAppearance._() : super(false);
+  AppAppearance._() : super(true);
   static final instance = AppAppearance._();
   Future<void> load() async {
-    value = (await SharedPreferences.getInstance()).getBool('darkMode') ?? false;
+    value = (await SharedPreferences.getInstance()).getBool('darkMode') ?? true;
     _systemBars();
   }
 
@@ -32,11 +32,11 @@ class AppAppearance extends ValueNotifier<bool> {
 
 abstract final class AppColors {
   static Color get bg =>
-      AppAppearance.instance.value ? const Color(0xFF16191E) : const Color(0xFFF1F3F6);
+      AppAppearance.instance.value ? const Color(0xFF10131C) : const Color(0xFFF0F2F7);
   static Color get surface =>
-      AppAppearance.instance.value ? const Color(0xFF24282E) : const Color(0xFFFFFFFF);
+      AppAppearance.instance.value ? const Color(0xFF1B1F2B) : const Color(0xFFFFFFFF);
   static Color get surfaceAlt =>
-      AppAppearance.instance.value ? const Color(0xFF1C2026) : const Color(0xFFF5F7FA);
+      AppAppearance.instance.value ? const Color(0xFF232836) : const Color(0xFFF5F6FA);
   static Color get ink =>
       AppAppearance.instance.value ? const Color(0xFFECEEF1) : const Color(0xFF222226);
   static Color get ink2 =>
@@ -44,20 +44,22 @@ abstract final class AppColors {
   static Color get ink3 =>
       AppAppearance.instance.value ? const Color(0xFF929CAA) : const Color(0xFF9AA1AD);
   static Color get line =>
-      AppAppearance.instance.value ? const Color(0xFF383E48) : const Color(0xFFE6E9EF);
+      AppAppearance.instance.value ? const Color(0xFF323848) : const Color(0xFFE0E4ED);
   static Color get primary =>
-      AppAppearance.instance.value ? const Color(0xFF929EFF) : const Color(0xFF374DF5);
+      AppAppearance.instance.value ? const Color(0xFFBE9AFF) : const Color(0xFF763ADC);
   static Color get primarySoft =>
-      AppAppearance.instance.value ? const Color(0xFF303857) : const Color(0xFFEBEEFE);
-  static Color get action => AppAppearance.instance.value ? const Color(0xFF5969E5) : primary;
+      AppAppearance.instance.value ? const Color(0xFF37284F) : const Color(0xFFF0E8FC);
+  static Color get action => const Color(0xFF8247E5);
+  static const header = Color(0xFF294B91);
+  static const teal = Color(0xFF36CDB8);
   static const live = Color(0xFFE5352B);
   static const win = Color(0xFF12A150);
   static const draw = Color(0xFFA1A7B3);
   static const loss = Color(0xFFE5352B);
   static const warning = Color(0xFFF5A524);
   static const gold = Color(0xFFE2A900);
-  static const pitch = Color(0xFF2E8B57);
-  static const pitchDark = Color(0xFF287A4C);
+  static const pitch = Color(0xFF438343);
+  static const pitchDark = Color(0xFF39763A);
 
   // Tinted surfaces must retain readable text in either appearance.
   static Color get dangerSurface => AppAppearance.instance.value ? const Color(0xFF342326) : const Color(0xFFFFF4F2);
@@ -148,7 +150,7 @@ ThemeData buildAppTheme() {
       brightness: AppAppearance.instance.value ? Brightness.dark : Brightness.light,
       onError: Colors.white,
       primary: AppColors.primary,
-      onPrimary: Colors.white,
+      onPrimary: AppAppearance.instance.value ? const Color(0xFF24123B) : Colors.white,
       secondary: AppColors.primary,
       onSecondary: Colors.white,
       primaryContainer: AppColors.primarySoft,
@@ -163,7 +165,7 @@ ThemeData buildAppTheme() {
       error: AppColors.live,
     ),
     appBarTheme: AppBarTheme(
-      backgroundColor: AppColors.surface,
+      backgroundColor: AppAppearance.instance.value ? AppColors.header : AppColors.surface,
       foregroundColor: AppColors.ink,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
@@ -178,8 +180,8 @@ ThemeData buildAppTheme() {
     ),
     tabBarTheme: TabBarThemeData(
       dividerColor: AppColors.line,
-      indicatorColor: AppColors.primary,
-      labelColor: AppColors.primary,
+      indicatorColor: AppColors.teal,
+      labelColor: AppColors.ink,
       unselectedLabelColor: AppColors.ink2,
       indicatorSize: TabBarIndicatorSize.label,
       labelStyle: TextStyle(fontFamily: 'Roboto', fontSize: 13, fontWeight: FontWeight.w700),
